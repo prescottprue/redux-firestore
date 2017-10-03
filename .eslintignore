@@ -1,0 +1,7 @@
+examples/**
+build/use-lodash-es.js
+coverage/**
+node_modules/**
+lib/**
+es/**
+dist/**

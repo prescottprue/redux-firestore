@@ -1,6 +1,6 @@
-import { pick, omit, get } from 'lodash'
-import { setWith, assign } from 'lodash/fp'
-import { actionTypes } from './constants'
+import { pick, omit, get } from 'lodash';
+import { setWith, assign } from 'lodash/fp';
+import { actionTypes } from './constants';
 
 const {
   START,
@@ -18,7 +18,7 @@ const {
   AUTH_LINK_SUCCESS,
   UNAUTHORIZED_ERROR,
   AUTH_UPDATE_SUCCESS,
-} = actionTypes
+} = actionTypes;
 
 /**
  * Create a path array from path string
@@ -26,7 +26,7 @@ const {
  * @return {Array} Path as Array
  * @private
  */
-const pathToArr = path => path ? path.split(/\//).filter(p => !!p) : []
+const pathToArr = path => path ? path.split(/\//).filter(p => !!p) : [];
 
 /**
  * Trim leading slash from path for use with state
@@ -34,7 +34,7 @@ const pathToArr = path => path ? path.split(/\//).filter(p => !!p) : []
  * @return {String} Path seperated with slashes
  * @private
  */
-const getSlashStrPath = path => pathToArr(path).join('/')
+const getSlashStrPath = path => pathToArr(path).join('/');
 
 /**
  * Convert path with slashes to dot seperated path (for use with lodash get/set)
@@ -42,7 +42,7 @@ const getSlashStrPath = path => pathToArr(path).join('/')
  * @return {String} Path seperated with dots
  * @private
  */
-export const getDotStrPath = path => pathToArr(path).join('.')
+export const getDotStrPath = path => pathToArr(path).join('.');
 
 /**
  * Combine reducers utility (abreveated version of redux's combineReducer).
@@ -61,11 +61,11 @@ const combineReducers = reducers =>
         nextState[key] = reducers[key]( // eslint-disable-line no-param-reassign
           state[key],
           action,
-        )
-        return nextState
+        );
+        return nextState;
       },
       {},
-    )
+    );
 
 /**
  * Reducer for isInitializing state. Changed by `AUTHENTICATION_INIT_STARTED`
@@ -78,13 +78,13 @@ const combineReducers = reducers =>
 export const isInitializingReducer = (state = false, action) => {
   switch (action.type) {
     case AUTHENTICATION_INIT_STARTED:
-      return true
+      return true;
     case AUTHENTICATION_INIT_FINISHED:
-      return false
+      return false;
     default:
-      return state
+      return state;
   }
-}
+};
 
 /**
  * Reducer for requesting state.Changed by `START`, `NO_VALUE`, and `SET` actions.
@@ -100,17 +100,17 @@ export const requestingReducer = (state = {}, { type, path }) => {
       return {
         ...state,
         [getSlashStrPath(path)]: true,
-      }
+      };
     case NO_VALUE:
     case SET:
       return {
         ...state,
         [getSlashStrPath(path)]: false,
-      }
+      };
     default:
-      return state
+      return state;
   }
-}
+};
 
 /**
  * Reducer for requested state. Changed by `START`, `NO_VALUE`, and `SET` actions.
@@ -126,17 +126,17 @@ export const requestedReducer = (state = {}, { type, path }) => {
       return {
         ...state,
         [getSlashStrPath(path)]: false,
-      }
+      };
     case NO_VALUE:
     case SET:
       return {
         ...state,
         [getSlashStrPath(path)]: true,
-      }
+      };
     default:
-      return state
+      return state;
   }
-}
+};
 
 /**
  * Reducer for timestamps state. Changed by `START`, `NO_VALUE`, and `SET` actions.
@@ -154,11 +154,11 @@ export const timestampsReducer = (state = {}, { type, path }) => {
       return {
         ...state,
         [getSlashStrPath(path)]: Date.now(),
-      }
+      };
     default:
-      return state
+      return state;
   }
-}
+};
 
 /**
  * Creates reducer for data state. Used to create data and ordered reducers.
@@ -174,23 +174,23 @@ export const timestampsReducer = (state = {}, { type, path }) => {
 const createDataReducer = (actionKey = 'data') => (state = {}, action) => {
   switch (action.type) {
     case SET:
-      return setWith(Object, getDotStrPath(action.path), action[actionKey], state)
+      return setWith(Object, getDotStrPath(action.path), action[actionKey], state);
     case MERGE:
-      const previousData = get(state, getDotStrPath(action.path), {})
-      const mergedData = assign(previousData, action[actionKey])
-      return setWith(Object, getDotStrPath(action.path), mergedData, state)
+      const previousData = get(state, getDotStrPath(action.path), {});
+      const mergedData = assign(previousData, action[actionKey]);
+      return setWith(Object, getDotStrPath(action.path), mergedData, state);
     case NO_VALUE:
-      return setWith(Object, getDotStrPath(action.path), null, state)
+      return setWith(Object, getDotStrPath(action.path), null, state);
     case LOGOUT:
       // support keeping data when logging out - #125
       if (action.preserve) {
-        return pick(state, action.preserve) // pick returns a new object
+        return pick(state, action.preserve); // pick returns a new object
       }
-      return {}
+      return {};
     default:
-      return state
+      return state;
   }
-}
+};
 
 /**
  * Reducer for auth state. Changed by `LOGIN`, `LOGOUT`, and `LOGIN_ERROR` actions.
@@ -207,31 +207,31 @@ export const authReducer = (state = { isLoaded: false, isEmpty: true }, action) 
         return {
           isEmpty: true,
           isLoaded: true,
-        }
+        };
       }
-      const auth = action.auth.toJSON ? action.auth.toJSON() : action.auth
-      return { ...auth, isEmpty: false, isLoaded: true }
+      const auth = action.auth.toJSON ? action.auth.toJSON() : action.auth;
+      return { ...auth, isEmpty: false, isLoaded: true };
     case AUTH_LINK_SUCCESS:
       if (!action.payload) {
         return {
           isEmpty: true,
           isLoaded: true,
-        }
+        };
       }
       return {
         ...(action.payload.toJSON ? action.payload.toJSON() : action.payload),
         isEmpty: false,
         isLoaded: true,
-      }
+      };
     case LOGIN_ERROR:
       // TODO: Support keeping data when logging out
-      return { isLoaded: true, isEmpty: true }
+      return { isLoaded: true, isEmpty: true };
     case LOGOUT:
-      return { isLoaded: true, isEmpty: true }
+      return { isLoaded: true, isEmpty: true };
     default:
-      return state
+      return state;
   }
-}
+};
 
 /**
  * Reducer for authError state. Changed by `LOGIN`, `LOGOUT`, `LOGIN_ERROR`, and
@@ -245,14 +245,14 @@ export const authErrorReducer = (state = {}, action) => {
   switch (action.type) {
     case LOGIN:
     case LOGOUT:
-      return {}
+      return {};
     case LOGIN_ERROR:
     case UNAUTHORIZED_ERROR:
-      return action.authError
+      return action.authError;
     default:
-      return state
+      return state;
   }
-}
+};
 
 /**
  * Reducer for profile state. Changed by `SET_PROFILE`, `LOGOUT`, and
@@ -270,21 +270,21 @@ export const profileReducer = (state = { isLoaded: false, isEmpty: true }, actio
           ...state,
           isEmpty: true,
           isLoaded: true,
-        }
+        };
       }
       return {
         ...state,
         ...action.profile,
         isEmpty: false,
         isLoaded: true,
-      }
+      };
     case LOGOUT:
     case LOGIN_ERROR:
-      return { isLoaded: true, isEmpty: true }
+      return { isLoaded: true, isEmpty: true };
     default:
-      return state
+      return state;
   }
-}
+};
 
 /**
  * Reducer for errors state. Changed by `UNAUTHORIZED_ERROR`
@@ -298,11 +298,11 @@ export const errorsReducer = (state = [], action) => {
   switch (action.type) {
     case LOGIN_ERROR:
     case UNAUTHORIZED_ERROR:
-      return [...state, action.authError]
-    case LOGOUT: return []
-    default: return state
+      return [...state, action.authError];
+    case LOGOUT: return [];
+    default: return state;
   }
-}
+};
 
 /**
  * Reducer for listeners ids. Changed by `SET_LISTENER` and `UNSET_LISTENER`
@@ -322,11 +322,11 @@ const listenersById = (state = {}, { type, path, payload }) => {
           id: payload.id,
           path,
         },
-      }
-    case UNSET_LISTENER: return omit(state, [payload.id])
-    default: return state
+      };
+    case UNSET_LISTENER: return omit(state, [payload.id]);
+    default: return state;
   }
-}
+};
 
 /**
  * Reducer for listeners state. Changed by `UNAUTHORIZED_ERROR`
@@ -339,11 +339,11 @@ const listenersById = (state = {}, { type, path, payload }) => {
  */
 const allListeners = (state = [], { type, payload }) => {
   switch (type) {
-    case SET_LISTENER: return [...state, payload.id]
-    case UNSET_LISTENER: return state.filter(lId => lId !== payload.id)
-    default: return state
+    case SET_LISTENER: return [...state, payload.id];
+    case UNSET_LISTENER: return state.filter(lId => lId !== payload.id);
+    default: return state;
   }
-}
+};
 
 /**
  * Reducer for listeners state. Changed by `UNAUTHORIZED_ERROR`
@@ -356,7 +356,7 @@ const allListeners = (state = [], { type, payload }) => {
 export const listenersReducer = combineReducers({
   byId: listenersById,
   allIds: allListeners,
-})
+});
 
 /**
  * Reducer for data state. Changed by `SET`, `SET_ORDERED`,`NO_VALUE`, and
@@ -367,7 +367,7 @@ export const listenersReducer = combineReducers({
  * @param  {String} action.path - Path of action that was dispatched
  * @return {Object} Data state after reduction
  */
-export const dataReducer = createDataReducer()
+export const dataReducer = createDataReducer();
 
 /**
  * Reducer for ordered state. Changed by `SET`, `SET_ORDERED`,`NO_VALUE`, and
@@ -378,7 +378,7 @@ export const dataReducer = createDataReducer()
  * @param  {String} action.path - Path of action that was dispatched
  * @return {Object} Data state after reduction
  */
-export const orderedReducer = createDataReducer('ordered')
+export const orderedReducer = createDataReducer('ordered');
 
 /**
  * @name firebaseStateReducer
@@ -405,4 +405,4 @@ export default combineReducers({
   listeners: listenersReducer,
   isInitializing: isInitializingReducer,
   errors: errorsReducer,
-})
+});

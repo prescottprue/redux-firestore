@@ -6,7 +6,7 @@
  * import { constants } from 'react-redux-firebase'
  * constants.actionsPrefix === '@@reduxFirestore' // true
 */
-export const actionsPrefix = '@@reduxFirestore'
+export const actionsPrefix = '@@reduxFirestore';
 
 /**
  * @constant
@@ -33,7 +33,7 @@ export const actionTypes = {
   ERROR: `${actionsPrefix}/ERROR`,
   SET_LISTENER: `${actionsPrefix}/SET_LISTENER`,
   UNSET_LISTENER: `${actionsPrefix}/UNSET_LISTENER`,
-}
+};
 
 /**
  * @constant
@@ -98,7 +98,7 @@ export const defaultConfig = {
   enableEmptyAuthChanges: false,
   firebaseStateName: 'firebase',
   attachAuthIsReady: true,
-}
+};
 
 /**
  * @constant
@@ -112,7 +112,7 @@ export const supportedAuthProviders = [
   'github',
   'twitter',
   'facebook',
-]
+];
 
 /**
  * @constant
@@ -120,9 +120,9 @@ export const supportedAuthProviders = [
  * @type {Array}
  * @private
  */
-export const topLevelPaths = ['auth', 'profile', 'ordered', 'data']
+export const topLevelPaths = ['auth', 'profile', 'ordered', 'data'];
 
 export default {
   actionTypes,
   defaultConfig,
-}
+};

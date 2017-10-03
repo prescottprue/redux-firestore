@@ -1,4 +1,4 @@
-import { defaultConfig } from './constants'
+import { defaultConfig } from './constants';
 
 /**
  * @name reduxFirestore
@@ -36,11 +36,11 @@ import { defaultConfig } from './constants'
  */
 export default (instance, otherConfig) => next =>
   (reducer, initialState, middleware) => {
-    const store = next(reducer, initialState, middleware)
+    const store = next(reducer, initialState, middleware);
 
-    const configs = { ...defaultConfig, ...otherConfig }
+    const configs = { ...defaultConfig, ...otherConfig };
 
-    store.firestore = { ...instance, _: { config: configs } }
+    store.firestore = { ...instance, _: { config: configs } };
 
-    return store
-  }
+    return store;
+  };

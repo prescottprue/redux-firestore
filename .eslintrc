@@ -11,6 +11,6 @@ env:
   node: true
 
 rules:
-  semi: [2, 'never']
   no-console: 'error'
   no-confusing-arrow: 0
+  no-case-declarations: 0

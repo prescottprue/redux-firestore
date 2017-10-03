@@ -18,7 +18,7 @@
 ## Installation
 
 ```sh
-npm install redux-firestore
+npm install redux-firestore --save
 ```
 
 ## Use

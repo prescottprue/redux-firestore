@@ -1,7 +1,7 @@
 const path = require('path');
 const webpack = require('webpack');
 
-const libraryName = 'reduxFirestore';
+const libraryName = 'redux-firestore';
 const isProduction = process.env.NODE_ENV === 'production';
 
 const config = {
@@ -29,7 +29,7 @@ const config = {
 };
 
 if (isProduction) {
-  config.plugins.push(new webpack.optimize.UglifyJsPlugin({ minimize: true }))
+  config.plugins.push(new webpack.optimize.UglifyJsPlugin({ minimize: true }));
 }
 
-module.exports = config
+module.exports = config;

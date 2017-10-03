@@ -8,7 +8,11 @@
       }
     }]
   ],
-  "plugins": ["add-module-exports"],
+  "plugins": [
+    "add-module-exports",
+    "transform-object-rest-spread",
+    "transform-object-assign"
+  ],
   "env": {
     "es": {
       "comments": false,
