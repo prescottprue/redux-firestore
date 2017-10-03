@@ -1,0 +1,16 @@
+root: true
+
+parser: babel-eslint
+
+extends: [airbnb]
+plugins: [babel]
+
+env:
+  browser: true
+  es6: true
+  node: true
+
+rules:
+  semi: [2, 'never']
+  no-console: 'error'
+  no-confusing-arrow: 0

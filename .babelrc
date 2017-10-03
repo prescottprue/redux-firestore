@@ -1,0 +1,25 @@
+{
+  "presets": [
+    "react",
+    ["env", {
+      "targets": {
+        "chrome": 52,
+        "browsers": ["last 2 versions", "safari >= 7"]
+      }
+    }]
+  ],
+  "plugins": ["add-module-exports"],
+  "env": {
+    "es": {
+      "comments": false,
+      "minified": true,
+      "plugins": [
+        "./build/use-lodash-es"
+      ]
+    },
+    "commonjs": {
+      "comments": false,
+      "minified": true
+    }
+  }
+}
