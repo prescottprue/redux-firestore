@@ -31,6 +31,8 @@ export const set = (firebase, dispatch, collection, doc, opts) =>
 export const get = (firebase, dispatch, collection, doc, opts) =>
   wrapInDispatch(dispatch, {
     method: ref(firebase, { collection, doc }).get,
+    collection,
+    doc,
     args: [opts.args],
     types: [
       actionTypes.GET_REQUEST,

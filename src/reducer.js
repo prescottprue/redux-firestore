@@ -172,6 +172,8 @@ export const timestampsReducer = (state = {}, { type, path }) => {
  * @private
  */
 const createDataReducer = (actionKey = 'data') => (state = {}, action) => {
+  const { collection, doc } = action;
+  const firestorePath = doc ? `${collection}/${doc}` : collection;
   switch (action.type) {
     case SET:
       return setWith(Object, getDotStrPath(action.path), action[actionKey], state);
@@ -181,6 +183,8 @@ const createDataReducer = (actionKey = 'data') => (state = {}, action) => {
       return setWith(Object, getDotStrPath(action.path), mergedData, state);
     case NO_VALUE:
       return setWith(Object, getDotStrPath(action.path), null, state);
+    case actionTypes.GET_SUCCESS:
+      return setWith(Object, getDotStrPath(firestorePath), action.payload, state);
     case LOGOUT:
       // support keeping data when logging out - #125
       if (action.preserve) {

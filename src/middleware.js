@@ -4,17 +4,20 @@ import { isArray } from 'lodash';
 // This makes every API response have the same shape, regardless of how nested it was.
 function callFirestore(firestoreInstance, callInfoObj) {
   // console.log('calling devshare:', callInfoObj, Devshare)
-  const { method } = callInfoObj;
-  let { modelArgs, namespace, methodArgs } = callInfoObj;
+  const { method, namespace = 'firestore' } = callInfoObj;
+  let { modelArgs, methodArgs } = callInfoObj;
   // Start call chain
-
   // Wrap args in array if not already
   if (!isArray(modelArgs)) modelArgs = [modelArgs];
   if (!isArray(methodArgs)) methodArgs = [methodArgs];
+  if (!firestoreInstance[namespace]) {
+    throw new Error(`${namespace} is not a Firebase namespace`);
+  }
+
   // Make devshare method call with array of params
   return !methodArgs
-  ? firestoreInstance[method]
-  : firestoreInstance[method]
+  ? firestoreInstance[namespace]()[method]
+  : firestoreInstance[namespace]()[method]
     .apply(this, methodArgs);
 }
 

@@ -33,7 +33,7 @@ export const unWatchUserProfile = (firebase) => {
       .ref()
       .child(`${userProfile}/${authUid}`)
       .off('value', firebase._.profileWatch);
-    firebase._.profileWatch = null;
+    firebase._.profileWatch = null; // eslint-disable-line no-param-reassign
   }
 };
 

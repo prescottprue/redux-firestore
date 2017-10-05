@@ -1,6 +1,6 @@
 {
   "name": "redux-firestore",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Redux bindings for Firestore.",
   "main": "lib/index.js",
   "module": "es/index.js",
@@ -19,9 +19,7 @@
     "test:cov": "istanbul cover ./node_modules/mocha/bin/_mocha -- ./tests/** --recursive --report lcov --compilers js:babel-register",
     "lint": "eslint .",
     "lint:fix": "npm run lint -- --fix",
-    "postinstall": "npm run build",
-    "preversion": "npm run build",
-    "prepare": "npm run build"
+    "preversion": "npm run build"
   },
   "dependencies": {
     "lodash": "^4.17.4",

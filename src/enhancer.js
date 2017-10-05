@@ -1,6 +1,6 @@
 import { defaultConfig } from './constants';
-import createFirebaseInstance from './createFirebaseInstance'
-import { createAuthIsReady } from './utils/auth'
+import { createFirebaseInstance } from './createFirebaseInstance';
+import { createAuthIsReady } from './utils/auth';
 import { authActions } from './actions';
 
 

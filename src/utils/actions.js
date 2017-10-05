@@ -1,4 +1,4 @@
-import { isObject } from 'lodash'
+import { isObject } from 'lodash';
 
 /**
  * @description Wrap method call in dispatched actions
@@ -31,4 +31,4 @@ export const wrapInDispatch = (dispatch, { method, args, types }) => {
     });
 };
 
-export default { wrapInDispatch }
+export default { wrapInDispatch };

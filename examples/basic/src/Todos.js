@@ -44,7 +44,7 @@ export default compose(
   withStore,
   withHandlers({
     loadData: props => err => props.store.firestore.get('todos'),
-    addData: props => err => props.store.firestore.push,
+    addData: props => err => props.store.firestore.add('todos', { text: 'test' }),
   }),
   connect(({ firebase }) => ({ // state.firebase
     // ImmutableJS map (for plain js checkout v2)
