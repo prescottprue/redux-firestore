@@ -34,14 +34,14 @@ const firebaseConfig = {
   databaseURL: '<your-database-url>',
   storageBucket: '<your-storage-bucket>'
 }
-const rrfConfig = { userProfile: 'users' } // react-redux-firebase config
+const rfConfig = { userProfile: 'users' } // react-redux-firebase config
 
 // initialize firebase instance
 const firebaseApp = firebase.initializeApp(config) // <- new to v2.*.*
 
 // Add reduxReduxFirebase to compose
 const createStoreWithFirebase = compose(
-  reduxFirestore(firebaseApp, rrfConfig), // firebase instance as first argument
+  reduxFirestore(firebaseApp, rfConfig), // firebase instance as first argument
 )(createStore)
 
 // Add Firebase to reducers
@@ -53,6 +53,37 @@ const rootReducer = combineReducers({
 const initialState = {}
 const store = createStoreWithFirebase(rootReducer, initialState)
 ```
+
+### Call Firestore
+
+#### Firestore Instance
+
+#### Middleware
+
+redux-firestore's enhancer offers a new middleware setup that was not offered in `react-redux-firebase` (but will eventually make it `redux-firebase`)
+**Note**: This syntax is just a sample and is not currently released
+
+```js
+import { actionTypes } from 'redux-firestore'
+
+dispatch({
+  type: actionTypes.FIREBASE_CALL,
+  namespace: 'firestore' ,// database, auth, storage, etc
+  collection: 'users', // only used when namespace is firestore
+  method:  'get' // get method
+})
+```
+
+Some of the goals behind this approach include:
+
+1. Not needing to pass around a Firebase instance (with `react-redux-firebase` this meant using `firebaseConnect` HOC or `getFirebase`)
+2. Follows [patterns outlined in the redux docs for data fetching](http://redux.js.org/docs/advanced/ExampleRedditAPI.html)
+3. Easier to expand/change internal API as Firebase/Firestore API grows & changes
+
+
+## Roadmap
+
+`v0.1.0` - Basic querying
 
 [npm-image]: https://img.shields.io/npm/v/redux-firestore.svg?style=flat-square
 [npm-url]: https://npmjs.org/package/redux-firestore

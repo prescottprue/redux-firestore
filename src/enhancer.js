@@ -1,4 +1,8 @@
 import { defaultConfig } from './constants';
+import createFirebaseInstance from './createFirebaseInstance'
+import { createAuthIsReady } from './utils/auth'
+import { authActions } from './actions';
+
 
 /**
  * @name reduxFirestore
@@ -34,13 +38,25 @@ import { defaultConfig } from './constants';
  * // Use Function later to create store
  * const store = createStoreWithFirebase(rootReducer, initialState)
  */
-export default (instance, otherConfig) => next =>
+export default (firebaseInstance, otherConfig) => next =>
   (reducer, initialState, middleware) => {
     const store = next(reducer, initialState, middleware);
 
     const configs = { ...defaultConfig, ...otherConfig };
 
-    store.firestore = { ...instance, _: { config: configs } };
+    firebaseInstance = createFirebaseInstance( // eslint-disable-line no-param-reassign
+      instance.firebase_ || instance, // eslint-disable-line no-underscore-dangle, no-undef
+      configs,
+      store.dispatch // eslint-disable-line comma-dangle
+    );
+
+    authActions.init(store.dispatch, firebaseInstance);
+
+    store.firestore = { ...firebaseInstance, _: { config: configs } };
+
+    if (configs.attachAuthIsReady) {
+      store.firebaseAuthIsReady = createAuthIsReady(store, configs);
+    }
 
     return store;
   };

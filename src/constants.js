@@ -33,6 +33,18 @@ export const actionTypes = {
   ERROR: `${actionsPrefix}/ERROR`,
   SET_LISTENER: `${actionsPrefix}/SET_LISTENER`,
   UNSET_LISTENER: `${actionsPrefix}/UNSET_LISTENER`,
+  GET_REQUEST: `${actionsPrefix}/GET_REQUEST`,
+  GET_SUCCESS: `${actionsPrefix}/GET_SUCCESS`,
+  GET_FAILURE: `${actionsPrefix}/GET_FAILURE`,
+  SET_REQUEST: `${actionsPrefix}/SET_REQUEST`,
+  SET_SUCCESS: `${actionsPrefix}/SET_SUCCESS`,
+  SET_FAILURE: `${actionsPrefix}/SET_FAILURE`,
+  ADD_REQUEST: `${actionsPrefix}/ADD_REQUEST`,
+  ADD_SUCCESS: `${actionsPrefix}/ADD_SUCCESS`,
+  ADD_FAILURE: `${actionsPrefix}/ADD_FAILURE`,
+  ON_SNAPSHOT_REQUEST: `${actionsPrefix}/ON_SNAPSHOT_REQUEST`,
+  ON_SNAPSHOT_SUCCESS: `${actionsPrefix}/ON_SNAPSHOT_SUCCESS`,
+  ON_SNAPSHOT_FAILURE: `${actionsPrefix}/ON_SNAPSHOT_FAILURE`,
 };
 
 /**

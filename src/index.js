@@ -5,6 +5,8 @@ import constants, { actionTypes } from './constants';
 export default {
   firebaseStateReducer: reducer,
   reduxFirestore: enhancer,
+  reducer,
+  enhancer,
   constants,
   actionTypes,
 };
