@@ -19,6 +19,7 @@
     "test:cov": "istanbul cover ./node_modules/mocha/bin/_mocha -- ./tests/** --recursive --report lcov --compilers js:babel-register",
     "lint": "eslint .",
     "lint:fix": "npm run lint -- --fix",
+    "prepare": "npm run clean && npm run build",
     "preversion": "npm run build"
   },
   "dependencies": {
