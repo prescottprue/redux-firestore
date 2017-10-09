@@ -45,7 +45,7 @@ export default (firebaseInstance, otherConfig) => next =>
     const configs = { ...defaultConfig, ...otherConfig };
 
     firebaseInstance = createFirebaseInstance( // eslint-disable-line no-param-reassign
-      instance.firebase_ || instance, // eslint-disable-line no-underscore-dangle, no-undef
+      firebaseInstance.firebase_ || firebaseInstance, // eslint-disable-line no-underscore-dangle, no-undef, max-len
       configs,
       store.dispatch // eslint-disable-line comma-dangle
     );

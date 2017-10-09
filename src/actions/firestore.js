@@ -41,6 +41,19 @@ export const get = (firebase, dispatch, collection, doc, opts) =>
     ],
   });
 
+export const update = (firebase, dispatch, collection, doc, updateData) =>
+  wrapInDispatch(dispatch, {
+    method: ref(firebase, { collection, doc }).get,
+    collection,
+    doc,
+    args: [updateData],
+    types: [
+      actionTypes.UPDATE_REQUEST,
+      actionTypes.UPDATE_SUCCESS,
+      actionTypes.UPDATE_FAILURE,
+    ],
+  });
+
 // TODO: Track listeners within state
 export const onSnapshot = (firebase, dispatch, collection, doc, opts) =>
   wrapInDispatch(dispatch, {
@@ -53,4 +66,4 @@ export const onSnapshot = (firebase, dispatch, collection, doc, opts) =>
     ],
   });
 
-export default { get, ref, add };
+export default { get, ref, add, update, onSnapshot };

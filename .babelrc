@@ -16,10 +16,7 @@
   "env": {
     "es": {
       "comments": false,
-      "minified": true,
-      "plugins": [
-        "./build/use-lodash-es"
-      ]
+      "minified": true
     },
     "commonjs": {
       "comments": false,

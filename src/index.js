@@ -3,7 +3,7 @@ import reducer from './reducer';
 import constants, { actionTypes } from './constants';
 
 export default {
-  firebaseStateReducer: reducer,
+  firestoreReducer: reducer,
   reduxFirestore: enhancer,
   reducer,
   enhancer,
