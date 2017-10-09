@@ -130,8 +130,8 @@ export const defaultConfig = {
   setProfilePopulateResults: false,
   dispatchOnUnsetListener: true,
   enableEmptyAuthChanges: false,
-  firebaseStateName: 'firebase',
-  attachAuthIsReady: true,
+  stateName: 'firestore',
+  attachAuthIsReady: false,
 };
 
 /**
