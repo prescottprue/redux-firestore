@@ -2,14 +2,17 @@ import { wrapInDispatch } from '../utils/actions';
 import { actionTypes } from '../constants';
 
 const ref = (firebase, dispatch, { collection, doc }) => {
+  if (!firebase.firestore) {
+    throw new Error('Firestore must be required and initalized.');
+  }
   const firestoreRef = firebase.firestore().collection(collection);
   return doc ? firestoreRef.doc(doc) : firestoreRef;
 };
 
-export const add = (firebase, dispatch, collection, doc, opts) =>
+export const add = (firebase, dispatch, collection, doc, ...args) =>
   wrapInDispatch(dispatch, {
-    method: ref(firebase, { collection, doc }).add,
-    args: [opts.args],
+    method: ref(firebase, dispatch, { collection, doc }).add,
+    args,
     types: [
       actionTypes.ADD_REQUEST,
       actionTypes.ADD_SUCCESS,
@@ -17,10 +20,10 @@ export const add = (firebase, dispatch, collection, doc, opts) =>
     ],
   });
 
-export const set = (firebase, dispatch, collection, doc, opts) =>
+export const set = (firebase, dispatch, collection, doc, ...args) =>
   wrapInDispatch(dispatch, {
-    method: ref(firebase, { collection, doc }).add,
-    args: [opts.args],
+    method: ref(firebase, dispatch, { collection, doc }).set,
+    args,
     types: [
       actionTypes.SET_REQUEST,
       actionTypes.SET_SUCCESS,
@@ -28,12 +31,10 @@ export const set = (firebase, dispatch, collection, doc, opts) =>
     ],
   });
 
-export const get = (firebase, dispatch, collection, doc, opts) =>
+export const get = (firebase, dispatch, collection, doc, ...args) =>
   wrapInDispatch(dispatch, {
-    method: ref(firebase, { collection, doc }).get,
-    collection,
-    doc,
-    args: [opts.args],
+    method: ref(firebase, dispatch, { collection, doc }).get,
+    args,
     types: [
       actionTypes.GET_REQUEST,
       actionTypes.GET_SUCCESS,
@@ -41,12 +42,10 @@ export const get = (firebase, dispatch, collection, doc, opts) =>
     ],
   });
 
-export const update = (firebase, dispatch, collection, doc, updateData) =>
+export const update = (firebase, dispatch, collection, doc, ...args) =>
   wrapInDispatch(dispatch, {
-    method: ref(firebase, { collection, doc }).get,
-    collection,
-    doc,
-    args: [updateData],
+    method: ref(firebase, dispatch, { collection, doc }).update,
+    args,
     types: [
       actionTypes.UPDATE_REQUEST,
       actionTypes.UPDATE_SUCCESS,
@@ -55,10 +54,10 @@ export const update = (firebase, dispatch, collection, doc, updateData) =>
   });
 
 // TODO: Track listeners within state
-export const onSnapshot = (firebase, dispatch, collection, doc, opts) =>
+export const onSnapshot = (firebase, dispatch, collection, doc, ...args) =>
   wrapInDispatch(dispatch, {
-    method: ref(firebase, { collection, doc }).onSnapshot,
-    args: [opts.args],
+    method: ref(firebase, dispatch, { collection, doc }).onSnapshot,
+    args,
     types: [
       actionTypes.ON_SNAPSHOT_REQUEST,
       actionTypes.ON_SNAPSHOT_SUCCESS,

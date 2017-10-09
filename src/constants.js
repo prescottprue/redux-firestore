@@ -20,6 +20,23 @@ export const actionsPrefix = '@@reduxFirestore';
  * @property {String} ERROR - `@@reduxFirestore/ERROR`
  * @property {String} SET_LISTENER - `@@reduxFirestore/SET_LISTENER`
  * @property {String} UNSET_LISTENER - `@@reduxFirestore/UNSET_LISTENER`
+ * @property {String} AUTHENTICATION_INIT_STARTED - `@@reactReduxFirebase/AUTHENTICATION_INIT_STARTED`
+ * @property {String} AUTHENTICATION_INIT_FINISHED - `@@reactReduxFirebase/AUTHENTICATION_INIT_FINISHED`
+ * @property {String} GET_REQUEST - `@@reduxFirestore/GET_REQUEST`
+ * @property {String} GET_SUCCESS - `@@reduxFirestore/GET_SUCCESS`
+ * @property {String} GET_FAILURE - `@@reduxFirestore/GET_FAILURE`
+ * @property {String} SET_REQUEST - `@@reduxFirestore/SET_REQUEST`
+ * @property {String} SET_SUCCESS - `@@reduxFirestore/SET_SUCCESS`
+ * @property {String} SET_FAILURE - `@@reduxFirestore/SET_FAILURE`
+ * @property {String} ADD_REQUEST - `@@reduxFirestore/ADD_REQUEST`
+ * @property {String} ADD_SUCCESS - `@@reduxFirestore/ADD_SUCCESS`
+ * @property {String} ADD_FAILURE - `@@reduxFirestore/ADD_FAILURE`
+ * @property {String} UPDATE_REQUEST - `@@reduxFirestore/UPDATE_REQUEST`
+ * @property {String} UPDATE_SUCCESS - `@@reduxFirestore/UPDATE_SUCCESS`
+ * @property {String} UPDATE_FAILURE - `@@reduxFirestore/UPDATE_FAILURE`
+ * @property {String} ON_SNAPSHOT_REQUEST - `@@reduxFirestore/ON_SNAPSHOT_REQUEST`
+ * @property {String} ON_SNAPSHOT_SUCCESS - `@@reduxFirestore/ON_SNAPSHOT_SUCCESS`
+ * @property {String} ON_SNAPSHOT_FAILURE - `@@reduxFirestore/ON_SNAPSHOT_FAILURE`
  * @example
  * import { actionTypes } from 'react-redux-firebase'
  * actionTypes.SET === '@@reduxFirestore/SET' // true
@@ -33,6 +50,8 @@ export const actionTypes = {
   ERROR: `${actionsPrefix}/ERROR`,
   SET_LISTENER: `${actionsPrefix}/SET_LISTENER`,
   UNSET_LISTENER: `${actionsPrefix}/UNSET_LISTENER`,
+  AUTHENTICATION_INIT_STARTED: `${actionsPrefix}/AUTHENTICATION_INIT_STARTED`,
+  AUTHENTICATION_INIT_FINISHED: `${actionsPrefix}/AUTHENTICATION_INIT_FINISHED`,
   GET_REQUEST: `${actionsPrefix}/GET_REQUEST`,
   GET_SUCCESS: `${actionsPrefix}/GET_SUCCESS`,
   GET_FAILURE: `${actionsPrefix}/GET_FAILURE`,

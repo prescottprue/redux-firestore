@@ -27,6 +27,7 @@ npm install redux-firestore --save
 import { createStore, combineReducers, compose } from 'redux'
 import { reduxFirestore, firestoreReducer } from 'redux-firestore'
 import firebase from 'firebase'
+import 'firebase/firestore'
 
 const firebaseConfig = {
   apiKey: '<your-api-key>',
@@ -38,6 +39,7 @@ const rfConfig = { userProfile: 'users' } // react-redux-firebase config
 
 // initialize firebase instance
 const firebaseApp = firebase.initializeApp(config) // <- new to v2.*.*
+firebase.firestore(); // Initialize Cloud Firestore through Firebase
 
 // Add reduxReduxFirebase to compose
 const createStoreWithFirebase = compose(

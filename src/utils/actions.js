@@ -14,7 +14,8 @@ export const wrapInDispatch = (dispatch, { method, args, types }) => {
     type: isObject(types[0]) ? types[0].type : types[0],
     payload: isObject(types[0]) ? types[0].payload : { args },
   });
-  return method(...args)
+  const methodCall = args && args.length ? method(...args) : method();
+  return methodCall
     .then((val) => {
       dispatch({
         type: types[1],
