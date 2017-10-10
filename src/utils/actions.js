@@ -1,4 +1,4 @@
-import { isObject } from 'lodash';
+import { isObject, isFunction } from 'lodash';
 
 /**
  * @description Wrap method call in dispatched actions
@@ -9,17 +9,22 @@ import { isObject } from 'lodash';
  * @param {Array} opts.types - Action types array ([BEFORE, SUCCESS, FAILURE])
  * @private
  */
-export const wrapInDispatch = (dispatch, { method, args, types }) => {
+export const wrapInDispatch = (dispatch, { ref, collection, doc, method, args, types }) => {
+  const [requestingType, successType, errorType] = types
   dispatch({
     type: isObject(types[0]) ? types[0].type : types[0],
     payload: isObject(types[0]) ? types[0].payload : { args },
   });
-  const methodCall = args && args.length ? method(...args) : method();
-  return methodCall
+  console.log('method:', ref, method)
+  const methodPromise = args && args.length ? ref[method](...args) : ref[method]()
+  return methodPromise
     .then((val) => {
+      const makePayload = ({ payload }) => isFunction(payload) ? payload(val) : payload
       dispatch({
-        type: types[1],
-        payload: val,
+        type: isObject(successType) ? successType.type : successType,
+        collection,
+        doc,
+        payload: isObject(successType) ? makePayload(successType) : { args },
       });
       return val;
     })

@@ -1,0 +1,11 @@
+@import 'base';
+.container {
+  @extend .flex-column-center;
+  padding-top: 4rem;
+}
+
+.section {
+  @extend .flex-column-center;
+  margin-left: 1rem;
+  margin-right: 1rem;
+}

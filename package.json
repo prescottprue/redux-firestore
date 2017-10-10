@@ -1,6 +1,6 @@
 {
   "name": "redux-firestore",
-  "version": "0.0.7-beta",
+  "version": "0.0.7",
   "description": "Redux bindings for Firestore.",
   "main": "lib/index.js",
   "module": "es/index.js",
@@ -21,7 +21,7 @@
     "build:umd": "cross-env BABEL_ENV=commonjs NODE_ENV=development webpack",
     "build:umd:min": "cross-env BABEL_ENV=commonjs NODE_ENV=production webpack",
     "build": "npm run build:commonjs && npm run build:es && npm run build:umd && npm run build:umd:min",
-    "watch": "npm run build:commonjs -- --watch",
+    "watch": "npm run build:es -- --watch",
     "start": "webpack-dev-server --config example/webpack.config.js",
     "test": "mocha -R spec ./tests/setup.js ./tests/** --recursive --compilers js:babel-core/register",
     "test:cov": "istanbul cover ./node_modules/mocha/bin/_mocha -- ./tests/** --recursive --report lcov --compilers js:babel-register",

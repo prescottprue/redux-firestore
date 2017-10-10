@@ -48,6 +48,7 @@ export const actionTypes = {
   LOGIN: `${actionsPrefix}/LOGIN`,
   LOGOUT: `${actionsPrefix}/LOGOUT`,
   ERROR: `${actionsPrefix}/ERROR`,
+  AUTH_EMPTY_CHANGE: `${actionsPrefix}/AUTH_EMPTY_CHANGE`,
   SET_LISTENER: `${actionsPrefix}/SET_LISTENER`,
   UNSET_LISTENER: `${actionsPrefix}/UNSET_LISTENER`,
   AUTHENTICATION_INIT_STARTED: `${actionsPrefix}/AUTHENTICATION_INIT_STARTED`,
