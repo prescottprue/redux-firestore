@@ -66,14 +66,18 @@ const store = createStoreWithFirebase(rootReducer, initialState)
 It is common to make react components "stateless" meaning that the component is just a function. This can be useful, but then can limit usage of lifecycle hooks and other features of Component Classes. [`recompose` helps solve this](https://github.com/acdlite/recompose/blob/master/docs/API.md) by providing Higher Order Component functions such as `withContext`, `lifecycle`, and `withHandlers`.
 
 ```js
+import { compose, withHandlers, lifecycle } from 'recompose'
+import { connect } from 'react-redux'
+
 const withStore = compose(
   withContext({ store: PropTypes.object }, () => {}),
   getContext({ store: PropTypes.object }),
 )
+
 const enhance = compose(
   withStore,
   withHandlers({
-    loadData: props => err => props.store.firestore.get('todos'),
+    loadData: props => () => props.store.firestore.get('todos'),
     onDoneClick: props => (key, done = false) =>
       props.store.firestore.update('todos', key, { done }),
     onNewSubmit: props => newTodo =>
@@ -81,14 +85,13 @@ const enhance = compose(
   }),
   lifecycle({
     componentWillMount(props) {
-      console.log('props', this.props)
+      props.loadData()
     }
   }),
   connect(({ firebase }) => ({ // state.firebase
-    // ImmutableJS map (for plain js checkout v2)
     todos: firebase.ordered.todos,
   }))
-)(Some)
+)
 
 export default enhance(SomeComponent)
 ```
@@ -100,39 +103,39 @@ For more information [on using recompose visit the docs](https://github.com/acdl
 ```js
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
+import { connect } from 'react-redux'
 import { isEqual } from 'lodash'
 import { watchEvents, unWatchEvents } from './actions/query'
 import { getEventsFromInput, createCallable } from './utils'
 
-export const firebaseConnect = (dataOrFn = []) => WrappedComponent => {
-  class FirebaseConnect extends Component {
-    static contextTypes = {
-      store: PropTypes.object.isRequired
-    }
-
-    componentWillMount () {
-      const { firebase, dispatch } = this.context.store
-      firebase.watchEvent(firebase, dispatch, 'todos')
-    }
-
-    componentWillUnmount () {
-      const { firebase, dispatch } = this.context.store
-      firebase.unWatchEvent(firebase, dispatch, 'todos')
-    }
-
-    render () {
-      return (
-        <WrappedComponent
-          {...this.props}
-          {...this.state}
-          firebase={this.firebase}
-        />
-      )
-    }
+class Todos extends Component {
+  static contextTypes = {
+    store: PropTypes.object.isRequired
   }
 
-  return FirebaseConnect
+  componentWillMount () {
+    const { firebase } = this.context.store
+    firestore.get('todos')
+  }
+
+  render () {
+    return (
+      <div>
+        {
+          todos.map(todo => (
+            <div key={todo.id}>
+              {JSON.stringify(todo)}
+            </div>
+          ))
+        }
+      </div>
+    )
+  }
 }
+
+export default connect((state) => ({
+  todos: state.firestore.ordered.todos
+}))(Todos)
 ```
 
 <!-- #### Middleware

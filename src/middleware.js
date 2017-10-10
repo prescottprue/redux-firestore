@@ -5,14 +5,14 @@ import { actionTypes } from './constants';
 // This makes every API response have the same shape, regardless of how nested it was.
 function callFirestore(firebaseInstance, callInfoObj) {
   // console.log('calling devshare:', callInfoObj, Devshare)
-  const { method, namespace = 'firestore' } = callInfoObj;
+  const { method } = callInfoObj;
   let { modelArgs, methodArgs } = callInfoObj;
   // Start call chain
   // Wrap args in array if not already
   if (!isArray(modelArgs)) modelArgs = [modelArgs];
   if (!isArray(methodArgs)) methodArgs = [methodArgs];
   if (!firebaseInstance || !firebaseInstance.firestore) {
-    throw new Error(`firestore is not a Firebase namespace`);
+    throw new Error('firestore is not a Firebase namespace');
   }
 
   // Make devshare method call with array of params
@@ -24,16 +24,16 @@ function callFirestore(firebaseInstance, callInfoObj) {
 
 // Action key that carries API call info interpreted by this Redux middleware.
 export const CALL_FIRESTORE = 'CALL_FIRESTORE';
-console.log('tyes', actionTypes)
+
 const typesMap = {
   get: [
     actionTypes.GET_REQUEST,
     actionTypes.GET_SUCCESS,
     actionTypes.GET_FAILURE,
-  ]
-}
+  ],
+};
 
-export const reduxFirestoreMiddleware = (firestore) => store => next => (action) => {
+export const reduxFirestoreMiddleware = firestore => store => next => (action) => {
   const callAPI = action.type === CALL_FIRESTORE ? action : undefined;
   if (typeof callAPI === 'undefined') return next(action);
 

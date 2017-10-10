@@ -1,6 +1,4 @@
-import { isArray } from 'lodash';
 import { defaultConfig } from './constants';
-import firestoreMiddleware from './middleware';
 import { createFirebaseInstance } from './createFirebaseInstance';
 
 /**

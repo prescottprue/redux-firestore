@@ -20,8 +20,10 @@ export const actionsPrefix = '@@reduxFirestore';
  * @property {String} ERROR - `@@reduxFirestore/ERROR`
  * @property {String} SET_LISTENER - `@@reduxFirestore/SET_LISTENER`
  * @property {String} UNSET_LISTENER - `@@reduxFirestore/UNSET_LISTENER`
- * @property {String} AUTHENTICATION_INIT_STARTED - `@@reactReduxFirebase/AUTHENTICATION_INIT_STARTED`
- * @property {String} AUTHENTICATION_INIT_FINISHED - `@@reactReduxFirebase/AUTHENTICATION_INIT_FINISHED`
+ * @property {String} AUTHENTICATION_INIT_STARTED -
+ * `@@reactReduxFirebase/AUTHENTICATION_INIT_STARTED`
+ * @property {String} AUTHENTICATION_INIT_FINISHED -
+ * `@@reactReduxFirebase/AUTHENTICATION_INIT_FINISHED`
  * @property {String} GET_REQUEST - `@@reduxFirestore/GET_REQUEST`
  * @property {String} GET_SUCCESS - `@@reduxFirestore/GET_SUCCESS`
  * @property {String} GET_FAILURE - `@@reduxFirestore/GET_FAILURE`

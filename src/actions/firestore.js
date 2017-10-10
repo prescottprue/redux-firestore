@@ -6,8 +6,7 @@ const dataFromSnap = (snap) => {
   const data = {};
   if (snap.forEach) {
     snap.forEach((doc) => {
-      console.log('doc:', doc.id);
-      data[doc.id] = doc.data();
+      data[doc.id] = doc.data() || doc;
     });
   }
   return data;
@@ -18,7 +17,7 @@ const orderedFromSnap = (snap) => {
   if (snap.forEach) {
     snap.forEach((doc) => {
       const obj = isObject(doc.data())
-        ? { id: doc.id, ...doc.data() }
+        ? { id: doc.id, ...doc.data() || doc.data }
         : { id: doc.id, data: doc.data() };
       ordered.push(obj);
     });
