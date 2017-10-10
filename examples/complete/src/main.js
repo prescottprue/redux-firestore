@@ -12,7 +12,9 @@ window.env = env
 
 // Store Initialization
 // ------------------------------------
-const initialState = window.___INITIAL_STATE__ || { firebase: { authError: null } }
+const initialState = window.___INITIAL_STATE__ || {
+  firebase: { authError: null }
+}
 const store = createStore(initialState)
 
 // Render Setup
@@ -23,10 +25,7 @@ let render = () => {
   const App = require('./containers/App').default
   const routes = require('./routes/index').default(store)
 
-  ReactDOM.render(
-    <App store={store} routes={routes} />,
-    MOUNT_NODE
-  )
+  ReactDOM.render(<App store={store} routes={routes} />, MOUNT_NODE)
 }
 
 // Development Tools
@@ -34,7 +33,7 @@ let render = () => {
 if (__DEV__) {
   if (module.hot) {
     const renderApp = render
-    const renderError = (error) => {
+    const renderError = error => {
       const RedBox = require('redbox-react').default
 
       ReactDOM.render(<RedBox error={error} />, MOUNT_NODE)
@@ -50,10 +49,7 @@ if (__DEV__) {
     }
 
     // Setup hot module replacement
-    module.hot.accept([
-      './containers/App',
-      './routes/index'
-    ], () =>
+    module.hot.accept(['./containers/App', './routes/index'], () =>
       setImmediate(() => {
         ReactDOM.unmountComponentAtNode(MOUNT_NODE)
         render()

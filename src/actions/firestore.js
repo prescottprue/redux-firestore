@@ -48,7 +48,6 @@ export const get = (firebase, dispatch, collection, doc) =>
         type: actionTypes.GET_SUCCESS,
         payload: (snap) => {
           let res
-          console.log('snap:')
           if (snap.forEach) {
             res = []
             snap.forEach((doc) => {

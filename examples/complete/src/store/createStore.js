@@ -3,6 +3,7 @@ import { browserHistory } from 'react-router'
 import firebase from 'firebase'
 import 'firebase/firestore'
 import { reduxFirestore } from 'redux-firestore'
+import { reactReduxFirebase } from 'react-redux-firebase'
 import makeRootReducer from './reducers'
 import { firebase as fbConfig, reduxFirebase as reduxConfig } from '../config'
 import { version } from '../../package.json'
@@ -44,6 +45,7 @@ export default (initialState = {}) => {
     compose(
       applyMiddleware(...middleware),
       reduxFirestore(firebase, reduxConfig),
+      reactReduxFirebase(firebase, reduxConfig), // used for auth
       ...enhancers
     )
   )

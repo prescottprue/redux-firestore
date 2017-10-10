@@ -11,21 +11,18 @@ const closeIconStyle = { paddingTop: '5px', height: '30px' }
 
 export const Notifications = ({ allIds, byId, dismissNotification }) => (
   <div>
-    {
-      allIds.map(id => (
-          <Snackbar
-            key={id}
-            open
-            className={classes.container}
-            contentStyle={{ color: 'white' }}
-            bodyStyle={{ paddingRight: 0 }}
-            action={<CloseIcon color="white" style={closeIconStyle} />}
-            onActionTouchTap={() => dismissNotification(id)}
-            message={byId[id].message}
-          />
-        )
-      )
-    }
+    {allIds.map(id => (
+      <Snackbar
+        key={id}
+        open
+        className={classes.container}
+        contentStyle={{ color: 'white' }}
+        bodyStyle={{ paddingRight: 0 }}
+        action={<CloseIcon color="white" style={closeIconStyle} />}
+        onActionTouchTap={() => dismissNotification(id)}
+        message={byId[id].message}
+      />
+    ))}
   </div>
 )
 
