@@ -1,8 +1,7 @@
+import { isArray } from 'lodash';
 import { defaultConfig } from './constants';
+import firestoreMiddleware from './middleware';
 import { createFirebaseInstance } from './createFirebaseInstance';
-import { createAuthIsReady } from './utils/auth';
-import { authActions } from './actions';
-
 
 /**
  * @name reduxFirestore
@@ -50,13 +49,7 @@ export default (firebaseInstance, otherConfig) => next =>
       store.dispatch // eslint-disable-line comma-dangle
     );
 
-    authActions.init(store.dispatch, firebaseInstance);
-
     store.firestore = { ...firebaseInstance, _: { config: configs } };
-
-    if (configs.attachAuthIsReady) {
-      store.firebaseAuthIsReady = createAuthIsReady(store, configs);
-    }
 
     return store;
   };

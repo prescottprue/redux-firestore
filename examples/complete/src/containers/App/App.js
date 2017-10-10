@@ -25,13 +25,11 @@ export default class AppContainer extends Component {
     muiTheme: getMuiTheme(Theme)
   })
 
-  render () {
+  render() {
     const { routes, store } = this.props
     return (
       <Provider store={store}>
-        <Router history={browserHistory}>
-          {routes}
-        </Router>
+        <Router history={browserHistory}>{routes}</Router>
       </Provider>
     )
   }

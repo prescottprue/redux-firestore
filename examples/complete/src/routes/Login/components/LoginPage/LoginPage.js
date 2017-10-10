@@ -4,7 +4,7 @@ import { Link } from 'react-router'
 import GoogleButton from 'react-google-button'
 import Paper from 'material-ui/Paper'
 import { withHandlers, pure, compose } from 'recompose'
-import { UserIsNotAuthenticated } from 'utils/router'
+// import { UserIsNotAuthenticated } from 'utils/router'
 import { withNotifications } from 'utils/components'
 import { SIGNUP_PATH } from 'constants'
 import LoginForm from '../LoginForm'
@@ -30,12 +30,13 @@ export const LoginPage = ({ emailLogin, googleLogin, onSubmitFail }) => (
 )
 
 LoginPage.propTypes = {
-  firebase: PropTypes.shape({ // eslint-disable-line react/no-unused-prop-types
+  firebase: PropTypes.shape({
+    // eslint-disable-line react/no-unused-prop-types
     login: PropTypes.func.isRequired
   }),
   emailLogin: PropTypes.func,
   onSubmitFail: PropTypes.func,
-  googleLogin: PropTypes.func,
+  googleLogin: PropTypes.func
 }
 
 export default compose(
@@ -44,10 +45,11 @@ export default compose(
   withNotifications, // add props.showError
   withHandlers({
     onSubmitFail: props => (formErrs, dispatch, err) =>
-      props.showError(formErrs ? 'Form Invalid' : (err.message || 'Error')),
+      props.showError(formErrs ? 'Form Invalid' : err.message || 'Error'),
     googleLogin: ({ firebase, showError }) => e =>
-      firebase.login({ provider: 'google', type: 'popup' })
-          .catch((err) => showError(err.message)),
+      firebase
+        .login({ provider: 'google', type: 'popup' })
+        .catch(err => showError(err.message)),
     emailLogin: ({ firebase }) => creds => firebase.login(creds)
   })
 )(LoginPage)

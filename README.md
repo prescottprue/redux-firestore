@@ -13,7 +13,7 @@
 
 > Redux bindings for Firestore
 
-**NOTE**: This library is still under construction, use at your own risk
+**NOTE**: This library is still under construction, use at your own risk. Please view the roadmap below for more information
 
 ## Installation
 
@@ -33,9 +33,10 @@ const firebaseConfig = {
   apiKey: '<your-api-key>',
   authDomain: '<your-auth-domain>',
   databaseURL: '<your-database-url>',
-  storageBucket: '<your-storage-bucket>'
+  storageBucket: '<your-storage-bucket>',
+  projectId: '<your-project-id>'
 }
-const rfConfig = { userProfile: 'users' } // react-redux-firebase config
+const rfConfig = {  } // redux-firestore config
 
 // initialize firebase instance
 const firebaseApp = firebase.initializeApp(config) // <- new to v2.*.*
@@ -134,17 +135,23 @@ export const firebaseConnect = (dataOrFn = []) => WrappedComponent => {
 }
 ```
 
-#### Middleware
+<!-- #### Middleware
 
 `redux-firestore`'s enhancer offers a new middleware setup that was not offered in `react-redux-firebase` (but will eventually make it `redux-firebase`)
 **Note**: This syntax is just a sample and is not currently released
 
+##### Setup
 ```js
-import { actionTypes } from 'redux-firestore'
+```
+
+
+##### Usage
+
+```js
+import { FIREBASE_CALL } from 'redux-firestore'
 
 dispatch({
-  type: actionTypes.FIREBASE_CALL,
-  namespace: 'firestore' ,// database, auth, storage, etc
+  type: FIREBASE_CALL,
   collection: 'users', // only used when namespace is firestore
   method:  'get' // get method
 })
@@ -154,12 +161,14 @@ Some of the goals behind this approach include:
 
 1. Not needing to pass around a Firebase instance (with `react-redux-firebase` this meant using `firebaseConnect` HOC or `getFirebase`)
 2. Follows [patterns outlined in the redux docs for data fetching](http://redux.js.org/docs/advanced/ExampleRedditAPI.html)
-3. Easier to expand/change internal API as Firebase/Firestore API grows & changes
+3. Easier to expand/change internal API as Firebase/Firestore API grows & changes -->
 
 
 ## Roadmap
 
 `v0.1.0` - Basic querying
+
+`redux-firestore` will soon be a dependency of `react-redux-firebase`
 
 [npm-image]: https://img.shields.io/npm/v/redux-firestore.svg?style=flat-square
 [npm-url]: https://npmjs.org/package/redux-firestore

@@ -2,6 +2,30 @@ import { isObject } from 'lodash';
 import { wrapInDispatch } from '../utils/actions';
 import { actionTypes } from '../constants';
 
+const dataFromSnap = (snap) => {
+  const data = {};
+  if (snap.forEach) {
+    snap.forEach((doc) => {
+      console.log('doc:', doc.id);
+      data[doc.id] = doc.data();
+    });
+  }
+  return data;
+};
+
+const orderedFromSnap = (snap) => {
+  const ordered = [];
+  if (snap.forEach) {
+    snap.forEach((doc) => {
+      const obj = isObject(doc.data())
+        ? { id: doc.id, ...doc.data() }
+        : { id: doc.id, data: doc.data() };
+      ordered.push(obj);
+    });
+  }
+  return ordered;
+};
+
 const ref = (firebase, dispatch, { collection, doc }) => {
   if (!firebase.firestore) {
     throw new Error('Firestore must be required and initalized.');
@@ -47,21 +71,12 @@ export const get = (firebase, dispatch, collection, doc) =>
       {
         type: actionTypes.GET_SUCCESS,
         payload: (snap) => {
-          let res
-          console.log('snap:')
-          if (snap.forEach) {
-            res = []
-            snap.forEach((doc) => {
-              const obj = isObject(doc.data()) ? { id: doc.id, ...doc.data() } : { id: doc.id, data: doc.data() }
-              res.push(obj);
-           });
-          } else {
-           return snap.data ? snap.data() : snap;
-          }
-          return res;
-        }
+          const ordered = orderedFromSnap(snap);
+          const data = dataFromSnap(snap);
+          return { data, ordered };
+        },
       },
-      actionTypes.GET_FAILURE
+      actionTypes.GET_FAILURE,
     ],
   });
 

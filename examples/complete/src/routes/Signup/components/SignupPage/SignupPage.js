@@ -4,7 +4,7 @@ import { Link } from 'react-router'
 import GoogleButton from 'react-google-button'
 import Paper from 'material-ui/Paper'
 import { withHandlers, pure, compose } from 'recompose'
-import { withNotifications } from 'utils/components'
+import { withNotifications, withFirestore } from 'utils/components'
 import { LOGIN_PATH } from 'constants'
 import SignupForm from '../SignupForm'
 
@@ -35,21 +35,24 @@ SignupPage.propTypes = {
   }),
   emailSignup: PropTypes.func,
   onSubmitFail: PropTypes.func,
-  googleLogin: PropTypes.func,
+  googleLogin: PropTypes.func
 }
 
 export default compose(
   // UserIsNotAuthenticated, // redirect to list page if logged in
+  // withFirestore,
   pure,
   withNotifications, // add props.showError
   withHandlers({
     onSubmitFail: props => (formErrs, dispatch, err) =>
-      props.showError(formErrs ? 'Form Invalid' : (err.message || 'Error')),
+      props.showError(formErrs ? 'Form Invalid' : err.message || 'Error'),
     googleLogin: ({ firebase, showError }) => e =>
-      firebase.login({ provider: 'google', type: 'popup' })
-          .catch((err) => showError(err.message)),
+      firebase // auth still done through react-redux-firebase
+        .login({ provider: 'google', type: 'popup' })
+        .catch(err => showError(err.message)),
     emailSignup: ({ firebase }) => creds =>
-      firebase.createUser(creds, { // email signup
+      firebase.createUser(creds, {
+        // email signup
         email: creds.email,
         username: creds.username
       })

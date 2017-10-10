@@ -1,6 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { compose, withHandlers } from 'recompose'
+import { compose, withHandlers, withFirebase } from 'recompose'
 import { connect } from 'react-redux'
 import { Link } from 'react-router'
 import AppBar from 'material-ui/AppBar'
@@ -31,6 +31,7 @@ const avatarStyles = {
     padding: '0'
   }
 }
+
 export const Navbar = ({ auth, profile, router, handleLogout }) => {
   const authExists = auth && auth.isLoaded && !auth.isEmpty
 
@@ -48,9 +49,7 @@ export const Navbar = ({ auth, profile, router, handleLogout }) => {
         </div>
         <div className={classes['avatar-text']}>
           <span className={`${classes['avatar-text-name']} hidden-mobile`}>
-            {
-              profile && profile.displayName ? profile.displayName : 'User'
-            }
+            {profile && profile.displayName ? profile.displayName : 'User'}
           </span>
           <DownArrow color="white" />
         </div>
@@ -84,7 +83,7 @@ export const Navbar = ({ auth, profile, router, handleLogout }) => {
     >
       <MenuItem
         primaryText="Account"
-        onTouchTap={() => props.router.push(ACCOUNT_PATH)}
+        onTouchTap={() => router.push(ACCOUNT_PATH)}
       />
       <MenuItem
         primaryText="Sign out"
@@ -108,14 +107,15 @@ export const Navbar = ({ auth, profile, router, handleLogout }) => {
 }
 
 Navbar.propTypes = {
-  account: PropTypes.object,
-  auth: PropTypes.object
+  auth: PropTypes.object, // from connect
+  handleLogout: PropTypes.func // from withHandlers
 }
 
 export default compose(
-  withRouter,
+  // withFirebase, // add props.firebase from react-redux-firebase
+  withRouter, // add props.router
   withHandlers({
-    handleLogout: props => err => {
+    handleLogout: props => () => {
       props.firebase.logout()
       props.router.push('/')
     }

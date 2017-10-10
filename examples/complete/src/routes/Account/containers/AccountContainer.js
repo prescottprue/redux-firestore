@@ -25,13 +25,13 @@ export default class Account extends Component {
     })
   }
 
-  updateAccount = (newAccount) => {
+  updateAccount = newAccount => {
     const { firebase: { update }, auth } = this.props
     // corresponds to /users/${uid}
     return update(`${fbReduxSettings.userProfile}/${auth.uid}`, newAccount)
   }
 
-  render () {
+  render() {
     const { account } = this.props
 
     if (!isLoaded(account)) {
@@ -45,7 +45,11 @@ export default class Account extends Component {
             <div className={classes.avatar}>
               <img
                 className={classes.avatarCurrent}
-                src={account && account.avatarUrl ? account.avatarUrl : defaultUserImageUrl}
+                src={
+                  account && account.avatarUrl
+                    ? account.avatarUrl
+                    : defaultUserImageUrl
+                }
                 onClick={this.toggleModal}
               />
             </div>

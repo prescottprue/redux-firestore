@@ -11,33 +11,27 @@ export const AccountForm = ({ account, handleSubmit, submitting }) => (
   <form className={classes.container} onSubmit={handleSubmit}>
     <h4>Account</h4>
     <Field
-      name='displayName'
+      name="displayName"
       component={TextField}
-      floatingLabelText='Display Name'
+      floatingLabelText="Display Name"
     />
+    <Field name="email" component={TextField} floatingLabelText="Email" />
     <Field
-      name='email'
+      name="avatarUrl"
       component={TextField}
-      floatingLabelText='Email'
+      floatingLabelText="Avatar Url"
     />
-    <Field
-      name='avatarUrl'
-      component={TextField}
-      floatingLabelText='Avatar Url'
-    />
-    {
-      !!account && !!account.providerData &&
+    {!!account &&
+      !!account.providerData && (
         <div>
           <h4>Linked Accounts</h4>
-          <ProviderDataForm
-            providerData={account.providerData}
-          />
+          <ProviderDataForm providerData={account.providerData} />
         </div>
-    }
+      )}
     <RaisedButton
       primary
-      label='Save'
-      type='submit'
+      label="Save"
+      type="submit"
       className={classes.submit}
     />
   </form>
