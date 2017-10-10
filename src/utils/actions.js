@@ -12,10 +12,9 @@ import { isObject, isFunction } from 'lodash';
 export const wrapInDispatch = (dispatch, { ref, collection, doc, method, args, types }) => {
   const [requestingType, successType, errorType] = types
   dispatch({
-    type: isObject(types[0]) ? types[0].type : types[0],
-    payload: isObject(types[0]) ? types[0].payload : { args },
+    type: isObject(requestingType) ? requestingType.type : requestingType,
+    payload: isObject(requestingType) ? requestingType.payload : { args },
   });
-  console.log('method:', ref, method)
   const methodPromise = args && args.length ? ref[method](...args) : ref[method]()
   return methodPromise
     .then((val) => {

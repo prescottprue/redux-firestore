@@ -29,8 +29,7 @@ export const SignupPage = ({ emailSignup, googleLogin, onSubmitFail }) => (
 )
 
 SignupPage.propTypes = {
-  firestore: PropTypes.shape({
-    // eslint-disable-line react/no-unused-prop-types
+  firebase: PropTypes.shape({ // eslint-disable-line react/no-unused-prop-types
     login: PropTypes.func.isRequired,
     createUser: PropTypes.func.isRequired
   }),
@@ -47,12 +46,12 @@ export default compose(
   withHandlers({
     onSubmitFail: props => (formErrs, dispatch, err) =>
       props.showError(formErrs ? 'Form Invalid' : err.message || 'Error'),
-    googleLogin: ({ firestore, showError }) => e =>
-      firestore
+    googleLogin: ({ firebase, showError }) => e =>
+      firebase // auth still done through react-redux-firebase
         .login({ provider: 'google', type: 'popup' })
         .catch(err => showError(err.message)),
-    emailSignup: ({ firestore }) => creds =>
-      firestore.createUser(creds, {
+    emailSignup: ({ firebase }) => creds =>
+      firebase.createUser(creds, {
         // email signup
         email: creds.email,
         username: creds.username

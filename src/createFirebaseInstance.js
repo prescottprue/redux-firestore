@@ -10,15 +10,6 @@ import { firestoreActions } from './actions';
  */
 export const createFirebaseInstance = (firebase, configs, dispatch) => {
   /* istanbul ignore next: Logging is external */
-  // Enable Logging based on config (handling instances without i.e RNFirebase)
-  if (
-    configs.enableLogging &&
-    firebase.database &&
-    typeof firebase.database.enableLogging === 'function'
-  ) {
-    firebase.database.enableLogging(configs.enableLogging);
-  }
-
   // Add internal variables to firebase instance
   const defaultInternals = { watchers: {}, config: configs, authUid: null };
   Object.defineProperty(firebase, '_', {
@@ -69,11 +60,6 @@ export const createFirebaseInstance = (firebase, configs, dispatch) => {
     firestoreActions.onSnapshot(firebase, dispatch, collection, doc, opts);
 
   /**
-   * @name ref
-   * @description Firebase ref function
-   * @return {firebase.database.Reference}
-   */
-  /**
    * @name database
    * @description Firebase database service instance including all Firebase storage methods
    * @return {firebase.database.Database} Firebase database service
@@ -88,15 +74,13 @@ export const createFirebaseInstance = (firebase, configs, dispatch) => {
    * @description Firebase auth service instance including all Firebase auth methods
    * @return {firebase.database.Auth}
    */
-  const helpers = {
-    ref: path => firebase.database().ref(path),
+  return {
     get,
     add,
     set,
     onSnapshot,
+    ...firebase,
   };
-
-  return Object.assign(firebase, helpers, { helpers });
 };
 
 export default createFirebaseInstance;

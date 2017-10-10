@@ -176,15 +176,15 @@ const createDataReducer = (actionKey = 'data') => (state = {}, action) => {
   const firestorePath = doc ? `${collection}/${doc}` : collection;
   switch (action.type) {
     case SET:
-      return setWith(Object, getDotStrPath(action.path), action[actionKey], state);
+      return setWith(Object, getDotStrPath(action.path), action.payload[actionKey], state);
     case MERGE:
       const previousData = get(state, getDotStrPath(action.path), {});
-      const mergedData = assign(previousData, action[actionKey]);
+      const mergedData = assign(previousData, action.payload[actionKey]);
       return setWith(Object, getDotStrPath(action.path), mergedData, state);
     case NO_VALUE:
       return setWith(Object, getDotStrPath(action.path), null, state);
     case actionTypes.GET_SUCCESS:
-      return setWith(Object, getDotStrPath(firestorePath), action.payload, state);
+      return setWith(Object, getDotStrPath(firestorePath), action.payload[actionKey], state);
     case LOGOUT:
       // support keeping data when logging out - #125
       if (action.preserve) {
@@ -404,9 +404,7 @@ export default combineReducers({
   data: dataReducer,
   ordered: orderedReducer,
   auth: authReducer,
-  authError: authErrorReducer,
   profile: profileReducer,
   listeners: listenersReducer,
-  isInitializing: isInitializingReducer,
   errors: errorsReducer,
 });
