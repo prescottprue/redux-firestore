@@ -1,30 +1,16 @@
-import { isObject } from 'lodash';
 import { wrapInDispatch } from '../utils/actions';
+import { setListener, orderedFromSnap, dataByIdSnapshot } from '../utils/query';
 import { actionTypes } from '../constants';
 
-const dataFromSnap = (snap) => {
-  const data = {};
-  if (snap.forEach) {
-    snap.forEach((doc) => {
-      data[doc.id] = doc.data() || doc;
-    });
-  }
-  return data;
-};
-
-const orderedFromSnap = (snap) => {
-  const ordered = [];
-  if (snap.forEach) {
-    snap.forEach((doc) => {
-      const obj = isObject(doc.data())
-        ? { id: doc.id, ...doc.data() || doc.data }
-        : { id: doc.id, data: doc.data() };
-      ordered.push(obj);
-    });
-  }
-  return ordered;
-};
-
+/**
+ * Create a Cloud Firestore reference for a collection or document
+ * @param {Object} firebase - Internal firebase object
+ * @param {Function} dispatch - Redux's dispatch function
+ * @param {Object} meta - Metadata
+ * @param {String} meta.collection - Collection name
+ * @param {String} meta.doc - Document name
+ * @return {firebase.firestore.Reference} Resolves with results of add call
+ */
 const ref = (firebase, dispatch, { collection, doc }) => {
   if (!firebase.firestore) {
     throw new Error('Firestore must be required and initalized.');
@@ -33,6 +19,15 @@ const ref = (firebase, dispatch, { collection, doc }) => {
   return doc ? firestoreRef.doc(doc) : firestoreRef;
 };
 
+
+/**
+ * Add data to a collection or document on Cloud Firestore.
+ * @param {Object} firebase - Internal firebase object
+ * @param {Function} dispatch - Redux's dispatch function
+ * @param {String} collection - Collection name
+ * @param {String} doc - Document name
+ * @return {Promise} Resolves with results of add call
+ */
 export const add = (firebase, dispatch, collection, doc, ...args) =>
   wrapInDispatch(dispatch, {
     ref: ref(firebase, dispatch, { collection, doc }),
@@ -47,6 +42,14 @@ export const add = (firebase, dispatch, collection, doc, ...args) =>
     ],
   });
 
+/**
+ * Set data to a document on Cloud Firestore.
+ * @param {Object} firebase - Internal firebase object
+ * @param {Function} dispatch - Redux's dispatch function
+ * @param {String} collection - Collection name
+ * @param {String} doc - Document name
+ * @return {Promise} Resolves with results of set call
+ */
 export const set = (firebase, dispatch, collection, doc, ...args) =>
   wrapInDispatch(dispatch, {
     ref: ref(firebase, dispatch, { collection, doc }),
@@ -59,6 +62,14 @@ export const set = (firebase, dispatch, collection, doc, ...args) =>
     ],
   });
 
+/**
+ * Get a collection or document from Cloud Firestore
+ * @param {Object} firebase - Internal firebase object
+ * @param {Function} dispatch - Redux's dispatch function
+ * @param {String} collection - Collection name
+ * @param {String} doc - Document name
+ * @return {Promise} Resolves with results of get call
+ */
 export const get = (firebase, dispatch, collection, doc) =>
   wrapInDispatch(dispatch, {
     ref: ref(firebase, dispatch, { collection, doc }),
@@ -71,7 +82,7 @@ export const get = (firebase, dispatch, collection, doc) =>
         type: actionTypes.GET_SUCCESS,
         payload: (snap) => {
           const ordered = orderedFromSnap(snap);
-          const data = dataFromSnap(snap);
+          const data = dataByIdSnapshot(snap);
           return { data, ordered };
         },
       },
@@ -79,6 +90,14 @@ export const get = (firebase, dispatch, collection, doc) =>
     ],
   });
 
+/**
+ * Update a document on Cloud Firestore
+ * @param {Object} firebase - Internal firebase object
+ * @param {Function} dispatch - Redux's dispatch function
+ * @param {String} collection - Collection name
+ * @param {String} doc - Document name
+ * @return {Promise} Resolves with results of update call
+ */
 export const update = (firebase, dispatch, collection, doc, ...args) =>
   wrapInDispatch(dispatch, {
     ref: ref(firebase, dispatch, { collection, doc }),
@@ -93,19 +112,44 @@ export const update = (firebase, dispatch, collection, doc, ...args) =>
     ],
   });
 
-// TODO: Track listeners within state
-export const onSnapshot = (firebase, dispatch, collection, doc, ...args) =>
-  wrapInDispatch(dispatch, {
-    ref: ref(firebase, dispatch, { collection, doc }),
-    method: 'onSnapshot',
-    collection,
-    doc,
-    args,
-    types: [
-      actionTypes.ON_SNAPSHOT_REQUEST,
-      actionTypes.ON_SNAPSHOT_SUCCESS,
-      actionTypes.ON_SNAPSHOT_FAILURE,
-    ],
-  });
+/**
+ * Set listener to Cloud Firestore. Internall calls Firebase's onSnapshot()
+ * method.
+ * @param {Object} firebase - Internal firebase object
+ * @param {Function} dispatch - Redux's dispatch function
+ * @param {Object} meta - Metadata
+ * @param {String} meta.collection - Collection name
+ * @param {String} meta.doc - Document name
+ * @param  {Function} successCb - Callback called on success
+ * @param  {Function} errorCb - Callback called on error
+ */
+export const onSnapshot = (firebase, dispatch, { collection, doc }, successCb, errorCb) => {
+  const query = firebase.firestore().collection(collection);
+  const unsubscribe = doc ? query.doc(doc) : query
+    .onSnapshot((docData) => {
+      dispatch({
+        type: actionTypes.LISTENER_RESPONSE,
+        meta: { collection, doc },
+        payload: {
+          data: dataByIdSnapshot(docData),
+          ordered: orderedFromSnap(docData),
+        },
+      });
+      if (successCb) {
+        successCb(docData);
+      }
+    }, (err) => {
+      // TODO: Look into whether unsubscribe should automatically be called or not
+      dispatch({
+        type: actionTypes.ON_SNAPSHOT_ERROR,
+        meta: { collection, doc },
+        payload: err,
+      });
+      if (errorCb) {
+        errorCb(err);
+      }
+    });
+  setListener(firebase, dispatch, { collection, doc }, unsubscribe);
+};
 
 export default { get, ref, add, update, onSnapshot };

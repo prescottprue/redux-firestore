@@ -16,6 +16,7 @@ export const actionsPrefix = '@@reduxFirestore';
  * @property {String} SET - `@@reduxFirestore/SET`
  * @property {String} SET_PROFILE - `@@reduxFirestore/SET_PROFILE`
  * @property {String} LOGIN - `@@reduxFirestore/LOGIN`
+ * @property {String} LISTENER_RESPONSE - `@@reduxFirestore/LISTENER_RESPONSE`
  * @property {String} LOGOUT - `@@reduxFirestore/LOGOUT`
  * @property {String} ERROR - `@@reduxFirestore/ERROR`
  * @property {String} SET_LISTENER - `@@reduxFirestore/SET_LISTENER`
@@ -61,6 +62,9 @@ export const actionTypes = {
   UPDATE_REQUEST: `${actionsPrefix}/UPDATE_REQUEST`,
   UPDATE_SUCCESS: `${actionsPrefix}/UPDATE_SUCCESS`,
   UPDATE_FAILURE: `${actionsPrefix}/UPDATE_FAILURE`,
+  ATTACH_LISTENER: `${actionsPrefix}/ATTACH_LISTENER`,
+  LISTENER_RESPONSE: `${actionsPrefix}/LISTENER_RESPONSE`,
+  LISTENER_ERROR: `${actionsPrefix}/LISTENER_ERROR`,
   ON_SNAPSHOT_REQUEST: `${actionsPrefix}/ON_SNAPSHOT_REQUEST`,
   ON_SNAPSHOT_SUCCESS: `${actionsPrefix}/ON_SNAPSHOT_SUCCESS`,
   ON_SNAPSHOT_FAILURE: `${actionsPrefix}/ON_SNAPSHOT_FAILURE`,

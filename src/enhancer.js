@@ -1,5 +1,5 @@
 import { defaultConfig } from './constants';
-import { createFirebaseInstance } from './createFirebaseInstance';
+import { createFirestoreInstance } from './createFirestoreInstance';
 
 /**
  * @name reduxFirestore
@@ -22,18 +22,18 @@ import { createFirebaseInstance } from './createFirebaseInstance';
  *   // here is where you place other config options
  * }
 
- * // initialize script from Firebase page
+ * // initialize script from Firestore page
  * const fbConfg = {} // firebase config object
  * firebase.initializeApp(fbConfig)
  *
  * // Add redux-firestore enhancer to store creation compose
  * // Note: In full projects this will often be within createStore.js or store.js
- * const createStoreWithFirebase = compose(
+ * const createStoreWithFirestore = compose(
  *  reduxFirestore(firebase, config),
  * )(createStore)
  *
  * // Use Function later to create store
- * const store = createStoreWithFirebase(rootReducer, initialState)
+ * const store = createStoreWithFirestore(rootReducer, initialState)
  */
 export default (firebaseInstance, otherConfig) => next =>
   (reducer, initialState, middleware) => {
@@ -41,7 +41,7 @@ export default (firebaseInstance, otherConfig) => next =>
 
     const configs = { ...defaultConfig, ...otherConfig };
 
-    firebaseInstance = createFirebaseInstance( // eslint-disable-line no-param-reassign
+    firebaseInstance = createFirestoreInstance( // eslint-disable-line no-param-reassign
       firebaseInstance.firebase_ || firebaseInstance, // eslint-disable-line no-underscore-dangle, no-undef, max-len
       configs,
       store.dispatch // eslint-disable-line comma-dangle

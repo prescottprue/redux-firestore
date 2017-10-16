@@ -8,16 +8,15 @@ import { firestoreActions } from './actions';
  * @return {Object} Extended Firebase instance
  * @private
  */
-export const createFirebaseInstance = (firebase, configs, dispatch) => {
+export const createFirestoreInstance = (firebase, configs, dispatch) => {
   /* istanbul ignore next: Logging is external */
   // Add internal variables to firebase instance
-  const defaultInternals = { watchers: {}, config: configs, authUid: null };
-  Object.defineProperty(firebase, '_', {
-    value: defaultInternals,
-    writable: true,
-    enumerable: true,
-    configurable: true,
-  });
+  const defaultInternals = { listeners: {}, config: configs, authUid: null };
+
+  // support extending existing firebase internals (using redux-firestore along with redux-firebase)
+  firebase._ = firebase._ // eslint-disable-line no-param-reassign
+    ? { ...firebase._, ...defaultInternals }
+    : defaultInternals;
 
   /**
    * @description Get data from Firestore
@@ -57,7 +56,7 @@ export const createFirebaseInstance = (firebase, configs, dispatch) => {
    * @return {Promise}
    */
   const onSnapshot = (collection, doc, opts) =>
-    firestoreActions.onSnapshot(firebase, dispatch, collection, doc, opts);
+    firestoreActions.onSnapshot(firebase, dispatch, { collection, doc }, opts);
 
   /**
    * @name database
@@ -74,13 +73,22 @@ export const createFirebaseInstance = (firebase, configs, dispatch) => {
    * @description Firebase auth service instance including all Firebase auth methods
    * @return {firebase.database.Auth}
    */
-  return {
+  const methods = {
     get,
     add,
     set,
     onSnapshot,
+  };
+  if (configs.firestoreNamespace) {
+    return {
+      [configs.firestoreNamespace]: methods,
+      ...firebase,
+    };
+  }
+  return {
+    ...methods,
     ...firebase,
   };
 };
 
-export default createFirebaseInstance;
+export default createFirestoreInstance;

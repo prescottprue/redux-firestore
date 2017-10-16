@@ -10,9 +10,11 @@ const {
   LOGIN,
   LOGOUT,
   LOGIN_ERROR,
+  GET_SUCCESS,
   NO_VALUE,
   SET_LISTENER,
   UNSET_LISTENER,
+  LISTENER_RESPONSE,
   AUTHENTICATION_INIT_STARTED,
   AUTHENTICATION_INIT_FINISHED,
   AUTH_LINK_SUCCESS,
@@ -160,6 +162,14 @@ export const timestampsReducer = (state = {}, { type, path }) => {
   }
 };
 
+const getFirestorePath = (action) => {
+  if (!action.meta) {
+    throw new Error('Meta is required to create firestore path');
+  }
+  const { meta: { collection, doc } } = action;
+  return doc ? `${collection}/${doc}` : collection;
+};
+
 /**
  * Creates reducer for data state. Used to create data and ordered reducers.
  * Changed by `SET` or `SET_ORDERED` (if actionKey === 'ordered'), `MERGE`,
@@ -172,8 +182,6 @@ export const timestampsReducer = (state = {}, { type, path }) => {
  * @private
  */
 const createDataReducer = (actionKey = 'data') => (state = {}, action) => {
-  const { collection, doc } = action;
-  const firestorePath = doc ? `${collection}/${doc}` : collection;
   switch (action.type) {
     case SET:
       return setWith(Object, getDotStrPath(action.path), action.payload[actionKey], state);
@@ -183,8 +191,13 @@ const createDataReducer = (actionKey = 'data') => (state = {}, action) => {
       return setWith(Object, getDotStrPath(action.path), mergedData, state);
     case NO_VALUE:
       return setWith(Object, getDotStrPath(action.path), null, state);
-    case actionTypes.GET_SUCCESS:
-      return setWith(Object, getDotStrPath(firestorePath), action.payload[actionKey], state);
+    case GET_SUCCESS:
+    case LISTENER_RESPONSE:
+      return setWith(
+        Object,
+        getDotStrPath(getFirestorePath(action)),
+        action.payload[actionKey], state,
+      );
     case LOGOUT:
       // support keeping data when logging out - #125
       if (action.preserve) {

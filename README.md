@@ -11,7 +11,7 @@
 <!-- [![Quality][quality-image]][quality-url] -->
 <!-- [![Code Coverage][coverage-image]][coverage-url] -->
 
-> Redux bindings for Firestore
+> Redux bindings for Firestore. Provides low-level API used in other libraries such as [react-redux-firebase](https://github.com/prescottprue/react-redux-firebase)
 
 **NOTE**: This library is still under construction, use at your own risk. Please view the roadmap below for more information
 
