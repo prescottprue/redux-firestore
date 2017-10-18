@@ -15,7 +15,8 @@ import { createFirestoreInstance } from './createFirestoreInstance';
  * @example <caption>Setup</caption>
  * import { createStore, compose } from 'redux'
  * import { reduxFirestore } from 'redux-firestore'
- * import * as firebase from 'firebase' // must be 4.5.0 or higher
+ * import firebase from 'firebase' // must be 4.5.0 or higher
+ import 'firebase/firestore' // make sure you add this for firestore
 
  * // Redux Firestore Config
  * const config = {
@@ -25,12 +26,20 @@ import { createFirestoreInstance } from './createFirestoreInstance';
  * // initialize script from Firestore page
  * const fbConfg = {} // firebase config object
  * firebase.initializeApp(fbConfig)
+ * firebase.firestore()
  *
  * // Add redux-firestore enhancer to store creation compose
  * // Note: In full projects this will often be within createStore.js or store.js
- * const createStoreWithFirestore = compose(
- *  reduxFirestore(firebase, config),
- * )(createStore)
+ const store = createStore(
+     makeRootReducer(),
+     initialState,
+     compose(
+       // pass firebase instance and config
+       reduxFirestore(firebase, reduxConfig),
+      //  applyMiddleware(...middleware),
+      //  ...enhancers
+     )
+   )
  *
  * // Use Function later to create store
  * const store = createStoreWithFirestore(rootReducer, initialState)

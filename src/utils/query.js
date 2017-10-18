@@ -1,4 +1,4 @@
-import { isObject, size } from 'lodash';
+import { isObject, isString, isArray, size } from 'lodash';
 import { actionTypes } from '../constants';
 
 /**
@@ -11,7 +11,7 @@ import { actionTypes } from '../constants';
  * @param {String} doc - Document name
  * @return {Object} Object containing all listeners
  */
-export const setListener = (firebase, dispatch, { collection, doc }, unsubscribe) => {
+export const attachListener = (firebase, dispatch, { collection, doc }, unsubscribe) => {
   const name = doc ? `${collection}/${doc}` : collection;
   if (!firebase._.listeners[name]) {
     firebase._.listeners[name] = unsubscribe; // eslint-disable-line no-param-reassign
@@ -50,6 +50,55 @@ export const unsetListener = (firebase, dispatch, { collection, doc }) => {
     meta: { collection, doc },
     payload: { name },
   });
+};
+
+/**
+ * Turn query string into a query config object
+ * @param  {String} queryPathStr String to be converted
+ * @return {Object} Object containing collection, doc and subcollection
+ */
+const queryStrToObj = (queryPathStr) => {
+  const [collection, doc, subcollection, ...other] = queryPathStr.split('/');
+  return {
+    collection,
+    doc,
+    subcollection,
+    other,
+  };
+};
+
+/**
+ * @description Convert array of querys into an array of query config objects
+ * @param {Array} queries - Array of query strings/objects
+ * @return {Array} watchEvents - Array of watch events
+ */
+export const getQueryConfig = (query) => {
+  if (isString(query)) {
+    return queryStrToObj(query);
+  }
+  if (isObject(query)) {
+    if (!query.collection) {
+      throw new Error('Collection is a required parameter within definition object');
+    }
+    return query;
+  }
+  throw new Error('Invalid Path Definition: Only Strings and Objects are accepted.');
+};
+
+
+/**
+ * @description Convert array of queryConfigs into
+ * @param {Array} queries - Array of query strings/objects
+ * @return {Array} watchEvents - Array of watch events
+ */
+export const getQueryConfigs = (queries) => {
+  if (isArray(queries)) {
+    return queries.map(getQueryConfig);
+  }
+  if (isString(queries)) {
+    return queryStrToObj(queries);
+  }
+  throw new Error('Querie(s) must be an Array or a string');
 };
 
 /**

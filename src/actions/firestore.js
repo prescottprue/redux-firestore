@@ -1,6 +1,12 @@
+import { isArray } from 'lodash';
 import { wrapInDispatch } from '../utils/actions';
-import { setListener, orderedFromSnap, dataByIdSnapshot } from '../utils/query';
 import { actionTypes } from '../constants';
+import {
+  attachListener,
+  orderedFromSnap,
+  dataByIdSnapshot,
+  getQueryConfig,
+} from '../utils/query';
 
 /**
  * Create a Cloud Firestore reference for a collection or document
@@ -149,7 +155,54 @@ export const onSnapshot = (firebase, dispatch, { collection, doc }, successCb, e
         errorCb(err);
       }
     });
-  setListener(firebase, dispatch, { collection, doc }, unsubscribe);
+  attachListener(firebase, dispatch, { collection, doc }, unsubscribe);
 };
 
-export default { get, ref, add, update, onSnapshot };
+/**
+ * Set listener to Cloud Firestore. Internall calls Firebase's onSnapshot()
+ * method.
+ * @param {Object} firebase - Internal firebase object
+ * @param {Function} dispatch - Redux's dispatch function
+ * @param {Object} meta - Metadata
+ * @param {String} meta.collection - Collection name
+ * @param {String} meta.doc - Document name
+ * @return {Promise} Resolves when listener has been attached **not** when data
+ * has been gathered by the listener.
+ */
+export const setListener = (firebase, dispatch, queryOpts) => {
+  const {
+    collection,
+    doc,
+    // subcollection,
+    // other,
+  } = getQueryConfig(queryOpts);
+  const query = firebase.firestore().collection(collection);
+  const unsubscribe = doc ? query.doc(doc) : query
+    .onSnapshot((docData) => {
+      dispatch({
+        type: actionTypes.LISTENER_RESPONSE,
+        meta: { collection, doc },
+        payload: {
+          data: dataByIdSnapshot(docData),
+          ordered: orderedFromSnap(docData),
+        },
+      });
+    }, (err) => {
+      // TODO: Look into whether listener is automatically removed in all cases
+      dispatch({
+        type: actionTypes.ON_SNAPSHOT_ERROR,
+        meta: { collection, doc },
+        payload: err,
+      });
+    });
+  attachListener(firebase, dispatch, { collection, doc }, unsubscribe);
+};
+
+export const setListeners = (firebase, dispatch, listeners) => {
+  if (!isArray(listeners)) {
+    throw new Error('Listeners must be an Array of listener configs (Strings/Objects)');
+  }
+  return listeners.map(listener => setListener(firebase, dispatch, listener));
+};
+
+export default { get, ref, add, update, onSnapshot, setListener, setListeners };

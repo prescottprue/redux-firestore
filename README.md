@@ -21,6 +21,14 @@
 npm install redux-firestore --save
 ```
 
+## NOTE
+
+You probably want to be using [react-redux-firebase](https://github.com/prescottprue/react-redux-firebase).
+
+If you are planning on using Firestore with Auth, Realtime DB, Storage or any other Firebase Products you will most likely want to use [react-redux-firebase](https://github.com/prescottprue/react-redux-firebase), which actually depends on this module.
+
+This is a low level library that is meant to be used simple as a building block.
+
 ## Use
 
 ```javascript
