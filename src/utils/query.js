@@ -2,7 +2,24 @@ import { isObject, isString, isArray, size } from 'lodash';
 import { actionTypes } from '../constants';
 
 /**
- * @private
+ * Create a Cloud Firestore reference for a collection or document
+ * @param {Object} firebase - Internal firebase object
+ * @param {Function} dispatch - Redux's dispatch function
+ * @param {Object} meta - Metadata
+ * @param {String} meta.collection - Collection name
+ * @param {String} meta.doc - Document name
+ * @return {firebase.firestore.Reference} Resolves with results of add call
+ */
+export const firestoreRef = (firebase, dispatch, { collection, doc }) => {
+  if (!firebase.firestore) {
+    throw new Error('Firestore must be required and initalized.');
+  }
+  const ref = firebase.firestore().collection(collection);
+  return doc ? ref.doc(doc) : ref;
+};
+
+
+/**
  * @description Update the number of watchers for a query
  * @param {Object} firebase - Internal firebase object
  * @param {Function} dispatch - Redux's dispatch function
@@ -29,7 +46,6 @@ export const attachListener = (firebase, dispatch, { collection, doc }, unsubscr
 };
 
 /**
- * @private
  * @description Remove/Unset a watcher
  * @param {Object} firebase - Internal firebase object
  * @param {Function} dispatch - Redux's dispatch function
