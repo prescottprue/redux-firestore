@@ -1,5 +1,5 @@
 import { defaultConfig } from './constants';
-import { createFirestoreInstance } from './createFirestoreInstance';
+import createFirestoreInstance from './createFirestoreInstance';
 
 /**
  * @name reduxFirestore
