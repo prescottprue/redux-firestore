@@ -5,9 +5,7 @@ import { actionTypes } from './constants';
 const {
   START,
   SET,
-  SET_PROFILE,
   MERGE,
-  LOGIN,
   LOGOUT,
   LOGIN_ERROR,
   GET_SUCCESS,
@@ -15,11 +13,7 @@ const {
   SET_LISTENER,
   UNSET_LISTENER,
   LISTENER_RESPONSE,
-  AUTHENTICATION_INIT_STARTED,
-  AUTHENTICATION_INIT_FINISHED,
-  AUTH_LINK_SUCCESS,
-  UNAUTHORIZED_ERROR,
-  AUTH_UPDATE_SUCCESS,
+  ERROR,
 } = actionTypes;
 
 /**
@@ -68,25 +62,6 @@ const combineReducers = reducers =>
       },
       {},
     );
-
-/**
- * Reducer for isInitializing state. Changed by `AUTHENTICATION_INIT_STARTED`
- * and `AUTHENTICATION_INIT_FINISHED` actions.
- * @param  {Object} [state=false] - Current isInitializing redux state
- * @param  {object} action - Object containing the action that was dispatched
- * @param  {String} action.type - Type of action that was dispatched
- * @return {Object} Profile state after reduction
- */
-export const isInitializingReducer = (state = false, action) => {
-  switch (action.type) {
-    case AUTHENTICATION_INIT_STARTED:
-      return true;
-    case AUTHENTICATION_INIT_FINISHED:
-      return false;
-    default:
-      return state;
-  }
-};
 
 /**
  * Reducer for requesting state.Changed by `START`, `NO_VALUE`, and `SET` actions.
@@ -210,101 +185,7 @@ const createDataReducer = (actionKey = 'data') => (state = {}, action) => {
 };
 
 /**
- * Reducer for auth state. Changed by `LOGIN`, `LOGOUT`, and `LOGIN_ERROR` actions.
- * @param  {Object} [state={isLoaded: false}] - Current auth redux state
- * @param  {Object} action - Object containing the action that was dispatched
- * @param  {String} action.type - Type of action that was dispatched
- * @return {Object} Profile state after reduction
- */
-export const authReducer = (state = { isLoaded: false, isEmpty: true }, action) => {
-  switch (action.type) {
-    case LOGIN:
-    case AUTH_UPDATE_SUCCESS:
-      if (!action.auth) {
-        return {
-          isEmpty: true,
-          isLoaded: true,
-        };
-      }
-      const auth = action.auth.toJSON ? action.auth.toJSON() : action.auth;
-      return { ...auth, isEmpty: false, isLoaded: true };
-    case AUTH_LINK_SUCCESS:
-      if (!action.payload) {
-        return {
-          isEmpty: true,
-          isLoaded: true,
-        };
-      }
-      return {
-        ...(action.payload.toJSON ? action.payload.toJSON() : action.payload),
-        isEmpty: false,
-        isLoaded: true,
-      };
-    case LOGIN_ERROR:
-      // TODO: Support keeping data when logging out
-      return { isLoaded: true, isEmpty: true };
-    case LOGOUT:
-      return { isLoaded: true, isEmpty: true };
-    default:
-      return state;
-  }
-};
-
-/**
- * Reducer for authError state. Changed by `LOGIN`, `LOGOUT`, `LOGIN_ERROR`, and
- * `UNAUTHORIZED_ERROR` actions.
- * @param  {Object} [state={}] - Current authError redux state
- * @param  {Object} action - Object containing the action that was dispatched
- * @param  {String} action.type - Type of action that was dispatched
- * @return {Object} authError state after reduction
- */
-export const authErrorReducer = (state = {}, action) => {
-  switch (action.type) {
-    case LOGIN:
-    case LOGOUT:
-      return {};
-    case LOGIN_ERROR:
-    case UNAUTHORIZED_ERROR:
-      return action.authError;
-    default:
-      return state;
-  }
-};
-
-/**
- * Reducer for profile state. Changed by `SET_PROFILE`, `LOGOUT`, and
- * `LOGIN_ERROR` actions.
- * @param  {Object} [state={isLoaded: false}] - Current profile redux state
- * @param  {object} action - Object containing the action that was dispatched
- * @param  {String} action.type - Type of action that was dispatched
- * @return {Object} Profile state after reduction
- */
-export const profileReducer = (state = { isLoaded: false, isEmpty: true }, action) => {
-  switch (action.type) {
-    case SET_PROFILE:
-      if (!action.profile) {
-        return {
-          ...state,
-          isEmpty: true,
-          isLoaded: true,
-        };
-      }
-      return {
-        ...state,
-        ...action.profile,
-        isEmpty: false,
-        isLoaded: true,
-      };
-    case LOGOUT:
-    case LOGIN_ERROR:
-      return { isLoaded: true, isEmpty: true };
-    default:
-      return state;
-  }
-};
-
-/**
- * Reducer for errors state. Changed by `UNAUTHORIZED_ERROR`
+ * Reducer for errors state. Changed by `ERROR`
  * and `LOGOUT` actions.
  * @param  {Object} [state=[]] - Current authError redux state
  * @param  {Object} action - Object containing the action that was dispatched
@@ -314,7 +195,7 @@ export const profileReducer = (state = { isLoaded: false, isEmpty: true }, actio
 export const errorsReducer = (state = [], action) => {
   switch (action.type) {
     case LOGIN_ERROR:
-    case UNAUTHORIZED_ERROR:
+    case ERROR:
       return [...state, action.authError];
     case LOGOUT: return [];
     default: return state;
@@ -346,7 +227,7 @@ const listenersById = (state = {}, { type, path, payload }) => {
 };
 
 /**
- * Reducer for listeners state. Changed by `UNAUTHORIZED_ERROR`
+ * Reducer for listeners state. Changed by `ERROR`
  * and `LOGOUT` actions.
  * @param  {Object} [state=[]] - Current authError redux state
  * @param  {Object} action - Object containing the action that was dispatched
@@ -363,7 +244,7 @@ const allListeners = (state = [], { type, payload }) => {
 };
 
 /**
- * Reducer for listeners state. Changed by `UNAUTHORIZED_ERROR`
+ * Reducer for listeners state. Changed by `ERROR`
  * and `LOGOUT` actions.
  * @param  {Object} [state=[]] - Current authError redux state
  * @param  {Object} action - Object containing the action that was dispatched
@@ -411,13 +292,13 @@ export const orderedReducer = createDataReducer('ordered');
  * @return {Object} Firebase redux state
  */
 export default combineReducers({
-  requesting: requestingReducer,
-  requested: requestedReducer,
-  timestamps: timestampsReducer,
+  status: combineReducers({
+    requesting: requestingReducer,
+    requested: requestedReducer,
+    timestamps: timestampsReducer,
+  }),
   data: dataReducer,
   ordered: orderedReducer,
-  auth: authReducer,
-  profile: profileReducer,
   listeners: listenersReducer,
   errors: errorsReducer,
 });
