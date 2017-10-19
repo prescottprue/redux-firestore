@@ -71,10 +71,14 @@ export const actionTypes = {
  * @description Default configuration options
  * @property {Boolean} enableLogging - `false` Whether or not firebase
  * database logging is enabled.
+ * @property {Boolean} enhancerNamespace - `'firestore'` Namespace underwhich
+ * enhancer places internal instance on redux store (i.e. store.firestore).
  * @type {Object}
 */
 export const defaultConfig = {
   enableLogging: false,
+  enhancerNamespace: 'firestore',
+  helpersNamespace: null,
 };
 
 export default {
