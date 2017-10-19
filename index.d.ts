@@ -79,22 +79,23 @@ export const constants: {
     supportedAuthProviders: string[];
 };
 
-export function reduxFirestore(fbConfig: any, otherConfig: any, ...args: any[]): any;
+/**
+ * A redux store enhancer that adds store.firebase
+ */
+export function reduxFirestore(firebaseInstance: object, otherConfig: object): any;
 
-
+/**
+ * A redux store reducer for Firestore state
+ */
 export namespace firestoreReducer {
     const prototype: {
     };
 
 }
 
-
-export namespace reactReduxFirebase {
-    const prototype: {
-    };
-
-}
-
+/**
+ * A redux store reducer for Firestore state
+ */
 export namespace reduxFirestore {
     const prototype: {
     };

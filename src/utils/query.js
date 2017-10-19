@@ -37,7 +37,7 @@ export const attachListener = (firebase, dispatch, { collection, doc }, unsubscr
  * @param {String} collection - Collection name
  * @param {String} doc - Document name
  */
-export const unsetListener = (firebase, dispatch, { collection, doc }) => {
+export const detachListener = (firebase, dispatch, { collection, doc }) => {
   const name = doc ? `${collection}/${doc}` : collection;
   if (firebase._.listeners[name]) {
     firebase._.listeners[name]();
@@ -58,27 +58,33 @@ export const unsetListener = (firebase, dispatch, { collection, doc }) => {
  * @return {Object} Object containing collection, doc and subcollection
  */
 const queryStrToObj = (queryPathStr) => {
-  const [collection, doc, subcollection, ...other] = queryPathStr.split('/');
+  const [collection, doc, subCollection, ...other] = queryPathStr.split('/');
   return {
     collection,
     doc,
-    subcollection,
+    subCollection,
     other,
   };
 };
 
 /**
  * @description Convert array of querys into an array of query config objects
- * @param {Array} queries - Array of query strings/objects
- * @return {Array} watchEvents - Array of watch events
+ * @param {Object|String} query - Query setups in the form of objects or strings
+ * @return {Object} Query setup normalized into a queryConfig object
  */
 export const getQueryConfig = (query) => {
   if (isString(query)) {
     return queryStrToObj(query);
   }
   if (isObject(query)) {
-    if (!query.collection) {
-      throw new Error('Collection is a required parameter within definition object');
+    if (!query.collection && !query.doc) {
+      throw new Error('Collection and/or Doc are required parameters within query definition object');
+    }
+    if (query.subCollections) {
+      return {
+        ...query,
+        subCollections: query.subCollections.map(getQueryConfig),
+      };
     }
     return query;
   }
@@ -87,7 +93,7 @@ export const getQueryConfig = (query) => {
 
 
 /**
- * @description Convert array of queryConfigs into
+ * @description Convert array of querys into an array of queryConfig objects
  * @param {Array} queries - Array of query strings/objects
  * @return {Array} watchEvents - Array of watch events
  */

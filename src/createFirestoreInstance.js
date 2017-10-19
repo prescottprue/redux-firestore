@@ -30,7 +30,7 @@ const mapWithFirebaseAndDispatch = (firebase, dispatch, actions) => {
  * @param  {Function} dispatch - Action dispatch function
  * @return {Object} Extended Firebase instance
  */
-export const createFirestoreInstance = (firebase, configs, dispatch) => {
+const createFirestoreInstance = (firebase, configs, dispatch) => {
   // Add internal variables to firebase instance
   const defaultInternals = { listeners: {}, config: configs, authUid: null };
 

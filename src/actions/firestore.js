@@ -3,6 +3,7 @@ import { wrapInDispatch } from '../utils/actions';
 import { actionTypes } from '../constants';
 import {
   attachListener,
+  detachListener,
   orderedFromSnap,
   dataByIdSnapshot,
   getQueryConfig,
@@ -173,7 +174,7 @@ export const setListener = (firebase, dispatch, queryOpts) => {
   const {
     collection,
     doc,
-    // subcollection,
+    // subCollection,
     // other,
   } = getQueryConfig(queryOpts);
   const query = firebase.firestore().collection(collection);
@@ -203,6 +204,28 @@ export const setListeners = (firebase, dispatch, listeners) => {
     throw new Error('Listeners must be an Array of listener configs (Strings/Objects)');
   }
   return listeners.map(listener => setListener(firebase, dispatch, listener));
+};
+
+/**
+ * Set listener to Cloud Firestore. Internall calls Firebase's onSnapshot()
+ * method.
+ * @param {Object} firebase - Internal firebase object
+ * @param {Function} dispatch - Redux's dispatch function
+ * @param {Object} meta - Metadata
+ * @param {String} meta.collection - Collection name
+ * @param {String} meta.doc - Document name
+ * @return {Promise} Resolves when listener has been attached **not** when data
+ * has been gathered by the listener.
+ */
+export const unsetListener = (firebase, dispatch, opts) =>
+  detachListener(firebase, dispatch, opts);
+
+
+export const unsetListeners = (firebase, dispatch, listeners) => {
+  if (!isArray(listeners)) {
+    throw new Error('Listeners must be an Array of listener configs (Strings/Objects)');
+  }
+  return listeners.map(listener => unsetListener(firebase, dispatch, listener));
 };
 
 export default { get, ref, add, update, onSnapshot, setListener, setListeners };
