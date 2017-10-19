@@ -7,6 +7,7 @@ import {
   orderedFromSnap,
   dataByIdSnapshot,
   getQueryConfigs,
+  getQueryConfig,
   firestoreRef,
 } from '../utils/query';
 
@@ -19,8 +20,9 @@ import {
  * @param {String} doc - Document name
  * @return {Promise} Resolves with results of add call
  */
-export const add = (firebase, dispatch, collection, doc, ...args) =>
-  wrapInDispatch(dispatch, {
+export const add = (firebase, dispatch, queryOption, ...args) => {
+  const { collection, doc } = getQueryConfig(queryOption);
+  return wrapInDispatch(dispatch, {
     ref: firestoreRef(firebase, dispatch, { collection, doc }),
     method: 'add',
     collection,
@@ -32,6 +34,7 @@ export const add = (firebase, dispatch, collection, doc, ...args) =>
       actionTypes.ADD_FAILURE,
     ],
   });
+};
 
 /**
  * Set data to a document on Cloud Firestore.
@@ -41,8 +44,9 @@ export const add = (firebase, dispatch, collection, doc, ...args) =>
  * @param {String} doc - Document name
  * @return {Promise} Resolves with results of set call
  */
-export const set = (firebase, dispatch, collection, doc, ...args) =>
-  wrapInDispatch(dispatch, {
+export const set = (firebase, dispatch, queryOption, ...args) => {
+  const { collection, doc } = getQueryConfig(queryOption);
+  return wrapInDispatch(dispatch, {
     ref: firestoreRef(firebase, dispatch, { collection, doc }),
     method: 'set',
     args,
@@ -52,6 +56,7 @@ export const set = (firebase, dispatch, collection, doc, ...args) =>
       actionTypes.SET_FAILURE,
     ],
   });
+};
 
 /**
  * Get a collection or document from Cloud Firestore
@@ -61,8 +66,9 @@ export const set = (firebase, dispatch, collection, doc, ...args) =>
  * @param {String} doc - Document name
  * @return {Promise} Resolves with results of get call
  */
-export const get = (firebase, dispatch, collection, doc) =>
-  wrapInDispatch(dispatch, {
+export const get = (firebase, dispatch, queryOption) => {
+  const { collection, doc } = getQueryConfig(queryOption);
+  return wrapInDispatch(dispatch, {
     ref: firestoreRef(firebase, dispatch, { collection, doc }),
     method: 'get',
     collection,
@@ -80,6 +86,7 @@ export const get = (firebase, dispatch, collection, doc) =>
       actionTypes.GET_FAILURE,
     ],
   });
+};
 
 /**
  * Update a document on Cloud Firestore
@@ -89,8 +96,9 @@ export const get = (firebase, dispatch, collection, doc) =>
  * @param {String} doc - Document name
  * @return {Promise} Resolves with results of update call
  */
-export const update = (firebase, dispatch, collection, doc, ...args) =>
-  wrapInDispatch(dispatch, {
+export const update = (firebase, dispatch, queryOption, ...args) => {
+  const { collection, doc } = getQueryConfig(queryOption);
+  return wrapInDispatch(dispatch, {
     ref: firestoreRef(firebase, dispatch, { collection, doc }),
     method: 'update',
     collection,
@@ -102,6 +110,7 @@ export const update = (firebase, dispatch, collection, doc, ...args) =>
       actionTypes.UPDATE_FAILURE,
     ],
   });
+};
 
 /**
  * Set listener to Cloud Firestore. Internall calls Firebase's onSnapshot()

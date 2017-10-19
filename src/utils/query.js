@@ -1,4 +1,4 @@
-import { isObject, isString, isArray, size } from 'lodash';
+import { isObject, isString, isArray, size, trim } from 'lodash';
 import { actionTypes } from '../constants';
 
 /**
@@ -74,7 +74,8 @@ export const detachListener = (firebase, dispatch, { collection, doc }) => {
  * @return {Object} Object containing collection, doc and subcollection
  */
 const queryStrToObj = (queryPathStr) => {
-  const [collection, doc, subCollection, ...other] = queryPathStr.split('/');
+  const pathArr = trim(queryPathStr, ['/']).split('/');
+  const [collection, doc, subCollection, ...other] = pathArr;
   return {
     collection,
     doc,
