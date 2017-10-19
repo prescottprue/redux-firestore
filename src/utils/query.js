@@ -1,8 +1,25 @@
-import { isObject, size } from 'lodash';
+import { isObject, isString, isArray, size, trim } from 'lodash';
 import { actionTypes } from '../constants';
 
 /**
- * @private
+ * Create a Cloud Firestore reference for a collection or document
+ * @param {Object} firebase - Internal firebase object
+ * @param {Function} dispatch - Redux's dispatch function
+ * @param {Object} meta - Metadata
+ * @param {String} meta.collection - Collection name
+ * @param {String} meta.doc - Document name
+ * @return {firebase.firestore.Reference} Resolves with results of add call
+ */
+export const firestoreRef = (firebase, dispatch, { collection, doc }) => {
+  if (!firebase.firestore) {
+    throw new Error('Firestore must be required and initalized.');
+  }
+  const ref = firebase.firestore().collection(collection);
+  return doc ? ref.doc(doc) : ref;
+};
+
+
+/**
  * @description Update the number of watchers for a query
  * @param {Object} firebase - Internal firebase object
  * @param {Function} dispatch - Redux's dispatch function
@@ -11,7 +28,7 @@ import { actionTypes } from '../constants';
  * @param {String} doc - Document name
  * @return {Object} Object containing all listeners
  */
-export const setListener = (firebase, dispatch, { collection, doc }, unsubscribe) => {
+export const attachListener = (firebase, dispatch, { collection, doc }, unsubscribe) => {
   const name = doc ? `${collection}/${doc}` : collection;
   if (!firebase._.listeners[name]) {
     firebase._.listeners[name] = unsubscribe; // eslint-disable-line no-param-reassign
@@ -29,7 +46,6 @@ export const setListener = (firebase, dispatch, { collection, doc }, unsubscribe
 };
 
 /**
- * @private
  * @description Remove/Unset a watcher
  * @param {Object} firebase - Internal firebase object
  * @param {Function} dispatch - Redux's dispatch function
@@ -37,7 +53,7 @@ export const setListener = (firebase, dispatch, { collection, doc }, unsubscribe
  * @param {String} collection - Collection name
  * @param {String} doc - Document name
  */
-export const unsetListener = (firebase, dispatch, { collection, doc }) => {
+export const detachListener = (firebase, dispatch, { collection, doc }) => {
   const name = doc ? `${collection}/${doc}` : collection;
   if (firebase._.listeners[name]) {
     firebase._.listeners[name]();
@@ -50,6 +66,62 @@ export const unsetListener = (firebase, dispatch, { collection, doc }) => {
     meta: { collection, doc },
     payload: { name },
   });
+};
+
+/**
+ * Turn query string into a query config object
+ * @param  {String} queryPathStr String to be converted
+ * @return {Object} Object containing collection, doc and subcollection
+ */
+const queryStrToObj = (queryPathStr) => {
+  const pathArr = trim(queryPathStr, ['/']).split('/');
+  const [collection, doc, subCollection, ...other] = pathArr;
+  return {
+    collection,
+    doc,
+    subCollection,
+    other,
+  };
+};
+
+/**
+ * @description Convert array of querys into an array of query config objects
+ * @param {Object|String} query - Query setups in the form of objects or strings
+ * @return {Object} Query setup normalized into a queryConfig object
+ */
+export const getQueryConfig = (query) => {
+  if (isString(query)) {
+    return queryStrToObj(query);
+  }
+  if (isObject(query)) {
+    if (!query.collection && !query.doc) {
+      throw new Error('Collection and/or Doc are required parameters within query definition object');
+    }
+    if (query.subCollections) {
+      return {
+        ...query,
+        subCollections: query.subCollections.map(getQueryConfig),
+      };
+    }
+    return query;
+  }
+  throw new Error('Invalid Path Definition: Only Strings and Objects are accepted.');
+};
+
+
+/**
+ * @description Convert array of querys into an array of queryConfig objects
+ * @param {Array} queries - Array of query strings/objects
+ * @return {Array} watchEvents - Array of watch events
+ */
+export const getQueryConfigs = (queries) => {
+  if (isArray(queries)) {
+    return queries.map(getQueryConfig);
+  }
+  if (isString(queries)) {
+    return queryStrToObj(queries);
+  }
+  throw new Error('Querie(s) must be an Array or a string');
 };
 
 /**
