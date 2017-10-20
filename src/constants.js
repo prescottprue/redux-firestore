@@ -13,12 +13,14 @@ export const actionsPrefix = '@@reduxFirestore';
  * @type {Object}
  * @description Object containing all action types
  * @property {String} START - `@@reduxFirestore/START`
- * @property {String} SET - `@@reduxFirestore/SET`
- * @property {String} LISTENER_RESPONSE - `@@reduxFirestore/LISTENER_RESPONSE`
- * @property {String} LISTENER_ERROR - `@@reduxFirestore/LISTENER_ERROR`
  * @property {String} ERROR - `@@reduxFirestore/ERROR`
  * @property {String} SET_LISTENER - `@@reduxFirestore/SET_LISTENER`
  * @property {String} UNSET_LISTENER - `@@reduxFirestore/UNSET_LISTENER`
+ * @property {String} LISTENER_RESPONSE - `@@reduxFirestore/LISTENER_RESPONSE`
+ * @property {String} LISTENER_ERROR - `@@reduxFirestore/LISTENER_ERROR`
+ * @property {String} CLEAR_DATA - `@@reduxFirestore/CLEAR_DATA`
+ * @property {String} CLEAR_ERROR - `@@reduxFirestore/CLEAR_ERROR`
+ * @property {String} CLEAR_ERRORS - `@@reduxFirestore/CLEAR_ERRORS`
  * @property {String} GET_REQUEST - `@@reduxFirestore/GET_REQUEST`
  * @property {String} GET_SUCCESS - `@@reduxFirestore/GET_SUCCESS`
  * @property {String} GET_FAILURE - `@@reduxFirestore/GET_FAILURE`
@@ -40,8 +42,10 @@ export const actionsPrefix = '@@reduxFirestore';
 */
 export const actionTypes = {
   START: `${actionsPrefix}/START`,
-  SET: `${actionsPrefix}/SET`,
   ERROR: `${actionsPrefix}/ERROR`,
+  CLEAR_DATA: `${actionsPrefix}/CLEAR_DATA`,
+  CLEAR_ERROR: `${actionsPrefix}/CLEAR_ERROR`,
+  CLEAR_ERRORS: `${actionsPrefix}/CLEAR_ERRORS`,
   SET_LISTENER: `${actionsPrefix}/SET_LISTENER`,
   UNSET_LISTENER: `${actionsPrefix}/UNSET_LISTENER`,
   GET_REQUEST: `${actionsPrefix}/GET_REQUEST`,
