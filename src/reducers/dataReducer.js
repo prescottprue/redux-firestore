@@ -16,7 +16,7 @@ const { CLEAR_DATA, GET_SUCCESS, LISTENER_RESPONSE } = actionTypes;
  * @return {Object} Data state after reduction
  * @private
  */
-const createDataReducer = (actionKey = 'data') => (state = {}, action) => {
+export const createDataReducer = (actionKey = 'data') => (state = {}, action) => {
   switch (action.type) {
     case GET_SUCCESS:
     case LISTENER_RESPONSE:

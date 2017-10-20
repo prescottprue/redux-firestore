@@ -17,7 +17,7 @@ const {
  * @return {Object} Profile state after reduction
  */
 const errorsAllIds = (state = [], { meta, type }) => {
-  if (!meta.id) {
+  if (!meta || !meta.id) {
     return state;
   }
   switch (type) {
@@ -41,7 +41,7 @@ const errorsAllIds = (state = [], { meta, type }) => {
  * @return {Object} Profile state after reduction
  */
 const errorsByQuery = (state = {}, { meta, payload, type }) => {
-  if (!meta.id) {
+  if (!meta || !meta.id) {
     return state;
   }
   switch (type) {
