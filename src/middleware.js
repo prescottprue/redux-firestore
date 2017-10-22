@@ -1,8 +1,10 @@
+/* istanbul ignore next */
 import { isArray } from 'lodash';
 import { actionTypes } from './constants';
 
 // Fetches an API response and normalizes the result JSON according to schema.
 // This makes every API response have the same shape, regardless of how nested it was.
+/* istanbul ignore next not yet in use */
 function callFirestore(firebaseInstance, callInfoObj) {
   // console.log('calling devshare:', callInfoObj, Devshare)
   const { method } = callInfoObj;
@@ -33,6 +35,7 @@ const typesMap = {
   ],
 };
 
+/* istanbul ignore next not yet in use */
 export const reduxFirestoreMiddleware = firestore => store => next => (action) => {
   const callAPI = action.type === CALL_FIRESTORE ? action : undefined;
   if (typeof callAPI === 'undefined') return next(action);
