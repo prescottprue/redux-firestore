@@ -5,9 +5,9 @@ describe('dataReducer', () => {
     expect(dataReducer).to.exist;
   });
   it('is a function', () => {
-    expect(dataReducer).to.be.a.function;
+    expect(dataReducer).to.be.a('function');
   });
   it('returns state for undefined actionType', () => {
-    expect(dataReducer({}, {})).to.exist;
+    expect(dataReducer({}, {})).to.be.empty;
   });
 });
