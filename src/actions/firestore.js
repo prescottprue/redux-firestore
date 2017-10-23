@@ -49,6 +49,7 @@ export const set = (firebase, dispatch, queryOption, ...args) => {
   return wrapInDispatch(dispatch, {
     ref: firestoreRef(firebase, dispatch, { collection, doc }),
     method: 'set',
+    meta: { collection, doc },
     args,
     types: [
       actionTypes.SET_REQUEST,
@@ -71,8 +72,7 @@ export const get = (firebase, dispatch, queryOption) => {
   return wrapInDispatch(dispatch, {
     ref: firestoreRef(firebase, dispatch, { collection, doc }),
     method: 'get',
-    collection,
-    doc,
+    meta: { collection, doc },
     types: [
       actionTypes.GET_REQUEST,
       {
@@ -101,8 +101,7 @@ export const update = (firebase, dispatch, queryOption, ...args) => {
   return wrapInDispatch(dispatch, {
     ref: firestoreRef(firebase, dispatch, { collection, doc }),
     method: 'update',
-    collection,
-    doc,
+    meta: { collection, doc },
     args,
     types: [
       actionTypes.UPDATE_REQUEST,

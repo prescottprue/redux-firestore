@@ -1,7 +1,5 @@
 import { pick } from 'lodash';
-import { setWith } from 'lodash/fp';
 import { actionTypes } from '../constants';
-import { getDotStrPath, getFirestorePath } from '../utils/reducers';
 
 const { CLEAR_DATA, GET_SUCCESS, LISTENER_RESPONSE } = actionTypes;
 
@@ -20,17 +18,21 @@ export const createDataReducer = (actionKey = 'data') => (state = {}, action) =>
   switch (action.type) {
     case GET_SUCCESS:
     case LISTENER_RESPONSE:
-      return setWith(
-        Object,
-        getDotStrPath(getFirestorePath(action)),
-        action.payload[actionKey], state,
-      );
+      if (!action.payload || !action.payload[actionKey]) {
+        return state;
+      }
+      return {
+        ...state,
+        [action.meta.collection]: state[action.meta.collection]
+          ? { ...state[action.meta.collection], ...action.payload[actionKey] }
+          : action.payload[actionKey],
+      };
     case CLEAR_DATA:
       // support keeping data when logging out - #125
       if (action.preserve) {
         return pick(state, action.preserve); // pick returns a new object
       }
-      return {};
+      return actionKey === 'ordered' ? [] : {};
     default:
       return state;
   }
