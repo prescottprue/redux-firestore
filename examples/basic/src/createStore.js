@@ -14,14 +14,21 @@ const fbConfig = {
 }
 
 firebase.initializeApp(fbConfig)
+firebase.firestore()
 
 export default function configureStore(initialState, history) {
+  const enhancers = []
+  const devToolsExtension = window.devToolsExtension;
+  if (typeof devToolsExtension === 'function') {
+    enhancers.push(devToolsExtension());
+  }
   const createStoreWithMiddleware = compose(
     reduxFirestore(firebase,
       {
         userProfile: 'users'
       }
     ),
+    ...enhancers
   )(createStore)
   const store = createStoreWithMiddleware(rootReducer)
 

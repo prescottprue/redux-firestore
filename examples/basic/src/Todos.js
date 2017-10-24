@@ -6,7 +6,7 @@ import { connect } from 'react-redux';
 import Todo from './Todo';
 import NewTodo from './NewTodo';
 
-const Todos = ({ todos, uid, onNewSubmit, onDoneClick, store: { firestore } }) => (
+const Todos = ({ todos, onNewSubmit, onDoneClick, store: { firestore } }) => (
   <div>
     <NewTodo onNewSubmit={onNewSubmit} />
     {
@@ -18,7 +18,6 @@ const Todos = ({ todos, uid, onNewSubmit, onDoneClick, store: { firestore } }) =
             text={todo.text}
             owner={todo.owner}
             done={todo.done}
-            disabled={todo.owner !== uid}
             onDoneClick={() => onDoneClick(todo.key, !todo.done)}
           />
         ))
@@ -26,7 +25,16 @@ const Todos = ({ todos, uid, onNewSubmit, onDoneClick, store: { firestore } }) =
         <span>Loading</span>
     }
   </div>
-);
+)
+
+Todos.propTypes = {
+  todos: PropTypes.array,
+  onNewSubmit: PropTypes.func,
+  onDoneClick: PropTypes.func,
+  store: PropTypes.shape({
+    firestore: PropTypes.object
+  })
+}
 
 const withStore = compose(
   withContext({ store: PropTypes.object }, () => {}),
@@ -36,7 +44,7 @@ const withStore = compose(
 export default compose(
   withStore,
   withHandlers({
-    loadData: props => err => props.store.firestore.get('todos'),
+    loadData: props => err => props.store.firestore.get('todos/tzDlkfQ6m2gNMVZc5iYx'),
     onDoneClick: props => (key, done = false) =>
       props.store.firestore.update('todos', key, { done }),
     onNewSubmit: props => newTodo =>
@@ -49,8 +57,6 @@ export default compose(
     }
   }),
   connect(({ firebase }) => ({ // state.firebase
-    // ImmutableJS map (for plain js checkout v2)
-    todos: firebase.ordered.todos,
-    uid: firebase.profile.uid
+    todos: firebase.ordered.todos
   }))
 )(Todos)

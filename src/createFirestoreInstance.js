@@ -32,7 +32,7 @@ const mapWithFirebaseAndDispatch = (firebase, dispatch, actions) => {
  */
 const createFirestoreInstance = (firebase, configs, dispatch) => {
   // Add internal variables to firebase instance
-  const defaultInternals = { listeners: {}, config: configs, authUid: null };
+  const defaultInternals = { listeners: {}, config: configs };
 
   // support extending existing firebase internals (using redux-firestore along with redux-firebase)
   firebase._ = firebase._ // eslint-disable-line no-param-reassign
@@ -41,9 +41,9 @@ const createFirestoreInstance = (firebase, configs, dispatch) => {
 
   const methods = mapWithFirebaseAndDispatch(firebase, dispatch, firestoreActions);
 
-  if (configs.firestoreNamespace) {
+  if (configs.helpersNamespace) {
     return {
-      [configs.firestoreNamespace]: methods,
+      [configs.helpersNamespace]: methods,
       ...firebase,
     };
   }

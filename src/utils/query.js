@@ -132,7 +132,12 @@ export const getQueryConfigs = (queries) => {
  */
 export const orderedFromSnap = (snap) => {
   const ordered = [];
-  if (snap.forEach) {
+  if (snap.data && snap.exists) {
+    const obj = isObject(snap.data())
+       ? { id: snap.id, ...snap.data() || snap.data }
+       : { id: snap.id, data: snap.data() };
+    ordered.push(obj);
+  } else if (snap.forEach) {
     snap.forEach((doc) => {
       const obj = isObject(doc.data())
          ? { id: doc.id, ...doc.data() || doc.data }
@@ -151,7 +156,9 @@ export const orderedFromSnap = (snap) => {
  */
 export const dataByIdSnapshot = (snap) => {
   const data = {};
-  if (snap.forEach) {
+  if (snap.data && snap.exists) {
+    data[snap.id] = snap.data();
+  } else if (snap.forEach) {
     snap.forEach((doc) => {
       data[doc.id] = doc.data() || doc;
     });

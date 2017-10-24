@@ -9,10 +9,11 @@ import { isObject, isFunction } from 'lodash';
  * @param {Array} opts.types - Action types array ([BEFORE, SUCCESS, FAILURE])
  * @private
  */
-export const wrapInDispatch = (dispatch, { ref, collection, doc, method, args, types }) => {
+export const wrapInDispatch = (dispatch, { ref, meta, method, args, types }) => {
   const [requestingType, successType, errorType] = types;
   dispatch({
     type: isObject(requestingType) ? requestingType.type : requestingType,
+    meta,
     payload: isObject(requestingType) ? requestingType.payload : { args },
   });
   const methodPromise = args && args.length ? ref[method](...args) : ref[method]();
@@ -21,8 +22,7 @@ export const wrapInDispatch = (dispatch, { ref, collection, doc, method, args, t
       const makePayload = ({ payload }) => isFunction(payload) ? payload(val) : payload;
       dispatch({
         type: isObject(successType) ? successType.type : successType,
-        collection,
-        doc,
+        meta,
         payload: isObject(successType) ? makePayload(successType) : { args },
       });
       return val;
@@ -30,6 +30,7 @@ export const wrapInDispatch = (dispatch, { ref, collection, doc, method, args, t
     .catch((err) => {
       dispatch({
         type: errorType,
+        meta,
         payload: err,
       });
       return Promise.reject(err);

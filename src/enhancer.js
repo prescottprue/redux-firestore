@@ -1,5 +1,5 @@
 import { defaultConfig } from './constants';
-import { createFirestoreInstance } from './createFirestoreInstance';
+import createFirestoreInstance from './createFirestoreInstance';
 
 /**
  * @name reduxFirestore
@@ -50,13 +50,11 @@ export default (firebaseInstance, otherConfig) => next =>
 
     const configs = { ...defaultConfig, ...otherConfig };
 
-    firebaseInstance = createFirestoreInstance( // eslint-disable-line no-param-reassign
+    store.firestore = createFirestoreInstance( // eslint-disable-line no-param-reassign
       firebaseInstance.firebase_ || firebaseInstance, // eslint-disable-line no-underscore-dangle, no-undef, max-len
       configs,
       store.dispatch // eslint-disable-line comma-dangle
     );
-
-    store.firestore = { ...firebaseInstance, _: { config: configs } };
 
     return store;
   };

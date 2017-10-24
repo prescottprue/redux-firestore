@@ -1,9 +1,10 @@
+sudo: false
+
 language: node_js
 
 node_js:
-  - "6"
-
-sudo: false
+  - 6.11.1 # LTS
+  - 8 # Current
 
 notifications:
   email:
