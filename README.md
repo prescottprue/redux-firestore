@@ -37,17 +37,11 @@ import { reduxFirestore, firestoreReducer } from 'redux-firestore'
 import firebase from 'firebase'
 import 'firebase/firestore'
 
-const firebaseConfig = {
-  apiKey: '<your-api-key>',
-  authDomain: '<your-auth-domain>',
-  databaseURL: '<your-database-url>',
-  storageBucket: '<your-storage-bucket>',
-  projectId: '<your-project-id>'
-}
-const rfConfig = {  } // redux-firestore config
+const firebaseConfig = {} // from Firebase Console
+const rfConfig = {} // redux-firestore config
 
-// initialize firebase instance
-const firebaseApp = firebase.initializeApp(config) // <- new to v2.*.*
+// Initialize firebase instance
+const firebaseApp = firebase.initializeApp(config)
 firebase.firestore(); // Initialize Cloud Firestore through Firebase
 
 // Add reduxReduxFirebase to compose
@@ -74,8 +68,14 @@ const store = createStoreWithFirebase(rootReducer, initialState)
 It is common to make react components "stateless" meaning that the component is just a function. This can be useful, but then can limit usage of lifecycle hooks and other features of Component Classes. [`recompose` helps solve this](https://github.com/acdlite/recompose/blob/master/docs/API.md) by providing Higher Order Component functions such as `withContext`, `lifecycle`, and `withHandlers`.
 
 ```js
-import { compose, withHandlers, lifecycle } from 'recompose'
 import { connect } from 'react-redux'
+import {
+  compose,
+  withHandlers,
+  lifecycle,
+  withContext,
+  getContext
+} from 'recompose'
 
 const withStore = compose(
   withContext({ store: PropTypes.object }, () => {}),

@@ -18,11 +18,10 @@ const orderedReducer = (state = {}, action) => {
       if (!action.payload || !action.payload.ordered) {
         return state;
       }
+      // TODO: Support merging
       return {
         ...state,
-        [action.meta.collection]: state[action.meta.collection]
-          ? [...state[action.meta.collection], ...action.payload.ordered]
-          : action.payload.ordered,
+        [action.meta.collection]: action.payload.ordered,
       };
     case CLEAR_DATA:
       // support keeping data when logging out - #125

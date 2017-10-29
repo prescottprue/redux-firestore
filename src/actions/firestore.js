@@ -112,6 +112,31 @@ export const update = (firebase, dispatch, queryOption, ...args) => {
 };
 
 /**
+ * Update a document on Cloud Firestore
+ * @param {Object} firebase - Internal firebase object
+ * @param {Function} dispatch - Redux's dispatch function
+ * @param {String} collection - Collection name
+ * @param {String} doc - Document name
+ * @return {Promise} Resolves with results of update call
+ */
+export const deleteRef = (firebase, dispatch, queryOption) => {
+  const { collection, doc, subcollection } = getQueryConfig(queryOption);
+  if (!doc) {
+    throw new Error('Only docs can be deleted');
+  }
+  return wrapInDispatch(dispatch, {
+    ref: firestoreRef(firebase, dispatch, { collection, doc }),
+    method: 'delete',
+    meta: { collection, doc, subcollection },
+    types: [
+      actionTypes.DELETE_REQUEST,
+      actionTypes.DELETE_SUCCESS,
+      actionTypes.DELETE_FAILURE,
+    ],
+  });
+};
+
+/**
  * Set listener to Cloud Firestore. Internall calls Firebase's onSnapshot()
  * method.
  * @param {Object} firebase - Internal firebase object

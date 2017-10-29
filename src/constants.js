@@ -33,6 +33,9 @@ export const actionsPrefix = '@@reduxFirestore';
  * @property {String} UPDATE_REQUEST - `@@reduxFirestore/UPDATE_REQUEST`
  * @property {String} UPDATE_SUCCESS - `@@reduxFirestore/UPDATE_SUCCESS`
  * @property {String} UPDATE_FAILURE - `@@reduxFirestore/UPDATE_FAILURE`
+ * @property {String} DELETE_REQUEST - `@@reduxFirestore/DELETE_REQUEST`
+ * @property {String} DELETE_SUCCESS - `@@reduxFirestore/DELETE_SUCCESS`
+ * @property {String} DELETE_FAILURE - `@@reduxFirestore/DELETE_FAILURE`
  * @property {String} ON_SNAPSHOT_REQUEST - `@@reduxFirestore/ON_SNAPSHOT_REQUEST`
  * @property {String} ON_SNAPSHOT_SUCCESS - `@@reduxFirestore/ON_SNAPSHOT_SUCCESS`
  * @property {String} ON_SNAPSHOT_FAILURE - `@@reduxFirestore/ON_SNAPSHOT_FAILURE`
@@ -60,6 +63,9 @@ export const actionTypes = {
   UPDATE_REQUEST: `${actionsPrefix}/UPDATE_REQUEST`,
   UPDATE_SUCCESS: `${actionsPrefix}/UPDATE_SUCCESS`,
   UPDATE_FAILURE: `${actionsPrefix}/UPDATE_FAILURE`,
+  DELETE_REQUEST: `${actionsPrefix}/DELETE_REQUEST`,
+  DELETE_SUCCESS: `${actionsPrefix}/DELETE_SUCCESS`,
+  DELETE_FAILURE: `${actionsPrefix}/DELETE_FAILURE`,
   ATTACH_LISTENER: `${actionsPrefix}/ATTACH_LISTENER`,
   LISTENER_RESPONSE: `${actionsPrefix}/LISTENER_RESPONSE`,
   LISTENER_ERROR: `${actionsPrefix}/LISTENER_ERROR`,
