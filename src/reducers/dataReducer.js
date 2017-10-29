@@ -21,11 +21,17 @@ export const createDataReducer = (actionKey = 'data') => (state = {}, action) =>
       if (!action.payload || !action.payload[actionKey]) {
         return state;
       }
+      if (action.merge) {
+        return {
+          ...state,
+          [action.meta.collection]: state[action.meta.collection]
+            ? { ...state[action.meta.collection], ...action.payload[actionKey] }
+            : action.payload[actionKey],
+        };
+      }
       return {
         ...state,
-        [action.meta.collection]: state[action.meta.collection]
-          ? { ...state[action.meta.collection], ...action.payload[actionKey] }
-          : action.payload[actionKey],
+        [action.meta.collection]: action.payload[actionKey],
       };
     case CLEAR_DATA:
       // support keeping data when logging out - #125
