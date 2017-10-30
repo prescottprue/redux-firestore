@@ -14,6 +14,7 @@ const createFirestoreInstance = (firebase, configs, dispatch) => {
 
   const aliases = [
     { action: firestoreActions.deleteRef, name: 'delete' },
+    { action: firestoreActions.setListener, name: 'onSnapshot' },
   ];
 
   // support extending existing firebase internals (using redux-firestore along with redux-firebase)

@@ -1,4 +1,4 @@
-import { isObject, isString, isArray, size, trim } from 'lodash';
+import { isObject, isString, isArray, size, trim, forEach } from 'lodash';
 import { actionTypes } from '../constants';
 
 /**
@@ -8,14 +8,36 @@ import { actionTypes } from '../constants';
  * @param {Object} meta - Metadata
  * @param {String} meta.collection - Collection name
  * @param {String} meta.doc - Document name
+ * @param {Array} meta.where - List of argument arrays
  * @return {firebase.firestore.Reference} Resolves with results of add call
  */
-export const firestoreRef = (firebase, dispatch, { collection, doc }) => {
+export const firestoreRef = (firebase, dispatch, meta) => {
   if (!firebase.firestore) {
     throw new Error('Firestore must be required and initalized.');
   }
-  const ref = firebase.firestore().collection(collection);
-  return doc ? ref.doc(doc) : ref;
+  const { collection, doc, where } = meta;
+  let ref = firebase.firestore().collection(collection);
+  if (doc) {
+    ref = ref.doc(doc);
+  }
+  if (where) {
+    if (!isArray(where)) {
+      throw new Error('where parameter must be an array');
+    }
+    if (where.length === 1) {
+      ref = ref.where(...where);
+    } else {
+      forEach(where, (whereArgs) => {
+        if (!isArray(whereArgs)) {
+          throw new Error(
+            'Where currently only supports arrays. Each option must be an Array of arguments to pass to where.',
+          );
+        }
+        ref = ref.where(...whereArgs);
+      });
+    }
+  }
+  return ref;
 };
 
 

@@ -145,6 +145,76 @@ export default connect((state) => ({
   todos: state.firestore.ordered.todos
 }))(Todos)
 ```
+#### Types of Query Options
+
+##### get
+```js
+props.store.firestore.get({ collection: 'cities' }),
+// store.firestore.get({ collection: 'cities', doc: 'SF' }), // doc
+```
+
+##### onSnapshot/setListener
+
+```js
+store.firestore.onSnapshot({ collection: 'cities' }),
+// store.firestore.setListener({ collection: 'cities' }), // alias
+// store.firestore.setListener({ collection: 'cities', doc: 'SF' }), // doc
+```
+
+#### setListeners
+
+```js
+store.firestore.setListeners([
+  { collection: 'cities' },
+  { collection: 'users' },
+]),
+```
+
+#### Query Options
+
+##### Collection
+```js
+{ collection: 'cities' },
+// or string equivalent
+// store.firestore.get('cities'),
+```
+
+##### Document
+
+```js
+{ collection: 'cities', doc: 'SF' },
+// or string equivalent
+// props.store.firestore.get('cities/SF'),
+```
+
+##### Where
+
+**Single**
+To create a single where call, pass a single argument array to where
+
+```js
+{
+  collection: 'cities',
+  where: ['state', '==', 'CA']
+},
+```
+
+**Multiple**
+
+Multiple where queries are as simple as passing mutiple argument arrays (each one representing a where call)
+
+```js
+{
+  collection: 'cities',
+  where: [
+    ['state', '==', 'CA'],
+    ['population', '<', 100000],
+    ['name', '>=', 'San Francisco']
+  ]
+},
+```
+
+*Should only be used with collections*
 
 <!-- #### Middleware
 
