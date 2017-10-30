@@ -85,6 +85,12 @@ export const constants: {
 export function reduxFirestore(firebaseInstance: object, otherConfig: object): any;
 
 /**
+ * Get extended firestore instance (attached to store.firestore)
+ */
+export function getFirestore(firebaseInstance: object, otherConfig: object): any;
+
+
+/**
  * A redux store reducer for Firestore state
  */
 export namespace firestoreReducer {

@@ -1,4 +1,4 @@
-import enhancer from './enhancer';
+import enhancer, { getFirestore } from './enhancer';
 import reducer from './reducer';
 import { firestoreActions } from './actions';
 import createFirestoreInstance from './createFirestoreInstance';
@@ -12,6 +12,7 @@ export default {
   actions: firestoreActions,
   reducer,
   enhancer,
+  getFirestore,
   constants,
   actionTypes,
   middleware,
