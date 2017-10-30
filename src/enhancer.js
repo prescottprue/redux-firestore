@@ -1,6 +1,8 @@
 import { defaultConfig } from './constants';
 import createFirestoreInstance from './createFirestoreInstance';
 
+let firestoreInstance;
+
 /**
  * @name reduxFirestore
  * @external
@@ -58,3 +60,47 @@ export default (firebaseInstance, otherConfig) => next =>
 
     return store;
   };
+
+/**
+ * @description Expose Firestore instance created internally. Useful for
+ * integrations into external libraries such as redux-thunk and redux-observable.
+ * @example <caption>redux-thunk integration</caption>
+ * import { applyMiddleware, compose, createStore } from 'redux';
+ * import thunk from 'redux-thunk';
+ * import makeRootReducer from './reducers';
+ * import { reduxFirestore, getFirestore } from 'redux-firestore';
+ *
+ * const fbConfig = {} // your firebase config
+ *
+ * const store = createStore(
+ *   makeRootReducer(),
+ *   initialState,
+ *   compose(
+ *     applyMiddleware([
+ *       // Pass getFirestore function as extra argument
+ *       thunk.withExtraArgument(getFirestore)
+ *     ]),
+ *     reduxFirestore(fbConfig)
+ *   )
+ * );
+ * // then later
+ * export const addTodo = (newTodo) =>
+ *  (dispatch, getState, getFirestore) => {
+ *    const firebase = getFirestore()
+ *    firebase
+ *      .add('todos', newTodo)
+ *      .then(() => {
+ *        dispatch({ type: 'SOME_ACTION' })
+ *      })
+ * };
+ *
+ */
+export const getFirestore = () => {
+    // TODO: Handle recieveing config and creating firebase instance if it doesn't exist
+    /* istanbul ignore next: Firebase instance always exists during tests */
+  if (!firestoreInstance) {
+    throw new Error('Firebase instance does not yet exist. Check your compose function.'); // eslint-disable-line no-console
+  }
+    // TODO: Create new firebase here with config passed in
+  return firestoreInstance;
+};
