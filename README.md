@@ -145,7 +145,8 @@ export default connect((state) => ({
   todos: state.firestore.ordered.todos
 }))(Todos)
 ```
-#### Types of Query Options
+
+#### Types of Queries
 
 ##### get
 ```js
