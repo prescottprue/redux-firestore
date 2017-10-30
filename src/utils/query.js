@@ -24,8 +24,8 @@ export const firestoreRef = (firebase, dispatch, meta) => {
     if (!isArray(where)) {
       throw new Error('where parameter must be an array');
     }
-    if (where.length === 1) {
-      ref = ref.where(...where);
+    if (isString(where[0])) {
+      ref = where.length > 1 ? ref.where(...where) : ref.where(where[0]);
     } else {
       forEach(where, (whereArgs) => {
         if (!isArray(whereArgs)) {
@@ -33,11 +33,31 @@ export const firestoreRef = (firebase, dispatch, meta) => {
             'Where currently only supports arrays. Each option must be an Array of arguments to pass to where.',
           );
         }
-        ref = ref.where(...whereArgs);
+        ref = whereArgs.length > 1 ? ref.where(...whereArgs) : ref.where(whereArgs);
       });
     }
   }
   return ref;
+};
+
+const whereToStr = where =>
+  isString(where[0]) ? where.join(':') : where.map(whereToStr);
+
+const getQueryName = (meta) => {
+  const { collection, doc, where } = meta;
+  if (!collection) {
+    throw new Error('Collection is required to build query name');
+  }
+  if (doc) {
+    return `${collection}/${doc}`;
+  }
+  if (where) {
+    if (!isArray(where)) {
+      throw new Error('Where must be an array');
+    }
+    return `${collection}/${doc}/${whereToStr(where)}`;
+  }
+  return collection;
 };
 
 
@@ -50,8 +70,8 @@ export const firestoreRef = (firebase, dispatch, meta) => {
  * @param {String} doc - Document name
  * @return {Object} Object containing all listeners
  */
-export const attachListener = (firebase, dispatch, { collection, doc }, unsubscribe) => {
-  const name = doc ? `${collection}/${doc}` : collection;
+export const attachListener = (firebase, dispatch, meta, unsubscribe) => {
+  const name = getQueryName(meta);
   if (!firebase._.listeners[name]) {
     firebase._.listeners[name] = unsubscribe; // eslint-disable-line no-param-reassign
   } else {
@@ -60,7 +80,7 @@ export const attachListener = (firebase, dispatch, { collection, doc }, unsubscr
 
   dispatch({
     type: actionTypes.SET_LISTENER,
-    meta: { collection, doc },
+    meta,
     payload: { name },
   });
 
@@ -75,8 +95,8 @@ export const attachListener = (firebase, dispatch, { collection, doc }, unsubscr
  * @param {String} collection - Collection name
  * @param {String} doc - Document name
  */
-export const detachListener = (firebase, dispatch, { collection, doc }) => {
-  const name = doc ? `${collection}/${doc}` : collection;
+export const detachListener = (firebase, dispatch, meta) => {
+  const name = getQueryName(meta);
   if (firebase._.listeners[name]) {
     firebase._.listeners[name]();
   } else {
@@ -85,7 +105,7 @@ export const detachListener = (firebase, dispatch, { collection, doc }) => {
 
   dispatch({
     type: actionTypes.UNSET_LISTENER,
-    meta: { collection, doc },
+    meta,
     payload: { name },
   });
 };

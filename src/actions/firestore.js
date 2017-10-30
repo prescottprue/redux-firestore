@@ -150,7 +150,7 @@ export const deleteRef = (firebase, dispatch, queryOption) => {
  * @param  {Function} errorCb - Callback called on error
  */
 export const setListener = (firebase, dispatch, queryOpts, successCb, errorCb) => {
-  const meta = getQueryConfigs(queryOpts);
+  const meta = getQueryConfig(queryOpts);
   const {
     collection,
     doc,
@@ -172,7 +172,7 @@ export const setListener = (firebase, dispatch, queryOpts, successCb, errorCb) =
     }, (err) => {
       // TODO: Look into whether listener is automatically removed in all cases
       dispatch({
-        type: actionTypes.ON_SNAPSHOT_ERROR,
+        type: actionTypes.LISTENER_ERROR,
         meta,
         payload: err,
       });
@@ -228,7 +228,6 @@ export default {
   firestoreRef,
   add,
   update,
-  onSnapshot,
   setListener,
   setListeners,
   unsetListener,
