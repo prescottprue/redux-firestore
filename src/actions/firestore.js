@@ -68,11 +68,11 @@ export const set = (firebase, dispatch, queryOption, ...args) => {
  * @return {Promise} Resolves with results of get call
  */
 export const get = (firebase, dispatch, queryOption) => {
-  const { collection, doc } = getQueryConfig(queryOption);
+  const meta = getQueryConfig(queryOption);
   return wrapInDispatch(dispatch, {
-    ref: firestoreRef(firebase, dispatch, { collection, doc }),
+    ref: firestoreRef(firebase, dispatch, meta),
     method: 'get',
-    meta: { collection, doc },
+    meta,
     types: [
       actionTypes.GET_REQUEST,
       {
@@ -144,16 +144,23 @@ export const deleteRef = (firebase, dispatch, queryOption) => {
  * @param {Object} meta - Metadata
  * @param {String} meta.collection - Collection name
  * @param {String} meta.doc - Document name
+ * @param {Array} meta.where - Where settings for query. Array of strings
+ * for one where, an Array of Arrays for multiple wheres
  * @param  {Function} successCb - Callback called on success
  * @param  {Function} errorCb - Callback called on error
  */
-export const onSnapshot = (firebase, dispatch, { collection, doc }, successCb, errorCb) => {
-  const query = firebase.firestore().collection(collection);
-  const unsubscribe = doc ? query.doc(doc) : query
+export const setListener = (firebase, dispatch, queryOpts, successCb, errorCb) => {
+  const meta = getQueryConfig(queryOpts);
+  const {
+    collection,
+    doc,
+    // subCollections,
+  } = meta;
+  const unsubscribe = firestoreRef(firebase, dispatch, meta)
     .onSnapshot((docData) => {
       dispatch({
         type: actionTypes.LISTENER_RESPONSE,
-        meta: { collection, doc },
+        meta,
         payload: {
           data: dataByIdSnapshot(docData),
           ordered: orderedFromSnap(docData),
@@ -163,54 +170,15 @@ export const onSnapshot = (firebase, dispatch, { collection, doc }, successCb, e
         successCb(docData);
       }
     }, (err) => {
-      // TODO: Look into whether unsubscribe should automatically be called or not
+      // TODO: Look into whether listener is automatically removed in all cases
       dispatch({
-        type: actionTypes.ON_SNAPSHOT_ERROR,
-        meta: { collection, doc },
+        type: actionTypes.LISTENER_ERROR,
+        meta,
         payload: err,
       });
       if (errorCb) {
         errorCb(err);
       }
-    });
-  attachListener(firebase, dispatch, { collection, doc }, unsubscribe);
-};
-
-/**
- * Set listener to Cloud Firestore. Internall calls Firebase's onSnapshot()
- * method.
- * @param {Object} firebase - Internal firebase object
- * @param {Function} dispatch - Redux's dispatch function
- * @param {Object} meta - Metadata
- * @param {String} meta.collection - Collection name
- * @param {String} meta.doc - Document name
- * @return {Promise} Resolves when listener has been attached **not** when data
- * has been gathered by the listener.
- */
-export const setListener = (firebase, dispatch, queryOpts) => {
-  const {
-    collection,
-    doc,
-    // subCollection,
-    // other,
-  } = getQueryConfigs(queryOpts);
-  const unsubscribe = firestoreRef(firebase, dispatch, { collection, doc })
-    .onSnapshot((docData) => {
-      dispatch({
-        type: actionTypes.LISTENER_RESPONSE,
-        meta: { collection, doc },
-        payload: {
-          data: dataByIdSnapshot(docData),
-          ordered: orderedFromSnap(docData),
-        },
-      });
-    }, (err) => {
-      // TODO: Look into whether listener is automatically removed in all cases
-      dispatch({
-        type: actionTypes.ON_SNAPSHOT_ERROR,
-        meta: { collection, doc },
-        payload: err,
-      });
     });
   attachListener(firebase, dispatch, { collection, doc }, unsubscribe);
 };
@@ -260,7 +228,6 @@ export default {
   firestoreRef,
   add,
   update,
-  onSnapshot,
   setListener,
   setListeners,
   unsetListener,
