@@ -99,6 +99,7 @@ export const detachListener = (firebase, dispatch, meta) => {
   const name = getQueryName(meta);
   if (firebase._.listeners[name]) {
     firebase._.listeners[name]();
+    delete firebase._.listeners[name]; // eslint-disable-line no-param-reassign
   } else {
     console.warn(`Listener does not exist for ${name}`); // eslint-disable-line no-console
   }
