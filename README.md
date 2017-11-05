@@ -202,15 +202,14 @@ To create a single where call, pass a single argument array to where
 
 **Multiple**
 
-Multiple where queries are as simple as passing mutiple argument arrays (each one representing a where call)
+Multiple where queries are as simple as passing multiple argument arrays (each one representing a where call)
 
 ```js
 {
   collection: 'cities',
   where: [
     ['state', '==', 'CA'],
-    ['population', '<', 100000],
-    ['name', '>=', 'San Francisco']
+    ['population', '<', 100000]
   ]
 },
 ```
