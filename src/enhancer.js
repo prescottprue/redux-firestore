@@ -58,7 +58,7 @@ export default (firebaseInstance, otherConfig) => next =>
       store.dispatch // eslint-disable-line comma-dangle
     );
 
-    store.firestore = firebaseInstance;
+    store.firestore = firestoreInstance;
 
     return store;
   };

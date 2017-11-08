@@ -19,4 +19,7 @@ describe('enhancer', () => {
   it('adds firestore to store', () => {
     expect(store).to.have.property('firestore');
   });
+  it('has the right methods', () => {
+    expect(store.firestore.setListener).to.be.a('function');
+  });
 });
