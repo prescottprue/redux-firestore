@@ -1,7 +1,10 @@
 import { pick } from 'lodash';
+import { setWith } from 'lodash/fp';
 import { actionTypes } from '../constants';
 
 const { CLEAR_DATA, GET_SUCCESS, LISTENER_RESPONSE } = actionTypes;
+
+const pathFromAction = ({ meta: { collection, doc } }) => `${collection}.${doc}`;
 
 /**
  * Creates reducer for data state. Used to create data and ordered reducers.
@@ -18,8 +21,11 @@ export const createDataReducer = (actionKey = 'data') => (state = {}, action) =>
   switch (action.type) {
     case GET_SUCCESS:
     case LISTENER_RESPONSE:
-      if (!action.payload || !action.payload[actionKey]) {
+      if (!action.payload || action.payload[actionKey] === undefined) {
         return state;
+      }
+      if (action.meta.doc) {
+        return setWith(Object, pathFromAction(action), action.payload[actionKey], state);
       }
       if (action.merge) {
         return {

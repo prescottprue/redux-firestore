@@ -164,6 +164,9 @@ export const getQueryConfigs = (queries) => {
   if (isString(queries)) {
     return queryStrToObj(queries);
   }
+  if (isObject(queries)) {
+    return [getQueryConfig(queries)];
+  }
   throw new Error('Querie(s) must be an Array or a string');
 };
 
