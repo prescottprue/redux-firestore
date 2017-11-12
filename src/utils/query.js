@@ -15,10 +15,20 @@ export const firestoreRef = (firebase, dispatch, meta) => {
   if (!firebase.firestore) {
     throw new Error('Firestore must be required and initalized.');
   }
-  const { collection, doc, where } = meta;
+  const { collection, doc, subcollections, where } = meta;
   let ref = firebase.firestore().collection(collection);
   if (doc) {
     ref = ref.doc(doc);
+  }
+  if (subcollections) {
+    forEach(subcollections, (subcollection) => {
+      if (subcollection.collection) {
+        ref.collection(subcollection.collection)
+      }
+      if (subcollection.doc) {
+        ref.doc(subcollection.doc)
+      }
+    })
   }
   if (where) {
     if (!isArray(where)) {

@@ -4,7 +4,14 @@ import { actionTypes } from '../constants';
 
 const { CLEAR_DATA, GET_SUCCESS, LISTENER_RESPONSE } = actionTypes;
 
-const pathFromAction = ({ meta: { collection, doc } }) => `${collection}.${doc}`;
+const pathFromMeta = ({ collection, doc, subcollections }) => {
+  const basePath = `${collection}.${doc}`;
+  if (!subcollections) {
+    return basePath;
+  }
+  const mappedCollections = subcollections.map(pathFromMeta);
+  return basePath.concat(mappedCollections.join('.'));
+};
 
 /**
  * Creates reducer for data state. Used to create data and ordered reducers.
@@ -25,7 +32,7 @@ export const createDataReducer = (actionKey = 'data') => (state = {}, action) =>
         return state;
       }
       if (action.meta.doc) {
-        return setWith(Object, pathFromAction(action), action.payload[actionKey], state);
+        return setWith(Object, pathFromMeta(action.meta), action.payload[actionKey], state);
       }
       if (action.merge) {
         return {
