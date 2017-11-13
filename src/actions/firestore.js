@@ -6,7 +6,6 @@ import {
   detachListener,
   orderedFromSnap,
   dataByIdSnapshot,
-  getQueryConfigs,
   getQueryConfig,
   firestoreRef,
 } from '../utils/query';
@@ -208,7 +207,7 @@ export const setListeners = (firebase, dispatch, listeners) => {
  * has been gathered by the listener.
  */
 export const unsetListener = (firebase, dispatch, opts) =>
-  detachListener(firebase, dispatch, getQueryConfigs(opts));
+  detachListener(firebase, dispatch, getQueryConfig(opts));
 
 /**
  * Unset a list of listeners
