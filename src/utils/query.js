@@ -23,12 +23,12 @@ export const firestoreRef = (firebase, dispatch, meta) => {
   if (subcollections) {
     forEach(subcollections, (subcollection) => {
       if (subcollection.collection) {
-        ref.collection(subcollection.collection)
+        ref.collection(subcollection.collection);
       }
       if (subcollection.doc) {
-        ref.doc(subcollection.doc)
+        ref.doc(subcollection.doc);
       }
-    })
+    });
   }
   if (where) {
     if (!isArray(where)) {

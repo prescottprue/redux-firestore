@@ -28,7 +28,8 @@
     "lint": "eslint .",
     "lint:fix": "npm run lint -- --fix",
     "prepare": "npm run clean && npm run build",
-    "preversion": "npm run clean && npm run build"
+    "preversion": "npm run clean && npm run build",
+    "prepush": "npm run lint"
   },
   "dependencies": {
     "lodash": "^4.17.4",
@@ -53,6 +54,7 @@
     "eslint-plugin-import": "^2.7.0",
     "eslint-plugin-jsx-a11y": "^3.0.2",
     "eslint-plugin-react": "^6.10.3",
+    "husky": "^0.14.3",
     "istanbul": "1.1.0-alpha.1",
     "mocha": "^4.0.0",
     "redux": "^3.7.2",
