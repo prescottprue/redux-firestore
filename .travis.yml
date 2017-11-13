@@ -3,8 +3,8 @@ sudo: false
 language: node_js
 
 node_js:
-  - 6.11.1 # LTS
-  - 8 # Current
+  - 8
+  - 9 # LTS
 
 notifications:
   email:

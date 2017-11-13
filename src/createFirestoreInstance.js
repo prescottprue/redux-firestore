@@ -10,7 +10,7 @@ import { mapWithFirebaseAndDispatch } from './utils/actions';
  */
 const createFirestoreInstance = (firebase, configs, dispatch) => {
   // Add internal variables to firebase instance
-  const defaultInternals = { listeners: {}, config: configs };
+  const defaultInternals = { listeners: {} };
 
   const aliases = [
     { action: firestoreActions.deleteRef, name: 'delete' },
