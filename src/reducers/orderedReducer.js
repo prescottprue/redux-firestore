@@ -11,7 +11,7 @@ const { GET_SUCCESS, LISTENER_RESPONSE, CLEAR_DATA } = actionTypes;
  * @param  {String} action.path - Path of action that was dispatched
  * @return {Object} Data state after reduction
  */
-const orderedReducer = (state = {}, action) => {
+export default function orderedReducer(state = {}, action) {
   switch (action.type) {
     case GET_SUCCESS:
     case LISTENER_RESPONSE:
@@ -32,6 +32,4 @@ const orderedReducer = (state = {}, action) => {
     default:
       return state;
   }
-};
-
-export default orderedReducer;
+}

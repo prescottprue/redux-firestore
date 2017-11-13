@@ -54,20 +54,27 @@ const whereToStr = where =>
   isString(where[0]) ? where.join(':') : where.map(whereToStr);
 
 const getQueryName = (meta) => {
-  const { collection, doc, where } = meta;
+  const { collection, doc, subcollections, where } = meta;
   if (!collection) {
     throw new Error('Collection is required to build query name');
   }
+  const basePath = collection;
   if (doc) {
-    return `${collection}/${doc}`;
+    basePath.concat(`/${doc}`);
+  }
+  if (subcollections) {
+    const mappedCollections = subcollections.map(subcollection =>
+      subcollection.collection.concat(subcollection.doc ? `/${subcollection.doc}` : ''),
+    );
+    basePath.concat(mappedCollections.join('/'));
   }
   if (where) {
     if (!isArray(where)) {
       throw new Error('Where must be an array');
     }
-    return `${collection}/${doc}/${whereToStr(where)}`;
+    return basePath.concat(`/${whereToStr(where)}`);
   }
-  return collection;
+  return basePath;
 };
 
 
@@ -84,8 +91,6 @@ export const attachListener = (firebase, dispatch, meta, unsubscribe) => {
   const name = getQueryName(meta);
   if (!firebase._.listeners[name]) {
     firebase._.listeners[name] = unsubscribe; // eslint-disable-line no-param-reassign
-  } else {
-    console.warn(`Listener already exists for ${name}`); // eslint-disable-line no-console
   }
 
   dispatch({
