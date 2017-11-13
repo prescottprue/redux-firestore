@@ -1,6 +1,26 @@
 import { isObject, isString, isArray, size, trim, forEach } from 'lodash';
 import { actionTypes } from '../constants';
 
+const addWhereToRef = (ref, where) => {
+  let newRef;
+  if (!isArray(where)) {
+    throw new Error('where parameter must be an array');
+  }
+  if (isString(where[0])) {
+    newRef = where.length > 1 ? ref.where(...where) : ref.where(where[0]);
+  } else {
+    forEach(where, (whereArgs) => {
+      if (!isArray(whereArgs)) {
+        throw new Error(
+          'Where currently only supports arrays. Each option must be an Array of arguments to pass to where.',
+        );
+      }
+      newRef = whereArgs.length > 1 ? ref.where(...whereArgs) : ref.where(whereArgs);
+    });
+  }
+  return newRef;
+};
+
 /**
  * Create a Cloud Firestore reference for a collection or document
  * @param {Object} firebase - Internal firebase object
@@ -23,29 +43,18 @@ export const firestoreRef = (firebase, dispatch, meta) => {
   if (subcollections) {
     forEach(subcollections, (subcollection) => {
       if (subcollection.collection) {
-        ref.collection(subcollection.collection);
+        ref = ref.collection(subcollection.collection);
       }
       if (subcollection.doc) {
-        ref.doc(subcollection.doc);
+        ref = ref.doc(subcollection.doc);
+      }
+      if (subcollection.where) {
+        ref = addWhereToRef(ref, subcollection.where);
       }
     });
   }
   if (where) {
-    if (!isArray(where)) {
-      throw new Error('where parameter must be an array');
-    }
-    if (isString(where[0])) {
-      ref = where.length > 1 ? ref.where(...where) : ref.where(where[0]);
-    } else {
-      forEach(where, (whereArgs) => {
-        if (!isArray(whereArgs)) {
-          throw new Error(
-            'Where currently only supports arrays. Each option must be an Array of arguments to pass to where.',
-          );
-        }
-        ref = whereArgs.length > 1 ? ref.where(...whereArgs) : ref.where(whereArgs);
-      });
-    }
+    ref = addWhereToRef(ref, where);
   }
   return ref;
 };

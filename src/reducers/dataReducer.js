@@ -5,15 +5,15 @@ import { actionTypes } from '../constants';
 const { CLEAR_DATA, GET_SUCCESS, LISTENER_RESPONSE } = actionTypes;
 
 const pathFromMeta = ({ collection, doc, subcollections }) => {
-  const basePath = collection;
+  let basePath = collection;
   if (doc) {
-    basePath.concat(doc);
+    basePath += `.${doc}`;
   }
   if (!subcollections) {
     return basePath;
   }
   const mappedCollections = subcollections.map(pathFromMeta);
-  return basePath.concat(mappedCollections.join('.'));
+  return basePath.concat(`.${mappedCollections.join('.')}`);
 };
 
 /**
