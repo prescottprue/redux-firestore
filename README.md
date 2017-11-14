@@ -263,6 +263,9 @@ Some of the goals behind this approach include:
 3. Easier to expand/change internal API as Firebase/Firestore API grows & changes -->
 
 
+## Applications Using This
+* [fireadmin.io](http://fireadmin.io) - Firebase Instance Management + Data Migration tool [source available here](https://github.com/prescottprue/fireadmin))
+
 ## Roadmap
 
 `v0.1.0` - Basic querying
