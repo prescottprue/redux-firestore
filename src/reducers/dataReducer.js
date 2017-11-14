@@ -35,7 +35,7 @@ export default function dataReducer(state = {}, action) {
         return state;
       }
       const previousData = get(state, pathFromMeta(meta));
-      // Do not merge if no existing data or subcollection
+      // Do not merge if no existing data or if meta contains subcollections
       if (!previousData || meta.subcollections) {
         return setWith(Object, pathFromMeta(meta), payload.data, state);
       }

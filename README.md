@@ -13,8 +13,6 @@
 
 > Redux bindings for Firestore. Provides low-level API used in other libraries such as [react-redux-firebase](https://github.com/prescottprue/react-redux-firebase)
 
-**NOTE**: This library is still under construction, use at your own risk. Please view the roadmap below for more information
-
 ## Installation
 
 ```sh
@@ -57,6 +55,17 @@ const rootReducer = combineReducers({
 // Create store with reducers and initial state
 const initialState = {}
 const store = createStoreWithFirebase(rootReducer, initialState)
+```
+
+Then pass store to your component's context using [react-redux's `Provider`](https://github.com/reactjs/react-redux/blob/master/docs/api.md#provider-store):
+
+```js
+ReactDOM.render(
+  <Provider store={store}>
+    <MyRootComponent />
+  </Provider>,
+  rootEl
+)
 ```
 
 ### Call Firestore
@@ -188,6 +197,15 @@ store.firestore.setListeners([
 // props.store.firestore.get('cities/SF'),
 ```
 
+##### Sub Collections
+
+```js
+{ collection: 'cities', doc: 'SF', subcollections: [{ collection: 'zipcodes' }] },
+// or string equivalent
+// props.store.firestore.get('cities/SF'),
+```
+
+
 ##### Where
 
 **Single**
@@ -249,7 +267,7 @@ Some of the goals behind this approach include:
 
 `v0.1.0` - Basic querying
 
-`redux-firestore` will soon be a dependency of `react-redux-firebase`
+`redux-firestore` can be used along side `react-redux-firebase`
 
 [npm-image]: https://img.shields.io/npm/v/redux-firestore.svg?style=flat-square
 [npm-url]: https://npmjs.org/package/redux-firestore
