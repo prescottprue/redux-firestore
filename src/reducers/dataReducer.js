@@ -1,5 +1,5 @@
-import { pick, assign, get } from 'lodash';
-import { setWith } from 'lodash/fp';
+import { pick, get } from 'lodash';
+import { setWith, assign } from 'lodash/fp';
 import { actionTypes } from '../constants';
 
 const { CLEAR_DATA, GET_SUCCESS, LISTENER_RESPONSE } = actionTypes;
@@ -30,27 +30,25 @@ export default function dataReducer(state = {}, action) {
   switch (action.type) {
     case GET_SUCCESS:
     case LISTENER_RESPONSE:
-      if (!action.payload || action.payload.data === undefined) {
+      const { meta, payload, preserve } = action;
+      if (!payload || payload.data === undefined) {
         return state;
       }
-      if (action.merge) {
-        return {
-          ...state,
-          [action.meta.collection]: state[action.meta.collection]
-            ? { ...state[action.meta.collection], ...action.payload.data }
-            : action.payload.data,
-        };
+      const previousData = get(state, pathFromMeta(meta));
+      // Do not merge if no existing data or subcollection
+      if (!previousData || meta.subcollections) {
+        return setWith(Object, pathFromMeta(meta), payload.data, state);
       }
-      const previousData = get(state, pathFromMeta(action.meta));
-      if (!previousData) {
-        return setWith(Object, pathFromMeta(action.meta), action.payload.data, state);
-      }
-      const mergedData = assign(previousData, action.payload.data);
-      return setWith(Object, pathFromMeta(action.meta), mergedData, state);
+      // Merge with existing data
+      const mergedData = assign(
+        previousData,
+        meta.doc ? get(payload.data, meta.doc) : payload.data,
+      );
+      return setWith(Object, pathFromMeta(meta), mergedData, state);
     case CLEAR_DATA:
       // support keeping data when logging out - #125
-      if (action.preserve) {
-        return pick(state, action.preserve); // pick returns a new object
+      if (preserve) {
+        return pick(state, preserve); // pick returns a new object
       }
       return {};
     default:

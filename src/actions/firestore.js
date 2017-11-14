@@ -20,12 +20,11 @@ import {
  * @return {Promise} Resolves with results of add call
  */
 export const add = (firebase, dispatch, queryOption, ...args) => {
-  const { collection, doc } = getQueryConfig(queryOption);
+  const meta = getQueryConfig(queryOption);
   return wrapInDispatch(dispatch, {
-    ref: firestoreRef(firebase, dispatch, { collection, doc }),
+    ref: firestoreRef(firebase, dispatch, meta),
     method: 'add',
-    collection,
-    doc,
+    meta,
     args,
     types: [
       actionTypes.ADD_REQUEST,
@@ -44,11 +43,11 @@ export const add = (firebase, dispatch, queryOption, ...args) => {
  * @return {Promise} Resolves with results of set call
  */
 export const set = (firebase, dispatch, queryOption, ...args) => {
-  const { collection, doc } = getQueryConfig(queryOption);
+  const meta = getQueryConfig(queryOption);
   return wrapInDispatch(dispatch, {
-    ref: firestoreRef(firebase, dispatch, { collection, doc }),
+    ref: firestoreRef(firebase, dispatch, meta),
     method: 'set',
-    meta: { collection, doc },
+    meta,
     args,
     types: [
       actionTypes.SET_REQUEST,
@@ -96,11 +95,11 @@ export const get = (firebase, dispatch, queryOption) => {
  * @return {Promise} Resolves with results of update call
  */
 export const update = (firebase, dispatch, queryOption, ...args) => {
-  const { collection, doc } = getQueryConfig(queryOption);
+  const meta = getQueryConfig(queryOption);
   return wrapInDispatch(dispatch, {
-    ref: firestoreRef(firebase, dispatch, { collection, doc }),
+    ref: firestoreRef(firebase, dispatch, meta),
     method: 'update',
-    meta: { collection, doc },
+    meta,
     args,
     types: [
       actionTypes.UPDATE_REQUEST,
@@ -119,14 +118,14 @@ export const update = (firebase, dispatch, queryOption, ...args) => {
  * @return {Promise} Resolves with results of update call
  */
 export const deleteRef = (firebase, dispatch, queryOption) => {
-  const { collection, doc, subcollection } = getQueryConfig(queryOption);
-  if (!doc) {
+  const meta = getQueryConfig(queryOption);
+  if (!meta.doc) {
     throw new Error('Only docs can be deleted');
   }
   return wrapInDispatch(dispatch, {
-    ref: firestoreRef(firebase, dispatch, { collection, doc }),
+    ref: firestoreRef(firebase, dispatch, meta),
     method: 'delete',
-    meta: { collection, doc, subcollection },
+    meta,
     types: [
       actionTypes.DELETE_REQUEST,
       actionTypes.DELETE_SUCCESS,
@@ -150,11 +149,6 @@ export const deleteRef = (firebase, dispatch, queryOption) => {
  */
 export const setListener = (firebase, dispatch, queryOpts, successCb, errorCb) => {
   const meta = getQueryConfig(queryOpts);
-  const {
-    collection,
-    doc,
-    // subCollections,
-  } = meta;
   const unsubscribe = firestoreRef(firebase, dispatch, meta)
     .onSnapshot((docData) => {
       dispatch({
@@ -179,7 +173,7 @@ export const setListener = (firebase, dispatch, queryOpts, successCb, errorCb) =
         errorCb(err);
       }
     });
-  attachListener(firebase, dispatch, { collection, doc }, unsubscribe);
+  attachListener(firebase, dispatch, meta, unsubscribe);
 };
 
 /**
