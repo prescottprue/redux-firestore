@@ -1,4 +1,4 @@
-import { pick, get, first } from 'lodash';
+import { pick, first } from 'lodash';
 import { actionTypes } from '../constants';
 import { updateItemInArray, updateObject } from '../utils/reducers';
 
@@ -19,16 +19,17 @@ const { GET_SUCCESS, LISTENER_RESPONSE, CLEAR_DATA } = actionTypes;
 function updateDocInOrdered(state, action) {
   const itemToAdd = first(action.payload.ordered);
   const subcollection = first(action.meta.subcollections);
+  const storeUnderKey = action.meta.storeAs || action.meta.collection;
   // TODO: Make this recursive so that is supports multiple subcollections
   return {
     ...state,
-    [action.meta.collection]: updateItemInArray(
-      state[action.meta.collection] || [],
+    [storeUnderKey]: updateItemInArray(
+      state[storeUnderKey] || [],
       action.meta.doc,
       item => updateObject(
         item,
         subcollection
-          ? { [get(subcollection, 'collection')]: action.payload.ordered }
+          ? { [subcollection.collection]: action.payload.ordered }
           : itemToAdd,
       ),
     ),
@@ -68,7 +69,7 @@ export default function orderedReducer(state = {}, action) {
       }
       return {
         ...state,
-        [action.meta.collection]: action.payload.ordered,
+        [action.meta.storeAs || action.meta.collection]: action.payload.ordered,
       };
     case CLEAR_DATA:
       // support keeping data when logging out - #125

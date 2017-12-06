@@ -234,6 +234,20 @@ Multiple where queries are as simple as passing multiple argument arrays (each o
 
 *Should only be used with collections*
 
+##### storeAs
+
+Storing data under a different path within redux is as easy as passing the `storeAs` parameter to your query:
+
+```js
+{
+  collection: 'cities',
+  where: ['state', '==', 'CA'],
+  storeAs: 'caliCities' // store data in redux under this path instead of "cities"
+},
+```
+
+**NOTE:** Not yet supported for subcollections
+
 <!-- #### Middleware
 
 `redux-firestore`'s enhancer offers a new middleware setup that was not offered in `react-redux-firebase` (but will eventually make it `redux-firebase`)
@@ -264,7 +278,7 @@ Some of the goals behind this approach include:
 
 
 ## Applications Using This
-* [fireadmin.io](http://fireadmin.io) - Firebase Instance Management + Data Migration tool [source available here](https://github.com/prescottprue/fireadmin))
+* [fireadmin.io](http://fireadmin.io) - Firebase Instance Management Tool [source available here](https://github.com/prescottprue/fireadmin))
 
 ## Roadmap
 
