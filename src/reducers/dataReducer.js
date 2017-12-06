@@ -4,8 +4,25 @@ import { actionTypes } from '../constants';
 
 const { CLEAR_DATA, GET_SUCCESS, LISTENER_RESPONSE } = actionTypes;
 
-const pathFromMeta = ({ collection, doc, subcollections }) => {
+/**
+ * Get path from meta data
+ * @param  {Object} meta - Action meta data object
+ * @param  {String} meta.collection - Name of Collection for which the action
+ * is to be handled.
+ * @param  {String} meta.doc - Name of Document for which the action is to be
+ * handled.
+ * @param  {Array} meta.subcollections - Subcollections of data
+ * @param  {String} meta.storeAs - Another key within redux store that the
+ * action associates with (used for storing data under a path different
+ * from its collection/document)
+ * @return {String} String path to be used within reducer
+ */
+function pathFromMeta(meta) {
+  const { collection, doc, subcollections, storeAs } = meta;
   let basePath = collection;
+  if (storeAs) {
+    return storeAs;
+  }
   if (doc) {
     basePath += `.${doc}`;
   }
@@ -14,7 +31,7 @@ const pathFromMeta = ({ collection, doc, subcollections }) => {
   }
   const mappedCollections = subcollections.map(pathFromMeta);
   return basePath.concat(`.${mappedCollections.join('.')}`);
-};
+}
 
 /**
  * @name dataReducer
@@ -23,7 +40,11 @@ const pathFromMeta = ({ collection, doc, subcollections }) => {
  * @param  {Object} action - Object containing the action that was dispatched
  * @param  {String} action.type - Type of action that was dispatched
  * @param  {Object} action.meta - Meta data of action
- * @param  {String} action.path - Path of action that was dispatched
+ * @param  {String} action.meta.collection - Name of the collection for the
+ * data being passed to the reducer.
+ * @param  {Array} action.meta.where - Where query parameters array
+ * @param  {Array} action.meta.storeAs - Another parameter in redux under
+ * which to store values.
  * @return {Object} Data state after reduction
  */
 export default function dataReducer(state = {}, action) {

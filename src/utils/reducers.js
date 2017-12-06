@@ -4,7 +4,9 @@
  * @return {Array} Path as Array
  * @private
  */
-export const pathToArr = path => path ? path.split(/\//).filter(p => !!p) : [];
+export function pathToArr(path) {
+  return path ? path.split(/\//).filter(p => !!p) : [];
+}
 
 /**
  * Trim leading slash from path for use with state
@@ -12,7 +14,9 @@ export const pathToArr = path => path ? path.split(/\//).filter(p => !!p) : [];
  * @return {String} Path seperated with slashes
  * @private
  */
-export const getSlashStrPath = path => pathToArr(path).join('/');
+export function getSlashStrPath(path) {
+  return pathToArr(path).join('/');
+}
 
 /**
  * Convert path with slashes to dot seperated path (for use with lodash get/set)
@@ -20,7 +24,9 @@ export const getSlashStrPath = path => pathToArr(path).join('/');
  * @return {String} Path seperated with dots
  * @private
  */
-export const getDotStrPath = path => pathToArr(path).join('.');
+export function getDotStrPath(path) {
+  return pathToArr(path).join('.');
+}
 
 /**
  * Combine reducers utility (abreveated version of redux's combineReducer).
@@ -52,3 +58,38 @@ export const getFirestorePath = (action) => {
   const { meta: { collection, doc } } = action;
   return doc ? `${collection}/${doc}` : collection;
 };
+
+
+/**
+ * Encapsulate the idea of passing a new object as the first parameter
+ * to Object.assign to ensure we correctly copy data instead of mutating
+ * @param  {Object} oldObject - Object before update
+ * @param  {Object} newValues - New values to add to the object
+ * @return {Object} Object with new values
+ */
+export function updateObject(oldObject, newValues) {
+  return Object.assign({}, oldObject, newValues);
+}
+
+/**
+ * Update a single item within an array
+ * @param  {Array} array - Array within which to update item
+ * @param  {String} itemId - Id of item to update
+ * @param  {Function} updateItemCallback - Callback dictacting how the item
+ * is updated
+ * @return {Array} Array with item updated
+ */
+export function updateItemInArray(array, itemId, updateItemCallback) {
+  const updatedItems = array.map((item) => {
+    if (item.id !== itemId) {
+      // Since we only want to update one item, preserve all others as they are now
+      return item;
+    }
+
+    // Use the provided callback to create an updated item
+    const updatedItem = updateItemCallback(item);
+    return updatedItem;
+  });
+
+  return updatedItems;
+}

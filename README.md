@@ -234,6 +234,55 @@ Multiple where queries are as simple as passing multiple argument arrays (each o
 
 *Should only be used with collections*
 
+##### storeAs
+
+Storing data under a different path within redux is as easy as passing the `storeAs` parameter to your query:
+
+```js
+{
+  collection: 'cities',
+  where: ['state', '==', 'CA'],
+  storeAs: 'caliCities' // store data in redux under this path instead of "cities"
+},
+```
+
+**NOTE:** Not yet supported for subcollections
+
+#### Other Firebase Statics
+
+Other Firebase statics (such as [FieldValue](https://firebase.google.com/docs/reference/js/firebase.firestore.FieldValue)) are available through the firestore instance:
+
+```js
+import { connect } from 'react-redux'
+import {
+  compose,
+  withHandlers,
+  lifecycle,
+  withContext,
+  getContext
+} from 'recompose'
+
+const withFirestore = compose(
+  withContext({ store: PropTypes.object }, () => {}),
+  getContext({ store: PropTypes.object }),
+)
+
+const enhance = compose(
+  withStore,
+  withHandlers({
+    onDoneClick: props => (key, done = true) => {
+      const { firestore } = props.store
+      return firestore.update('todos', key, {
+        done,
+        updatedAt: firestore.FieldValue.serverTimestamp() // use static from firestore instance
+      }),
+    }
+  })
+)
+
+export default enhance(SomeComponent)
+```
+
 <!-- #### Middleware
 
 `redux-firestore`'s enhancer offers a new middleware setup that was not offered in `react-redux-firebase` (but will eventually make it `redux-firebase`)
@@ -264,7 +313,7 @@ Some of the goals behind this approach include:
 
 
 ## Applications Using This
-* [fireadmin.io](http://fireadmin.io) - Firebase Instance Management + Data Migration tool [source available here](https://github.com/prescottprue/fireadmin))
+* [fireadmin.io](http://fireadmin.io) - Firebase Instance Management Tool [source available here](https://github.com/prescottprue/fireadmin))
 
 ## Roadmap
 
