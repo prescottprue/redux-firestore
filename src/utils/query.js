@@ -152,7 +152,8 @@ const queryStrToObj = (queryPathStr) => {
 };
 
 /**
- * @description Convert array of querys into an array of query config objects
+ * @description Convert array of querys into an array of query config objects.
+ * This normalizes things for later use.
  * @param {Object|String} query - Query setups in the form of objects or strings
  * @return {Object} Query setup normalized into a queryConfig object
  */

@@ -10,9 +10,9 @@ import {
   firestoreRef,
 } from '../utils/query';
 
-
 /**
- * Add data to a collection or document on Cloud Firestore.
+ * Add data to a collection or document on Cloud Firestore with the call to
+ * the Firebase library being wrapped in action dispatches.
  * @param {Object} firebase - Internal firebase object
  * @param {Function} dispatch - Redux's dispatch function
  * @param {String} collection - Collection name
@@ -35,7 +35,8 @@ export const add = (firebase, dispatch, queryOption, ...args) => {
 };
 
 /**
- * Set data to a document on Cloud Firestore.
+ * Set data to a document on Cloud Firestore with the call to
+ * the Firebase library being wrapped in action dispatches.
  * @param {Object} firebase - Internal firebase object
  * @param {Function} dispatch - Redux's dispatch function
  * @param {String} collection - Collection name
@@ -58,7 +59,8 @@ export const set = (firebase, dispatch, queryOption, ...args) => {
 };
 
 /**
- * Get a collection or document from Cloud Firestore
+ * Get a collection or document from Cloud Firestore with the call to
+ * the Firebase library being wrapped in action dispatches.
  * @param {Object} firebase - Internal firebase object
  * @param {Function} dispatch - Redux's dispatch function
  * @param {String} collection - Collection name
@@ -87,7 +89,8 @@ export const get = (firebase, dispatch, queryOption) => {
 };
 
 /**
- * Update a document on Cloud Firestore
+ * Update a document on Cloud Firestore with the call to
+ * the Firebase library being wrapped in action dispatches.
  * @param {Object} firebase - Internal firebase object
  * @param {Function} dispatch - Redux's dispatch function
  * @param {String} collection - Collection name
@@ -110,7 +113,8 @@ export const update = (firebase, dispatch, queryOption, ...args) => {
 };
 
 /**
- * Update a document on Cloud Firestore
+ * Update a document on Cloud Firestore with the call to
+ * the Firebase library being wrapped in action dispatches.
  * @param {Object} firebase - Internal firebase object
  * @param {Function} dispatch - Redux's dispatch function
  * @param {String} collection - Collection name
@@ -135,7 +139,8 @@ export const deleteRef = (firebase, dispatch, queryOption) => {
 };
 
 /**
- * Set listener to Cloud Firestore. Internall calls Firebase's onSnapshot()
+ * Set listener to Cloud Firestore with the call to the Firebase library
+ * being wrapped in action dispatches.. Internall calls Firebase's onSnapshot()
  * method.
  * @param {Object} firebase - Internal firebase object
  * @param {Function} dispatch - Redux's dispatch function
@@ -177,10 +182,10 @@ export const setListener = (firebase, dispatch, queryOpts, successCb, errorCb) =
 };
 
 /**
- * [setListeners description]
+ * Set an array of listeners
  * @param {Object} firebase - Internal firebase object
  * @param {Function} dispatch - Redux's dispatch function
- * @param {[type]} listeners [description]
+ * @param {Array} listeners
  */
 export const setListeners = (firebase, dispatch, listeners) => {
   if (!isArray(listeners)) {
