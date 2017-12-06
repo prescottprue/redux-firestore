@@ -248,6 +248,41 @@ Storing data under a different path within redux is as easy as passing the `stor
 
 **NOTE:** Not yet supported for subcollections
 
+#### Other Firebase Statics
+
+Other Firebase statics (such as [FieldValue](https://firebase.google.com/docs/reference/js/firebase.firestore.FieldValue)) are available through the firestore instance:
+
+```js
+import { connect } from 'react-redux'
+import {
+  compose,
+  withHandlers,
+  lifecycle,
+  withContext,
+  getContext
+} from 'recompose'
+
+const withFirestore = compose(
+  withContext({ store: PropTypes.object }, () => {}),
+  getContext({ store: PropTypes.object }),
+)
+
+const enhance = compose(
+  withStore,
+  withHandlers({
+    onDoneClick: props => (key, done = true) => {
+      const { firestore } = props.store
+      return firestore.update('todos', key, {
+        done,
+        updatedAt: firestore.FieldValue.serverTimestamp() // use static from firestore instance
+      }),
+    }
+  })
+)
+
+export default enhance(SomeComponent)
+```
+
 <!-- #### Middleware
 
 `redux-firestore`'s enhancer offers a new middleware setup that was not offered in `react-redux-firebase` (but will eventually make it `redux-firebase`)
