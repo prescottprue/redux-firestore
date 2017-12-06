@@ -31,13 +31,13 @@ const createFirestoreInstance = (firebase, configs, dispatch) => {
 
   if (configs.helpersNamespace) {
     return {
+      ...firebase.firestore,
       [configs.helpersNamespace]: methods,
-      ...firebase,
     };
   }
   return {
+    ...firebase.firestore,
     ...methods,
-    ...firebase,
   };
 };
 
