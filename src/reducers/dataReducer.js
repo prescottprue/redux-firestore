@@ -55,16 +55,14 @@ export default function dataReducer(state = {}, action) {
       if (!payload || payload.data === undefined) {
         return state;
       }
+      const data = meta.doc ? get(payload.data, meta.doc) : payload.data;
       const previousData = get(state, pathFromMeta(meta));
       // Do not merge if no existing data or if meta contains subcollections
       if (!previousData || meta.subcollections) {
-        return setWith(Object, pathFromMeta(meta), payload.data, state);
+        return setWith(Object, pathFromMeta(meta), data, state);
       }
       // Merge with existing data
-      const mergedData = assign(
-        previousData,
-        meta.doc ? get(payload.data, meta.doc) : payload.data,
-      );
+      const mergedData = assign(previousData, data);
       return setWith(Object, pathFromMeta(meta), mergedData, state);
     case CLEAR_DATA:
       // support keeping data when logging out - #125
