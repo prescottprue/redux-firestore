@@ -6,10 +6,10 @@
 [![Code Style][code-style-image]][code-style-url]
 [![Dependency Status][daviddm-image]][daviddm-url]
 [![Build Status][travis-image]][travis-url]
+[![Code Coverage][coverage-image]][coverage-url]
 
 [![Gitter][gitter-image]][gitter-url]
 <!-- [![Quality][quality-image]][quality-url] -->
-<!-- [![Code Coverage][coverage-image]][coverage-url] -->
 
 > Redux bindings for Firestore. Provides low-level API used in other libraries such as [react-redux-firebase](https://github.com/prescottprue/react-redux-firebase)
 
@@ -19,13 +19,33 @@
 npm install redux-firestore --save
 ```
 
-## NOTE
+This assumes you are using [npm](https://www.npmjs.com/) as your package manager.
 
-You probably want to be using [react-redux-firebase](https://github.com/prescottprue/react-redux-firebase).
+If you're not, you can access the library on [unpkg](https://unpkg.com/redux-firestore@0.1.0/dist/redux-firestore.min.js), download it, or point your package manager to it.
 
-If you are planning on using Firestore with Auth, Realtime DB, Storage or any other Firebase Products you will most likely want to use [react-redux-firebase](https://github.com/prescottprue/react-redux-firebase), which actually depends on this module.
+Most commonly people consume Redux Firestore as a [CommonJS module](http://webpack.github.io/docs/commonjs.html). This module is what you get when you import redux in a Webpack, Browserify, or a Node environment.
 
-This is a low level library that is meant to be used simple as a building block.
+If you don't use a module bundler, it's also fine. The redux-firestore npm package includes precompiled production and development [UMD builds](https://github.com/umdjs/umd) in the [dist folder](https://unpkg.com/redux-firestore@latest/dist/). They can be used directly without a bundler and are thus compatible with many popular JavaScript module loaders and environments. For example, you can drop a UMD build as a `<script>` tag on the page. The UMD builds make Redux Firestore available as a `window.ReduxFirestore` global variable.
+
+It can be imported like so:
+
+```html
+<script src="../node_modules/redux-firestore/dist/redux-firestore.min.js"></script>
+<!-- or through cdn: <script src="https://unpkg.com/redux-firestore@0.1.0/dist/redux-firestore.min.js"></script> -->
+<script>console.log('redux firestore:', window.ReduxFirestore)</script>
+```
+
+Note: In an effort to keep things simple, the wording from this explanation was modeled after [the installation section of the Redux Docs](https://redux.js.org/#installation).
+
+## Complementary Package
+
+Most likely, you'll want react bindings, for that you will need: [react-redux-firebase](https://github.com/prescottprue/react-redux-firebase).
+
+```js
+npm install --save react-redux-firebase@next
+```
+
+If you are planning on using Firestore with Auth, Realtime DB, Storage or any other Firebase Products you will need to install [react-redux-firebase](https://github.com/prescottprue/react-redux-firebase), which actually works nicely alongside this module.
 
 ## Use
 
@@ -36,15 +56,15 @@ import firebase from 'firebase'
 import 'firebase/firestore'
 
 const firebaseConfig = {} // from Firebase Console
-const rfConfig = {} // redux-firestore config
 
 // Initialize firebase instance
 const firebaseApp = firebase.initializeApp(config)
-firebase.firestore(); // Initialize Cloud Firestore through Firebase
+// Initialize Cloud Firestore through Firebase
+firebase.firestore();
 
 // Add reduxReduxFirebase to compose
 const createStoreWithFirebase = compose(
-  reduxFirestore(firebaseApp, rfConfig), // firebase instance as first argument
+  reduxFirestore(firebaseApp), // firebase instance as first argument
 )(createStore)
 
 // Add Firebase to reducers
@@ -208,8 +228,7 @@ store.firestore.setListeners([
 
 ##### Where
 
-**Single**
-To create a single where call, pass a single argument array to where
+To create a single `where` call, pass a single argument array to the `where` parameter:
 
 ```js
 {
@@ -218,9 +237,7 @@ To create a single where call, pass a single argument array to where
 },
 ```
 
-**Multiple**
-
-Multiple where queries are as simple as passing multiple argument arrays (each one representing a where call)
+Multiple `where` queries are as simple as passing multiple argument arrays (each one representing a `where` call):
 
 ```js
 {
@@ -229,6 +246,45 @@ Multiple where queries are as simple as passing multiple argument arrays (each o
     ['state', '==', 'CA'],
     ['population', '<', 100000]
   ]
+},
+```
+
+*Should only be used with collections*
+
+##### orderBy
+
+To create a single `orderBy` call, pass a single argument array to `orderBy`
+
+```js
+{
+  collection: 'cities',
+  orderBy: ['state'],
+  // orderBy: 'state' // string notation can also be used
+},
+```
+
+Multiple `orderBy`s are as simple as passing multiple argument arrays (each one representing a `orderBy` call)
+
+```js
+{
+  collection: 'cities',
+  orderBy: [
+    ['state'],
+    ['population', 'desc']
+  ]
+},
+```
+
+*Should only be used with collections*
+
+##### limit
+
+Limit the query to a certain number of results
+
+```js
+{
+  collection: 'cities',
+  limit: 10
 },
 ```
 
@@ -246,7 +302,7 @@ Storing data under a different path within redux is as easy as passing the `stor
 },
 ```
 
-**NOTE:** Not yet supported for subcollections
+**NOTE:** Not yet supported inside of subcollections (only at the top level)
 
 #### Other Firebase Statics
 
@@ -313,13 +369,12 @@ Some of the goals behind this approach include:
 
 
 ## Applications Using This
-* [fireadmin.io](http://fireadmin.io) - Firebase Instance Management Tool [source available here](https://github.com/prescottprue/fireadmin))
+* [fireadmin.io](http://fireadmin.io) - Firebase Instance Management Tool [source available here](https://github.com/prescottprue/fireadmin)
 
 ## Roadmap
 
-`v0.1.0` - Basic querying
+* Support for Passing a Ref to `setListener` in place of `queryConfig`
 
-`redux-firestore` can be used along side `react-redux-firebase`
 
 [npm-image]: https://img.shields.io/npm/v/redux-firestore.svg?style=flat-square
 [npm-url]: https://npmjs.org/package/redux-firestore

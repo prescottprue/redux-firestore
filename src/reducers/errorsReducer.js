@@ -1,10 +1,11 @@
 import { actionTypes } from '../constants';
-import { combineReducers } from '../utils/reducers';
+import { combineReducers, pathFromMeta } from '../utils/reducers';
 
 const {
   CLEAR_ERRORS,
   CLEAR_ERROR,
   LOGIN_ERROR,
+  LISTENER_ERROR,
   ERROR,
 } = actionTypes;
 
@@ -50,6 +51,11 @@ const errorsByQuery = (state = {}, { meta, payload, type }) => {
       return {
         ...state,
         [meta.id]: payload,
+      };
+    case LISTENER_ERROR:
+      return {
+        ...state,
+        [pathFromMeta(meta)]: payload,
       };
     case CLEAR_ERRORS:
       return [];
