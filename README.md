@@ -6,10 +6,10 @@
 [![Code Style][code-style-image]][code-style-url]
 [![Dependency Status][daviddm-image]][daviddm-url]
 [![Build Status][travis-image]][travis-url]
+[![Code Coverage][coverage-image]][coverage-url]
 
 [![Gitter][gitter-image]][gitter-url]
 <!-- [![Quality][quality-image]][quality-url] -->
-<!-- [![Code Coverage][coverage-image]][coverage-url] -->
 
 > Redux bindings for Firestore. Provides low-level API used in other libraries such as [react-redux-firebase](https://github.com/prescottprue/react-redux-firebase)
 
@@ -25,19 +25,21 @@ If you're not, you can access the library on [unpkg](https://unpkg.com/redux-fir
 
 Most commonly people consume Redux Firestore as a [CommonJS module](http://webpack.github.io/docs/commonjs.html). This module is what you get when you import redux in a Webpack, Browserify, or a Node environment.
 
-If you don't use a module bundler, it's also fine. The redux-firestore npm package includes precompiled production and development [UMD builds](https://github.com/umdjs/umd) in the [dist folder](https://unpkg.com/redux-firestore@latest/dist/). They can be used directly without a bundler and are thus compatible with many popular JavaScript module loaders and environments. For example, you can drop a UMD build as a `<script>` tag on the page. The UMD builds make Redux Firestore available as a window.ReduxFirestore global variable.
+If you don't use a module bundler, it's also fine. The redux-firestore npm package includes precompiled production and development [UMD builds](https://github.com/umdjs/umd) in the [dist folder](https://unpkg.com/redux-firestore@latest/dist/). They can be used directly without a bundler and are thus compatible with many popular JavaScript module loaders and environments. For example, you can drop a UMD build as a `<script>` tag on the page. The UMD builds make Redux Firestore available as a `window.ReduxFirestore` global variable.
 
 It can be imported like so:
 
-```js
+```html
 <script src="../node_modules/redux-firestore/dist/redux-firestore.min.js"></script>
-// or through cdn: <script src="https://unpkg.com/redux-firestore@0.1.0/dist/redux-firestore.min.js"></script>
+<!-- or through cdn: <script src="https://unpkg.com/redux-firestore@0.1.0/dist/redux-firestore.min.js"></script> -->
 <script>console.log('redux firestore:', window.ReduxFirestore)</script>
 ```
 
+Note: In an effort to keep things simple, the wording from this explanation was modeled after [the installation section of the Redux Docs](https://redux.js.org/#installation).
+
 ## Complementary Package
 
-Most likley, you'll want react bindings, for that you will need: [react-redux-firebase](https://github.com/prescottprue/react-redux-firebase).
+Most likely, you'll want react bindings, for that you will need: [react-redux-firebase](https://github.com/prescottprue/react-redux-firebase).
 
 ```js
 npm install --save react-redux-firebase@next
@@ -54,15 +56,15 @@ import firebase from 'firebase'
 import 'firebase/firestore'
 
 const firebaseConfig = {} // from Firebase Console
-const rfConfig = {} // redux-firestore config
 
 // Initialize firebase instance
 const firebaseApp = firebase.initializeApp(config)
-firebase.firestore(); // Initialize Cloud Firestore through Firebase
+// Initialize Cloud Firestore through Firebase
+firebase.firestore();
 
 // Add reduxReduxFirebase to compose
 const createStoreWithFirebase = compose(
-  reduxFirestore(firebaseApp, rfConfig), // firebase instance as first argument
+  reduxFirestore(firebaseApp), // firebase instance as first argument
 )(createStore)
 
 // Add Firebase to reducers

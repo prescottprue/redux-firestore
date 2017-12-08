@@ -1,6 +1,13 @@
 import { isObject, isString, isArray, size, trim, forEach } from 'lodash';
 import { actionTypes } from '../constants';
 
+/**
+ * Add where claues to Cloud Firestore Reference handling invalid formats
+ * and multiple where statements (array of arrays)
+ * @param {firebase.firestore.Reference} ref - Reference which to add where to
+ * @param {Array} where - Where statement to attach to reference
+ * @return {firebase.firestore.Reference} Reference with where statement attached
+ */
 const addWhereToRef = (ref, where) => {
   let newRef;
   if (!isArray(where)) {
@@ -35,8 +42,10 @@ export const firestoreRef = (firebase, dispatch, meta) => {
   if (!firebase.firestore) {
     throw new Error('Firestore must be required and initalized.');
   }
-  const { collection, doc, subcollections, where } = meta;
+  const { collection, doc, subcollections, where, orderBy, limit } = meta;
   let ref = firebase.firestore().collection(collection);
+  // TODO: Compare to doing this by creating all methods/arguments as array
+  // and doing call at once
   if (doc) {
     ref = ref.doc(doc);
   }
@@ -55,6 +64,12 @@ export const firestoreRef = (firebase, dispatch, meta) => {
   }
   if (where) {
     ref = addWhereToRef(ref, where);
+  }
+  if (orderBy) {
+    ref = isArray(orderBy) ? ref.orderBy(...orderBy) : ref.orderBy(orderBy);
+  }
+  if (limit) {
+    ref = ref.limit(limit);
   }
   return ref;
 };

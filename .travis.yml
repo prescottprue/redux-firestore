@@ -23,3 +23,7 @@ branches:
 script:
   - npm run lint
   - npm run test:cov
+
+after_success:
+  - codeclimate-test-reporter < coverage/lcov.info
+  - npm run codecov
