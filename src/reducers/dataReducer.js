@@ -1,37 +1,10 @@
 import { pick, get } from 'lodash';
 import { setWith, assign } from 'lodash/fp';
 import { actionTypes } from '../constants';
+import { pathFromMeta } from '../utils/reducers';
 
 const { CLEAR_DATA, GET_SUCCESS, LISTENER_RESPONSE } = actionTypes;
 
-/**
- * Get path from meta data
- * @param  {Object} meta - Action meta data object
- * @param  {String} meta.collection - Name of Collection for which the action
- * is to be handled.
- * @param  {String} meta.doc - Name of Document for which the action is to be
- * handled.
- * @param  {Array} meta.subcollections - Subcollections of data
- * @param  {String} meta.storeAs - Another key within redux store that the
- * action associates with (used for storing data under a path different
- * from its collection/document)
- * @return {String} String path to be used within reducer
- */
-function pathFromMeta(meta) {
-  const { collection, doc, subcollections, storeAs } = meta;
-  let basePath = collection;
-  if (storeAs) {
-    return storeAs;
-  }
-  if (doc) {
-    basePath += `.${doc}`;
-  }
-  if (!subcollections) {
-    return basePath;
-  }
-  const mappedCollections = subcollections.map(pathFromMeta);
-  return basePath.concat(`.${mappedCollections.join('.')}`);
-}
 
 /**
  * @name dataReducer

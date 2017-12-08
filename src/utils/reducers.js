@@ -61,6 +61,36 @@ export const getFirestorePath = (action) => {
 
 
 /**
+ * Get path from meta data
+ * @param  {Object} meta - Action meta data object
+ * @param  {String} meta.collection - Name of Collection for which the action
+ * is to be handled.
+ * @param  {String} meta.doc - Name of Document for which the action is to be
+ * handled.
+ * @param  {Array} meta.subcollections - Subcollections of data
+ * @param  {String} meta.storeAs - Another key within redux store that the
+ * action associates with (used for storing data under a path different
+ * from its collection/document)
+ * @return {String} String path to be used within reducer
+ */
+export function pathFromMeta(meta) {
+  const { collection, doc, subcollections, storeAs } = meta;
+  let basePath = collection;
+  if (storeAs) {
+    return storeAs;
+  }
+  if (doc) {
+    basePath += `.${doc}`;
+  }
+  if (!subcollections) {
+    return basePath;
+  }
+  const mappedCollections = subcollections.map(pathFromMeta);
+  return basePath.concat(`.${mappedCollections.join('.')}`);
+}
+
+
+/**
  * Encapsulate the idea of passing a new object as the first parameter
  * to Object.assign to ensure we correctly copy data instead of mutating
  * @param  {Object} oldObject - Object before update
