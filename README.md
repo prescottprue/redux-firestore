@@ -229,7 +229,7 @@ store.firestore.setListeners([
 ##### Where
 
 **Single**
-To create a single where call, pass a single argument array to where
+To create a single `where` call, pass a single argument array to the `where` parameter:
 
 ```js
 {
@@ -240,7 +240,7 @@ To create a single where call, pass a single argument array to where
 
 **Multiple**
 
-Multiple where queries are as simple as passing multiple argument arrays (each one representing a where call)
+Multiple `where` queries are as simple as passing multiple argument arrays (each one representing a `where` call):
 
 ```js
 {
@@ -249,6 +249,48 @@ Multiple where queries are as simple as passing multiple argument arrays (each o
     ['state', '==', 'CA'],
     ['population', '<', 100000]
   ]
+},
+```
+
+*Should only be used with collections*
+
+##### orderBy
+
+**Single**
+To create a single `orderBy` call, pass a single argument array to `orderBy`
+
+```js
+{
+  collection: 'cities',
+  orderBy: ['state'],
+  // orderBy: 'state' // string notation can also be used
+},
+```
+
+**Multiple**
+
+Multiple `orderBy`s are as simple as passing multiple argument arrays (each one representing a `orderBy` call)
+
+```js
+{
+  collection: 'cities',
+  orderBy: [
+    ['state'],
+    ['population', 'desc']
+  ]
+},
+```
+
+*Should only be used with collections*
+
+##### limit
+
+Limit the query to a certain number of results
+
+```js
+{
+  collection: 'cities',
+  limit: 10
 },
 ```
 
@@ -266,7 +308,7 @@ Storing data under a different path within redux is as easy as passing the `stor
 },
 ```
 
-**NOTE:** Not yet supported for subcollections
+**NOTE:** Not yet supported inside of subcollections (only at the top level)
 
 #### Other Firebase Statics
 

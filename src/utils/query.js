@@ -9,22 +9,51 @@ import { actionTypes } from '../constants';
  * @return {firebase.firestore.Reference} Reference with where statement attached
  */
 const addWhereToRef = (ref, where) => {
-  let newRef;
   if (!isArray(where)) {
     throw new Error('where parameter must be an array');
   }
   if (isString(where[0])) {
-    newRef = where.length > 1 ? ref.where(...where) : ref.where(where[0]);
-  } else {
-    forEach(where, (whereArgs) => {
-      if (!isArray(whereArgs)) {
-        throw new Error(
-          'Where currently only supports arrays. Each option must be an Array of arguments to pass to where.',
-        );
-      }
-      newRef = whereArgs.length > 1 ? ref.where(...whereArgs) : ref.where(whereArgs);
-    });
+    return where.length > 1 ? ref.where(...where) : ref.where(where[0]);
   }
+  let newRef;
+  forEach(where, (whereArgs) => {
+    if (!isArray(whereArgs)) {
+      throw new Error(
+        'Where currently only supports arrays. Each option must be an Array of arguments to pass to where.',
+      );
+    }
+    newRef = whereArgs.length > 1 ? ref.where(...whereArgs) : ref.where(whereArgs);
+  });
+  return newRef;
+};
+
+/**
+ * Add attribute to Cloud Firestore Reference handling invalid formats
+ * and multiple where statements (array of arrays). Used for orderBy and where
+ * @param {firebase.firestore.Reference} ref - Reference which to add where to
+ * @param {Array} attrVal - Statement to attach to reference
+ * @param {String} [attrName='where'] - Name of attribute
+  * @return {firebase.firestore.Reference} Reference with where statement attached
+  */
+const addOrderByToRef = (ref, orderBy) => {
+  if (!isArray(orderBy) && !isString(orderBy)) {
+    throw new Error('orderBy parameter must be an array or string');
+  }
+  if (isString(orderBy)) {
+    return ref.orderBy(orderBy);
+  }
+  let newRef;
+  forEach(orderBy, (orderByArgs) => {
+    if (isString(orderByArgs)) {
+      newRef = ref.orderBy(orderByArgs);
+    } else if (isArray(orderByArgs)) {
+      newRef = orderByArgs.length > 1 ? ref.orderBy(...orderByArgs) : ref.orderBy(orderByArgs[0]);
+    } else {
+      throw new Error(
+        'orderBy currently only supports arrays. Each option must be an Array of arguments to pass to orderBy.',
+      );
+    }
+  });
   return newRef;
 };
 
@@ -60,13 +89,19 @@ export const firestoreRef = (firebase, dispatch, meta) => {
       if (subcollection.where) {
         ref = addWhereToRef(ref, subcollection.where);
       }
+      if (subcollection.orderBy) {
+        ref = addOrderByToRef(ref, subcollection.orderBy);
+      }
+      if (subcollection.limit) {
+        ref = ref.limit(subcollection.limit);
+      }
     });
   }
   if (where) {
     ref = addWhereToRef(ref, where);
   }
   if (orderBy) {
-    ref = isArray(orderBy) ? ref.orderBy(...orderBy) : ref.orderBy(orderBy);
+    ref = addOrderByToRef(ref, orderBy);
   }
   if (limit) {
     ref = ref.limit(limit);
