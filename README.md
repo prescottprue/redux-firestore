@@ -19,13 +19,31 @@
 npm install redux-firestore --save
 ```
 
-## NOTE
+This assumes you are using [npm](https://www.npmjs.com/) as your package manager.
 
-You probably want to be using [react-redux-firebase](https://github.com/prescottprue/react-redux-firebase).
+If you're not, you can access the library on [unpkg](https://unpkg.com/redux-firestore@0.1.0/dist/redux-firestore.min.js), download it, or point your package manager to it.
 
-If you are planning on using Firestore with Auth, Realtime DB, Storage or any other Firebase Products you will most likely want to use [react-redux-firebase](https://github.com/prescottprue/react-redux-firebase), which actually depends on this module.
+Most commonly people consume Redux Firestore as a [CommonJS module](http://webpack.github.io/docs/commonjs.html). This module is what you get when you import redux in a Webpack, Browserify, or a Node environment.
 
-This is a low level library that is meant to be used simple as a building block.
+If you don't use a module bundler, it's also fine. The redux-firestore npm package includes precompiled production and development [UMD builds](https://github.com/umdjs/umd) in the [dist folder](https://unpkg.com/redux-firestore@latest/dist/). They can be used directly without a bundler and are thus compatible with many popular JavaScript module loaders and environments. For example, you can drop a UMD build as a `<script>` tag on the page. The UMD builds make Redux Firestore available as a window.ReduxFirestore global variable.
+
+It can be imported like so:
+
+```js
+<script src="../node_modules/redux-firestore/dist/redux-firestore.min.js"></script>
+// or through cdn: <script src="https://unpkg.com/redux-firestore@0.1.0/dist/redux-firestore.min.js"></script>
+<script>console.log('redux firestore:', window.ReduxFirestore)</script>
+```
+
+## Complementary Package
+
+Most likley, you'll want react bindings, for that you will need: [react-redux-firebase](https://github.com/prescottprue/react-redux-firebase).
+
+```js
+npm install --save react-redux-firebase@next
+```
+
+If you are planning on using Firestore with Auth, Realtime DB, Storage or any other Firebase Products you will need to install [react-redux-firebase](https://github.com/prescottprue/react-redux-firebase), which actually works nicely alongside this module.
 
 ## Use
 
