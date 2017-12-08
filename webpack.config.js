@@ -11,7 +11,7 @@ const config = {
   output: {
     path: path.join(__dirname, 'dist'),
     filename: libraryName + (isProduction ? '.min.js' : '.js'),
-    library: libraryName,
+    library: 'ReduxFirestore',
     libraryTarget: 'umd',
     umdNamedDefine: true,
   },

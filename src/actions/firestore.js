@@ -1,4 +1,4 @@
-import { isArray } from 'lodash';
+import { isArray, invoke } from 'lodash';
 import { wrapInDispatch } from '../utils/actions';
 import { actionTypes } from '../constants';
 import {
@@ -169,6 +169,9 @@ export const setListener = (firebase, dispatch, queryOpts, successCb, errorCb) =
       }
     }, (err) => {
       // TODO: Look into whether listener is automatically removed in all cases
+      // TODO: Provide a setting that allows for silencing of console error
+      // Log error handling the case of it not existing
+      invoke(console, 'error', err);
       dispatch({
         type: actionTypes.LISTENER_ERROR,
         meta,
