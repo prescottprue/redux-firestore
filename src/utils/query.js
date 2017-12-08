@@ -215,12 +215,6 @@ export const getQueryConfig = (query) => {
     if (!query.collection && !query.doc) {
       throw new Error('Collection and/or Doc are required parameters within query definition object');
     }
-    if (query.subCollections) {
-      return {
-        ...query,
-        subCollections: query.subCollections.map(getQueryConfig),
-      };
-    }
     return query;
   }
   throw new Error('Invalid Path Definition: Only Strings and Objects are accepted.');

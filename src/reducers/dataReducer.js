@@ -28,7 +28,9 @@ export default function dataReducer(state = {}, action) {
       if (!payload || payload.data === undefined) {
         return state;
       }
-      const data = meta.doc ? get(payload.data, meta.doc) : payload.data;
+      const data = meta.doc && !meta.subcollections
+        ? get(payload.data, meta.doc)
+        : payload.data;
       const previousData = get(state, pathFromMeta(meta));
       // Do not merge if no existing data or if meta contains subcollections
       if (!previousData || meta.subcollections) {
