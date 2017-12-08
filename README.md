@@ -228,7 +228,6 @@ store.firestore.setListeners([
 
 ##### Where
 
-**Single**
 To create a single `where` call, pass a single argument array to the `where` parameter:
 
 ```js
@@ -237,8 +236,6 @@ To create a single `where` call, pass a single argument array to the `where` par
   where: ['state', '==', 'CA']
 },
 ```
-
-**Multiple**
 
 Multiple `where` queries are as simple as passing multiple argument arrays (each one representing a `where` call):
 
@@ -256,7 +253,6 @@ Multiple `where` queries are as simple as passing multiple argument arrays (each
 
 ##### orderBy
 
-**Single**
 To create a single `orderBy` call, pass a single argument array to `orderBy`
 
 ```js
@@ -266,8 +262,6 @@ To create a single `orderBy` call, pass a single argument array to `orderBy`
   // orderBy: 'state' // string notation can also be used
 },
 ```
-
-**Multiple**
 
 Multiple `orderBy`s are as simple as passing multiple argument arrays (each one representing a `orderBy` call)
 
@@ -375,7 +369,7 @@ Some of the goals behind this approach include:
 
 
 ## Applications Using This
-* [fireadmin.io](http://fireadmin.io) - Firebase Instance Management Tool [source available here](https://github.com/prescottprue/fireadmin))
+* [fireadmin.io](http://fireadmin.io) - Firebase Instance Management Tool [source available here](https://github.com/prescottprue/fireadmin)
 
 ## Roadmap
 
