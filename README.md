@@ -379,9 +379,8 @@ Some of the goals behind this approach include:
 
 ## Roadmap
 
-`v0.1.0` - Basic querying
+* Support for Passing a Ref to `setListener` in place of `queryConfig`
 
-`redux-firestore` can be used along side `react-redux-firebase`
 
 [npm-image]: https://img.shields.io/npm/v/redux-firestore.svg?style=flat-square
 [npm-url]: https://npmjs.org/package/redux-firestore
