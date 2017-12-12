@@ -5,7 +5,6 @@ import { pathFromMeta } from '../utils/reducers';
 
 const { CLEAR_DATA, GET_SUCCESS, LISTENER_RESPONSE } = actionTypes;
 
-
 /**
  * @name dataReducer
  * Reducer for data state.
@@ -25,22 +24,29 @@ export default function dataReducer(state = {}, action) {
     case GET_SUCCESS:
     case LISTENER_RESPONSE:
       const { meta, payload, preserve } = action;
+      // Return state if payload are invalid
       if (!payload || payload.data === undefined) {
         return state;
       }
-      const data = meta.doc && !meta.subcollections
-        ? get(payload.data, meta.doc)
-        : payload.data;
+      // Get doc from subcollections if they exist
+      const docName = meta.subcollections
+        ? meta.subcollections.slice(-1)[0].doc // doc from last item of subcollections array
+        : meta.doc; // doc from top level meta
+      // Data to set to state is doc if doc name exists within meta
+      const data = docName ? get(payload.data, docName) : payload.data;
+      // Get previous data at path to check for existence
       const previousData = get(state, pathFromMeta(meta));
-      // Do not merge if no existing data or if meta contains subcollections
+      // Only merge if data does not already exist or if meta contains subcollections
       if (!previousData || meta.subcollections) {
+        // Set data to state immutabily (lodash/fp's setWith creates copy)
         return setWith(Object, pathFromMeta(meta), data, state);
       }
-      // Merge with existing data
+      // Otherwise merge with existing data
       const mergedData = assign(previousData, data);
+      // Set data to state (with merge) immutabily (lodash/fp's setWith creates copy)
       return setWith(Object, pathFromMeta(meta), mergedData, state);
     case CLEAR_DATA:
-      // support keeping data when logging out - #125
+      // support keeping data when logging out - #125 of react-redux-firebase
       if (preserve) {
         return pick(state, preserve); // pick returns a new object
       }
