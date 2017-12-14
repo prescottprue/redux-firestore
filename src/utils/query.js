@@ -117,15 +117,15 @@ const getQueryName = (meta) => {
   if (!collection) {
     throw new Error('Collection is required to build query name');
   }
-  const basePath = collection;
+  let basePath = collection;
   if (doc) {
-    basePath.concat(`/${doc}`);
+    basePath = basePath.concat(`/${doc}`);
   }
   if (subcollections) {
     const mappedCollections = subcollections.map(subcollection =>
       subcollection.collection.concat(subcollection.doc ? `/${subcollection.doc}` : ''),
     );
-    basePath.concat(mappedCollections.join('/'));
+    basePath = basePath.concat(mappedCollections.join('/'));
   }
   if (where) {
     if (!isArray(where)) {
