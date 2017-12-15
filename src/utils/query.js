@@ -15,16 +15,14 @@ const addWhereToRef = (ref, where) => {
   if (isString(where[0])) {
     return where.length > 1 ? ref.where(...where) : ref.where(where[0]);
   }
-  let newRef;
-  forEach(where, (whereArgs) => {
+  return where.reduce((acc, whereArgs) => {
     if (!isArray(whereArgs)) {
       throw new Error(
         'Where currently only supports arrays. Each option must be an Array of arguments to pass to where.',
       );
     }
-    newRef = whereArgs.length > 1 ? ref.where(...whereArgs) : ref.where(whereArgs);
-  });
-  return newRef;
+    return whereArgs.length > 1 ? acc.where(...whereArgs) : acc.where(whereArgs);
+  }, ref);
 };
 
 /**
@@ -33,8 +31,8 @@ const addWhereToRef = (ref, where) => {
  * @param {firebase.firestore.Reference} ref - Reference which to add where to
  * @param {Array} attrVal - Statement to attach to reference
  * @param {String} [attrName='where'] - Name of attribute
-  * @return {firebase.firestore.Reference} Reference with where statement attached
-  */
+ * @return {firebase.firestore.Reference} Reference with where statement attached
+ */
 const addOrderByToRef = (ref, orderBy) => {
   if (!isArray(orderBy) && !isString(orderBy)) {
     throw new Error('orderBy parameter must be an array or string');
@@ -42,19 +40,16 @@ const addOrderByToRef = (ref, orderBy) => {
   if (isString(orderBy)) {
     return ref.orderBy(orderBy);
   }
-  let newRef;
-  forEach(orderBy, (orderByArgs) => {
+  return orderBy.reduce((acc, orderByArgs) => {
     if (isString(orderByArgs)) {
-      newRef = ref.orderBy(orderByArgs);
+      return acc.orderBy(orderByArgs);
     } else if (isArray(orderByArgs)) {
-      newRef = orderByArgs.length > 1 ? ref.orderBy(...orderByArgs) : ref.orderBy(orderByArgs[0]);
-    } else {
-      throw new Error(
+      return orderByArgs.length > 1 ? acc.orderBy(...orderByArgs) : acc.orderBy(orderByArgs[0]);
+    }
+    throw new Error(
         'orderBy currently only supports arrays. Each option must be an Array of arguments to pass to orderBy.',
       );
-    }
-  });
-  return newRef;
+  }, ref);
 };
 
 /**
@@ -109,8 +104,7 @@ export const firestoreRef = (firebase, dispatch, meta) => {
   return ref;
 };
 
-const whereToStr = where =>
-  isString(where[0]) ? where.join(':') : where.map(whereToStr);
+const whereToStr = where => (isString(where[0]) ? where.join(':') : where.map(whereToStr));
 
 const getQueryName = (meta) => {
   const { collection, doc, subcollections, where } = meta;
@@ -135,7 +129,6 @@ const getQueryName = (meta) => {
   }
   return basePath;
 };
-
 
 /**
  * @description Update the number of watchers for a query
@@ -213,13 +206,14 @@ export const getQueryConfig = (query) => {
   }
   if (isObject(query)) {
     if (!query.collection && !query.doc) {
-      throw new Error('Collection and/or Doc are required parameters within query definition object');
+      throw new Error(
+        'Collection and/or Doc are required parameters within query definition object',
+      );
     }
     return query;
   }
   throw new Error('Invalid Path Definition: Only Strings and Objects are accepted.');
 };
-
 
 /**
  * @description Convert array of querys into an array of queryConfig objects
@@ -249,14 +243,14 @@ export const orderedFromSnap = (snap) => {
   const ordered = [];
   if (snap.data && snap.exists) {
     const obj = isObject(snap.data())
-       ? { id: snap.id, ...snap.data() || snap.data }
-       : { id: snap.id, data: snap.data() };
+      ? { id: snap.id, ...(snap.data() || snap.data) }
+      : { id: snap.id, data: snap.data() };
     ordered.push(obj);
   } else if (snap.forEach) {
     snap.forEach((doc) => {
       const obj = isObject(doc.data())
-         ? { id: doc.id, ...doc.data() || doc.data }
-         : { id: doc.id, data: doc.data() };
+        ? { id: doc.id, ...(doc.data() || doc.data) }
+        : { id: doc.id, data: doc.data() };
       ordered.push(obj);
     });
   }
