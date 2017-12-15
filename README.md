@@ -27,7 +27,7 @@ If you're not, you can access the library on [unpkg](https://unpkg.com/redux-fir
 
 Most likely, you'll want react bindings, for that you will need [react-redux-firebase](https://github.com/prescottprue/react-redux-firebase). You can install the current v2.0.0 version it by running:
 
-```js
+```sh
 npm install --save react-redux-firebase@next
 ```
 
@@ -370,11 +370,11 @@ It can be imported like so:
 Note: In an effort to keep things simple, the wording from this explanation was modeled after [the installation section of the Redux Docs](https://redux.js.org/#installation).
 
 ## Applications Using This
-* [fireadmin.io](http://fireadmin.io) - Firebase Instance Management Tool [source available here](https://github.com/prescottprue/fireadmin)
+* [fireadmin.io](http://fireadmin.io) - Firebase Instance Management Tool (source [available here](https://github.com/prescottprue/fireadmin))
 
 ## Roadmap
 
-* Support for Passing a Ref to `setListener` in place of `queryConfig`
+* Support for Passing a Ref to `setListener` in place of `queryConfig` object or string
 
 
 [npm-image]: https://img.shields.io/npm/v/redux-firestore.svg?style=flat-square
