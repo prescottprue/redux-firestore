@@ -51,17 +51,9 @@ export const combineReducers = reducers =>
       {},
     );
 
-export const getFirestorePath = (action) => {
-  if (!action.meta) {
-    throw new Error('Meta is required to create firestore path');
-  }
-  const { meta: { collection, doc } } = action;
-  return doc ? `${collection}/${doc}` : collection;
-};
-
-
 /**
- * Get path from meta data
+ * Get path from meta data. Path is used with lodash's setWith to set deep
+ * data within reducers.
  * @param  {Object} meta - Action meta data object
  * @param  {String} meta.collection - Name of Collection for which the action
  * is to be handled.
@@ -74,6 +66,9 @@ export const getFirestorePath = (action) => {
  * @return {String} String path to be used within reducer
  */
 export function pathFromMeta(meta) {
+  if (!meta) {
+    throw new Error('Action meta is required to build path for reducers');
+  }
   const { collection, doc, subcollections, storeAs } = meta;
   let basePath = collection;
   if (storeAs) {
