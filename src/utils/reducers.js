@@ -67,13 +67,16 @@ export const combineReducers = reducers =>
  */
 export function pathFromMeta(meta) {
   if (!meta) {
-    throw new Error('Action meta is required to build path for reducers');
+    throw new Error('Action meta is required to build path for reducers.');
   }
   const { collection, doc, subcollections, storeAs } = meta;
-  let basePath = collection;
   if (storeAs) {
     return storeAs;
   }
+  if (!collection) {
+    throw new Error('Collection is required to construct reducer path.');
+  }
+  let basePath = collection;
   if (doc) {
     basePath += `.${doc}`;
   }

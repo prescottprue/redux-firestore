@@ -20,11 +20,12 @@ describe('reducer utils', () => {
 
     it('throws for no meta data passed (first argument)', () => {
       expect(() => pathFromMeta())
-        .to.throw('Action meta is required to build path for reducers');
+        .to.throw('Action meta is required to build path for reducers.');
     });
 
     it('returns undefined if provided nothing', () => {
-      expect(pathFromMeta({})).to.not.exist;
+      expect(() => pathFromMeta({}))
+        .to.throw('Collection is required to construct reducer path.');
     });
 
     it('returns collection if provided', () => {
@@ -32,7 +33,8 @@ describe('reducer utils', () => {
     });
 
     it('returns collection doc combined into dot path if both provided', () => {
-      expect(pathFromMeta({ collection: 'first', doc: 'second' })).to.equal('first.second');
+      expect(pathFromMeta({ collection: 'first', doc: 'second' }))
+        .to.equal('first.second');
     });
 
     it('uses storeAs as path if provided', () => {
@@ -56,7 +58,10 @@ describe('reducer utils', () => {
     });
 
     it('supports multiple subcollections', () => {
-      subcollections = [{ collection: 'third', doc: 'forth' }, { collection: 'fifth' }];
+      subcollections = [
+        { collection: 'third', doc: 'forth' },
+        { collection: 'fifth' },
+      ];
       config = { collection: 'first', doc: 'second', subcollections };
       expect(pathFromMeta(config))
         .to.equal('first.second.third.forth.fifth');

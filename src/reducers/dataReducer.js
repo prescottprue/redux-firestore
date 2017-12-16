@@ -23,7 +23,7 @@ export default function dataReducer(state = {}, action) {
   switch (action.type) {
     case GET_SUCCESS:
     case LISTENER_RESPONSE:
-      const { meta, payload, preserve } = action;
+      const { meta, payload } = action;
       // Return state if payload are invalid
       if (!payload || payload.data === undefined) {
         return state;
@@ -47,8 +47,8 @@ export default function dataReducer(state = {}, action) {
       return setWith(Object, pathFromMeta(meta), mergedData, state);
     case CLEAR_DATA:
       // support keeping data when logging out - #125 of react-redux-firebase
-      if (preserve) {
-        return pick(state, preserve); // pick returns a new object
+      if (action.preserve) {
+        return pick(state, action.preserve); // pick returns a new object
       }
       return {};
     default:
