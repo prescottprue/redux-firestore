@@ -119,7 +119,7 @@ const getQueryName = (meta) => {
     const mappedCollections = subcollections.map(subcollection =>
       subcollection.collection.concat(subcollection.doc ? `/${subcollection.doc}` : ''),
     );
-    basePath = basePath.concat(mappedCollections.join('/'));
+    basePath = `${basePath}/${mappedCollections.join('/')}`;
   }
   if (where) {
     if (!isArray(where)) {
