@@ -374,8 +374,10 @@ Note: In an effort to keep things simple, the wording from this explanation was 
 
 ## Roadmap
 
+* Automatic support for documents that have a parameter and a subcollection with the same name (currently requires `storeAs`)
 * Support for Passing a Ref to `setListener` in place of `queryConfig` object or string
 
+Post an issue with a feature suggestion if you have any ideas!
 
 [npm-image]: https://img.shields.io/npm/v/redux-firestore.svg?style=flat-square
 [npm-url]: https://npmjs.org/package/redux-firestore
