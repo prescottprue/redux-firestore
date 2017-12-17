@@ -10,16 +10,21 @@
   ],
   "plugins": [
     "lodash",
-    "transform-inline-environment-variables",
     "transform-object-rest-spread",
     "transform-object-assign",
   ],
   "env": {
     "es": {
-      "comments": false
+      "comments": false,
+      "plugins": [
+        "transform-inline-environment-variables"
+      ]
     },
     "commonjs": {
-      "comments": false
+      "comments": false,
+      "plugins": [
+        "transform-inline-environment-variables"
+      ]
     }
   }
 }
