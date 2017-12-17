@@ -6,6 +6,7 @@ import constants, { actionTypes } from './constants';
 import middleware, { CALL_FIRESTORE } from './middleware';
 
 export default {
+  version: process.env.npm_package_version, // converted with transform-inline-environment-variables
   firestoreReducer: reducer,
   reduxFirestore: enhancer,
   createFirestoreInstance,
