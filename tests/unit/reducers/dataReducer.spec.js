@@ -2,8 +2,7 @@ import dataReducer from '../../../src/reducers/dataReducer';
 import { actionTypes } from '../../../src/constants';
 
 const state = {};
-const collection = 'test';
-
+let collection = 'test'; // eslint-disable-line prefer-const
 let action = {};
 let payload = {};
 let meta = {};
