@@ -73,6 +73,24 @@ describe('firestoreActions', () => {
           expect(err.message).to.equal('Listeners must be an Array of listener configs (Strings/Objects)');
         }
       });
+
+      it('calls dispatch if listeners provided', () => {
+        const instance = createFirestoreInstance({}, { helpersNamespace: 'test' });
+        try {
+          instance.test.setListeners({ collection: 'test' });
+        } catch (err) {
+          expect(err.message).to.equal('Listeners must be an Array of listener configs (Strings/Objects)');
+        }
+      });
+
+      it('supports subcollections', () => {
+        const instance = createFirestoreInstance({}, { helpersNamespace: 'test' });
+        try {
+          instance.test.setListeners({ collection: 'test', doc: '1', subcollections: [{ collection: 'test2' }] });
+        } catch (err) {
+          expect(err.message).to.equal('Listeners must be an Array of listener configs (Strings/Objects)');
+        }
+      });
     });
 
     describe('unsetListener', () => {
