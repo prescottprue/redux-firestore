@@ -1,4 +1,4 @@
-import { isObject, isString, isArray, size, trim, forEach } from 'lodash';
+import { isObject, isString, isArray, size, trim, forEach, has } from 'lodash';
 import { actionTypes } from '../constants';
 
 /**
@@ -140,7 +140,14 @@ const getQueryName = (meta) => {
  * @return {Object} Object containing all listeners
  */
 export const attachListener = (firebase, dispatch, meta, unsubscribe) => {
+  if (!meta) {
+    throw new Error('Meta data is required to attach listener.');
+  }
+  if (!has(firebase, '_.listeners')) {
+    throw new Error('Internal Firebase object required to attach listener. Confirm that reduxFirestore enhancer was added when you were creating your store');
+  }
   const name = getQueryName(meta);
+
   if (!firebase._.listeners[name]) {
     firebase._.listeners[name] = unsubscribe; // eslint-disable-line no-param-reassign
   }
