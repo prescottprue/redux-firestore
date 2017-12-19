@@ -44,11 +44,11 @@ import 'firebase/firestore'
 const firebaseConfig = {} // from Firebase Console
 
 // Initialize firebase instance
-const firebaseApp = firebase.initializeApp(config)
+const firebaseApp = firebase.initializeApp(firebaseConfig)
 // Initialize Cloud Firestore through Firebase
 firebase.firestore();
 
-// Add reduxReduxFirebase to compose
+// Add reduxFirestore store enhancer to store creator
 const createStoreWithFirebase = compose(
   reduxFirestore(firebaseApp), // firebase instance as first argument
 )(createStore)
@@ -66,7 +66,11 @@ const store = createStoreWithFirebase(rootReducer, initialState)
 Then pass store to your component's context using [react-redux's `Provider`](https://github.com/reactjs/react-redux/blob/master/docs/api.md#provider-store):
 
 ```js
-ReactDOM.render(
+import React from 'react';
+import { render } from 'react-dom';
+import { Provider } from 'react-redux';
+
+render(
   <Provider store={store}>
     <MyRootComponent />
   </Provider>,
