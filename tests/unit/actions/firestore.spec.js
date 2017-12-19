@@ -1,5 +1,6 @@
 import createFirestoreInstance from '../../../src/createFirestoreInstance';
 import { firestoreActions } from '../../../src/actions';
+import { setListeners } from '../../../src/actions/firestore';
 
 describe('firestoreActions', () => {
   describe('exports', () => {
@@ -81,6 +82,19 @@ describe('firestoreActions', () => {
         } catch (err) {
           expect(err.message).to.equal('Listeners must be an Array of listener configs (Strings/Objects)');
         }
+      });
+
+      it('maps listeners array', () => {
+        const dispatchSpy = sinon.spy();
+        // const mapSpy = sinon.spy(listenersArray, 'map');
+        const fakeFirebase = {
+          _: { listeners: {} },
+          firestore: () => ({
+            collection: () => ({ onSnapshot: () => ({ }) }),
+          }),
+        };
+        setListeners(fakeFirebase, dispatchSpy, [{ collection: 'test' }]);
+        // expect(mapSpy).to.be.calledOnce;
       });
 
       it('supports subcollections', () => {
