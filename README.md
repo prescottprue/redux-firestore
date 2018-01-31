@@ -25,10 +25,10 @@ If you're not, you can access the library on [unpkg](https://unpkg.com/redux-fir
 
 ## Complementary Package
 
-Most likely, you'll want react bindings, for that you will need [react-redux-firebase](https://github.com/prescottprue/react-redux-firebase). You can install the current v2.0.0 version it by running:
+Most likely, you'll want react bindings, for that you will need [react-redux-firebase](https://github.com/prescottprue/react-redux-firebase). You can install the current version it by running:
 
 ```sh
-npm install --save react-redux-firebase@next
+npm install --save react-redux-firebase
 ```
 
 [react-redux-firebase](https://github.com/prescottprue/react-redux-firebase) provides [`withFirestore`](http://docs.react-redux-firebase.com/history/v2.0.0/docs/api/withFirestore.html) and [`firestoreConnect`](http://docs.react-redux-firebase.com/history/v2.0.0/docs/api/withFirestore.html) higher order components, which handle automatically calling `redux-firestore` internally based on component's lifecycle (i.e. mounting/un-mounting)
@@ -84,7 +84,7 @@ render(
 
 ##### Functional Components
 
-It is common to make react components "stateless" meaning that the component is just a function. This can be useful, but then can limit usage of lifecycle hooks and other features of Component Classes. [`recompose` helps solve this](https://github.com/acdlite/recompose/blob/master/docs/API.md) by providing Higher Order Component functions such as `withContext`, `lifecycle`, and `withHandlers`.
+It is common to make react components "functional" meaning that the component is just a function instead of being a `class` which `extends React.Component`. This can be useful, but then can limit usage of lifecycle hooks and other features of Component Classes. [`recompose` helps solve this](https://github.com/acdlite/recompose/blob/master/docs/API.md) by providing Higher Order Component functions such as `withContext`, `lifecycle`, and `withHandlers`.
 
 ```js
 import { connect } from 'react-redux'
