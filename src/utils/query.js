@@ -40,6 +40,9 @@ const addOrderByToRef = (ref, orderBy) => {
   if (isString(orderBy)) {
     return ref.orderBy(orderBy);
   }
+  if (isString(orderBy[0])) {
+    return ref.orderBy(...orderBy);
+  }
   return orderBy.reduce((acc, orderByArgs) => {
     if (isString(orderByArgs)) {
       return acc.orderBy(orderByArgs);
@@ -47,8 +50,8 @@ const addOrderByToRef = (ref, orderBy) => {
       return orderByArgs.length > 1 ? acc.orderBy(...orderByArgs) : acc.orderBy(orderByArgs[0]);
     }
     throw new Error(
-        'orderBy currently only supports arrays. Each option must be an Array of arguments to pass to orderBy.',
-      );
+      'orderBy currently only supports arrays. Each option must be an Array of arguments to pass to orderBy.',
+    );
   }, ref);
 };
 
@@ -144,7 +147,9 @@ export const attachListener = (firebase, dispatch, meta, unsubscribe) => {
     throw new Error('Meta data is required to attach listener.');
   }
   if (!has(firebase, '_.listeners')) {
-    throw new Error('Internal Firebase object required to attach listener. Confirm that reduxFirestore enhancer was added when you were creating your store');
+    throw new Error(
+      'Internal Firebase object required to attach listener. Confirm that reduxFirestore enhancer was added when you were creating your store',
+    );
   }
   const name = getQueryName(meta);
 

@@ -8,13 +8,21 @@ describe('actions utils', () => {
 
     it('calls dispatch', () => {
       const dispatch = sinon.spy();
-      wrapInDispatch(dispatch, { ref: { test: () => Promise.resolve() }, types: ['test', 'test'], method: 'test' });
+      wrapInDispatch(dispatch, {
+        ref: { test: () => Promise.resolve() },
+        types: ['test', 'test'],
+        method: 'test',
+      });
       expect(dispatch).to.have.been.calledOnce;
     });
 
     it('handles Object action types', () => {
       const dispatch = sinon.spy();
-      wrapInDispatch(dispatch, { ref: { test: () => Promise.resolve() }, types: [{ type: 'test' }, { type: 'test' }], method: 'test' });
+      wrapInDispatch(dispatch, {
+        ref: { test: () => Promise.resolve() },
+        types: [{ type: 'test' }, { type: 'test' }],
+        method: 'test',
+      });
       expect(dispatch).to.have.been.calledOnce;
     });
 
@@ -22,10 +30,7 @@ describe('actions utils', () => {
       const dispatch = sinon.spy();
       const opts = {
         ref: { test: () => Promise.resolve() },
-        types: [
-          { type: 'test' },
-          { type: 'test', payload: () => ({}) },
-        ],
+        types: [{ type: 'test' }, { type: 'test', payload: () => ({}) }],
         method: 'test',
       };
       wrapInDispatch(dispatch, opts);
@@ -36,10 +41,7 @@ describe('actions utils', () => {
       const dispatch = sinon.spy();
       const opts = {
         ref: { test: () => Promise.reject() },
-        types: [
-          { type: 'test' },
-          { type: 'test', payload: () => ({}) },
-        ],
+        types: [{ type: 'test' }, { type: 'test', payload: () => ({}) }],
         method: 'test',
       };
       wrapInDispatch(dispatch, opts);
