@@ -76,25 +76,29 @@ export const firestoreRef = (firebase, dispatch, meta) => {
   if (doc) {
     ref = ref.doc(doc);
   }
-  if (subcollections) {
-    forEach(subcollections, (subcollection) => {
-      if (subcollection.collection) {
-        ref = ref.collection(subcollection.collection);
-      }
-      if (subcollection.doc) {
-        ref = ref.doc(subcollection.doc);
-      }
-      if (subcollection.where) {
-        ref = addWhereToRef(ref, subcollection.where);
-      }
-      if (subcollection.orderBy) {
-        ref = addOrderByToRef(ref, subcollection.orderBy);
-      }
-      if (subcollection.limit) {
-        ref = ref.limit(subcollection.limit);
-      }
-    });
-  }
+  const handleSubcollections = (subcollectionList) => {
+    if (subcollectionList) {
+      forEach(subcollectionList, (subcollection) => {
+        if (subcollection.collection) {
+          ref = ref.collection(subcollection.collection);
+        }
+        if (subcollection.doc) {
+          ref = ref.doc(subcollection.doc);
+        }
+        if (subcollection.where) {
+          ref = addWhereToRef(ref, subcollection.where);
+        }
+        if (subcollection.orderBy) {
+          ref = addOrderByToRef(ref, subcollection.orderBy);
+        }
+        if (subcollection.limit) {
+          ref = ref.limit(subcollection.limit);
+        }
+        handleSubcollections(subcollection.subcollections);
+      });
+    }
+  };
+  handleSubcollections(subcollections);
   if (where) {
     ref = addWhereToRef(ref, where);
   }
@@ -119,9 +123,7 @@ const getQueryName = (meta) => {
     basePath = basePath.concat(`/${doc}`);
   }
   if (subcollections) {
-    const mappedCollections = subcollections.map(subcollection =>
-      subcollection.collection.concat(subcollection.doc ? `/${subcollection.doc}` : ''),
-    );
+    const mappedCollections = subcollections.map(subcollection => getQueryName(subcollection));
     basePath = `${basePath}/${mappedCollections.join('/')}`;
   }
   if (where) {

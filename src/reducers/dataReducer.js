@@ -29,9 +29,10 @@ export default function dataReducer(state = {}, action) {
         return state;
       }
       // Get doc from subcollections if they exist
-      const docName = meta.subcollections
-        ? meta.subcollections.slice(-1)[0].doc // doc from last item of subcollections array
-        : meta.doc; // doc from top level meta
+      const getDocName = data => data.subcollections
+        ? getDocName(data.subcollections.slice(-1)[0]) // doc from last item of subcollections array
+        : data.doc; // doc from top level meta
+      const docName = getDocName(meta);
       // Data to set to state is doc if doc name exists within meta
       const data = docName ? get(payload.data, docName) : payload.data;
       // Get previous data at path to check for existence
