@@ -18,17 +18,18 @@ const {
  * @return {Object} Profile state after reduction
  */
 const errorsAllIds = (state = [], { meta, type }) => {
-  if (!meta || !meta.id) {
+  if (!meta) {
     return state;
   }
   switch (type) {
     case LOGIN_ERROR:
+    case LISTENER_ERROR:
     case ERROR:
-      return [...state, meta.id];
+      return [...state, pathFromMeta(meta)];
     case CLEAR_ERRORS:
       return [];
     case CLEAR_ERROR:
-      return state.filter(lId => lId !== meta.id);
+      return state.filter(lId => lId !== pathFromMeta(meta));
     default:
       return state;
   }
@@ -43,25 +44,35 @@ const errorsAllIds = (state = [], { meta, type }) => {
  * @return {Object} Profile state after reduction
  */
 const errorsByQuery = (state = {}, { meta, payload, type }) => {
-  if (!meta || !meta.id) {
+  if (!meta) {
     return state;
   }
+  const listenerPath = pathFromMeta(meta);
   switch (type) {
     case LOGIN_ERROR:
     case ERROR:
       return {
         ...state,
-        [meta.id]: payload,
+        [listenerPath]: payload,
       };
     case LISTENER_ERROR:
+      const errorObj = { id: meta.id, error: payload };
       return {
         ...state,
-        [pathFromMeta(meta)]: payload,
+        [listenerPath]: state[listenerPath]
+          ? [...state[listenerPath], errorObj]
+          : [errorObj],
       };
     case CLEAR_ERRORS:
-      return [];
+      return {
+        ...state,
+        [listenerPath]: [],
+      };
     case CLEAR_ERROR:
-      return state.filter(lId => lId !== payload.id);
+      return {
+        ...state,
+        [listenerPath]: state[listenerPath].filter(lId => lId !== meta.id),
+      };
     default:
       return state;
   }

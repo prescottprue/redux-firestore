@@ -160,6 +160,7 @@ export const setListener = (
   errorCb,
 ) => {
   const meta = getQueryConfig(queryOpts);
+  // Create listener
   const unsubscribe = firestoreRef(firebase, dispatch, meta).onSnapshot(
     docData => {
       dispatch({
