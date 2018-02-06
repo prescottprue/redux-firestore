@@ -51,27 +51,15 @@ const errorsByQuery = (state = {}, { meta, payload, type }) => {
   switch (type) {
     case LOGIN_ERROR:
     case ERROR:
+    case LISTENER_ERROR:
       return {
         ...state,
         [listenerPath]: payload,
       };
-    case LISTENER_ERROR:
-      const errorObj = { id: meta.id, error: payload };
-      return {
-        ...state,
-        [listenerPath]: state[listenerPath]
-          ? [...state[listenerPath], errorObj]
-          : [errorObj],
-      };
-    case CLEAR_ERRORS:
-      return {
-        ...state,
-        [listenerPath]: [],
-      };
     case CLEAR_ERROR:
       return {
         ...state,
-        [listenerPath]: state[listenerPath].filter(lId => lId !== meta.id),
+        [listenerPath]: null,
       };
     default:
       return state;
