@@ -21,7 +21,9 @@ const addWhereToRef = (ref, where) => {
         'Where currently only supports arrays. Each option must be an Array of arguments to pass to where.',
       );
     }
-    return whereArgs.length > 1 ? acc.where(...whereArgs) : acc.where(whereArgs);
+    return whereArgs.length > 1
+      ? acc.where(...whereArgs)
+      : acc.where(whereArgs);
   }, ref);
 };
 
@@ -47,7 +49,9 @@ const addOrderByToRef = (ref, orderBy) => {
     if (isString(orderByArgs)) {
       return acc.orderBy(orderByArgs);
     } else if (isArray(orderByArgs)) {
-      return orderByArgs.length > 1 ? acc.orderBy(...orderByArgs) : acc.orderBy(orderByArgs[0]);
+      return orderByArgs.length > 1
+        ? acc.orderBy(...orderByArgs)
+        : acc.orderBy(orderByArgs[0]);
     }
     throw new Error(
       'orderBy currently only supports arrays. Each option must be an Array of arguments to pass to orderBy.',
@@ -76,9 +80,9 @@ export const firestoreRef = (firebase, dispatch, meta) => {
   if (doc) {
     ref = ref.doc(doc);
   }
-  const handleSubcollections = (subcollectionList) => {
+  const handleSubcollections = subcollectionList => {
     if (subcollectionList) {
-      forEach(subcollectionList, (subcollection) => {
+      forEach(subcollectionList, subcollection => {
         if (subcollection.collection) {
           ref = ref.collection(subcollection.collection);
         }
@@ -111,9 +115,10 @@ export const firestoreRef = (firebase, dispatch, meta) => {
   return ref;
 };
 
-const whereToStr = where => (isString(where[0]) ? where.join(':') : where.map(whereToStr));
+const whereToStr = where =>
+  isString(where[0]) ? where.join(':') : where.map(whereToStr);
 
-const getQueryName = (meta) => {
+const getQueryName = meta => {
   const { collection, doc, subcollections, where } = meta;
   if (!collection) {
     throw new Error('Collection is required to build query name');
@@ -123,7 +128,9 @@ const getQueryName = (meta) => {
     basePath = basePath.concat(`/${doc}`);
   }
   if (subcollections) {
-    const mappedCollections = subcollections.map(subcollection => getQueryName(subcollection));
+    const mappedCollections = subcollections.map(subcollection =>
+      getQueryName(subcollection),
+    );
     basePath = `${basePath}/${mappedCollections.join('/')}`;
   }
   if (where) {
@@ -195,7 +202,7 @@ export const detachListener = (firebase, dispatch, meta) => {
  * @param  {String} queryPathStr String to be converted
  * @return {Object} Object containing collection, doc and subcollection
  */
-const queryStrToObj = (queryPathStr) => {
+const queryStrToObj = queryPathStr => {
   const pathArr = trim(queryPathStr, ['/']).split('/');
   const [collection, doc, subCollection, ...other] = pathArr;
   return {
@@ -212,7 +219,7 @@ const queryStrToObj = (queryPathStr) => {
  * @param {Object|String} query - Query setups in the form of objects or strings
  * @return {Object} Query setup normalized into a queryConfig object
  */
-export const getQueryConfig = (query) => {
+export const getQueryConfig = query => {
   if (isString(query)) {
     return queryStrToObj(query);
   }
@@ -224,7 +231,9 @@ export const getQueryConfig = (query) => {
     }
     return query;
   }
-  throw new Error('Invalid Path Definition: Only Strings and Objects are accepted.');
+  throw new Error(
+    'Invalid Path Definition: Only Strings and Objects are accepted.',
+  );
 };
 
 /**
@@ -232,7 +241,7 @@ export const getQueryConfig = (query) => {
  * @param {Array} queries - Array of query strings/objects
  * @return {Array} watchEvents - Array of watch events
  */
-export const getQueryConfigs = (queries) => {
+export const getQueryConfigs = queries => {
   if (isArray(queries)) {
     return queries.map(getQueryConfig);
   }
@@ -251,7 +260,7 @@ export const getQueryConfigs = (queries) => {
  * an ordered array.
  * @return {Array|Null} Ordered list of children from snapshot or null
  */
-export const orderedFromSnap = (snap) => {
+export const orderedFromSnap = snap => {
   const ordered = [];
   if (snap.data && snap.exists) {
     const obj = isObject(snap.data())
@@ -259,7 +268,7 @@ export const orderedFromSnap = (snap) => {
       : { id: snap.id, data: snap.data() };
     ordered.push(obj);
   } else if (snap.forEach) {
-    snap.forEach((doc) => {
+    snap.forEach(doc => {
       const obj = isObject(doc.data())
         ? { id: doc.id, ...(doc.data() || doc.data) }
         : { id: doc.id, data: doc.data() };
@@ -275,12 +284,12 @@ export const orderedFromSnap = (snap) => {
  * an ordered array.
  * @return {Object|Null} Object documents from snapshot or null
  */
-export const dataByIdSnapshot = (snap) => {
+export const dataByIdSnapshot = snap => {
   const data = {};
   if (snap.data && snap.exists) {
     data[snap.id] = snap.data();
   } else if (snap.forEach) {
-    snap.forEach((doc) => {
+    snap.forEach(doc => {
       data[doc.id] = doc.data() || doc;
     });
   }

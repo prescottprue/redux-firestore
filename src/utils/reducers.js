@@ -38,18 +38,13 @@ export function getDotStrPath(path) {
  * passed object, and builds a state object with the same shape.
  * @private
  */
-export const combineReducers = reducers =>
-  (state = {}, action) =>
-    Object.keys(reducers).reduce(
-      (nextState, key) => {
-        nextState[key] = reducers[key]( // eslint-disable-line no-param-reassign
-          state[key],
-          action,
-        );
-        return nextState;
-      },
-      {},
-    );
+export const combineReducers = reducers => (state = {}, action) =>
+  Object.keys(reducers).reduce((nextState, key) => {
+    /* eslint-disable no-param-reassign */
+    nextState[key] = reducers[key](state[key], action);
+    /* eslint-enable no-param-reassign */
+    return nextState;
+  }, {});
 
 /**
  * Get path from meta data. Path is used with lodash's setWith to set deep
@@ -87,7 +82,6 @@ export function pathFromMeta(meta) {
   return basePath.concat(`.${mappedCollections.join('.')}`);
 }
 
-
 /**
  * Encapsulate the idea of passing a new object as the first parameter
  * to Object.assign to ensure we correctly copy data instead of mutating
@@ -108,7 +102,7 @@ export function updateObject(oldObject, newValues) {
  * @return {Array} Array with item updated
  */
 export function updateItemInArray(array, itemId, updateItemCallback) {
-  const updatedItems = array.map((item) => {
+  const updatedItems = array.map(item => {
     if (item.id !== itemId) {
       // Since we only want to update one item, preserve all others as they are now
       return item;

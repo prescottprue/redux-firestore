@@ -46,22 +46,26 @@ let firestoreInstance;
  * // Use Function later to create store
  * const store = createStoreWithFirestore(rootReducer, initialState)
  */
-export default (firebaseInstance, otherConfig) => next =>
-  (reducer, initialState, middleware) => {
-    const store = next(reducer, initialState, middleware);
+export default (firebaseInstance, otherConfig) => next => (
+  reducer,
+  initialState,
+  middleware,
+) => {
+  const store = next(reducer, initialState, middleware);
 
-    const configs = { ...defaultConfig, ...otherConfig };
+  const configs = { ...defaultConfig, ...otherConfig };
 
-    firestoreInstance = createFirestoreInstance( // eslint-disable-line no-param-reassign
-      firebaseInstance.firebase_ || firebaseInstance, // eslint-disable-line no-underscore-dangle, no-undef, max-len
-      configs,
-      store.dispatch // eslint-disable-line comma-dangle
-    );
+  firestoreInstance = createFirestoreInstance(
+    // eslint-disable-line no-param-reassign
+    firebaseInstance.firebase_ || firebaseInstance, // eslint-disable-line no-underscore-dangle, no-undef, max-len
+    configs,
+    store.dispatch, // eslint-disable-line comma-dangle
+  );
 
-    store.firestore = firestoreInstance;
+  store.firestore = firestoreInstance;
 
-    return store;
-  };
+  return store;
+};
 
 /**
  * @description Expose Firestore instance created internally. Useful for
@@ -98,11 +102,13 @@ export default (firebaseInstance, otherConfig) => next =>
  *
  */
 export const getFirestore = () => {
-    // TODO: Handle recieveing config and creating firebase instance if it doesn't exist
-    /* istanbul ignore next: Firebase instance always exists during tests */
+  // TODO: Handle recieveing config and creating firebase instance if it doesn't exist
+  /* istanbul ignore next: Firebase instance always exists during tests */
   if (!firestoreInstance) {
-    throw new Error('Firebase instance does not yet exist. Check your compose function.'); // eslint-disable-line no-console
+    throw new Error(
+      'Firebase instance does not yet exist. Check your compose function.',
+    );
   }
-    // TODO: Create new firebase here with config passed in
+  // TODO: Create new firebase here with config passed in
   return firestoreInstance;
 };

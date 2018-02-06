@@ -3,12 +3,14 @@ import reduxFirestore, { getFirestore } from '../../src/enhancer';
 
 const reducer = sinon.spy();
 const generateCreateStore = () =>
-  compose(reduxFirestore(
-    {},
-    {
-      userProfile: 'users',
-    },
-  ))(createStore);
+  compose(
+    reduxFirestore(
+      {},
+      {
+        userProfile: 'users',
+      },
+    ),
+  )(createStore);
 
 const store = generateCreateStore()(reducer);
 

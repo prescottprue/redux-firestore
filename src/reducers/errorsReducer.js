@@ -29,7 +29,8 @@ const errorsAllIds = (state = [], { meta, type }) => {
       return [];
     case CLEAR_ERROR:
       return state.filter(lId => lId !== meta.id);
-    default: return state;
+    default:
+      return state;
   }
 };
 
@@ -61,7 +62,8 @@ const errorsByQuery = (state = {}, { meta, payload, type }) => {
       return [];
     case CLEAR_ERROR:
       return state.filter(lId => lId !== payload.id);
-    default: return state;
+    default:
+      return state;
   }
 };
 

@@ -15,7 +15,10 @@ describe('createFirestoreInstance', () => {
     describe('options - ', () => {
       describe('helpersNamespace -', () => {
         it('places helpers on namespace if passed', () => {
-          const instance = createFirestoreInstance({}, { helpersNamespace: 'test' });
+          const instance = createFirestoreInstance(
+            {},
+            { helpersNamespace: 'test' },
+          );
           expect(instance).to.have.property('test');
         });
       });

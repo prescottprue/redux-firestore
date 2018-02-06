@@ -43,28 +43,43 @@ describe('dataReducer', () => {
         payload = { data: { abc: {} } };
         meta = {};
         action = { meta, payload, type: actionTypes.LISTENER_RESPONSE };
-        expect(() => dataReducer(state, action))
-          .to.throw('Collection is required to construct reducer path.');
+        expect(() => dataReducer(state, action)).to.throw(
+          'Collection is required to construct reducer path.',
+        );
       });
 
       describe('with subcollections parameter', () => {
         it('updates empty state', () => {
           const data = { abc: { field: 'test' } };
           payload = { data };
-          meta = { collection, doc: 'someDoc', subcollections: [{ collection: 'another' }] };
+          meta = {
+            collection,
+            doc: 'someDoc',
+            subcollections: [{ collection: 'another' }],
+          };
           action = { meta, payload, type: actionTypes.LISTENER_RESPONSE };
-          expect(dataReducer(state, action))
-            .to.have.nested.property('test.someDoc.another', data);
+          expect(dataReducer(state, action)).to.have.nested.property(
+            'test.someDoc.another',
+            data,
+          );
         });
 
         it('updates state when data already exists', () => {
           const data = { testing: { field: 'test' } };
           payload = { data };
-          meta = { collection, doc: 'someDoc', subcollections: [{ collection: 'another', doc: 'testing' }] };
-          const existingState = { test: { someDoc: { another: { testing: {} } } } };
+          meta = {
+            collection,
+            doc: 'someDoc',
+            subcollections: [{ collection: 'another', doc: 'testing' }],
+          };
+          const existingState = {
+            test: { someDoc: { another: { testing: {} } } },
+          };
           action = { meta, payload, type: actionTypes.LISTENER_RESPONSE };
-          expect(dataReducer(existingState, action))
-            .to.have.nested.property('test.someDoc.another.testing.field', data.testing.field);
+          expect(dataReducer(existingState, action)).to.have.nested.property(
+            'test.someDoc.another.testing.field',
+            data.testing.field,
+          );
         });
       });
     });
@@ -92,8 +107,9 @@ describe('dataReducer', () => {
         payload = { data: { abc: {} } };
         meta = {};
         action = { meta, payload, type: actionTypes.GET_SUCCESS };
-        expect(() => dataReducer(state, action))
-          .to.throw('Collection is required to construct reducer path.');
+        expect(() => dataReducer(state, action)).to.throw(
+          'Collection is required to construct reducer path.',
+        );
       });
 
       // TODO: Make this test complete
@@ -103,28 +119,44 @@ describe('dataReducer', () => {
         meta = { collection, doc: 'someDoc' };
         const existingState = { test: { someDoc: { another: 'test' } } };
         action = { meta, payload, type: actionTypes.GET_SUCCESS };
-        expect(dataReducer(existingState, action))
-          .to.have.nested.property('test', {});
+        expect(dataReducer(existingState, action)).to.have.nested.property(
+          'test',
+          {},
+        );
       });
 
       describe('with subcollections parameter', () => {
         it('updates empty state', () => {
           const data = { abc: { field: 'test' } };
           payload = { data };
-          meta = { collection, doc: 'someDoc', subcollections: [{ collection: 'another' }] };
+          meta = {
+            collection,
+            doc: 'someDoc',
+            subcollections: [{ collection: 'another' }],
+          };
           action = { meta, payload, type: actionTypes.GET_SUCCESS };
-          expect(dataReducer(state, action))
-            .to.have.nested.property('test.someDoc.another', data);
+          expect(dataReducer(state, action)).to.have.nested.property(
+            'test.someDoc.another',
+            data,
+          );
         });
 
         it('updates state when data already exists', () => {
           const data = { testing: { field: 'test' } };
           payload = { data };
-          meta = { collection, doc: 'someDoc', subcollections: [{ collection: 'another', doc: 'testing' }] };
-          const existingState = { test: { someDoc: { another: { testing: {} } } } };
+          meta = {
+            collection,
+            doc: 'someDoc',
+            subcollections: [{ collection: 'another', doc: 'testing' }],
+          };
+          const existingState = {
+            test: { someDoc: { another: { testing: {} } } },
+          };
           action = { meta, payload, type: actionTypes.GET_SUCCESS };
-          expect(dataReducer(existingState, action))
-            .to.have.nested.property('test.someDoc.another.testing.field', data.testing.field);
+          expect(dataReducer(existingState, action)).to.have.nested.property(
+            'test.someDoc.another.testing.field',
+            data.testing.field,
+          );
         });
       });
     });

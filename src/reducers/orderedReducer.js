@@ -26,12 +26,13 @@ function updateDocInOrdered(state, action) {
     [storeUnderKey]: updateItemInArray(
       state[storeUnderKey] || [],
       action.meta.doc,
-      item => updateObject(
-        item,
-        subcollection
-          ? { [subcollection.collection]: action.payload.ordered }
-          : itemToAdd,
-      ),
+      item =>
+        updateObject(
+          item,
+          subcollection
+            ? { [subcollection.collection]: action.payload.ordered }
+            : itemToAdd,
+        ),
     ),
   };
 }

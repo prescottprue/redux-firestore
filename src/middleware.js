@@ -19,9 +19,8 @@ function callFirestore(firebaseInstance, callInfoObj) {
 
   // Make devshare method call with array of params
   return !methodArgs
-  ? firebaseInstance.firestore()[method]
-  : firebaseInstance.firestore()[method]
-    .apply(firebaseInstance, methodArgs);
+    ? firebaseInstance.firestore()[method]
+    : firebaseInstance.firestore()[method].apply(firebaseInstance, methodArgs);
 }
 
 // Action key that carries API call info interpreted by this Redux middleware.
@@ -36,7 +35,7 @@ const typesMap = {
 };
 
 /* istanbul ignore next not yet in use */
-export const reduxFirestoreMiddleware = firestore => store => next => (action) => {
+export const reduxFirestoreMiddleware = firestore => store => next => action => {
   const callAPI = action.type === CALL_FIRESTORE ? action : undefined;
   if (typeof callAPI === 'undefined') return next(action);
 
@@ -67,14 +66,14 @@ export const reduxFirestoreMiddleware = firestore => store => next => (action) =
   next({ type: requestType });
   const callInfoObj = { method };
   return callFirestore(firestore, callInfoObj)
-    .then(response =>
-      next({ response, method, args, type: successType }),
-    )
+    .then(response => next({ response, method, args, type: successType }))
     .catch(error =>
-      next(actionWith({
-        type: failureType,
-        error: error.message || error || 'Something bad happened',
-      })),
+      next(
+        actionWith({
+          type: failureType,
+          error: error.message || error || 'Something bad happened',
+        }),
+      ),
     );
 };
 
