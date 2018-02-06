@@ -81,6 +81,33 @@ describe('dataReducer', () => {
             data.testing.field,
           );
         });
+
+        describe('containing multiple subcollections', () => {
+          it('updates state when data already exists', () => {
+            const data = {
+              subdoc2: { field: 'test' },
+            };
+            payload = { data };
+            meta = {
+              collection,
+              doc: 'someDoc',
+              subcollections: [
+                { collection: 'subcol1', doc: 'subdoc1' },
+                { collection: 'subcol2', doc: 'subdoc2' },
+              ],
+            };
+            const existingState = {
+              test: {
+                someDoc: { subcol1: { subdoc1: { subcol2: { subdoc2: {} } } } },
+              },
+            };
+            action = { meta, payload, type: actionTypes.LISTENER_RESPONSE };
+            expect(dataReducer(existingState, action)).to.have.nested.property(
+              'test.someDoc.subcol1.subdoc1.subcol2.subdoc2.field',
+              data.subdoc2.field,
+            );
+          });
+        });
       });
     });
 
