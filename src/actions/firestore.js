@@ -77,7 +77,7 @@ export const get = (firebase, dispatch, queryOption) => {
       actionTypes.GET_REQUEST,
       {
         type: actionTypes.GET_SUCCESS,
-        payload: (snap) => {
+        payload: snap => {
           const ordered = orderedFromSnap(snap);
           const data = dataByIdSnapshot(snap);
           return { data, ordered };
@@ -152,10 +152,16 @@ export const deleteRef = (firebase, dispatch, queryOption) => {
  * @param  {Function} successCb - Callback called on success
  * @param  {Function} errorCb - Callback called on error
  */
-export const setListener = (firebase, dispatch, queryOpts, successCb, errorCb) => {
+export const setListener = (
+  firebase,
+  dispatch,
+  queryOpts,
+  successCb,
+  errorCb,
+) => {
   const meta = getQueryConfig(queryOpts);
-  const unsubscribe = firestoreRef(firebase, dispatch, meta)
-    .onSnapshot((docData) => {
+  const unsubscribe = firestoreRef(firebase, dispatch, meta).onSnapshot(
+    docData => {
       dispatch({
         type: actionTypes.LISTENER_RESPONSE,
         meta,
@@ -167,7 +173,8 @@ export const setListener = (firebase, dispatch, queryOpts, successCb, errorCb) =
       if (successCb) {
         successCb(docData);
       }
-    }, (err) => {
+    },
+    err => {
       // TODO: Look into whether listener is automatically removed in all cases
       // TODO: Provide a setting that allows for silencing of console error
       // Log error handling the case of it not existing
@@ -180,7 +187,8 @@ export const setListener = (firebase, dispatch, queryOpts, successCb, errorCb) =
       if (errorCb) {
         errorCb(err);
       }
-    });
+    },
+  );
   attachListener(firebase, dispatch, meta, unsubscribe);
 };
 
@@ -192,7 +200,9 @@ export const setListener = (firebase, dispatch, queryOpts, successCb, errorCb) =
  */
 export const setListeners = (firebase, dispatch, listeners) => {
   if (!isArray(listeners)) {
-    throw new Error('Listeners must be an Array of listener configs (Strings/Objects)');
+    throw new Error(
+      'Listeners must be an Array of listener configs (Strings/Objects)',
+    );
   }
   return listeners.map(listener => setListener(firebase, dispatch, listener));
 };
@@ -219,7 +229,9 @@ export const unsetListener = (firebase, dispatch, opts) =>
  */
 export const unsetListeners = (firebase, dispatch, listeners) => {
   if (!isArray(listeners)) {
-    throw new Error('Listeners must be an Array of listener configs (Strings/Objects)');
+    throw new Error(
+      'Listeners must be an Array of listener configs (Strings/Objects)',
+    );
   }
   return listeners.map(listener => unsetListener(firebase, dispatch, listener));
 };

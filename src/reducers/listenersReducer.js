@@ -23,7 +23,8 @@ const listenersById = (state = {}, { type, path, payload }) => {
       };
     case actionTypes.UNSET_LISTENER:
       return omit(state, [payload.name]);
-    default: return state;
+    default:
+      return state;
   }
 };
 
@@ -42,7 +43,8 @@ const allListeners = (state = [], { type, payload }) => {
       return [...state, payload.name];
     case actionTypes.UNSET_LISTENER:
       return state.filter(name => name !== payload.name);
-    default: return state;
+    default:
+      return state;
   }
 };
 
