@@ -1,13 +1,7 @@
 import { actionTypes } from '../constants';
 import { combineReducers, pathFromMeta } from '../utils/reducers';
 
-const {
-  CLEAR_ERRORS,
-  CLEAR_ERROR,
-  LOGIN_ERROR,
-  LISTENER_ERROR,
-  ERROR,
-} = actionTypes;
+const { CLEAR_ERRORS, CLEAR_ERROR, LISTENER_ERROR, ERROR } = actionTypes;
 
 /**
  * Reducer for errors state. Changed by `ERROR`
@@ -19,7 +13,6 @@ const {
  */
 const errorsAllIds = (state = [], { meta, type }) => {
   switch (type) {
-    case LOGIN_ERROR:
     case LISTENER_ERROR:
     case ERROR:
       return [...state, pathFromMeta(meta)];
@@ -42,7 +35,6 @@ const errorsAllIds = (state = [], { meta, type }) => {
  */
 const errorsByQuery = (state = {}, { meta, payload, type }) => {
   switch (type) {
-    case LOGIN_ERROR:
     case ERROR:
     case LISTENER_ERROR:
       return {
