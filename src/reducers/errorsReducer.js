@@ -15,6 +15,9 @@ const errorsAllIds = (state = [], { meta, type }) => {
   switch (type) {
     case LISTENER_ERROR:
     case ERROR:
+      if (state.indexOf(pathFromMeta(meta)) !== -1) {
+        return state;
+      }
       return [...state, pathFromMeta(meta)];
     case CLEAR_ERRORS:
       return [];
