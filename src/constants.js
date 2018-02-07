@@ -83,12 +83,15 @@ export const actionTypes = {
  * database logging is enabled.
  * @property {Boolean} enhancerNamespace - `'firestore'` Namespace underwhich
  * enhancer places internal instance on redux store (i.e. store.firestore).
+ * @property {Object} preserveOnListenerError - `null` Object containing, list
+ * of keys to preserve from slices of state
  * @type {Object}
  */
 export const defaultConfig = {
   enableLogging: false,
   enhancerNamespace: 'firestore',
   helpersNamespace: null,
+  preserveOnListenerError: null,
 };
 
 export default {

@@ -1,9 +1,14 @@
 import { pick, get } from 'lodash';
 import { setWith, assign } from 'lodash/fp';
 import { actionTypes } from '../constants';
-import { pathFromMeta } from '../utils/reducers';
+import { pathFromMeta, preserveValuesFromState } from '../utils/reducers';
 
-const { CLEAR_DATA, GET_SUCCESS, LISTENER_RESPONSE } = actionTypes;
+const {
+  CLEAR_DATA,
+  GET_SUCCESS,
+  LISTENER_RESPONSE,
+  LISTENER_ERROR,
+} = actionTypes;
 
 /**
  * @name dataReducer
@@ -38,7 +43,7 @@ export default function dataReducer(state = {}, action) {
       const data = docName ? get(payload.data, docName) : payload.data;
       // Get previous data at path to check for existence
       const previousData = get(state, pathFromMeta(meta));
-      // Only merge if data does not already exist or if meta contains subcollections
+      // Set data (without merging) if no previous data exists or if there are subcollections
       if (!previousData || meta.subcollections) {
         // Set data to state immutabily (lodash/fp's setWith creates copy)
         return setWith(Object, pathFromMeta(meta), data, state);
@@ -53,6 +58,13 @@ export default function dataReducer(state = {}, action) {
         return pick(state, action.preserve); // pick returns a new object
       }
       return {};
+    case LISTENER_ERROR:
+      const nextState = setWith(Object, pathFromMeta(action.meta), null, state);
+      if (action.preserve && action.preserve.data) {
+        return preserveValuesFromState(state, action.preserve.data, nextState);
+      }
+      // Set data to state immutabily (lodash/fp's setWith creates copy)
+      return nextState;
     default:
       return state;
   }

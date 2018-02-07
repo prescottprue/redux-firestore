@@ -184,6 +184,7 @@ export const setListener = (
         type: actionTypes.LISTENER_ERROR,
         meta,
         payload: err,
+        preserve: firebase._.preserveOnListenerError,
       });
       if (errorCb) {
         errorCb(err);

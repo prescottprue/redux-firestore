@@ -1,8 +1,14 @@
 import { pick, first } from 'lodash';
+import { setWith } from 'lodash/fp';
 import { actionTypes } from '../constants';
 import { updateItemInArray, updateObject } from '../utils/reducers';
 
-const { GET_SUCCESS, LISTENER_RESPONSE, CLEAR_DATA } = actionTypes;
+const {
+  GET_SUCCESS,
+  LISTENER_RESPONSE,
+  CLEAR_DATA,
+  LISTENER_ERROR,
+} = actionTypes;
 
 /**
  * Update a document within an array from the ordered state
@@ -16,8 +22,8 @@ const { GET_SUCCESS, LISTENER_RESPONSE, CLEAR_DATA } = actionTypes;
  * @param  {String} action.payload - Data from within the action
  * @return {Object} Ordered state after reduction
  */
-function updateDocInOrdered(state, action) {
-  const itemToAdd = first(action.payload.ordered);
+function updateDocInOrdered(state, action, setAsEmpty = false) {
+  const itemToAdd = setAsEmpty ? null : first(action.payload.ordered);
   const subcollection = first(action.meta.subcollections);
   const storeUnderKey = action.meta.storeAs || action.meta.collection;
   // TODO: Make this recursive so that is supports multiple subcollections
@@ -78,6 +84,16 @@ export default function orderedReducer(state = {}, action) {
         return pick(state, action.preserve); // pick returns a new object
       }
       return state;
+    case LISTENER_ERROR:
+      if (action.meta.doc) {
+        return updateDocInOrdered(state, action, true);
+      }
+      return setWith(
+        Object,
+        action.meta.storeAs || action.meta.collection,
+        null,
+        state,
+      );
     default:
       return state;
   }

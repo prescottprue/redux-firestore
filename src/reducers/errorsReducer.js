@@ -18,9 +18,6 @@ const {
  * @return {Object} Profile state after reduction
  */
 const errorsAllIds = (state = [], { meta, type }) => {
-  if (!meta) {
-    return state;
-  }
   switch (type) {
     case LOGIN_ERROR:
     case LISTENER_ERROR:
@@ -44,22 +41,18 @@ const errorsAllIds = (state = [], { meta, type }) => {
  * @return {Object} Profile state after reduction
  */
 const errorsByQuery = (state = {}, { meta, payload, type }) => {
-  if (!meta) {
-    return state;
-  }
-  const listenerPath = pathFromMeta(meta);
   switch (type) {
     case LOGIN_ERROR:
     case ERROR:
     case LISTENER_ERROR:
       return {
         ...state,
-        [listenerPath]: payload,
+        [pathFromMeta(meta)]: payload,
       };
     case CLEAR_ERROR:
       return {
         ...state,
-        [listenerPath]: null,
+        [pathFromMeta(meta)]: null,
       };
     default:
       return state;
