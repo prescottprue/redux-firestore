@@ -1,6 +1,7 @@
 import createFirestoreInstance from '../../../src/createFirestoreInstance';
 import { firestoreActions } from '../../../src/actions';
 import { setListeners } from '../../../src/actions/firestore';
+import { actionTypes } from '../../../src/constants';
 
 let dispatchSpy;
 let fakeFirebase;
@@ -270,6 +271,20 @@ describe('firestoreActions', () => {
             'Listeners must be an Array of listener configs (Strings/Objects)',
           );
         }
+      });
+
+      it('dispatches UNSET_LISTENER action', () => {
+        const instance = createFirestoreInstance(
+          {},
+          { helpersNamespace: 'test' },
+          dispatchSpy,
+        );
+        instance.test.unsetListeners([{ collection: 'test' }]);
+        expect(dispatchSpy).to.have.been.calledWith({
+          meta: { collection: 'test' },
+          payload: { name: 'test' },
+          type: actionTypes.UNSET_LISTENER,
+        });
       });
     });
   });

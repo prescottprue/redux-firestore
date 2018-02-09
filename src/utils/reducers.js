@@ -1,3 +1,5 @@
+import { isFunction, isBoolean, isArray, pick } from 'lodash';
+
 /**
  * Create a path array from path string
  * @param  {String} path - Path seperated with slashes
@@ -59,6 +61,7 @@ export const combineReducers = reducers => (state = {}, action) =>
  * action associates with (used for storing data under a path different
  * from its collection/document)
  * @return {String} String path to be used within reducer
+ * @private
  */
 export function pathFromMeta(meta) {
   if (!meta) {
@@ -83,23 +86,13 @@ export function pathFromMeta(meta) {
 }
 
 /**
- * Encapsulate the idea of passing a new object as the first parameter
- * to Object.assign to ensure we correctly copy data instead of mutating
- * @param  {Object} oldObject - Object before update
- * @param  {Object} newValues - New values to add to the object
- * @return {Object} Object with new values
- */
-export function updateObject(oldObject, newValues) {
-  return Object.assign({}, oldObject, newValues);
-}
-
-/**
  * Update a single item within an array
  * @param  {Array} array - Array within which to update item
  * @param  {String} itemId - Id of item to update
  * @param  {Function} updateItemCallback - Callback dictacting how the item
  * is updated
  * @return {Array} Array with item updated
+ * @private
  */
 export function updateItemInArray(array, itemId, updateItemCallback) {
   const updatedItems = array.map(item => {
@@ -114,4 +107,35 @@ export function updateItemInArray(array, itemId, updateItemCallback) {
   });
 
   return updatedItems;
+}
+
+/**
+ * Preserve slice of state based on preserve settings for that slice. Settings
+ * for support can be any of type `Boolean`, `Function`, or `Array`.
+ * @param  {Object} state - slice of redux state to be preserved
+ * @param  {Boolean|Function|Array} preserveSetting [description]
+ * @param  {Object} nextState - What state would have been set to if preserve
+ * was not occuring.
+ * @return {Object} Slice of state with values preserved
+ * @private
+ */
+export function preserveValuesFromState(state, preserveSetting, nextState) {
+  // Return original state if preserve is true
+  if (isBoolean(preserveSetting) && preserveSetting) {
+    return nextState ? { ...state, ...nextState } : state;
+  }
+
+  // Return result of function if preserve is a function
+  if (isFunction(preserveSetting)) {
+    return preserveSetting(state, nextState);
+  }
+
+  // Return keys listed within array
+  if (isArray(preserveSetting)) {
+    return pick(state, preserveSetting); // pick returns a new object
+  }
+
+  throw new Error(
+    'Invalid preserve parameter. It must be an Object or an Array',
+  );
 }

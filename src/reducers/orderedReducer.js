@@ -1,6 +1,6 @@
 import { pick, first } from 'lodash';
 import { actionTypes } from '../constants';
-import { updateItemInArray, updateObject } from '../utils/reducers';
+import { updateItemInArray } from '../utils/reducers';
 
 const { GET_SUCCESS, LISTENER_RESPONSE, CLEAR_DATA } = actionTypes;
 
@@ -27,7 +27,8 @@ function updateDocInOrdered(state, action) {
       state[storeUnderKey] || [],
       action.meta.doc,
       item =>
-        updateObject(
+        Object.assign(
+          {},
           item,
           subcollection
             ? { [subcollection.collection]: action.payload.ordered }
@@ -78,6 +79,7 @@ export default function orderedReducer(state = {}, action) {
         return pick(state, action.preserve); // pick returns a new object
       }
       return state;
+    // TODO: LISTENER_ERROR that sets null in a way that is configurable (v0.3.0)
     default:
       return state;
   }

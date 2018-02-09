@@ -1,13 +1,7 @@
 import { actionTypes } from '../constants';
 import { combineReducers, pathFromMeta } from '../utils/reducers';
 
-const {
-  CLEAR_ERRORS,
-  CLEAR_ERROR,
-  LOGIN_ERROR,
-  LISTENER_ERROR,
-  ERROR,
-} = actionTypes;
+const { CLEAR_ERRORS, CLEAR_ERROR, LISTENER_ERROR, ERROR } = actionTypes;
 
 /**
  * Reducer for errors state. Changed by `ERROR`
@@ -18,17 +12,17 @@ const {
  * @return {Object} Profile state after reduction
  */
 const errorsAllIds = (state = [], { meta, type }) => {
-  if (!meta || !meta.id) {
-    return state;
-  }
   switch (type) {
-    case LOGIN_ERROR:
+    case LISTENER_ERROR:
     case ERROR:
-      return [...state, meta.id];
+      if (state.indexOf(pathFromMeta(meta)) !== -1) {
+        return state;
+      }
+      return [...state, pathFromMeta(meta)];
     case CLEAR_ERRORS:
       return [];
     case CLEAR_ERROR:
-      return state.filter(lId => lId !== meta.id);
+      return state.filter(lId => lId !== pathFromMeta(meta));
     default:
       return state;
   }
@@ -43,25 +37,18 @@ const errorsAllIds = (state = [], { meta, type }) => {
  * @return {Object} Profile state after reduction
  */
 const errorsByQuery = (state = {}, { meta, payload, type }) => {
-  if (!meta || !meta.id) {
-    return state;
-  }
   switch (type) {
-    case LOGIN_ERROR:
     case ERROR:
-      return {
-        ...state,
-        [meta.id]: payload,
-      };
     case LISTENER_ERROR:
       return {
         ...state,
         [pathFromMeta(meta)]: payload,
       };
-    case CLEAR_ERRORS:
-      return [];
     case CLEAR_ERROR:
-      return state.filter(lId => lId !== payload.id);
+      return {
+        ...state,
+        [pathFromMeta(meta)]: null,
+      };
     default:
       return state;
   }
