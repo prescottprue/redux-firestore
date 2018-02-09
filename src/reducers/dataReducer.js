@@ -53,6 +53,7 @@ export default function dataReducer(state = {}, action) {
         return pick(state, action.preserve); // pick returns a new object
       }
       return {};
+    // TODO: LISTENER_ERROR that sets null in a way that is configurable (v0.3.0)
     default:
       return state;
   }
