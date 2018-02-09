@@ -1,14 +1,8 @@
 import { pick, first } from 'lodash';
-import { setWith } from 'lodash/fp';
 import { actionTypes } from '../constants';
 import { updateItemInArray, updateObject } from '../utils/reducers';
 
-const {
-  GET_SUCCESS,
-  LISTENER_RESPONSE,
-  CLEAR_DATA,
-  LISTENER_ERROR,
-} = actionTypes;
+const { GET_SUCCESS, LISTENER_RESPONSE, CLEAR_DATA } = actionTypes;
 
 /**
  * Update a document within an array from the ordered state
@@ -84,16 +78,6 @@ export default function orderedReducer(state = {}, action) {
         return pick(state, action.preserve); // pick returns a new object
       }
       return state;
-    case LISTENER_ERROR:
-      if (action.meta.doc) {
-        return updateDocInOrdered(state, action, true);
-      }
-      return setWith(
-        Object,
-        action.meta.storeAs || action.meta.collection,
-        null,
-        state,
-      );
     default:
       return state;
   }

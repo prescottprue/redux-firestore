@@ -1,14 +1,9 @@
 import { pick, get } from 'lodash';
 import { setWith, assign } from 'lodash/fp';
 import { actionTypes } from '../constants';
-import { pathFromMeta, preserveValuesFromState } from '../utils/reducers';
+import { pathFromMeta } from '../utils/reducers';
 
-const {
-  CLEAR_DATA,
-  GET_SUCCESS,
-  LISTENER_RESPONSE,
-  LISTENER_ERROR,
-} = actionTypes;
+const { CLEAR_DATA, GET_SUCCESS, LISTENER_RESPONSE } = actionTypes;
 
 /**
  * @name dataReducer
@@ -58,13 +53,6 @@ export default function dataReducer(state = {}, action) {
         return pick(state, action.preserve); // pick returns a new object
       }
       return {};
-    case LISTENER_ERROR:
-      const nextState = setWith(Object, pathFromMeta(action.meta), null, state);
-      if (action.preserve && action.preserve.data) {
-        return preserveValuesFromState(state, action.preserve.data, nextState);
-      }
-      // Set data to state immutabily (lodash/fp's setWith creates copy)
-      return nextState;
     default:
       return state;
   }
