@@ -1,6 +1,6 @@
 import { pick, first } from 'lodash';
 import { actionTypes } from '../constants';
-import { updateItemInArray, updateObject } from '../utils/reducers';
+import { updateItemInArray } from '../utils/reducers';
 
 const { GET_SUCCESS, LISTENER_RESPONSE, CLEAR_DATA } = actionTypes;
 
@@ -16,8 +16,8 @@ const { GET_SUCCESS, LISTENER_RESPONSE, CLEAR_DATA } = actionTypes;
  * @param  {String} action.payload - Data from within the action
  * @return {Object} Ordered state after reduction
  */
-function updateDocInOrdered(state, action, setAsEmpty = false) {
-  const itemToAdd = setAsEmpty ? null : first(action.payload.ordered);
+function updateDocInOrdered(state, action) {
+  const itemToAdd = first(action.payload.ordered);
   const subcollection = first(action.meta.subcollections);
   const storeUnderKey = action.meta.storeAs || action.meta.collection;
   // TODO: Make this recursive so that is supports multiple subcollections
@@ -27,7 +27,8 @@ function updateDocInOrdered(state, action, setAsEmpty = false) {
       state[storeUnderKey] || [],
       action.meta.doc,
       item =>
-        updateObject(
+        Object.assign(
+          {},
           item,
           subcollection
             ? { [subcollection.collection]: action.payload.ordered }

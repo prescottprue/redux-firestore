@@ -29,8 +29,7 @@ const listenersById = (state = {}, { type, path, payload }) => {
 };
 
 /**
- * Reducer for listeners state. Changed by `ERROR`
- * and `LOGOUT` actions.
+ * Reducer for listeners state. Changed by `ERROR` and `LOGOUT` actions.
  * @param  {Object} [state=[]] - Current authError redux state
  * @param  {Object} action - Object containing the action that was dispatched
  * @param  {String} action.type - Type of action that was dispatched
