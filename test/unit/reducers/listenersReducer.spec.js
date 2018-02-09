@@ -21,24 +21,43 @@ describe('listenersReducer', () => {
   });
   describe('allIds sub-reducer', () => {
     describe('actionTypes', () => {
-      describe('LISTENER_ERROR', () => {
-        it('returns state if payload is not defined', () => {
+      describe('SET_LISTENER', () => {
+        it.skip('returns state if payload is not defined', () => {
           action = {
             meta: { collection: 'test' },
-            type: actionTypes.LISTENER_ERROR,
+            type: actionTypes.SET_LISTENER,
           };
           state = { allIds: [], byId: {} };
-          expect(listenersReducer(state, action)).to.be.an('object');
+          expect(listenersReducer(state, action).allIds).to.be.have.length(1);
         });
 
         it('returns state if payload is not defined', () => {
           action = {
             meta: { collection: 'test' },
-            type: actionTypes.LISTENER_ERROR,
-            payload: { some: 'data' },
+            type: actionTypes.SET_LISTENER,
+            payload: { name: 'data' },
           };
           state = { allIds: [], byId: {} };
-          expect(listenersReducer(state, action)).to.be.an('object');
+          expect(listenersReducer(state, action).allIds).to.be.have.length(1);
+        });
+      });
+
+      describe('UNSET_LISTENER', () => {
+        it.skip('returns state if payload is not defined', () => {
+          action = {
+            type: actionTypes.UNSET_LISTENER,
+          };
+          state = { allIds: [], byId: {} };
+          expect(listenersReducer(state, action).allIds).to.be.have.length(1);
+        });
+
+        it('returns state if payload is not defined', () => {
+          action = {
+            type: actionTypes.UNSET_LISTENER,
+            payload: { name: 'test' },
+          };
+          state = { allIds: ['test'], byId: {} };
+          expect(listenersReducer(state, action).allIds).to.be.have.length(0);
         });
       });
     });
