@@ -1,4 +1,8 @@
-import { attachListener, getQueryConfigs, firestoreRef } from '../../../src/utils/query';
+import {
+  attachListener,
+  getQueryConfigs,
+  firestoreRef,
+} from '../../../src/utils/query';
 
 let dispatch = sinon.spy();
 let meta;
@@ -11,18 +15,24 @@ describe('query utils', () => {
     });
 
     it('converts slash path to dot path', () => {
-      attachListener({ _: { listeners: {} } }, dispatch, { collection: 'test' });
+      attachListener({ _: { listeners: {} } }, dispatch, {
+        collection: 'test',
+      });
       expect(dispatch).to.be.calledOnce;
     });
 
     it('throws if meta is not included', () => {
-      expect(() => attachListener({}, dispatch))
-        .to.Throw('Meta data is required to attach listener.');
+      expect(() => attachListener({}, dispatch)).to.Throw(
+        'Meta data is required to attach listener.',
+      );
     });
 
     it('throws if _ variable is not defined on Firebase', () => {
-      expect(() => attachListener({}, dispatch, { collection: 'test' }))
-        .to.Throw('Internal Firebase object required to attach listener. Confirm that reduxFirestore enhancer was added when you were creating your store');
+      expect(() =>
+        attachListener({}, dispatch, { collection: 'test' }),
+      ).to.Throw(
+        'Internal Firebase object required to attach listener. Confirm that reduxFirestore enhancer was added when you were creating your store',
+      );
     });
 
     describe('converts slash path to dot path', () => {
@@ -51,11 +61,19 @@ describe('query utils', () => {
       });
 
       it('for collection, document, and subcollections', () => {
-        meta = { collection: 'test', doc: 'doc', subcollections: [{ collection: 'test' }] };
+        meta = {
+          collection: 'test',
+          doc: 'doc',
+          subcollections: [{ collection: 'test' }],
+        };
         attachListener({ _: { listeners: {} } }, dispatch, meta);
         expect(dispatch).to.be.calledWith({
           meta,
-          payload: { name: `${meta.collection}/${meta.doc}/${meta.subcollections[0].collection}` },
+          payload: {
+            name: `${meta.collection}/${meta.doc}/${
+              meta.subcollections[0].collection
+            }`,
+          },
           type: '@@reduxFirestore/SET_LISTENER',
         });
       });
@@ -68,7 +86,9 @@ describe('query utils', () => {
     });
 
     it('throws if _ variable is not defined on Firebase', () => {
-      expect(() => attachListener({}, dispatch, { collection: 'test' })).to.Throw(
+      expect(() =>
+        attachListener({}, dispatch, { collection: 'test' }),
+      ).to.Throw(
         'Internal Firebase object required to attach listener. Confirm that reduxFirestore enhancer was added when you were creating your store',
       );
     });
@@ -80,25 +100,32 @@ describe('query utils', () => {
     });
 
     it('it throws for invalid input', () => {
-      expect(() => getQueryConfigs(1)).to.Throw('Querie(s) must be an Array or a string');
+      expect(() => getQueryConfigs(1)).to.Throw(
+        'Querie(s) must be an Array or a string',
+      );
     });
 
     describe('array', () => {
       it('with collection in string', () => {
-        expect(getQueryConfigs(['test'])).to.have.nested.property('0.collection', 'test');
-      });
-
-      it('with collection in an object', () => {
-        expect(getQueryConfigs([{ collection: 'test' }])).to.have.nested.property(
+        expect(getQueryConfigs(['test'])).to.have.nested.property(
           '0.collection',
           'test',
         );
       });
 
+      it('with collection in an object', () => {
+        expect(
+          getQueryConfigs([{ collection: 'test' }]),
+        ).to.have.nested.property('0.collection', 'test');
+      });
+
       it('with collection and doc in an object', () => {
         meta = [{ collection: 'test', doc: 'other' }];
         result = getQueryConfigs(meta);
-        expect(result).to.have.nested.property('0.collection', meta[0].collection);
+        expect(result).to.have.nested.property(
+          '0.collection',
+          meta[0].collection,
+        );
         expect(result).to.have.nested.property('0.doc', meta[0].doc);
       });
 
@@ -132,7 +159,11 @@ describe('query utils', () => {
       });
 
       it('with subcollections', () => {
-        meta = { collection: 'test', doc: 'other', subcollections: [{ collection: 'thing' }] };
+        meta = {
+          collection: 'test',
+          doc: 'other',
+          subcollections: [{ collection: 'thing' }],
+        };
         result = getQueryConfigs(meta);
         expect(result).to.have.nested.property('0.collection', meta.collection);
         expect(result).to.have.nested.property('0.doc', meta.doc);
@@ -153,7 +184,9 @@ describe('query utils', () => {
       it('creates ref', () => {
         meta = { collection: 'test', doc: 'other' };
         const docSpy = sinon.spy(() => ({}));
-        const fakeFirebase = { firestore: () => ({ collection: () => ({ doc: docSpy }) }) };
+        const fakeFirebase = {
+          firestore: () => ({ collection: () => ({ doc: docSpy }) }),
+        };
         result = firestoreRef(fakeFirebase, dispatch, meta);
         expect(result).to.be.an('object');
         expect(docSpy).to.be.calledWith(meta.doc);
@@ -162,7 +195,11 @@ describe('query utils', () => {
 
     describe('subcollections', () => {
       it('creates ref with collection', () => {
-        meta = { collection: 'test', doc: 'other', subcollections: [{ collection: 'thing' }] };
+        meta = {
+          collection: 'test',
+          doc: 'other',
+          subcollections: [{ collection: 'thing' }],
+        };
         const docSpy = sinon.spy(() => ({}));
         const fakeFirebase = {
           firestore: () => ({

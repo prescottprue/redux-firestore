@@ -29,14 +29,16 @@ export default function dataReducer(state = {}, action) {
         return state;
       }
       // Get doc from subcollections if they exist
-      const docName = meta.subcollections
-        ? meta.subcollections.slice(-1)[0].doc // doc from last item of subcollections array
-        : meta.doc; // doc from top level meta
+      const getDocName = data =>
+        data.subcollections
+          ? getDocName(data.subcollections.slice(-1)[0]) // doc from last item of subcollections array
+          : data.doc; // doc from top level meta
+      const docName = getDocName(meta);
       // Data to set to state is doc if doc name exists within meta
       const data = docName ? get(payload.data, docName) : payload.data;
       // Get previous data at path to check for existence
       const previousData = get(state, pathFromMeta(meta));
-      // Only merge if data does not already exist or if meta contains subcollections
+      // Set data (without merging) if no previous data exists or if there are subcollections
       if (!previousData || meta.subcollections) {
         // Set data to state immutabily (lodash/fp's setWith creates copy)
         return setWith(Object, pathFromMeta(meta), data, state);
@@ -51,6 +53,7 @@ export default function dataReducer(state = {}, action) {
         return pick(state, action.preserve); // pick returns a new object
       }
       return {};
+    // TODO: LISTENER_ERROR that sets null in a way that is configurable (v0.3.0)
     default:
       return state;
   }

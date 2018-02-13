@@ -25,6 +25,12 @@
       "plugins": [
         "transform-inline-environment-variables"
       ]
+    },
+    "test": {
+      "plugins": [
+        "transform-runtime",
+        "transform-async-to-generator"
+      ]
     }
   }
 }

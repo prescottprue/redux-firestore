@@ -5,7 +5,7 @@
  * @example
  * import { constants } from 'react-redux-firebase'
  * constants.actionsPrefix === '@@reduxFirestore' // true
-*/
+ */
 export const actionsPrefix = '@@reduxFirestore';
 
 /**
@@ -42,7 +42,7 @@ export const actionsPrefix = '@@reduxFirestore';
  * @example
  * import { actionTypes } from 'react-redux-firebase'
  * actionTypes.SET === '@@reduxFirestore/SET' // true
-*/
+ */
 export const actionTypes = {
   START: `${actionsPrefix}/START`,
   ERROR: `${actionsPrefix}/ERROR`,
@@ -84,7 +84,7 @@ export const actionTypes = {
  * @property {Boolean} enhancerNamespace - `'firestore'` Namespace underwhich
  * enhancer places internal instance on redux store (i.e. store.firestore).
  * @type {Object}
-*/
+ */
 export const defaultConfig = {
   enableLogging: false,
   enhancerNamespace: 'firestore',

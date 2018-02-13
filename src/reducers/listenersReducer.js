@@ -23,13 +23,13 @@ const listenersById = (state = {}, { type, path, payload }) => {
       };
     case actionTypes.UNSET_LISTENER:
       return omit(state, [payload.name]);
-    default: return state;
+    default:
+      return state;
   }
 };
 
 /**
- * Reducer for listeners state. Changed by `ERROR`
- * and `LOGOUT` actions.
+ * Reducer for listeners state. Changed by `ERROR` and `LOGOUT` actions.
  * @param  {Object} [state=[]] - Current authError redux state
  * @param  {Object} action - Object containing the action that was dispatched
  * @param  {String} action.type - Type of action that was dispatched
@@ -42,7 +42,8 @@ const allListeners = (state = [], { type, payload }) => {
       return [...state, payload.name];
     case actionTypes.UNSET_LISTENER:
       return state.filter(name => name !== payload.name);
-    default: return state;
+    default:
+      return state;
   }
 };
 
