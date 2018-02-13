@@ -4,3 +4,4 @@ dist
 es
 *.log
 coverage
+/.idea
