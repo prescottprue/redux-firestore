@@ -7,8 +7,16 @@ import {
   orderedFromSnap,
   dataByIdSnapshot,
   getQueryConfig,
+  getQueryName,
   firestoreRef,
 } from '../utils/query';
+
+/**
+ * Internal counter for the listeners to a particular query
+ *
+ * @type {{}}
+ */
+const pathListenerCounts = {};
 
 /**
  * Add data to a collection or document on Cloud Firestore with the call to
@@ -205,7 +213,19 @@ export const setListeners = (firebase, dispatch, listeners) => {
       'Listeners must be an Array of listener configs (Strings/Objects)',
     );
   }
-  return listeners.map(listener => setListener(firebase, dispatch, listener));
+
+  listeners.forEach(listener => {
+    const path = getQueryName(listener);
+    const oldListenerCount = pathListenerCounts[path] || 0;
+    pathListenerCounts[path] = oldListenerCount + 1;
+
+    // If we already have an attached listener exit here
+    if (oldListenerCount > 0) {
+      return;
+    }
+
+    setListener(firebase, dispatch, listener);
+  });
 };
 
 /**
@@ -234,7 +254,16 @@ export const unsetListeners = (firebase, dispatch, listeners) => {
       'Listeners must be an Array of listener configs (Strings/Objects)',
     );
   }
-  return listeners.map(listener => unsetListener(firebase, dispatch, listener));
+
+  listeners.forEach(listener => {
+    const path = getQueryName(listener);
+    pathListenerCounts[path] -= 1;
+
+    // If we aren't supposed to have listners for this path, then remove them
+    if (pathListenerCounts[path] === 0) {
+      unsetListener(firebase, dispatch, listener);
+    }
+  });
 };
 
 export default {
