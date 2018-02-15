@@ -118,7 +118,7 @@ export const firestoreRef = (firebase, dispatch, meta) => {
 const whereToStr = where =>
   isString(where[0]) ? where.join(':') : where.map(whereToStr);
 
-const getQueryName = meta => {
+export const getQueryName = meta => {
   const { collection, doc, subcollections, where } = meta;
   if (!collection) {
     throw new Error('Collection is required to build query name');
