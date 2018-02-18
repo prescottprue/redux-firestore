@@ -118,7 +118,7 @@ export const firestoreRef = (firebase, dispatch, meta) => {
 const whereToStr = where =>
   isString(where[0]) ? where.join(':') : where.map(whereToStr);
 
-export const getQueryName = meta => {
+const getQueryName = meta => {
   const { collection, doc, subcollections, where } = meta;
   if (!collection) {
     throw new Error('Collection is required to build query name');
@@ -143,6 +143,36 @@ export const getQueryName = meta => {
 };
 
 /**
+ * Confirm that meta object exists and that listeners object exists on internal
+ * firebase instance. If these required values do not exist, an error is thrown.
+ * @param {Object} firebase - Internal firebase object
+ * @param {Object} meta - Metadata object
+ */
+function confirmMetaAndConfig(firebase, meta) {
+  if (!meta) {
+    throw new Error('Meta data is required to attach listener.');
+  }
+  if (!has(firebase, '_.listeners')) {
+    throw new Error(
+      'Internal Firebase object required to attach listener. Confirm that reduxFirestore enhancer was added when you were creating your store',
+    );
+  }
+}
+
+/**
+ * Get whether or not a listener is attached at the provided path
+ * @param {Object} firebase - Internal firebase object
+ * @param {Function} dispatch - Redux's dispatch function
+ * @param {Object} meta - Metadata object
+ * @return {Boolean} Whether or not listener exists
+ */
+export const listenerExists = (firebase, meta) => {
+  confirmMetaAndConfig(firebase, meta);
+  const name = getQueryName(meta);
+  return !!firebase._.listeners[name];
+};
+
+/**
  * @description Update the number of watchers for a query
  * @param {Object} firebase - Internal firebase object
  * @param {Function} dispatch - Redux's dispatch function
@@ -152,14 +182,8 @@ export const getQueryName = meta => {
  * @return {Object} Object containing all listeners
  */
 export const attachListener = (firebase, dispatch, meta, unsubscribe) => {
-  if (!meta) {
-    throw new Error('Meta data is required to attach listener.');
-  }
-  if (!has(firebase, '_.listeners')) {
-    throw new Error(
-      'Internal Firebase object required to attach listener. Confirm that reduxFirestore enhancer was added when you were creating your store',
-    );
-  }
+  confirmMetaAndConfig(firebase, meta);
+
   const name = getQueryName(meta);
 
   if (!firebase._.listeners[name]) {

@@ -4,19 +4,12 @@ import { actionTypes } from '../constants';
 import {
   attachListener,
   detachListener,
+  listenerExists,
   orderedFromSnap,
   dataByIdSnapshot,
   getQueryConfig,
-  getQueryName,
   firestoreRef,
 } from '../utils/query';
-
-/**
- * Internal counter for the listeners to a particular query
- *
- * @type {{}}
- */
-const pathListenerCounts = {};
 
 /**
  * Add data to a collection or document on Cloud Firestore with the call to
@@ -214,17 +207,11 @@ export const setListeners = (firebase, dispatch, listeners) => {
     );
   }
 
-  listeners.forEach(listener => {
-    const path = getQueryName(listener);
-    const oldListenerCount = pathListenerCounts[path] || 0;
-    pathListenerCounts[path] = oldListenerCount + 1;
-
-    // If we already have an attached listener exit here
-    if (oldListenerCount > 0) {
-      return;
+  return listeners.forEach(listener => {
+    // Only attach listener if it does not already exist
+    if (!listenerExists(firebase, listener)) {
+      setListener(firebase, dispatch, listener);
     }
-
-    setListener(firebase, dispatch, listener);
   });
 };
 
@@ -246,7 +233,7 @@ export const unsetListener = (firebase, dispatch, opts) =>
  * Unset a list of listeners
  * @param {Object} firebase - Internal firebase object
  * @param {Function} dispatch - Redux's dispatch function
- * @param {Array} listeners [description]
+ * @param {Array} listeners - Array of listener configs
  */
 export const unsetListeners = (firebase, dispatch, listeners) => {
   if (!isArray(listeners)) {
@@ -256,13 +243,8 @@ export const unsetListeners = (firebase, dispatch, listeners) => {
   }
 
   listeners.forEach(listener => {
-    const path = getQueryName(listener);
-    pathListenerCounts[path] -= 1;
-
-    // If we aren't supposed to have listners for this path, then remove them
-    if (pathListenerCounts[path] === 0) {
-      unsetListener(firebase, dispatch, listener);
-    }
+    // Remove listener only if it exists
+    unsetListener(firebase, dispatch, listener);
   });
 };
 
