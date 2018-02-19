@@ -1,7 +1,7 @@
 import createFirestoreInstance from '../../../src/createFirestoreInstance';
 import { firestoreActions } from '../../../src/actions';
 import { setListeners } from '../../../src/actions/firestore';
-import { actionTypes } from '../../../src/constants';
+import { actionTypes, defaultConfig } from '../../../src/constants';
 
 let dispatchSpy;
 let fakeFirebase;
@@ -23,7 +23,7 @@ describe('firestoreActions', () => {
       onSnapshot: onSnapshotSpy,
     });
     fakeFirebase = {
-      _: { listeners: {} },
+      _: { listeners: {}, config: defaultConfig },
       firestore: () => ({
         collection: collectionClass,
       }),

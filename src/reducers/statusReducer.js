@@ -13,7 +13,7 @@ const { SET_LISTENER, LISTENER_ERROR, LISTENER_RESPONSE } = actionTypes;
  * @param  {String} action.meta - The meta information of the query
  * @return {Object} Profile state after reduction
  */
-export const requestingReducer = (state = {}, { type, payload, meta }) => {
+export function requestingReducer(state = {}, { type, payload, meta }) {
   switch (type) {
     case SET_LISTENER:
       return {
@@ -29,7 +29,7 @@ export const requestingReducer = (state = {}, { type, payload, meta }) => {
     default:
       return state;
   }
-};
+}
 
 /**
  * Reducer for requested state. Changed by `START`, `NO_VALUE`, and `SET` actions.
@@ -40,7 +40,7 @@ export const requestingReducer = (state = {}, { type, payload, meta }) => {
  * @param  {String} action.meta - The meta information of the query
  * @return {Object} Profile state after reduction
  */
-export const requestedReducer = (state = {}, { type, payload, meta }) => {
+export function requestedReducer(state = {}, { type, payload, meta }) {
   switch (type) {
     case SET_LISTENER:
       return {
@@ -56,7 +56,7 @@ export const requestedReducer = (state = {}, { type, payload, meta }) => {
     default:
       return state;
   }
-};
+}
 
 /**
  * Reducer for timestamps state. Changed by `START`, `NO_VALUE`, and `SET` actions.
@@ -66,7 +66,7 @@ export const requestedReducer = (state = {}, { type, payload, meta }) => {
  * @param  {String} action.path - Path of action that was dispatched
  * @return {Object} Profile state after reduction
  */
-export const timestampsReducer = (state = {}, { type, payload }) => {
+export function timestampsReducer(state = {}, { type, payload }) {
   switch (type) {
     case SET_LISTENER:
       return {
@@ -76,7 +76,7 @@ export const timestampsReducer = (state = {}, { type, payload }) => {
     default:
       return state;
   }
-};
+}
 
 /**
  * @name statusReducer

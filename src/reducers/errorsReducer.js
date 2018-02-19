@@ -11,7 +11,7 @@ const { CLEAR_ERRORS, CLEAR_ERROR, LISTENER_ERROR, ERROR } = actionTypes;
  * @param  {String} action.type - Type of action that was dispatched
  * @return {Object} Profile state after reduction
  */
-const errorsAllIds = (state = [], { meta, type }) => {
+function errorsAllIds(state = [], { meta, type }) {
   switch (type) {
     case LISTENER_ERROR:
     case ERROR:
@@ -26,7 +26,7 @@ const errorsAllIds = (state = [], { meta, type }) => {
     default:
       return state;
   }
-};
+}
 
 /**
  * Reducer for errors state. Changed by `ERROR`
@@ -36,7 +36,7 @@ const errorsAllIds = (state = [], { meta, type }) => {
  * @param  {String} action.type - Type of action that was dispatched
  * @return {Object} Profile state after reduction
  */
-const errorsByQuery = (state = {}, { meta, payload, type }) => {
+function errorsByQuery(state = {}, { meta, payload, type }) {
   switch (type) {
     case ERROR:
     case LISTENER_ERROR:
@@ -52,7 +52,7 @@ const errorsByQuery = (state = {}, { meta, payload, type }) => {
     default:
       return state;
   }
-};
+}
 
 const errorsReducer = combineReducers({
   byQuery: errorsByQuery,

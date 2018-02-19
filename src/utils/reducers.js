@@ -40,13 +40,15 @@ export function getDotStrPath(path) {
  * passed object, and builds a state object with the same shape.
  * @private
  */
-export const combineReducers = reducers => (state = {}, action) =>
-  Object.keys(reducers).reduce((nextState, key) => {
-    /* eslint-disable no-param-reassign */
-    nextState[key] = reducers[key](state[key], action);
-    /* eslint-enable no-param-reassign */
-    return nextState;
-  }, {});
+export function combineReducers(reducers) {
+  return (state = {}, action) =>
+    Object.keys(reducers).reduce((nextState, key) => {
+      /* eslint-disable no-param-reassign */
+      nextState[key] = reducers[key](state[key], action);
+      /* eslint-enable no-param-reassign */
+      return nextState;
+    }, {});
+}
 
 /**
  * Get path from meta data. Path is used with lodash's setWith to set deep

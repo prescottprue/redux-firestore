@@ -83,12 +83,17 @@ export const actionTypes = {
  * database logging is enabled.
  * @property {Boolean} enhancerNamespace - `'firestore'` Namespace underwhich
  * enhancer places internal instance on redux store (i.e. store.firestore).
+ * @property {Boolean} allowMultipleListeners - `null` Whether or not to allow
+ * multiple listeners to be attached for the same query. If a function
+ * is passed the arguments it receives are `listenerToAttach`,
+ * `currentListeners`, and the function should return a boolean.
  * @type {Object}
  */
 export const defaultConfig = {
   enableLogging: false,
   enhancerNamespace: 'firestore',
   helpersNamespace: null,
+  allowMultipleListeners: null,
 };
 
 export default {

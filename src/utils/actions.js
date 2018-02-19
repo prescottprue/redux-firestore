@@ -50,9 +50,10 @@ export const wrapInDispatch = (
  * @return {Function} A wrapper that accepts a function to wrap with firebase
  * and dispatch.
  */
-const createWithFirebaseAndDispatch = (firebase, dispatch) => func => (
-  ...args
-) => func.apply(firebase, [firebase, dispatch, ...args]);
+function createWithFirebaseAndDispatch(firebase, dispatch) {
+  return func => (...args) =>
+    func.apply(firebase, [firebase, dispatch, ...args]);
+}
 
 /**
  * Map each action with Firebase and Dispatch. Includes aliasing of actions.
@@ -61,12 +62,12 @@ const createWithFirebaseAndDispatch = (firebase, dispatch) => func => (
  * @param  {Object} actions - Action functions to map with firebase and dispatch
  * @return {Object} Actions mapped with firebase and dispatch
  */
-export const mapWithFirebaseAndDispatch = (
+export function mapWithFirebaseAndDispatch(
   firebase,
   dispatch,
   actions,
   aliases,
-) => {
+) {
   const withFirebaseAndDispatch = createWithFirebaseAndDispatch(
     firebase,
     dispatch,
@@ -81,4 +82,4 @@ export const mapWithFirebaseAndDispatch = (
       {},
     ),
   };
-};
+}

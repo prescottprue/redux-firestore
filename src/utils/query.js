@@ -8,7 +8,7 @@ import { actionTypes } from '../constants';
  * @param {Array} where - Where statement to attach to reference
  * @return {firebase.firestore.Reference} Reference with where statement attached
  */
-const addWhereToRef = (ref, where) => {
+function addWhereToRef(ref, where) {
   if (!isArray(where)) {
     throw new Error('where parameter must be an array');
   }
@@ -25,7 +25,7 @@ const addWhereToRef = (ref, where) => {
       ? acc.where(...whereArgs)
       : acc.where(whereArgs);
   }, ref);
-};
+}
 
 /**
  * Add attribute to Cloud Firestore Reference handling invalid formats
@@ -35,7 +35,7 @@ const addWhereToRef = (ref, where) => {
  * @param {String} [attrName='where'] - Name of attribute
  * @return {firebase.firestore.Reference} Reference with where statement attached
  */
-const addOrderByToRef = (ref, orderBy) => {
+function addOrderByToRef(ref, orderBy) {
   if (!isArray(orderBy) && !isString(orderBy)) {
     throw new Error('orderBy parameter must be an array or string');
   }
@@ -57,7 +57,7 @@ const addOrderByToRef = (ref, orderBy) => {
       'orderBy currently only supports arrays. Each option must be an Array of arguments to pass to orderBy.',
     );
   }, ref);
-};
+}
 
 /**
  * Create a Cloud Firestore reference for a collection or document
@@ -69,7 +69,7 @@ const addOrderByToRef = (ref, orderBy) => {
  * @param {Array} meta.where - List of argument arrays
  * @return {firebase.firestore.Reference} Resolves with results of add call
  */
-export const firestoreRef = (firebase, dispatch, meta) => {
+export function firestoreRef(firebase, dispatch, meta) {
   if (!firebase.firestore) {
     throw new Error('Firestore must be required and initalized.');
   }
@@ -113,12 +113,13 @@ export const firestoreRef = (firebase, dispatch, meta) => {
     ref = ref.limit(limit);
   }
   return ref;
-};
+}
 
-const whereToStr = where =>
-  isString(where[0]) ? where.join(':') : where.map(whereToStr);
+function whereToStr(where) {
+  return isString(where[0]) ? where.join(':') : where.map(whereToStr);
+}
 
-const getQueryName = meta => {
+export function getQueryName(meta) {
   const { collection, doc, subcollections, where } = meta;
   if (!collection) {
     throw new Error('Collection is required to build query name');
@@ -140,7 +141,7 @@ const getQueryName = meta => {
     return basePath.concat(`/${whereToStr(where)}`);
   }
   return basePath;
-};
+}
 
 /**
  * Confirm that meta object exists and that listeners object exists on internal
@@ -166,11 +167,11 @@ function confirmMetaAndConfig(firebase, meta) {
  * @param {Object} meta - Metadata object
  * @return {Boolean} Whether or not listener exists
  */
-export const listenerExists = (firebase, meta) => {
+export function listenerExists(firebase, meta) {
   confirmMetaAndConfig(firebase, meta);
   const name = getQueryName(meta);
   return !!firebase._.listeners[name];
-};
+}
 
 /**
  * @description Update the number of watchers for a query
@@ -181,11 +182,10 @@ export const listenerExists = (firebase, meta) => {
  * @param {String} doc - Document name
  * @return {Object} Object containing all listeners
  */
-export const attachListener = (firebase, dispatch, meta, unsubscribe) => {
+export function attachListener(firebase, dispatch, meta, unsubscribe) {
   confirmMetaAndConfig(firebase, meta);
 
   const name = getQueryName(meta);
-
   if (!firebase._.listeners[name]) {
     firebase._.listeners[name] = unsubscribe; // eslint-disable-line no-param-reassign
   }
@@ -197,7 +197,7 @@ export const attachListener = (firebase, dispatch, meta, unsubscribe) => {
   });
 
   return firebase._.listeners;
-};
+}
 
 /**
  * @description Remove/Unset a watcher
@@ -207,7 +207,7 @@ export const attachListener = (firebase, dispatch, meta, unsubscribe) => {
  * @param {String} collection - Collection name
  * @param {String} doc - Document name
  */
-export const detachListener = (firebase, dispatch, meta) => {
+export function detachListener(firebase, dispatch, meta) {
   const name = getQueryName(meta);
   if (firebase._.listeners[name]) {
     firebase._.listeners[name]();
@@ -219,14 +219,14 @@ export const detachListener = (firebase, dispatch, meta) => {
     meta,
     payload: { name },
   });
-};
+}
 
 /**
  * Turn query string into a query config object
  * @param  {String} queryPathStr String to be converted
  * @return {Object} Object containing collection, doc and subcollection
  */
-const queryStrToObj = queryPathStr => {
+export function queryStrToObj(queryPathStr) {
   const pathArr = trim(queryPathStr, ['/']).split('/');
   const [collection, doc, subCollection, ...other] = pathArr;
   return {
@@ -235,7 +235,7 @@ const queryStrToObj = queryPathStr => {
     subCollection,
     other,
   };
-};
+}
 
 /**
  * @description Convert array of querys into an array of query config objects.
@@ -243,7 +243,7 @@ const queryStrToObj = queryPathStr => {
  * @param {Object|String} query - Query setups in the form of objects or strings
  * @return {Object} Query setup normalized into a queryConfig object
  */
-export const getQueryConfig = query => {
+export function getQueryConfig(query) {
   if (isString(query)) {
     return queryStrToObj(query);
   }
@@ -258,14 +258,14 @@ export const getQueryConfig = query => {
   throw new Error(
     'Invalid Path Definition: Only Strings and Objects are accepted.',
   );
-};
+}
 
 /**
  * @description Convert array of querys into an array of queryConfig objects
  * @param {Array} queries - Array of query strings/objects
  * @return {Array} watchEvents - Array of watch events
  */
-export const getQueryConfigs = queries => {
+export function getQueryConfigs(queries) {
   if (isArray(queries)) {
     return queries.map(getQueryConfig);
   }
@@ -276,7 +276,7 @@ export const getQueryConfigs = queries => {
     return [getQueryConfig(queries)];
   }
   throw new Error('Querie(s) must be an Array or a string');
-};
+}
 
 /**
  * Get ordered array from snapshot
@@ -284,7 +284,7 @@ export const getQueryConfigs = queries => {
  * an ordered array.
  * @return {Array|Null} Ordered list of children from snapshot or null
  */
-export const orderedFromSnap = snap => {
+export function orderedFromSnap(snap) {
   const ordered = [];
   if (snap.data && snap.exists) {
     const obj = isObject(snap.data())
@@ -300,7 +300,7 @@ export const orderedFromSnap = snap => {
     });
   }
   return ordered;
-};
+}
 
 /**
  * Create data object with values for each document with keys being doc.id.
@@ -308,7 +308,7 @@ export const orderedFromSnap = snap => {
  * an ordered array.
  * @return {Object|Null} Object documents from snapshot or null
  */
-export const dataByIdSnapshot = snap => {
+export function dataByIdSnapshot(snap) {
   const data = {};
   if (snap.data && snap.exists) {
     data[snap.id] = snap.data();
@@ -318,4 +318,4 @@ export const dataByIdSnapshot = snap => {
     });
   }
   return size(data) ? data : null;
-};
+}

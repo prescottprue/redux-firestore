@@ -11,7 +11,7 @@ import { combineReducers } from '../utils/reducers';
  * @return {Object} listenersById state after reduction (used in listeners)
  * @private
  */
-const listenersById = (state = {}, { type, path, payload }) => {
+function listenersById(state = {}, { type, path, payload }) {
   switch (type) {
     case actionTypes.SET_LISTENER:
       return {
@@ -26,7 +26,7 @@ const listenersById = (state = {}, { type, path, payload }) => {
     default:
       return state;
   }
-};
+}
 
 /**
  * Reducer for listeners state. Changed by `ERROR` and `LOGOUT` actions.
@@ -36,7 +36,7 @@ const listenersById = (state = {}, { type, path, payload }) => {
  * @return {Object} allListeners state after reduction (used in listeners)
  * @private
  */
-const allListeners = (state = [], { type, payload }) => {
+function allListeners(state = [], { type, payload }) {
   switch (type) {
     case actionTypes.SET_LISTENER:
       return [...state, payload.name];
@@ -45,7 +45,7 @@ const allListeners = (state = [], { type, payload }) => {
     default:
       return state;
   }
-};
+}
 
 /**
  * Reducer for `listeners` state. Made from combination of listenersById and
