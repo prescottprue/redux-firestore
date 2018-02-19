@@ -1,4 +1,4 @@
-import { pick, get } from 'lodash';
+import { get } from 'lodash';
 import { setWith, assign } from 'lodash/fp';
 import { actionTypes } from '../constants';
 import { pathFromMeta, preserveValuesFromState } from '../utils/reducers';
@@ -54,8 +54,8 @@ export default function dataReducer(state = {}, action) {
       return setWith(Object, pathFromMeta(meta), mergedData, state);
     case CLEAR_DATA:
       // support keeping data when logging out - #125 of react-redux-firebase
-      if (action.preserve) {
-        return pick(state, action.preserve); // pick returns a new object
+      if (action.preserve && action.preserve.data) {
+        return preserveValuesFromState(state, action.preserve.data, {});
       }
       return {};
     case LISTENER_ERROR:

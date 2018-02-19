@@ -226,7 +226,11 @@ describe('dataReducer', () => {
       it('preserves keys provided in preserve parameter', () => {
         meta = {};
         const data = { some: 'test' };
-        action = { meta, type: actionTypes.CLEAR_DATA, preserve: ['some'] };
+        action = {
+          meta,
+          type: actionTypes.CLEAR_DATA,
+          preserve: { data: ['some'] },
+        };
         expect(dataReducer(data, action)).to.have.property('some', data.some);
       });
     });
