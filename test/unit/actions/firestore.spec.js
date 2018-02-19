@@ -143,7 +143,7 @@ describe('firestoreActions', () => {
         const expectedAction = {
           meta: { ...listenerConfig },
           payload: { name: 'test/1/test2/test3' },
-          type: '@@reduxFirestore/SET_LISTENER',
+          type: actionTypes.SET_LISTENER,
         };
         await instance.test.setListener(listenerConfig);
         expect(onSnapshotSpy).to.be.calledOnce;
@@ -167,7 +167,7 @@ describe('firestoreActions', () => {
         const expectedAction = {
           meta: { ...listenerConfig },
           payload: { name: 'test/1/test2/test3/test4' },
-          type: '@@reduxFirestore/SET_LISTENER',
+          type: actionTypes.SET_LISTENER,
         };
         await instance.test.setListener(listenerConfig);
         expect(onSnapshotSpy).to.be.calledOnce;

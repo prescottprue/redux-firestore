@@ -10,21 +10,12 @@ import { actionTypes } from '../constants';
  */
 function addWhereToRef(ref, where) {
   if (!isArray(where)) {
-    throw new Error('where parameter must be an array');
+    throw new Error('where parameter must be an array.');
   }
   if (isString(where[0])) {
     return where.length > 1 ? ref.where(...where) : ref.where(where[0]);
   }
-  return where.reduce((acc, whereArgs) => {
-    if (!isArray(whereArgs)) {
-      throw new Error(
-        'Where currently only supports arrays. Each option must be an Array of arguments to pass to where.',
-      );
-    }
-    return whereArgs.length > 1
-      ? acc.where(...whereArgs)
-      : acc.where(whereArgs);
-  }, ref);
+  return where.reduce((acc, whereArgs) => addWhereToRef(ref, whereArgs), ref);
 }
 
 /**
@@ -37,7 +28,7 @@ function addWhereToRef(ref, where) {
  */
 function addOrderByToRef(ref, orderBy) {
   if (!isArray(orderBy) && !isString(orderBy)) {
-    throw new Error('orderBy parameter must be an array or string');
+    throw new Error('orderBy parameter must be an array or string.');
   }
   if (isString(orderBy)) {
     return ref.orderBy(orderBy);
@@ -45,18 +36,10 @@ function addOrderByToRef(ref, orderBy) {
   if (isString(orderBy[0])) {
     return ref.orderBy(...orderBy);
   }
-  return orderBy.reduce((acc, orderByArgs) => {
-    if (isString(orderByArgs)) {
-      return acc.orderBy(orderByArgs);
-    } else if (isArray(orderByArgs)) {
-      return orderByArgs.length > 1
-        ? acc.orderBy(...orderByArgs)
-        : acc.orderBy(orderByArgs[0]);
-    }
-    throw new Error(
-      'orderBy currently only supports arrays. Each option must be an Array of arguments to pass to orderBy.',
-    );
-  }, ref);
+  return orderBy.reduce(
+    (acc, orderByArgs) => addOrderByToRef(ref, orderByArgs),
+    ref,
+  );
 }
 
 /**
@@ -115,10 +98,26 @@ export function firestoreRef(firebase, dispatch, meta) {
   return ref;
 }
 
+/**
+ * Convert where parameter into a string notation for use in query name
+ * @param  {Array} where - Where config array
+ * @return {String} String representing where settings for use in query name
+ */
 function whereToStr(where) {
-  return isString(where[0]) ? where.join(':') : where.map(whereToStr);
+  return isString(where[0])
+    ? `where::${where.join('')}`
+    : where.map(whereToStr);
 }
 
+/**
+ * Create query name based on query settings for use as object keys (used
+ * in listener management and reducers).
+ * @param  {Object} meta - Metadata object containing query settings
+ * @param  {String} meta.collection - Collection name of query
+ * @param  {String} meta.doc - Document id of query
+ * @param  {Array} meta.subcollections - Subcollections of query
+ * @return {String} String representing query settings
+ */
 export function getQueryName(meta) {
   const { collection, doc, subcollections, where } = meta;
   if (!collection) {
@@ -136,9 +135,9 @@ export function getQueryName(meta) {
   }
   if (where) {
     if (!isArray(where)) {
-      throw new Error('Where must be an array');
+      throw new Error('where parameter must be an array.');
     }
-    return basePath.concat(`/${whereToStr(where)}`);
+    return basePath.concat(`?${whereToStr(where)}`);
   }
   return basePath;
 }

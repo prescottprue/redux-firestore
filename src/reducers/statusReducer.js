@@ -13,12 +13,12 @@ const { SET_LISTENER, LISTENER_ERROR, LISTENER_RESPONSE } = actionTypes;
  * @param  {String} action.meta - The meta information of the query
  * @return {Object} Profile state after reduction
  */
-export function requestingReducer(state = {}, { type, payload, meta }) {
+export function requestingReducer(state = {}, { type, meta }) {
   switch (type) {
     case SET_LISTENER:
       return {
         ...state,
-        [getSlashStrPath(payload.name)]: true,
+        [getSlashStrPath(getQueryName(meta))]: true,
       };
     case LISTENER_ERROR:
     case LISTENER_RESPONSE:
@@ -40,18 +40,18 @@ export function requestingReducer(state = {}, { type, payload, meta }) {
  * @param  {String} action.meta - The meta information of the query
  * @return {Object} Profile state after reduction
  */
-export function requestedReducer(state = {}, { type, payload, meta }) {
+export function requestedReducer(state = {}, { type, meta }) {
   switch (type) {
     case SET_LISTENER:
       return {
         ...state,
-        [getSlashStrPath(payload.name)]: false,
+        [getQueryName(meta)]: false,
       };
     case LISTENER_ERROR:
     case LISTENER_RESPONSE:
       return {
         ...state,
-        [getSlashStrPath(getQueryName(meta))]: true,
+        [getQueryName(meta)]: true,
       };
     default:
       return state;
@@ -66,12 +66,12 @@ export function requestedReducer(state = {}, { type, payload, meta }) {
  * @param  {String} action.path - Path of action that was dispatched
  * @return {Object} Profile state after reduction
  */
-export function timestampsReducer(state = {}, { type, payload }) {
+export function timestampsReducer(state = {}, { type, meta }) {
   switch (type) {
     case SET_LISTENER:
       return {
         ...state,
-        [getSlashStrPath(payload.name)]: Date.now(),
+        [getQueryName(meta)]: Date.now(),
       };
     default:
       return state;

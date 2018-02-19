@@ -1,4 +1,11 @@
-import { isFunction, isBoolean, isArray, pick } from 'lodash';
+import {
+  isFunction,
+  isBoolean,
+  isArray,
+  pick,
+  replace,
+  trimStart,
+} from 'lodash';
 
 /**
  * Create a path array from path string
@@ -17,7 +24,7 @@ export function pathToArr(path) {
  * @private
  */
 export function getSlashStrPath(path) {
-  return pathToArr(path).join('/');
+  return trimStart(replace(path, /[.]/g, '/'), '/');
 }
 
 /**
@@ -97,18 +104,15 @@ export function pathFromMeta(meta) {
  * @private
  */
 export function updateItemInArray(array, itemId, updateItemCallback) {
-  const updatedItems = array.map(item => {
+  return array.map(item => {
+    // Preserve items that do not have matching ids
     if (item.id !== itemId) {
-      // Since we only want to update one item, preserve all others as they are now
       return item;
     }
-
     // Use the provided callback to create an updated item
     const updatedItem = updateItemCallback(item);
     return updatedItem;
   });
-
-  return updatedItems;
 }
 
 /**
@@ -123,7 +127,7 @@ export function updateItemInArray(array, itemId, updateItemCallback) {
  */
 export function preserveValuesFromState(state, preserveSetting, nextState) {
   // Return original state if preserve is true
-  if (isBoolean(preserveSetting) && preserveSetting) {
+  if (isBoolean(preserveSetting)) {
     return nextState ? { ...state, ...nextState } : state;
   }
 
@@ -138,6 +142,6 @@ export function preserveValuesFromState(state, preserveSetting, nextState) {
   }
 
   throw new Error(
-    'Invalid preserve parameter. It must be an Object or an Array',
+    'Invalid preserve parameter. It must be an Object or an Array.',
   );
 }
