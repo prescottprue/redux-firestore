@@ -83,7 +83,7 @@ describe('firestoreActions', () => {
           { helpersNamespace: 'test' },
         );
         expect(() => instance.test.deleteRef({ collection: 'test' })).to.throw(
-          'Only docs can be deleted',
+          'Only docs can be deleted.',
         );
       });
     });
@@ -118,7 +118,7 @@ describe('firestoreActions', () => {
           dispatchSpy,
         );
         expect(() => instance.test.setListener({})).to.throw(
-          'Collection and/or Doc are required parameters within query definition object',
+          'Collection and/or Doc are required parameters within query definition object.',
         );
       });
 
@@ -203,7 +203,7 @@ describe('firestoreActions', () => {
         expect(() =>
           instance.test.setListeners({ collection: 'test' }),
         ).to.throw(
-          'Listeners must be an Array of listener configs (Strings/Objects)',
+          'Listeners must be an Array of listener configs (Strings/Objects).',
         );
       });
 
@@ -215,7 +215,7 @@ describe('firestoreActions', () => {
         expect(() =>
           instance.test.setListeners({ collection: 'test' }),
         ).to.throw(
-          'Listeners must be an Array of listener configs (Strings/Objects)',
+          'Listeners must be an Array of listener configs (Strings/Objects).',
         );
       });
 
@@ -239,7 +239,7 @@ describe('firestoreActions', () => {
             subcollections: [{ collection: 'test2' }],
           }),
         ).to.throw(
-          'Listeners must be an Array of listener configs (Strings/Objects)',
+          'Listeners must be an Array of listener configs (Strings/Objects).',
         );
       });
     });
@@ -254,6 +254,7 @@ describe('firestoreActions', () => {
           'Invalid Path Definition: Only Strings and Objects are accepted.',
         );
       });
+
       it('throws if dispatch is not a function', () => {
         const instance = createFirestoreInstance(
           {},

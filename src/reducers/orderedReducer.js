@@ -79,7 +79,10 @@ export default function orderedReducer(state = {}, action) {
         return preserveValuesFromState(state, action.preserve.ordered, {});
       }
       return {};
-    // TODO: LISTENER_ERROR that sets null in a way that is configurable (v0.3.0)
+    // TODO: DELETE_SUCCESS that removes item from array in a way that is
+    // configurable and aware of listeners (v0.3.0)
+    // TODO: LISTENER_ERROR that sets null or removes items in a way that is
+    // configurable (v0.3.0)
     default:
       return state;
   }

@@ -249,7 +249,7 @@ export function getQueryConfig(query) {
   if (isObject(query)) {
     if (!query.collection && !query.doc) {
       throw new Error(
-        'Collection and/or Doc are required parameters within query definition object',
+        'Collection and/or Doc are required parameters within query definition object.',
       );
     }
     return query;
@@ -274,7 +274,7 @@ export function getQueryConfigs(queries) {
   if (isObject(queries)) {
     return [getQueryConfig(queries)];
   }
-  throw new Error('Querie(s) must be an Array or a string');
+  throw new Error('Querie(s) must be an Array or a string.');
 }
 
 /**

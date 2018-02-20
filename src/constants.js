@@ -81,6 +81,10 @@ export const actionTypes = {
  * @description Default configuration options
  * @property {Boolean} enableLogging - `false` Whether or not firebase
  * database logging is enabled.
+ * @property {Object} preserveOnDelete - `null` Values to
+ * preserve from state when DELETE_SUCCESS action is dispatched. Note that this
+ * will not prevent the LISTENER_RESPONSE action from removing items from
+ * state.ordered if you have a listener attached.
  * @property {Boolean} enhancerNamespace - `'firestore'` Namespace underwhich
  * enhancer places internal instance on redux store (i.e. store.firestore).
  * @property {Boolean} allowMultipleListeners - `null` Whether or not to allow
@@ -94,6 +98,7 @@ export const defaultConfig = {
   enhancerNamespace: 'firestore',
   helpersNamespace: null,
   allowMultipleListeners: null,
+  preserveOnDelete: null,
 };
 
 export default {

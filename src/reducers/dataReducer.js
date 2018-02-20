@@ -8,6 +8,7 @@ const {
   GET_SUCCESS,
   LISTENER_RESPONSE,
   LISTENER_ERROR,
+  DELETE_SUCCESS,
 } = actionTypes;
 
 /**
@@ -52,6 +53,17 @@ export default function dataReducer(state = {}, action) {
       const mergedData = assign(previousData, data);
       // Set data to state (with merge) immutabily (lodash/fp's setWith creates copy)
       return setWith(Object, pathFromMeta(meta), mergedData, state);
+    case DELETE_SUCCESS:
+      const removePath = pathFromMeta(action.meta);
+      const cleanedState = setWith(Object, removePath, null, state);
+      if (action.preserve && action.preserve.data) {
+        return preserveValuesFromState(
+          state,
+          action.preserve.data,
+          cleanedState,
+        );
+      }
+      return cleanedState;
     case CLEAR_DATA:
       // support keeping data when logging out - #125 of react-redux-firebase
       if (action.preserve && action.preserve.data) {

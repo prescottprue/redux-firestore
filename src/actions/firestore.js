@@ -70,6 +70,7 @@ export function set(firebase, dispatch, queryOption, ...args) {
  */
 export function get(firebase, dispatch, queryOption) {
   const meta = getQueryConfig(queryOption);
+  // Wrap get call in dispatch calls
   return wrapInDispatch(dispatch, {
     ref: firestoreRef(firebase, dispatch, meta),
     method: 'get',
@@ -125,7 +126,7 @@ export function update(firebase, dispatch, queryOption, ...args) {
 export function deleteRef(firebase, dispatch, queryOption) {
   const meta = getQueryConfig(queryOption);
   if (!meta.doc) {
-    throw new Error('Only docs can be deleted');
+    throw new Error('Only docs can be deleted.');
   }
   return wrapInDispatch(dispatch, {
     ref: firestoreRef(firebase, dispatch, meta),
@@ -133,6 +134,10 @@ export function deleteRef(firebase, dispatch, queryOption) {
     meta,
     types: [
       actionTypes.DELETE_REQUEST,
+      {
+        type: actionTypes.DELETE_SUCCESS,
+        preserve: firebase._.preserveOnDelete,
+      },
       actionTypes.DELETE_SUCCESS,
       actionTypes.DELETE_FAILURE,
     ],
@@ -197,7 +202,7 @@ export function setListener(firebase, dispatch, queryOpts, successCb, errorCb) {
 export function setListeners(firebase, dispatch, listeners) {
   if (!isArray(listeners)) {
     throw new Error(
-      'Listeners must be an Array of listener configs (Strings/Objects)',
+      'Listeners must be an Array of listener configs (Strings/Objects).',
     );
   }
 
@@ -240,7 +245,7 @@ export function unsetListener(firebase, dispatch, opts) {
 export function unsetListeners(firebase, dispatch, listeners) {
   if (!isArray(listeners)) {
     throw new Error(
-      'Listeners must be an Array of listener configs (Strings/Objects)',
+      'Listeners must be an Array of listener configs (Strings/Objects).',
     );
   }
 
