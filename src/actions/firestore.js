@@ -136,7 +136,7 @@ export function deleteRef(firebase, dispatch, queryOption) {
       actionTypes.DELETE_REQUEST,
       {
         type: actionTypes.DELETE_SUCCESS,
-        preserve: firebase._.preserveOnDelete,
+        preserve: firebase._.config.preserveOnDelete,
       },
       actionTypes.DELETE_SUCCESS,
       actionTypes.DELETE_FAILURE,
@@ -171,23 +171,23 @@ export function setListener(firebase, dispatch, queryOpts, successCb, errorCb) {
           ordered: orderedFromSnap(docData),
         },
       });
-      if (successCb) {
-        successCb(docData);
-      }
+      // Invoke success callback if it exists
+      if (successCb) successCb(docData);
     },
     err => {
       // TODO: Look into whether listener is automatically removed in all cases
       // TODO: Provide a setting that allows for silencing of console error
+      const { config } = firebase._;
       // Log error handling the case of it not existing
-      invoke(console, 'error', err);
+      if (config.logListenerError) invoke(console, 'error', err);
       dispatch({
         type: actionTypes.LISTENER_ERROR,
         meta,
         payload: err,
+        preserve: config.preserveOnListenerError,
       });
-      if (errorCb) {
-        errorCb(err);
-      }
+      // Invoke error callback if it exists
+      if (errorCb) errorCb(err);
     },
   );
   attachListener(firebase, dispatch, meta, unsubscribe);

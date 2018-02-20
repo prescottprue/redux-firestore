@@ -81,10 +81,16 @@ export const actionTypes = {
  * @description Default configuration options
  * @property {Boolean} enableLogging - `false` Whether or not firebase
  * database logging is enabled.
+ * @property {Boolean} logListenerError - `true` Whether or not to use
+ * console.error to log listener error objects. Errors from listeners
+ * are helpful to developers on multiple occasions including when index
+ * needs to be added.
  * @property {Object} preserveOnDelete - `null` Values to
  * preserve from state when DELETE_SUCCESS action is dispatched. Note that this
  * will not prevent the LISTENER_RESPONSE action from removing items from
  * state.ordered if you have a listener attached.
+ * @property {Object} preserveOnListenerError - `null` Values to
+ * preserve from state when LISTENER_ERROR action is dispatched.
  * @property {Boolean} enhancerNamespace - `'firestore'` Namespace underwhich
  * enhancer places internal instance on redux store (i.e. store.firestore).
  * @property {Boolean} allowMultipleListeners - `null` Whether or not to allow
@@ -95,10 +101,12 @@ export const actionTypes = {
  */
 export const defaultConfig = {
   enableLogging: false,
+  logListenerError: true,
   enhancerNamespace: 'firestore',
   helpersNamespace: null,
   allowMultipleListeners: null,
   preserveOnDelete: null,
+  preserveOnListenerError: null,
 };
 
 export default {
