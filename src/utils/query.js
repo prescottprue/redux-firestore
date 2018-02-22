@@ -73,7 +73,18 @@ export const firestoreRef = (firebase, dispatch, meta) => {
   if (!firebase.firestore) {
     throw new Error('Firestore must be required and initalized.');
   }
-  const { collection, doc, subcollections, where, orderBy, limit } = meta;
+  const {
+    collection,
+    doc,
+    subcollections,
+    where,
+    orderBy,
+    limit,
+    startAt,
+    startAfter,
+    endAt,
+    endBefore,
+  } = meta;
   let ref = firebase.firestore().collection(collection);
   // TODO: Compare to doing this by creating all methods/arguments as array
   // and doing call at once
@@ -111,6 +122,18 @@ export const firestoreRef = (firebase, dispatch, meta) => {
   }
   if (limit) {
     ref = ref.limit(limit);
+  }
+  if (startAt) {
+    ref = ref.startAt(startAt);
+  }
+  if (startAfter) {
+    ref = ref.startAfter(startAfter);
+  }
+  if (endAt) {
+    ref = ref.endAt(endAt);
+  }
+  if (endBefore) {
+    ref = ref.endBefore(endBefore);
   }
   return ref;
 };
