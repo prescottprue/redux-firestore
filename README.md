@@ -141,7 +141,7 @@ class Todos extends Component {
   }
 
   componentWillMount () {
-    const { firebase } = this.context.store
+    const { firestore } = this.context.store
     firestore.get('todos')
   }
 
