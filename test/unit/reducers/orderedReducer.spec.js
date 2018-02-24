@@ -14,6 +14,7 @@ describe('orderedReducer', () => {
   it('returns state for undefined actionType', () => {
     expect(orderedReducer({}, {})).to.exist;
   });
+
   describe('actionTypes', () => {
     describe('LISTENER_RESPONSE', () => {
       it('returns state if payload is not defined', () => {
@@ -100,6 +101,71 @@ describe('orderedReducer', () => {
           storeAs,
           orderedData,
         );
+      });
+    });
+
+    describe('GET_SUCCESS', () => {
+      it('returns state if payload is not defined', () => {
+        action = { meta: 'test', type: actionTypes.GET_SUCCESS };
+        state = {};
+        expect(orderedReducer(state, action)).to.equal(state);
+      });
+
+      it('returns state if payload does not contain ordered', () => {
+        action = {
+          meta: 'test',
+          type: actionTypes.GET_SUCCESS,
+          payload: {},
+        };
+        state = {};
+        expect(orderedReducer(state, action)).to.equal(state);
+      });
+
+      describe('preserve parameter', () => {
+        it('array saves keys from state', () => {
+          action = {
+            meta: 'test',
+            type: actionTypes.GET_SUCCESS,
+            payload: {},
+            preserve: ['some'],
+          };
+          state = { some: 'value' };
+          expect(orderedReducer(state, action)).to.have.property('some');
+        });
+      });
+    });
+
+    describe('CLEAR_DATA', () => {
+      it('removes all data from state', () => {
+        action = {
+          type: actionTypes.CLEAR_DATA,
+        };
+        state = {};
+        expect(orderedReducer(state, action)).to.be.empty;
+      });
+
+      describe('preserve parameter', () => {
+        it('array saves keys from state', () => {
+          action = {
+            meta: 'test',
+            type: actionTypes.CLEAR_DATA,
+            payload: {},
+            preserve: { ordered: ['some'] },
+          };
+          state = { some: 'value' };
+          expect(orderedReducer(state, action)).to.have.property('some');
+        });
+
+        it('function returns state to save', () => {
+          action = {
+            meta: 'test',
+            type: actionTypes.CLEAR_DATA,
+            payload: {},
+            preserve: { ordered: currentState => currentState },
+          };
+          state = { some: 'value' };
+          expect(orderedReducer(state, action)).to.have.property('some');
+        });
       });
     });
   });

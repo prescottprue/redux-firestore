@@ -1,7 +1,8 @@
 import { actionTypes } from '../constants';
 import { getSlashStrPath, combineReducers } from '../utils/reducers';
+import { getQueryName } from '../utils/query';
 
-const { START, SET, NO_VALUE } = actionTypes;
+const { SET_LISTENER, LISTENER_ERROR, LISTENER_RESPONSE } = actionTypes;
 
 /**
  * Reducer for requesting state.Changed by `START`, `NO_VALUE`, and `SET` actions.
@@ -9,25 +10,26 @@ const { START, SET, NO_VALUE } = actionTypes;
  * @param  {Object} action - Object containing the action that was dispatched
  * @param  {String} action.type - Type of action that was dispatched
  * @param  {String} action.path - Path of action that was dispatched
+ * @param  {String} action.meta - The meta information of the query
  * @return {Object} Profile state after reduction
  */
-export const requestingReducer = (state = {}, { type, path }) => {
+export function requestingReducer(state = {}, { type, meta }) {
   switch (type) {
-    case START:
+    case SET_LISTENER:
       return {
         ...state,
-        [getSlashStrPath(path)]: true,
+        [getSlashStrPath(getQueryName(meta))]: true,
       };
-    case NO_VALUE:
-    case SET:
+    case LISTENER_ERROR:
+    case LISTENER_RESPONSE:
       return {
         ...state,
-        [getSlashStrPath(path)]: false,
+        [getSlashStrPath(getQueryName(meta))]: false,
       };
     default:
       return state;
   }
-};
+}
 
 /**
  * Reducer for requested state. Changed by `START`, `NO_VALUE`, and `SET` actions.
@@ -35,25 +37,26 @@ export const requestingReducer = (state = {}, { type, path }) => {
  * @param  {Object} action - Object containing the action that was dispatched
  * @param  {String} action.type - Type of action that was dispatched
  * @param  {String} action.path - Path of action that was dispatched
+ * @param  {String} action.meta - The meta information of the query
  * @return {Object} Profile state after reduction
  */
-export const requestedReducer = (state = {}, { type, path }) => {
+export function requestedReducer(state = {}, { type, meta }) {
   switch (type) {
-    case START:
+    case SET_LISTENER:
       return {
         ...state,
-        [getSlashStrPath(path)]: false,
+        [getQueryName(meta)]: false,
       };
-    case NO_VALUE:
-    case SET:
+    case LISTENER_ERROR:
+    case LISTENER_RESPONSE:
       return {
         ...state,
-        [getSlashStrPath(path)]: true,
+        [getQueryName(meta)]: true,
       };
     default:
       return state;
   }
-};
+}
 
 /**
  * Reducer for timestamps state. Changed by `START`, `NO_VALUE`, and `SET` actions.
@@ -63,19 +66,17 @@ export const requestedReducer = (state = {}, { type, path }) => {
  * @param  {String} action.path - Path of action that was dispatched
  * @return {Object} Profile state after reduction
  */
-export const timestampsReducer = (state = {}, { type, path }) => {
+export function timestampsReducer(state = {}, { type, meta }) {
   switch (type) {
-    case START:
-    case NO_VALUE:
-    case SET:
+    case SET_LISTENER:
       return {
         ...state,
-        [getSlashStrPath(path)]: Date.now(),
+        [getQueryName(meta)]: Date.now(),
       };
     default:
       return state;
   }
-};
+}
 
 /**
  * @name statusReducer

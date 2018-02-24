@@ -1,14 +1,99 @@
 import {
   attachListener,
+  detachListener,
   getQueryConfigs,
+  getQueryName,
   firestoreRef,
+  orderedFromSnap,
+  dataByIdSnapshot,
 } from '../../../src/utils/query';
+import { actionTypes } from '../../../src/constants';
 
 let dispatch = sinon.spy();
 let meta;
 let result;
+let docSpy;
+let fakeFirebase;
+
+const fakeFirebaseWith = spyedName => {
+  const theSpy = sinon.spy(() => ({}));
+  const theFirebase = {
+    firestore: () => ({
+      collection: () => ({
+        doc: () => ({
+          collection: () => ({ doc: () => ({ [spyedName]: theSpy }) }),
+        }),
+      }),
+    }),
+  };
+  const theMeta = {
+    collection: 'test',
+    doc: 'other',
+    subcollections: [
+      { collection: 'thing', doc: 'again', [spyedName]: 'some' },
+    ],
+  };
+  return { theSpy, theFirebase, theMeta };
+};
 
 describe('query utils', () => {
+  beforeEach(() => {
+    dispatch = sinon.spy();
+    docSpy = sinon.spy(() => ({}));
+    fakeFirebase = {
+      firestore: () => ({
+        collection: () => ({
+          doc: () => ({
+            collection: () => ({ doc: docSpy }),
+          }),
+        }),
+      }),
+    };
+  });
+
+  describe('getQueryName', () => {
+    it('throws for no collection name', () => {
+      expect(() => getQueryName({})).to.throw(
+        'Collection is required to build query name',
+      );
+    });
+
+    it('returns collection name', () => {
+      meta = { collection: 'test' };
+      result = getQueryName(meta);
+      expect(result).to.equal(meta.collection);
+    });
+
+    it('returns collection/doc', () => {
+      meta = { collection: 'test', doc: 'doc' };
+      result = getQueryName(meta);
+      expect(result).to.equal(`${meta.collection}/${meta.doc}`);
+    });
+
+    describe('where paremeter', () => {
+      it('is appended if valid', () => {
+        meta = { collection: 'test', doc: 'doc', where: 'some' };
+        expect(() => getQueryName(meta)).to.throw(
+          'where parameter must be an array.',
+        );
+      });
+
+      it('is appended if valid', () => {
+        const where1 = 'some';
+        const where2 = 'other';
+        meta = {
+          collection: 'test',
+          doc: 'doc',
+          where: [where1, '==', where2],
+        };
+        result = getQueryName(meta);
+        expect(result).to.equal(
+          `${meta.collection}/${meta.doc}?where::${where1}==${where2}`,
+        );
+      });
+    });
+  });
+
   describe('attachListener', () => {
     it('is exported', () => {
       expect(attachListener).to.be.a('function');
@@ -91,6 +176,41 @@ describe('query utils', () => {
       ).to.Throw(
         'Internal Firebase object required to attach listener. Confirm that reduxFirestore enhancer was added when you were creating your store',
       );
+    });
+  });
+
+  describe('detachListener', () => {
+    it('is exported', () => {
+      expect(detachListener).to.be.a('function');
+    });
+
+    it('calls dispatch with unlisten actionType', () => {
+      const callbackSpy = sinon.spy();
+      const collection = 'test';
+      detachListener({ _: { listeners: { test: callbackSpy } } }, dispatch, {
+        collection,
+      });
+      expect(dispatch).to.be.calledWith({
+        type: actionTypes.UNSET_LISTENER,
+        meta: { collection },
+        payload: { name: collection },
+      });
+    });
+
+    it('calls unlisten if listener exists', () => {
+      const callbackSpy = sinon.spy();
+      detachListener({ _: { listeners: { test: callbackSpy } } }, dispatch, {
+        collection: 'test',
+      });
+      expect(dispatch).to.be.calledOnce;
+    });
+
+    it('detaches listener if it exists', () => {
+      const callbackSpy = sinon.spy();
+      detachListener({ _: { listeners: { test: callbackSpy } } }, dispatch, {
+        collection: 'test',
+      });
+      expect(dispatch).to.be.calledOnce;
     });
   });
 
@@ -183,8 +303,7 @@ describe('query utils', () => {
     describe('doc', () => {
       it('creates ref', () => {
         meta = { collection: 'test', doc: 'other' };
-        const docSpy = sinon.spy(() => ({}));
-        const fakeFirebase = {
+        fakeFirebase = {
           firestore: () => ({ collection: () => ({ doc: docSpy }) }),
         };
         result = firestoreRef(fakeFirebase, dispatch, meta);
@@ -200,8 +319,7 @@ describe('query utils', () => {
           doc: 'other',
           subcollections: [{ collection: 'thing' }],
         };
-        const docSpy = sinon.spy(() => ({}));
-        const fakeFirebase = {
+        fakeFirebase = {
           firestore: () => ({
             collection: () => ({
               doc: () => ({
@@ -221,8 +339,7 @@ describe('query utils', () => {
           doc: 'other',
           subcollections: [{ collection: 'thing', doc: 'again' }],
         };
-        const docSpy = sinon.spy(() => ({}));
-        const fakeFirebase = {
+        fakeFirebase = {
           firestore: () => ({
             collection: () => ({
               doc: () => ({
@@ -232,9 +349,345 @@ describe('query utils', () => {
           }),
         };
         result = firestoreRef(fakeFirebase, dispatch, meta);
-        expect(result).to.be.an('object');
-        // expect(docSpy).to.be.calledWith(meta.subcollections[0].collection.doc);
+        expect(docSpy).to.be.calledWith(meta.subcollections[0].doc);
       });
+
+      it('calls where if provided where parameter', () => {
+        const testVal = 'some';
+        meta = {
+          collection: 'test',
+          doc: 'other',
+          subcollections: [
+            { collection: 'thing', doc: 'again', where: [testVal] },
+          ],
+        };
+        const whereSpy = sinon.spy();
+        docSpy = sinon.spy(() => ({ where: whereSpy }));
+        fakeFirebase = {
+          firestore: () => ({
+            collection: () => ({
+              doc: () => ({
+                collection: () => ({ doc: docSpy }),
+              }),
+            }),
+          }),
+        };
+        result = firestoreRef(fakeFirebase, dispatch, meta);
+        expect(docSpy).to.be.calledWith(meta.subcollections[0].doc);
+        expect(whereSpy).to.be.calledWith(testVal);
+      });
+
+      describe('orderBy', () => {
+        it('calls orderBy if valid', () => {
+          meta = {
+            collection: 'test',
+            doc: 'other',
+            subcollections: [
+              { collection: 'thing', doc: 'again', orderBy: 'some' },
+            ],
+          };
+          const orderBySpy = sinon.spy(() => ({}));
+          docSpy = sinon.spy(() => ({ orderBy: orderBySpy }));
+          fakeFirebase = {
+            firestore: () => ({
+              collection: () => ({
+                doc: () => ({
+                  collection: () => ({ doc: docSpy }),
+                }),
+              }),
+            }),
+          };
+          result = firestoreRef(fakeFirebase, dispatch, meta);
+          expect(result).to.be.an('object');
+          expect(orderBySpy).to.be.calledWith(meta.subcollections[0].orderBy);
+        });
+      });
+
+      describe('limit', () => {
+        it('calls limit if valid', () => {
+          meta = {
+            collection: 'test',
+            doc: 'other',
+            subcollections: [
+              { collection: 'thing', doc: 'again', limit: 'some' },
+            ],
+          };
+          const limitSpy = sinon.spy(() => ({}));
+          docSpy = sinon.spy(() => ({ limit: limitSpy }));
+          fakeFirebase = {
+            firestore: () => ({
+              collection: () => ({
+                doc: () => ({
+                  collection: () => ({ doc: docSpy }),
+                }),
+              }),
+            }),
+          };
+          result = firestoreRef(fakeFirebase, dispatch, meta);
+          expect(result).to.be.an('object');
+          expect(limitSpy).to.be.calledWith(meta.subcollections[0].limit);
+        });
+      });
+
+      describe('startAt', () => {
+        it('calls startAt if valid', () => {
+          const { theFirebase, theSpy, theMeta } = fakeFirebaseWith('startAt');
+          result = firestoreRef(theFirebase, dispatch, theMeta);
+          expect(result).to.be.an('object');
+          expect(theSpy).to.be.calledWith(theMeta.subcollections[0].startAt);
+        });
+      });
+
+      describe('startAfter', () => {
+        it('calls startAfter if valid', () => {
+          const { theFirebase, theSpy, theMeta } = fakeFirebaseWith(
+            'startAfter',
+          );
+          result = firestoreRef(theFirebase, dispatch, theMeta);
+          expect(result).to.be.an('object');
+          expect(theSpy).to.be.calledWith(theMeta.subcollections[0].startAfter);
+        });
+      });
+
+      describe('endAt', () => {
+        it('calls endAt if valid', () => {
+          meta = {
+            collection: 'test',
+            doc: 'other',
+            subcollections: [
+              { collection: 'thing', doc: 'again', endAt: 'some' },
+            ],
+          };
+          const { theFirebase, theSpy } = fakeFirebaseWith('endAt');
+          result = firestoreRef(theFirebase, dispatch, meta);
+          expect(result).to.be.an('object');
+          expect(theSpy).to.be.calledWith(meta.subcollections[0].endAt);
+        });
+      });
+
+      describe('endBefore', () => {
+        it('calls endBefore if valid', () => {
+          meta = {
+            collection: 'test',
+            doc: 'other',
+            subcollections: [
+              { collection: 'thing', doc: 'again', endBefore: 'some' },
+            ],
+          };
+          const { theFirebase, theSpy } = fakeFirebaseWith('endBefore');
+          result = firestoreRef(theFirebase, dispatch, meta);
+          expect(result).to.be.an('object');
+          expect(theSpy).to.be.calledWith(meta.subcollections[0].endBefore);
+        });
+      });
+    });
+
+    describe('where', () => {
+      it('calls where if valid', () => {
+        meta = { collection: 'test', where: ['other'] };
+        const whereSpy = sinon.spy(() => ({}));
+        fakeFirebase = {
+          firestore: () => ({ collection: () => ({ where: whereSpy }) }),
+        };
+        result = firestoreRef(fakeFirebase, dispatch, meta);
+        expect(result).to.be.an('object');
+        expect(whereSpy).to.be.calledWith(meta.where[0]);
+      });
+
+      it('handles array of arrays', () => {
+        meta = { collection: 'test', where: [['other', '===', 'test']] };
+        const whereSpy = sinon.spy(() => ({}));
+        fakeFirebase = {
+          firestore: () => ({ collection: () => ({ where: whereSpy }) }),
+        };
+        result = firestoreRef(fakeFirebase, dispatch, meta);
+        expect(result).to.be.an('object');
+        expect(whereSpy).to.be.calledOnce;
+      });
+
+      it('throws for invalid where parameter', () => {
+        meta = { collection: 'test', where: 'other' };
+        fakeFirebase = {
+          firestore: () => ({ collection: () => ({ where: () => ({}) }) }),
+        };
+        expect(() => firestoreRef(fakeFirebase, dispatch, meta)).to.throw(
+          'where parameter must be an array.',
+        );
+      });
+
+      it('throws for invalid where parameter within array', () => {
+        meta = { collection: 'test', where: [false] };
+        const whereSpy = sinon.spy(() => ({}));
+        fakeFirebase = {
+          firestore: () => ({ collection: () => ({ where: whereSpy }) }),
+        };
+        expect(() => firestoreRef(fakeFirebase, dispatch, meta)).to.throw(
+          'where parameter must be an array.',
+        );
+      });
+    });
+
+    describe('orderBy', () => {
+      it('calls orderBy if valid', () => {
+        meta = { collection: 'test', orderBy: ['other'] };
+        const orderBySpy = sinon.spy(() => ({}));
+        fakeFirebase = {
+          firestore: () => ({ collection: () => ({ orderBy: orderBySpy }) }),
+        };
+        result = firestoreRef(fakeFirebase, dispatch, meta);
+        expect(result).to.be.an('object');
+        expect(orderBySpy).to.be.calledWith(meta.orderBy[0]);
+      });
+
+      it('handles array of arrays', () => {
+        meta = { collection: 'test', orderBy: [['other']] };
+        const orderBySpy = sinon.spy(() => ({}));
+        fakeFirebase = {
+          firestore: () => ({ collection: () => ({ orderBy: orderBySpy }) }),
+        };
+        result = firestoreRef(fakeFirebase, dispatch, meta);
+        expect(result).to.be.an('object');
+        expect(orderBySpy).to.be.calledWith(meta.orderBy[0][0]);
+      });
+
+      it('throws for invalid orderBy parameter', () => {
+        meta = { collection: 'test', orderBy: () => {} };
+        fakeFirebase = {
+          firestore: () => ({ collection: () => ({ orderBy: () => ({}) }) }),
+        };
+        expect(() => firestoreRef(fakeFirebase, dispatch, meta)).to.throw(
+          'orderBy parameter must be an array or string.',
+        );
+      });
+    });
+
+    describe('limit', () => {
+      it('calls limit if valid', () => {
+        meta = { collection: 'test', limit: 'other' };
+        const limitSpy = sinon.spy(() => ({}));
+        fakeFirebase = {
+          firestore: () => ({ collection: () => ({ limit: limitSpy }) }),
+        };
+        result = firestoreRef(fakeFirebase, dispatch, meta);
+        expect(result).to.be.an('object');
+        expect(limitSpy).to.be.calledWith(meta.limit);
+      });
+    });
+
+    describe('startAt', () => {
+      it('calls startAt if valid', () => {
+        meta = { collection: 'test', startAt: 'other' };
+        const startAtSpy = sinon.spy(() => ({}));
+        fakeFirebase = {
+          firestore: () => ({ collection: () => ({ startAt: startAtSpy }) }),
+        };
+        result = firestoreRef(fakeFirebase, dispatch, meta);
+        expect(result).to.be.an('object');
+        expect(startAtSpy).to.be.calledWith(meta.startAt);
+      });
+    });
+
+    describe('startAfter', () => {
+      it('calls startAfter if valid', () => {
+        meta = { collection: 'test', startAfter: 'other' };
+        const startAfterSpy = sinon.spy(() => ({}));
+        fakeFirebase = {
+          firestore: () => ({
+            collection: () => ({ startAfter: startAfterSpy }),
+          }),
+        };
+        result = firestoreRef(fakeFirebase, dispatch, meta);
+        expect(result).to.be.an('object');
+        expect(startAfterSpy).to.be.calledWith(meta.startAfter);
+      });
+    });
+
+    describe('endAt', () => {
+      it('calls endAt if valid', () => {
+        meta = { collection: 'test', endAt: 'other' };
+        const endAtSpy = sinon.spy(() => ({}));
+        fakeFirebase = {
+          firestore: () => ({ collection: () => ({ endAt: endAtSpy }) }),
+        };
+        result = firestoreRef(fakeFirebase, dispatch, meta);
+        expect(result).to.be.an('object');
+        expect(endAtSpy).to.be.calledWith(meta.endAt);
+      });
+    });
+
+    describe('endBefore', () => {
+      it('calls endBefore if valid', () => {
+        meta = { collection: 'test', endBefore: 'other' };
+        const endBeforeSpy = sinon.spy(() => ({}));
+        fakeFirebase = {
+          firestore: () => ({
+            collection: () => ({ endBefore: endBeforeSpy }),
+          }),
+        };
+        result = firestoreRef(fakeFirebase, dispatch, meta);
+        expect(result).to.be.an('object');
+        expect(endBeforeSpy).to.be.calledWith(meta.endBefore);
+      });
+    });
+  });
+
+  describe('orderedFromSnap', () => {
+    it('returns empty array if data does not exist', () => {
+      result = orderedFromSnap({});
+      expect(result).to.be.an('array');
+      expect(result).to.be.empty;
+    });
+
+    it('returns an array containing data if it exists', () => {
+      const id = 'someId';
+      const fakeData = { some: 'thing' };
+      result = orderedFromSnap({ id, data: () => fakeData, exists: true });
+      expect(result).to.be.an('array');
+      expect(result[0]).to.have.property('id', id);
+      expect(result[0]).to.have.property('some');
+    });
+
+    it('returns an array non object data within an object containing id and data parameters', () => {
+      const id = 'someId';
+      const fakeData = 'some';
+      result = orderedFromSnap({ id, data: () => fakeData, exists: true });
+      expect(result).to.be.an('array');
+      expect(result[0]).to.have.property('id', id);
+      expect(result[0]).to.have.property('data', fakeData);
+    });
+
+    it('returns an array containing children if they exist', () => {
+      const id = 'someId';
+      const fakeData = 'some';
+      result = orderedFromSnap({
+        forEach: func => func({ data: () => fakeData, id }),
+      });
+      expect(result).to.be.an('array');
+      expect(result[0]).to.have.property('id', id);
+    });
+  });
+
+  describe('dataByIdSnapshot', () => {
+    it('sets data by id if valid', () => {
+      const id = 'someId';
+      const fakeData = 'some';
+      result = dataByIdSnapshot({ id, data: () => fakeData, exists: true });
+      expect(result).to.have.property(id, fakeData);
+    });
+
+    it('supports collection data', () => {
+      const id = 'someId';
+      const fakeData = 'some';
+      result = dataByIdSnapshot({
+        forEach: func => func({ data: () => fakeData, id }),
+      });
+      expect(result).to.have.property(id, fakeData);
+    });
+
+    it('returns null if no data returned', () => {
+      const id = 'someId';
+      result = dataByIdSnapshot({ id, data: () => ({}) });
+      expect(result).to.be.null;
     });
   });
 });

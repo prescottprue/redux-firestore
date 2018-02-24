@@ -1,14 +1,43 @@
-import { getDotStrPath, pathFromMeta } from '../../../src/utils/reducers';
+import {
+  getDotStrPath,
+  pathFromMeta,
+  getSlashStrPath,
+  preserveValuesFromState,
+  updateItemInArray,
+} from '../../../src/utils/reducers';
 
 let subcollections;
 let config;
 
 describe('reducer utils', () => {
+  describe('getSlashStrPath', () => {
+    it('is exported', () => {
+      expect(getSlashStrPath).to.be.a('function');
+    });
+    it('converts dot path to slash path', () => {
+      expect(getSlashStrPath('some.other.thing')).to.equal('some/other/thing');
+    });
+    it('removes leading .', () => {
+      expect(getSlashStrPath('.some.other.thing')).to.equal('some/other/thing');
+    });
+    it('returns empty string for undefined input', () => {
+      expect(getSlashStrPath()).to.equal('');
+    });
+  });
+
   describe('getDotStrPath', () => {
     it('is exported', () => {
       expect(getDotStrPath).to.be.a('function');
     });
-    it('converts slash path to dot path', () => {});
+    it('converts slash path to dot path', () => {
+      expect(getDotStrPath('some/other/thing')).to.equal('some.other.thing');
+    });
+    it('removes leading /', () => {
+      expect(getDotStrPath('/some/other/thing')).to.equal('some.other.thing');
+    });
+    it('returns empty string for undefined input', () => {
+      expect(getDotStrPath()).to.equal('');
+    });
   });
 
   describe('pathFromMeta', () => {
@@ -42,6 +71,36 @@ describe('reducer utils', () => {
       pathFromMeta({ storeAs: 'testing' });
     });
 
+    describe('updateItemInArray', () => {
+      it('is exported', () => {
+        expect(updateItemInArray).to.be.a('function');
+      });
+
+      it('returns an array when no arguments are passed', () => {
+        expect(updateItemInArray([])).to.be.an('array');
+      });
+
+      it('preserves items which do not have matching ids', () => {
+        const testId = '123ABC';
+        const result = updateItemInArray(
+          [{ id: 'other' }, { id: testId }],
+          testId,
+          () => 'test',
+        );
+        expect(result[0]).to.have.property('id', 'other');
+      });
+
+      it('updates item with matching id', () => {
+        const testId = '123ABC';
+        const result = updateItemInArray(
+          [{ id: testId }],
+          testId,
+          () => 'test',
+        );
+        expect(result[0]).to.equal('test');
+      });
+    });
+
     describe('supports a subcollection', () => {
       it('with collection', () => {
         subcollections = [{ collection: 'third' }];
@@ -63,6 +122,49 @@ describe('reducer utils', () => {
       ];
       config = { collection: 'first', doc: 'second', subcollections };
       expect(pathFromMeta(config)).to.equal('first.second.third.forth.fifth');
+    });
+  });
+
+  describe('preserveValuesFromState', () => {
+    it('is exported', () => {
+      expect(preserveValuesFromState).to.be.a('function');
+    });
+
+    describe('passing boolean', () => {
+      it('returns original state for true', () => {
+        const result = preserveValuesFromState({}, true);
+        expect(result).to.be.an('object');
+        expect(result).to.be.empty;
+      });
+
+      it('extends state with next state if provided', () => {
+        const testVal = 'val';
+        const result = preserveValuesFromState({}, true, { testVal });
+        expect(result).to.have.property('testVal', testVal);
+      });
+    });
+
+    describe('passing function', () => {
+      it('returns original state for true', () => {
+        const result = preserveValuesFromState({}, () => ({}));
+        expect(result).to.be.an('object');
+        expect(result).to.be.empty;
+      });
+    });
+
+    describe('passing an array of keys', () => {
+      it('returns original state for true', () => {
+        const result = preserveValuesFromState({ some: 'val' }, ['some']);
+        expect(result).to.have.property('some', 'val');
+      });
+    });
+
+    describe('passing invalid preserve option', () => {
+      it('throws', () => {
+        expect(() => preserveValuesFromState({ some: 'val' }, 'some')).to.throw(
+          'Invalid preserve parameter. It must be an Object or an Array.',
+        );
+      });
     });
   });
 });

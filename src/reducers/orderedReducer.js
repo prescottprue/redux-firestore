@@ -1,6 +1,6 @@
-import { pick, first } from 'lodash';
+import { first } from 'lodash';
 import { actionTypes } from '../constants';
-import { updateItemInArray } from '../utils/reducers';
+import { updateItemInArray, preserveValuesFromState } from '../utils/reducers';
 
 const { GET_SUCCESS, LISTENER_RESPONSE, CLEAR_DATA } = actionTypes;
 
@@ -75,11 +75,14 @@ export default function orderedReducer(state = {}, action) {
       };
     case CLEAR_DATA:
       // support keeping data when logging out - #125
-      if (action.preserve) {
-        return pick(state, action.preserve); // pick returns a new object
+      if (action.preserve && action.preserve.ordered) {
+        return preserveValuesFromState(state, action.preserve.ordered, {});
       }
-      return state;
-    // TODO: LISTENER_ERROR that sets null in a way that is configurable (v0.3.0)
+      return {};
+    // TODO: DELETE_SUCCESS that removes item from array in a way that is
+    // configurable and aware of listeners (v0.3.0)
+    // TODO: LISTENER_ERROR that sets null or removes items in a way that is
+    // configurable (v0.3.0)
     default:
       return state;
   }

@@ -84,7 +84,7 @@ render(
 
 ##### Functional Components
 
-It is common to make react components "functional" meaning that the component is just a function instead of being a `class` which `extends React.Component`. This can be useful, but then can limit usage of lifecycle hooks and other features of Component Classes. [`recompose` helps solve this](https://github.com/acdlite/recompose/blob/master/docs/API.md) by providing Higher Order Component functions such as `withContext`, `lifecycle`, and `withHandlers`.
+It is common to make react components "functional" meaning that the component is just a function instead of being a `class` which `extends React.Component`. This can be useful, but can limit usage of lifecycle hooks and other features of Component Classes. [`recompose` helps solve this](https://github.com/acdlite/recompose/blob/master/docs/API.md) by providing Higher Order Component functions such as `withContext`, `lifecycle`, and `withHandlers`.
 
 ```js
 import { connect } from 'react-redux'
@@ -280,6 +280,72 @@ Limit the query to a certain number of results
 
 *Should only be used with collections*
 
+##### startAt
+
+> Creates a new query where the results start at the provided document (inclusive)
+
+[From Firebase's `startAt` docs](https://firebase.google.com/docs/reference/js/firebase.firestore.CollectionReference#startAt)
+
+```js
+{
+  collection: 'cities',
+  orderBy: 'population',
+  startAt: 1000000
+},
+```
+
+*Should only be used with collections*
+
+##### startAfter
+
+> Creates a new query where the results start after the provided document (exclusive)...
+
+[From Firebase's `startAfter` docs](https://firebase.google.com/docs/reference/js/firebase.firestore.CollectionReference#startAfter)
+
+```js
+{
+  collection: 'cities',
+  orderBy: 'population',
+  startAfter: 1000000
+},
+```
+
+*Should only be used with collections*
+
+##### endAt
+
+> Creates a new query where the results end at the provided document (inclusive)...
+
+[From Firebase's `endAt` docs](https://firebase.google.com/docs/reference/js/firebase.firestore.CollectionReference#endAt)
+
+
+```js
+{
+  collection: 'cities',
+  orderBy: 'population',
+  endAt: 1000000
+},
+```
+
+*Should only be used with collections*
+
+##### endBefore
+
+> Creates a new query where the results end before the provided document (exclusive) ...
+
+[From Firebase's `endBefore` docs](https://firebase.google.com/docs/reference/js/firebase.firestore.CollectionReference#endBefore)
+
+
+```js
+{
+  collection: 'cities',
+  orderBy: 'population',
+  endBefore: 1000000
+},
+```
+
+*Should only be used with collections*
+
 ##### storeAs
 
 Storing data under a different path within redux is as easy as passing the `storeAs` parameter to your query:
@@ -293,6 +359,7 @@ Storing data under a different path within redux is as easy as passing the `stor
 ```
 
 **NOTE:** Not yet supported inside of subcollections (only at the top level)
+
 
 #### Other Firebase Statics
 

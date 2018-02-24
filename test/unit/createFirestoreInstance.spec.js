@@ -12,6 +12,13 @@ describe('createFirestoreInstance', () => {
       const instance = createFirestoreInstance({}, {});
       expect(instance).to.have.property('_');
     });
+
+    it('attaches provided config to internal _.config object', () => {
+      const testVal = 'test';
+      const instance = createFirestoreInstance({}, { testVal });
+      expect(instance).to.have.nested.property('_.config.testVal', testVal);
+    });
+
     describe('options - ', () => {
       describe('helpersNamespace -', () => {
         it('places helpers on namespace if passed', () => {
