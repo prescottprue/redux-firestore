@@ -9,6 +9,9 @@ let listenerConfig;
 let collectionClass;
 let onSnapshotSpy;
 let deleteSpy;
+let addSpy;
+let setSpy;
+let updateSpy;
 
 const fakeConfig = {
   helpersNamespace: 'test',
@@ -19,6 +22,9 @@ const successRes = 'success';
 describe('firestoreActions', () => {
   beforeEach(() => {
     dispatchSpy = sinon.spy();
+    addSpy = sinon.spy(() => Promise.resolve(successRes));
+    setSpy = sinon.spy(() => Promise.resolve(successRes));
+    updateSpy = sinon.spy(() => Promise.resolve(successRes));
     deleteSpy = sinon.spy(() => Promise.resolve(successRes));
     onSnapshotSpy = sinon.spy((func, func2) => {
       func(sinon.spy());
@@ -31,6 +37,9 @@ describe('firestoreActions', () => {
         onSnapshot: onSnapshotSpy,
         delete: deleteSpy,
       }),
+      add: addSpy,
+      set: setSpy,
+      update: updateSpy,
       onSnapshot: onSnapshotSpy,
     });
     fakeFirebase = {
@@ -58,6 +67,24 @@ describe('firestoreActions', () => {
           'Firestore must be required and initalized.',
         );
       });
+
+      it('calls dispatch with correct action types', async () => {
+        const instance = createFirestoreInstance(
+          fakeFirebase,
+          { helpersNamespace: 'test' },
+          dispatchSpy,
+        );
+        await instance.test.add({ collection: 'test' }, { some: 'thing' });
+        expect(dispatchSpy).to.have.nested.property(
+          'firstCall.args.0.type',
+          actionTypes.ADD_REQUEST,
+        );
+        expect(dispatchSpy).to.have.nested.property(
+          'secondCall.args.0.type',
+          actionTypes.ADD_SUCCESS,
+        );
+        expect(addSpy).to.have.been.calledOnce;
+      });
     });
 
     describe('set', () => {
@@ -70,6 +97,24 @@ describe('firestoreActions', () => {
           'Firestore must be required and initalized.',
         );
       });
+
+      it('calls dispatch with correct action types', async () => {
+        const instance = createFirestoreInstance(
+          fakeFirebase,
+          { helpersNamespace: 'test' },
+          dispatchSpy,
+        );
+        await instance.test.set({ collection: 'test' }, { some: 'thing' });
+        expect(dispatchSpy).to.have.nested.property(
+          'firstCall.args.0.type',
+          actionTypes.SET_REQUEST,
+        );
+        expect(dispatchSpy).to.have.nested.property(
+          'secondCall.args.0.type',
+          actionTypes.SET_SUCCESS,
+        );
+        expect(setSpy).to.have.been.calledOnce;
+      });
     });
 
     describe('update', () => {
@@ -81,6 +126,24 @@ describe('firestoreActions', () => {
         expect(() => instance.test.update({ collection: 'test' })).to.throw(
           'Firestore must be required and initalized.',
         );
+      });
+
+      it('calls dispatch with correct action types', async () => {
+        const instance = createFirestoreInstance(
+          fakeFirebase,
+          { helpersNamespace: 'test' },
+          dispatchSpy,
+        );
+        await instance.test.update({ collection: 'test' }, { some: 'thing' });
+        expect(dispatchSpy).to.have.nested.property(
+          'firstCall.args.0.type',
+          actionTypes.UPDATE_REQUEST,
+        );
+        expect(dispatchSpy).to.have.nested.property(
+          'secondCall.args.0.type',
+          actionTypes.UPDATE_SUCCESS,
+        );
+        expect(updateSpy).to.have.been.calledOnce;
       });
     });
 

@@ -491,6 +491,62 @@ describe('query utils', () => {
         expect(limitSpy).to.be.calledWith(meta.limit);
       });
     });
+
+    describe('startAt', () => {
+      it('calls startAt if valid', () => {
+        meta = { collection: 'test', startAt: 'other' };
+        const startAtSpy = sinon.spy(() => ({}));
+        const fakeFirebase = {
+          firestore: () => ({ collection: () => ({ startAt: startAtSpy }) }),
+        };
+        result = firestoreRef(fakeFirebase, dispatch, meta);
+        expect(result).to.be.an('object');
+        expect(startAtSpy).to.be.calledWith(meta.startAt);
+      });
+    });
+
+    describe('startAfter', () => {
+      it('calls startAfter if valid', () => {
+        meta = { collection: 'test', startAfter: 'other' };
+        const startAfterSpy = sinon.spy(() => ({}));
+        const fakeFirebase = {
+          firestore: () => ({
+            collection: () => ({ startAfter: startAfterSpy }),
+          }),
+        };
+        result = firestoreRef(fakeFirebase, dispatch, meta);
+        expect(result).to.be.an('object');
+        expect(startAfterSpy).to.be.calledWith(meta.startAfter);
+      });
+    });
+
+    describe('endAt', () => {
+      it('calls endAt if valid', () => {
+        meta = { collection: 'test', endAt: 'other' };
+        const endAtSpy = sinon.spy(() => ({}));
+        const fakeFirebase = {
+          firestore: () => ({ collection: () => ({ endAt: endAtSpy }) }),
+        };
+        result = firestoreRef(fakeFirebase, dispatch, meta);
+        expect(result).to.be.an('object');
+        expect(endAtSpy).to.be.calledWith(meta.endAt);
+      });
+    });
+
+    describe('endBefore', () => {
+      it('calls endBefore if valid', () => {
+        meta = { collection: 'test', endBefore: 'other' };
+        const endBeforeSpy = sinon.spy(() => ({}));
+        const fakeFirebase = {
+          firestore: () => ({
+            collection: () => ({ endBefore: endBeforeSpy }),
+          }),
+        };
+        result = firestoreRef(fakeFirebase, dispatch, meta);
+        expect(result).to.be.an('object');
+        expect(endBeforeSpy).to.be.calledWith(meta.endBefore);
+      });
+    });
   });
 
   describe('orderedFromSnap', () => {
