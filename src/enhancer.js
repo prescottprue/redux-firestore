@@ -46,26 +46,23 @@ let firestoreInstance;
  * // Use Function later to create store
  * const store = createStoreWithFirestore(rootReducer, initialState)
  */
-export default (firebaseInstance, otherConfig) => next => (
-  reducer,
-  initialState,
-  middleware,
-) => {
-  const store = next(reducer, initialState, middleware);
+export default function reduxFirestore(firebaseInstance, otherConfig) {
+  return next => (reducer, initialState, middleware) => {
+    const store = next(reducer, initialState, middleware);
 
-  const configs = { ...defaultConfig, ...otherConfig };
+    const configs = { ...defaultConfig, ...otherConfig };
 
-  firestoreInstance = createFirestoreInstance(
-    // eslint-disable-line no-param-reassign
-    firebaseInstance.firebase_ || firebaseInstance, // eslint-disable-line no-underscore-dangle, no-undef, max-len
-    configs,
-    store.dispatch, // eslint-disable-line comma-dangle
-  );
+    firestoreInstance = createFirestoreInstance(
+      firebaseInstance.firebase_ || firebaseInstance, // eslint-disable-line no-underscore-dangle, no-undef, max-len
+      configs,
+      store.dispatch, // eslint-disable-line comma-dangle
+    );
 
-  store.firestore = firestoreInstance;
+    store.firestore = firestoreInstance;
 
-  return store;
-};
+    return store;
+  };
+}
 
 /**
  * @description Expose Firestore instance created internally. Useful for

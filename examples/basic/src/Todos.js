@@ -6,7 +6,7 @@ import { connect } from 'react-redux';
 import Todo from './Todo';
 import NewTodo from './NewTodo';
 
-const Todos = ({ todos, onNewSubmit, onDoneClick, store: { firestore } }) => (
+const Todos = ({ todos, onNewSubmit, onDoneClick }) => (
   <div>
     <NewTodo onNewSubmit={onNewSubmit} />
     {
@@ -44,7 +44,8 @@ const withStore = compose(
 export default compose(
   withStore,
   withHandlers({
-    loadData: props => err => props.store.firestore.get('todos/tzDlkfQ6m2gNMVZc5iYx'),
+    loadData: props => err =>
+      props.store.firestore.get('todos/tzDlkfQ6m2gNMVZc5iYx'),
     onDoneClick: props => (key, done = false) =>
       props.store.firestore.update('todos', key, { done }),
     onNewSubmit: props => newTodo =>
@@ -52,7 +53,6 @@ export default compose(
   }),
   lifecycle({
     componentWillMount() {
-      console.log('props', this.props)
       this.props.loadData()
     }
   }),

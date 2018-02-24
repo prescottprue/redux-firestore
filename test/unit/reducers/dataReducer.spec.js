@@ -6,8 +6,13 @@ let collection = 'test'; // eslint-disable-line prefer-const
 let action = {};
 let payload = {};
 let meta = {};
+let result;
 
 describe('dataReducer', () => {
+  beforeEach(() => {
+    result = undefined;
+  });
+
   it('is exported', () => {
     expect(dataReducer).to.exist;
   });
@@ -45,6 +50,29 @@ describe('dataReducer', () => {
         action = { meta, payload, type: actionTypes.LISTENER_RESPONSE };
         expect(() => dataReducer(state, action)).to.throw(
           'Collection is required to construct reducer path.',
+        );
+      });
+
+      it('merges new state with existing state', () => {
+        const doc = 'someDoc';
+        const data = { [doc]: { newData: { field: 'test' } } };
+        payload = { data };
+        meta = {
+          collection,
+          doc,
+        };
+        const existingState = {
+          [collection]: { [doc]: { originalData: { some: {} } } },
+        };
+        action = { meta, payload, type: actionTypes.LISTENER_RESPONSE };
+        result = dataReducer(existingState, action);
+        expect(result).to.have.nested.property(
+          `${collection}.${doc}.newData.field`,
+          data[doc].newData.field,
+        );
+        expect(result).to.have.nested.property(
+          `${collection}.${doc}.originalData.some`,
+          existingState[collection][doc].originalData.some,
         );
       });
 
@@ -198,8 +226,74 @@ describe('dataReducer', () => {
       it('preserves keys provided in preserve parameter', () => {
         meta = {};
         const data = { some: 'test' };
-        action = { meta, type: actionTypes.CLEAR_DATA, preserve: ['some'] };
+        action = {
+          meta,
+          type: actionTypes.CLEAR_DATA,
+          preserve: { data: ['some'] },
+        };
         expect(dataReducer(data, action)).to.have.property('some', data.some);
+      });
+    });
+
+    describe('LISTENER_ERROR', () => {
+      it('sets state to null for collection', () => {
+        const data = { testing: { field: 'test' } };
+        action = {
+          meta: { collection },
+          payload: { data },
+          type: actionTypes.LISTENER_ERROR,
+        };
+        result = dataReducer(state, action);
+        expect(result).to.have.property(collection);
+        expect(result[collection]).to.be.null;
+      });
+
+      it('preserves existing state (to not run over existing data)', () => {
+        const data = { testing: { field: 'test' } };
+        action = {
+          meta: { collection },
+          payload: { data },
+          type: actionTypes.LISTENER_ERROR,
+        };
+        result = dataReducer({ [collection]: {} }, action);
+        expect(result).to.have.property(collection);
+        expect(result[collection]).to.be.an('object');
+      });
+
+      it('throws if meta does not contain collection', () => {
+        payload = {};
+        action = { meta: {}, payload, type: actionTypes.LISTENER_ERROR };
+        expect(() => dataReducer(state, action)).to.throw(
+          'Collection is required to construct reducer path.',
+        );
+      });
+
+      describe('preserve parameter', () => {
+        it('list of keys preserve state', () => {
+          const data = { testing: { field: 'test' } };
+          action = {
+            meta: { collection },
+            payload: { data },
+            preserve: { data: [collection] },
+            type: actionTypes.LISTENER_ERROR,
+          };
+          result = dataReducer({ [collection]: {} }, action);
+          expect(result).to.have.property(collection);
+          expect(result[collection]).to.be.an('object');
+        });
+
+        it('list of keys preserve state', () => {
+          const data = { testing: { field: 'test' } };
+          action = {
+            meta: { collection },
+            payload: { data },
+            preserve: { data: currentState => currentState },
+            type: actionTypes.LISTENER_ERROR,
+          };
+          result = dataReducer({ [collection]: {} }, action);
+          expect(result).to.have.property(collection);
+          expect(result[collection]).to.be.an('object');
+        });
       });
     });
   });

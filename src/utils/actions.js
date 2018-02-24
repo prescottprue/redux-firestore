@@ -1,6 +1,18 @@
 import { isObject, isFunction, mapValues } from 'lodash';
 
 /**
+ * Build payload by invoking payload function if it a function, otherwise
+ * returning the payload.
+ * @param  {Function|Object|Boolean} payload - Payload value (invoked if it
+ * is a function)
+ * @param  {Any} valToPass - Value to pass to custom payload function
+ * @return {Any} Result of building payload
+ */
+function makePayload({ payload }, valToPass) {
+  return isFunction(payload) ? payload(valToPass) : payload;
+}
+
+/**
  * @description Wrap method call in dispatched actions
  * @param {Function} dispatch - Action dispatch function
  * @param {Object} opts - Options object
@@ -9,28 +21,34 @@ import { isObject, isFunction, mapValues } from 'lodash';
  * @param {Array} opts.types - Action types array ([BEFORE, SUCCESS, FAILURE])
  * @private
  */
-export const wrapInDispatch = (
+export function wrapInDispatch(
   dispatch,
-  { ref, meta, method, args, types },
-) => {
+  { ref, meta, method, args = [], types },
+) {
   const [requestingType, successType, errorType] = types;
   dispatch({
     type: isObject(requestingType) ? requestingType.type : requestingType,
     meta,
     payload: isObject(requestingType) ? requestingType.payload : { args },
   });
-  const methodPromise =
-    args && args.length ? ref[method](...args) : ref[method]();
-  return methodPromise
-    .then(val => {
-      const makePayload = ({ payload }) =>
-        isFunction(payload) ? payload(val) : payload;
-      dispatch({
-        type: isObject(successType) ? successType.type : successType,
+  return ref[method](...args)
+    .then(result => {
+      const successIsObject = isObject(successType);
+      // Built action object handling function for custom payload
+      const actionObj = {
+        type: successIsObject ? successType.type : successType,
         meta,
-        payload: isObject(successType) ? makePayload(successType) : { args },
-      });
-      return val;
+        payload:
+          successIsObject && successType.payload
+            ? makePayload(successType, result)
+            : { args },
+      };
+      // Attach preserve to action if it is passed
+      if (successIsObject && successType.preserve) {
+        actionObj.preserve = successType.preserve;
+      }
+      dispatch(actionObj);
+      return result;
     })
     .catch(err => {
       dispatch({
@@ -40,7 +58,7 @@ export const wrapInDispatch = (
       });
       return Promise.reject(err);
     });
-};
+}
 
 /**
  * Function that builds a factory that passes firebase and dispatch as
@@ -50,9 +68,10 @@ export const wrapInDispatch = (
  * @return {Function} A wrapper that accepts a function to wrap with firebase
  * and dispatch.
  */
-const createWithFirebaseAndDispatch = (firebase, dispatch) => func => (
-  ...args
-) => func.apply(firebase, [firebase, dispatch, ...args]);
+function createWithFirebaseAndDispatch(firebase, dispatch) {
+  return func => (...args) =>
+    func.apply(firebase, [firebase, dispatch, ...args]);
+}
 
 /**
  * Map each action with Firebase and Dispatch. Includes aliasing of actions.
@@ -61,12 +80,12 @@ const createWithFirebaseAndDispatch = (firebase, dispatch) => func => (
  * @param  {Object} actions - Action functions to map with firebase and dispatch
  * @return {Object} Actions mapped with firebase and dispatch
  */
-export const mapWithFirebaseAndDispatch = (
+export function mapWithFirebaseAndDispatch(
   firebase,
   dispatch,
   actions,
   aliases,
-) => {
+) {
   const withFirebaseAndDispatch = createWithFirebaseAndDispatch(
     firebase,
     dispatch,
@@ -81,4 +100,4 @@ export const mapWithFirebaseAndDispatch = (
       {},
     ),
   };
-};
+}

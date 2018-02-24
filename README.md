@@ -84,7 +84,7 @@ render(
 
 ##### Functional Components
 
-It is common to make react components "functional" meaning that the component is just a function instead of being a `class` which `extends React.Component`. This can be useful, but then can limit usage of lifecycle hooks and other features of Component Classes. [`recompose` helps solve this](https://github.com/acdlite/recompose/blob/master/docs/API.md) by providing Higher Order Component functions such as `withContext`, `lifecycle`, and `withHandlers`.
+It is common to make react components "functional" meaning that the component is just a function instead of being a `class` which `extends React.Component`. This can be useful, but can limit usage of lifecycle hooks and other features of Component Classes. [`recompose` helps solve this](https://github.com/acdlite/recompose/blob/master/docs/API.md) by providing Higher Order Component functions such as `withContext`, `lifecycle`, and `withHandlers`.
 
 ```js
 import { connect } from 'react-redux'

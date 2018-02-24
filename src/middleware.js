@@ -34,49 +34,49 @@ const typesMap = {
   ],
 };
 
-/* istanbul ignore next not yet in use */
-export const reduxFirestoreMiddleware = firestore => store => next => action => {
-  const callAPI = action.type === CALL_FIRESTORE ? action : undefined;
-  if (typeof callAPI === 'undefined') return next(action);
-
-  let { method } = callAPI;
-
-  if (typeof method === 'function') method = method(store.getState());
-
-  if (typeof method !== 'string') throw new Error('Specify a method.');
-
-  const { args } = callAPI;
-  const types = typesMap[method];
-
-  if (!Array.isArray(types) || types.length !== 3) {
-    throw new Error('Expected an array of three action types.');
-  }
-
-  if (!types.every(type => typeof type === 'string')) {
-    throw new Error('Expected action types to be strings.');
-  }
-
-  function actionWith(data) {
-    const finalAction = Object.assign({}, action, data);
-    delete finalAction[CALL_FIRESTORE];
-    return finalAction;
-  }
-
-  const [requestType, successType, failureType] = types;
-  next({ type: requestType });
-  const callInfoObj = { method };
-  return callFirestore(firestore, callInfoObj)
-    .then(response => next({ response, method, args, type: successType }))
-    .catch(error =>
-      next(
-        actionWith({
-          type: failureType,
-          error: error.message || error || 'Something bad happened',
-        }),
-      ),
-    );
-};
-
 // A Redux middleware that interprets actions with CALL_FIRESTORE info specified.
 // Performs the call and promises when such actions are dispatched.
-export default reduxFirestoreMiddleware;
+/* istanbul ignore next not yet in use */
+export default function reduxFirestoreMiddleware(firestore) {
+  return store => next => action => {
+    const callAPI = action.type === CALL_FIRESTORE ? action : undefined;
+    if (typeof callAPI === 'undefined') return next(action);
+
+    let { method } = callAPI;
+
+    if (typeof method === 'function') method = method(store.getState());
+
+    if (typeof method !== 'string') throw new Error('Specify a method.');
+
+    const { args } = callAPI;
+    const types = typesMap[method];
+
+    if (!Array.isArray(types) || types.length !== 3) {
+      throw new Error('Expected an array of three action types.');
+    }
+
+    if (!types.every(type => typeof type === 'string')) {
+      throw new Error('Expected action types to be strings.');
+    }
+
+    function actionWith(data) {
+      const finalAction = Object.assign({}, action, data);
+      delete finalAction[CALL_FIRESTORE];
+      return finalAction;
+    }
+
+    const [requestType, successType, failureType] = types;
+    next({ type: requestType });
+    const callInfoObj = { method };
+    return callFirestore(firestore, callInfoObj)
+      .then(response => next({ response, method, args, type: successType }))
+      .catch(error =>
+        next(
+          actionWith({
+            type: failureType,
+            error: error.message || error || 'Something bad happened',
+          }),
+        ),
+      );
+  };
+}

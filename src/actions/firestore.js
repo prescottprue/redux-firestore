@@ -1,9 +1,10 @@
-import { isArray, invoke } from 'lodash';
+import { isArray, invoke, isFunction } from 'lodash';
 import { wrapInDispatch } from '../utils/actions';
 import { actionTypes } from '../constants';
 import {
   attachListener,
   detachListener,
+  listenerExists,
   orderedFromSnap,
   dataByIdSnapshot,
   getQueryConfig,
@@ -19,7 +20,7 @@ import {
  * @param {String} doc - Document name
  * @return {Promise} Resolves with results of add call
  */
-export const add = (firebase, dispatch, queryOption, ...args) => {
+export function add(firebase, dispatch, queryOption, ...args) {
   const meta = getQueryConfig(queryOption);
   return wrapInDispatch(dispatch, {
     ref: firestoreRef(firebase, dispatch, meta),
@@ -32,7 +33,7 @@ export const add = (firebase, dispatch, queryOption, ...args) => {
       actionTypes.ADD_FAILURE,
     ],
   });
-};
+}
 
 /**
  * Set data to a document on Cloud Firestore with the call to
@@ -43,7 +44,7 @@ export const add = (firebase, dispatch, queryOption, ...args) => {
  * @param {String} doc - Document name
  * @return {Promise} Resolves with results of set call
  */
-export const set = (firebase, dispatch, queryOption, ...args) => {
+export function set(firebase, dispatch, queryOption, ...args) {
   const meta = getQueryConfig(queryOption);
   return wrapInDispatch(dispatch, {
     ref: firestoreRef(firebase, dispatch, meta),
@@ -56,7 +57,7 @@ export const set = (firebase, dispatch, queryOption, ...args) => {
       actionTypes.SET_FAILURE,
     ],
   });
-};
+}
 
 /**
  * Get a collection or document from Cloud Firestore with the call to
@@ -67,8 +68,9 @@ export const set = (firebase, dispatch, queryOption, ...args) => {
  * @param {String} doc - Document name
  * @return {Promise} Resolves with results of get call
  */
-export const get = (firebase, dispatch, queryOption) => {
+export function get(firebase, dispatch, queryOption) {
   const meta = getQueryConfig(queryOption);
+  // Wrap get call in dispatch calls
   return wrapInDispatch(dispatch, {
     ref: firestoreRef(firebase, dispatch, meta),
     method: 'get',
@@ -86,7 +88,7 @@ export const get = (firebase, dispatch, queryOption) => {
       actionTypes.GET_FAILURE,
     ],
   });
-};
+}
 
 /**
  * Update a document on Cloud Firestore with the call to
@@ -97,7 +99,7 @@ export const get = (firebase, dispatch, queryOption) => {
  * @param {String} doc - Document name
  * @return {Promise} Resolves with results of update call
  */
-export const update = (firebase, dispatch, queryOption, ...args) => {
+export function update(firebase, dispatch, queryOption, ...args) {
   const meta = getQueryConfig(queryOption);
   return wrapInDispatch(dispatch, {
     ref: firestoreRef(firebase, dispatch, meta),
@@ -110,7 +112,7 @@ export const update = (firebase, dispatch, queryOption, ...args) => {
       actionTypes.UPDATE_FAILURE,
     ],
   });
-};
+}
 
 /**
  * Update a document on Cloud Firestore with the call to
@@ -121,10 +123,10 @@ export const update = (firebase, dispatch, queryOption, ...args) => {
  * @param {String} doc - Document name
  * @return {Promise} Resolves with results of update call
  */
-export const deleteRef = (firebase, dispatch, queryOption) => {
+export function deleteRef(firebase, dispatch, queryOption) {
   const meta = getQueryConfig(queryOption);
   if (!meta.doc) {
-    throw new Error('Only docs can be deleted');
+    throw new Error('Only docs can be deleted.');
   }
   return wrapInDispatch(dispatch, {
     ref: firestoreRef(firebase, dispatch, meta),
@@ -132,11 +134,15 @@ export const deleteRef = (firebase, dispatch, queryOption) => {
     meta,
     types: [
       actionTypes.DELETE_REQUEST,
+      {
+        type: actionTypes.DELETE_SUCCESS,
+        preserve: firebase._.config.preserveOnDelete,
+      },
       actionTypes.DELETE_SUCCESS,
       actionTypes.DELETE_FAILURE,
     ],
   });
-};
+}
 
 /**
  * Set listener to Cloud Firestore with the call to the Firebase library
@@ -152,13 +158,7 @@ export const deleteRef = (firebase, dispatch, queryOption) => {
  * @param  {Function} successCb - Callback called on success
  * @param  {Function} errorCb - Callback called on error
  */
-export const setListener = (
-  firebase,
-  dispatch,
-  queryOpts,
-  successCb,
-  errorCb,
-) => {
+export function setListener(firebase, dispatch, queryOpts, successCb, errorCb) {
   const meta = getQueryConfig(queryOpts);
   // Create listener
   const unsubscribe = firestoreRef(firebase, dispatch, meta).onSnapshot(
@@ -171,27 +171,27 @@ export const setListener = (
           ordered: orderedFromSnap(docData),
         },
       });
-      if (successCb) {
-        successCb(docData);
-      }
+      // Invoke success callback if it exists
+      if (successCb) successCb(docData);
     },
     err => {
       // TODO: Look into whether listener is automatically removed in all cases
       // TODO: Provide a setting that allows for silencing of console error
+      const { config } = firebase._;
       // Log error handling the case of it not existing
-      invoke(console, 'error', err);
+      if (config.logListenerError) invoke(console, 'error', err);
       dispatch({
         type: actionTypes.LISTENER_ERROR,
         meta,
         payload: err,
+        preserve: config.preserveOnListenerError,
       });
-      if (errorCb) {
-        errorCb(err);
-      }
+      // Invoke error callback if it exists
+      if (errorCb) errorCb(err);
     },
   );
   attachListener(firebase, dispatch, meta, unsubscribe);
-};
+}
 
 /**
  * Set an array of listeners
@@ -199,14 +199,27 @@ export const setListener = (
  * @param {Function} dispatch - Redux's dispatch function
  * @param {Array} listeners
  */
-export const setListeners = (firebase, dispatch, listeners) => {
+export function setListeners(firebase, dispatch, listeners) {
   if (!isArray(listeners)) {
     throw new Error(
-      'Listeners must be an Array of listener configs (Strings/Objects)',
+      'Listeners must be an Array of listener configs (Strings/Objects).',
     );
   }
-  return listeners.map(listener => setListener(firebase, dispatch, listener));
-};
+
+  return listeners.forEach(listener => {
+    // Config for supporting attaching of multiple listeners
+    const { config } = firebase._;
+    const multipleListenersEnabled = isFunction(config.allowMultipleListeners)
+      ? config.allowMultipleListeners(listener, firebase._.listeners)
+      : config.allowMultipleListeners;
+    // Only attach listener if it does not already exist or
+    // if multiple listeners config is true or is a function which returns
+    // truthy value
+    if (!listenerExists(firebase, listener) || multipleListenersEnabled) {
+      setListener(firebase, dispatch, listener);
+    }
+  });
+}
 
 /**
  * Unset previously set listener to Cloud Firestore. Listener must have been
@@ -219,23 +232,28 @@ export const setListeners = (firebase, dispatch, listeners) => {
  * @return {Promise} Resolves when listener has been attached **not** when data
  * has been gathered by the listener.
  */
-export const unsetListener = (firebase, dispatch, opts) =>
-  detachListener(firebase, dispatch, getQueryConfig(opts));
+export function unsetListener(firebase, dispatch, opts) {
+  return detachListener(firebase, dispatch, getQueryConfig(opts));
+}
 
 /**
  * Unset a list of listeners
  * @param {Object} firebase - Internal firebase object
  * @param {Function} dispatch - Redux's dispatch function
- * @param {Array} listeners [description]
+ * @param {Array} listeners - Array of listener configs
  */
-export const unsetListeners = (firebase, dispatch, listeners) => {
+export function unsetListeners(firebase, dispatch, listeners) {
   if (!isArray(listeners)) {
     throw new Error(
-      'Listeners must be an Array of listener configs (Strings/Objects)',
+      'Listeners must be an Array of listener configs (Strings/Objects).',
     );
   }
-  return listeners.map(listener => unsetListener(firebase, dispatch, listener));
-};
+
+  listeners.forEach(listener => {
+    // Remove listener only if it exists
+    unsetListener(firebase, dispatch, listener);
+  });
+}
 
 export default {
   get,
