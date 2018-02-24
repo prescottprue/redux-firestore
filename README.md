@@ -294,13 +294,11 @@ Limit the query to a certain number of results
 },
 ```
 
-**NOTE:**
-* *Not yet supported inside of subcollections (only at the top level)*
-* *Should only be used with collections*
+*Should only be used with collections*
 
 ##### startAfter
 
-> Creates a new query where the results start after the provided document (exclusive).
+> Creates a new query where the results start after the provided document (exclusive)...
 
 [From Firebase's `startAfter` docs](https://firebase.google.com/docs/reference/js/firebase.firestore.CollectionReference#startAfter)
 
@@ -312,13 +310,11 @@ Limit the query to a certain number of results
 },
 ```
 
-**NOTE:**
-* *Not yet supported inside of subcollections (only at the top level)*
-* *Should only be used with collections*
+*Should only be used with collections*
 
 ##### endAt
 
-> Creates a new query where the results end at the provided document (inclusive). The end position ...
+> Creates a new query where the results end at the provided document (inclusive)...
 
 [From Firebase's `endAt` docs](https://firebase.google.com/docs/reference/js/firebase.firestore.CollectionReference#endAt)
 
@@ -331,13 +327,14 @@ Limit the query to a certain number of results
 },
 ```
 
-**NOTE:**
-* *Not yet supported inside of subcollections (only at the top level)*
-* *Should only be used with collections*
+*Should only be used with collections*
 
 ##### endBefore
 
-Start the query at a specific document
+> Creates a new query where the results end before the provided document (exclusive) ...
+
+[From Firebase's `endBefore` docs](https://firebase.google.com/docs/reference/js/firebase.firestore.CollectionReference#endBefore)
+
 
 ```js
 {
@@ -347,9 +344,7 @@ Start the query at a specific document
 },
 ```
 
-**NOTE:**
-* *Not yet supported inside of subcollections (only at the top level)*
-* *Should only be used with collections*
+*Should only be used with collections*
 
 ##### storeAs
 
