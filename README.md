@@ -106,7 +106,7 @@ const enhance = compose(
   withHandlers({
     loadData: props => () => props.store.firestore.get('todos'),
     onDoneClick: props => (key, done = false) =>
-      props.store.firestore.update('todos', key, { done }),
+      props.store.firestore.update(`todos/${key}`, { done }),
     onNewSubmit: props => newTodo =>
       props.store.firestore.add('todos', { ...newTodo, owner: 'Anonymous' }),
   }),
@@ -141,7 +141,7 @@ class Todos extends Component {
   }
 
   componentWillMount () {
-    const { firebase } = this.context.store
+    const { firestore } = this.context.store
     firestore.get('todos')
   }
 
@@ -318,7 +318,7 @@ const enhance = compose(
   withHandlers({
     onDoneClick: props => (key, done = true) => {
       const { firestore } = props.store
-      return firestore.update('todos', key, {
+      return firestore.update(`todos/${key}`, {
         done,
         updatedAt: firestore.FieldValue.serverTimestamp() // use static from firestore instance
       }),
