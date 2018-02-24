@@ -20,7 +20,7 @@ function addWhereToRef(ref, where) {
 
 /**
  * Add attribute to Cloud Firestore Reference handling invalid formats
- * and multiple where statements (array of arrays). Used for orderBy and where
+ * and multiple orderBy statements (array of arrays). Used for orderBy and where
  * @param {firebase.firestore.Reference} ref - Reference which to add where to
  * @param {Array} attrVal - Statement to attach to reference
  * @param {String} [attrName='where'] - Name of attribute
@@ -41,6 +41,31 @@ function addOrderByToRef(ref, orderBy) {
     ref,
   );
 }
+
+/* eslint-disable no-param-reassign */
+function handleSubcollections(ref, subcollectionList) {
+  if (subcollectionList) {
+    forEach(subcollectionList, subcollection => {
+      if (subcollection.collection) {
+        ref = ref.collection(subcollection.collection);
+      }
+      if (subcollection.doc) ref = ref.doc(subcollection.doc);
+      if (subcollection.where) ref = addWhereToRef(ref, subcollection.where);
+      if (subcollection.orderBy) {
+        ref = addOrderByToRef(ref, subcollection.orderBy);
+      }
+      if (subcollection.limit) ref = ref.limit(subcollection.limit);
+      if (subcollection.startAt) ref = ref.startAt(subcollection.startAt);
+      if (subcollection.startAfter) {
+        ref = ref.startAfter(subcollection.startAfter);
+      }
+      if (subcollection.endAt) ref = ref.endAt(subcollection.endAt);
+      if (subcollection.endBefore) ref = ref.endBefore(subcollection.endBefore);
+      handleSubcollections(subcollection.subcollections);
+    });
+  }
+}
+/* eslint-enable */
 
 /**
  * Create a Cloud Firestore reference for a collection or document
@@ -69,55 +94,16 @@ export function firestoreRef(firebase, dispatch, meta) {
     endBefore,
   } = meta;
   let ref = firebase.firestore().collection(collection);
-  // TODO: Compare to doing this by creating all methods/arguments as array
-  // and doing call at once
-  if (doc) {
-    ref = ref.doc(doc);
-  }
-  const handleSubcollections = subcollectionList => {
-    if (subcollectionList) {
-      forEach(subcollectionList, subcollection => {
-        if (subcollection.collection) {
-          ref = ref.collection(subcollection.collection);
-        }
-        if (subcollection.doc) {
-          ref = ref.doc(subcollection.doc);
-        }
-        if (subcollection.where) {
-          ref = addWhereToRef(ref, subcollection.where);
-        }
-        if (subcollection.orderBy) {
-          ref = addOrderByToRef(ref, subcollection.orderBy);
-        }
-        if (subcollection.limit) {
-          ref = ref.limit(subcollection.limit);
-        }
-        handleSubcollections(subcollection.subcollections);
-      });
-    }
-  };
-  handleSubcollections(subcollections);
-  if (where) {
-    ref = addWhereToRef(ref, where);
-  }
-  if (orderBy) {
-    ref = addOrderByToRef(ref, orderBy);
-  }
-  if (limit) {
-    ref = ref.limit(limit);
-  }
-  if (startAt) {
-    ref = ref.startAt(startAt);
-  }
-  if (startAfter) {
-    ref = ref.startAfter(startAfter);
-  }
-  if (endAt) {
-    ref = ref.endAt(endAt);
-  }
-  if (endBefore) {
-    ref = ref.endBefore(endBefore);
-  }
+  // TODO: Compare other ways of building ref
+  if (doc) ref = ref.doc(doc);
+  handleSubcollections(ref, subcollections);
+  if (where) ref = addWhereToRef(ref, where);
+  if (orderBy) ref = addOrderByToRef(ref, orderBy);
+  if (limit) ref = ref.limit(limit);
+  if (startAt) ref = ref.startAt(startAt);
+  if (startAfter) ref = ref.startAfter(startAfter);
+  if (endAt) ref = ref.endAt(endAt);
+  if (endBefore) ref = ref.endBefore(endBefore);
   return ref;
 }
 

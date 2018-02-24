@@ -11,6 +11,7 @@ let onSnapshotSpy;
 let deleteSpy;
 let addSpy;
 let setSpy;
+let getSpy;
 let updateSpy;
 
 const fakeConfig = {
@@ -24,6 +25,7 @@ describe('firestoreActions', () => {
     dispatchSpy = sinon.spy();
     addSpy = sinon.spy(() => Promise.resolve(successRes));
     setSpy = sinon.spy(() => Promise.resolve(successRes));
+    getSpy = sinon.spy(() => Promise.resolve(successRes));
     updateSpy = sinon.spy(() => Promise.resolve(successRes));
     deleteSpy = sinon.spy(() => Promise.resolve(successRes));
     onSnapshotSpy = sinon.spy((func, func2) => {
@@ -36,9 +38,11 @@ describe('firestoreActions', () => {
         collection: collectionClass,
         onSnapshot: onSnapshotSpy,
         delete: deleteSpy,
+        get: getSpy,
       }),
       add: addSpy,
       set: setSpy,
+      get: getSpy,
       update: updateSpy,
       onSnapshot: onSnapshotSpy,
     });
@@ -195,6 +199,17 @@ describe('firestoreActions', () => {
         expect(() => instance.test.get({ collection: 'test' })).to.throw(
           'Firestore must be required and initalized.',
         );
+      });
+
+      it('calls dispatch twice', async () => {
+        const instance = createFirestoreInstance(
+          fakeFirebase,
+          { helpersNamespace: 'test' },
+          dispatchSpy,
+        );
+        const res = await instance.test.get({ collection: 'test' });
+        expect(res).to.equal(successRes);
+        expect(dispatchSpy).to.have.been.calledTwice;
       });
     });
 

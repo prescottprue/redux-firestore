@@ -12,10 +12,43 @@ import { actionTypes } from '../../../src/constants';
 let dispatch = sinon.spy();
 let meta;
 let result;
+let docSpy;
+let fakeFirebase;
+
+const fakeFirebaseWith = spyedName => {
+  const theSpy = sinon.spy(() => ({}));
+  const theFirebase = {
+    firestore: () => ({
+      collection: () => ({
+        doc: () => ({
+          collection: () => ({ doc: () => ({ [spyedName]: theSpy }) }),
+        }),
+      }),
+    }),
+  };
+  const theMeta = {
+    collection: 'test',
+    doc: 'other',
+    subcollections: [
+      { collection: 'thing', doc: 'again', [spyedName]: 'some' },
+    ],
+  };
+  return { theSpy, theFirebase, theMeta };
+};
 
 describe('query utils', () => {
   beforeEach(() => {
     dispatch = sinon.spy();
+    docSpy = sinon.spy(() => ({}));
+    fakeFirebase = {
+      firestore: () => ({
+        collection: () => ({
+          doc: () => ({
+            collection: () => ({ doc: docSpy }),
+          }),
+        }),
+      }),
+    };
   });
 
   describe('getQueryName', () => {
@@ -270,8 +303,7 @@ describe('query utils', () => {
     describe('doc', () => {
       it('creates ref', () => {
         meta = { collection: 'test', doc: 'other' };
-        const docSpy = sinon.spy(() => ({}));
-        const fakeFirebase = {
+        fakeFirebase = {
           firestore: () => ({ collection: () => ({ doc: docSpy }) }),
         };
         result = firestoreRef(fakeFirebase, dispatch, meta);
@@ -287,8 +319,7 @@ describe('query utils', () => {
           doc: 'other',
           subcollections: [{ collection: 'thing' }],
         };
-        const docSpy = sinon.spy(() => ({}));
-        const fakeFirebase = {
+        fakeFirebase = {
           firestore: () => ({
             collection: () => ({
               doc: () => ({
@@ -308,8 +339,7 @@ describe('query utils', () => {
           doc: 'other',
           subcollections: [{ collection: 'thing', doc: 'again' }],
         };
-        const docSpy = sinon.spy(() => ({}));
-        const fakeFirebase = {
+        fakeFirebase = {
           firestore: () => ({
             collection: () => ({
               doc: () => ({
@@ -332,8 +362,8 @@ describe('query utils', () => {
           ],
         };
         const whereSpy = sinon.spy();
-        const docSpy = sinon.spy(() => ({ where: whereSpy }));
-        const fakeFirebase = {
+        docSpy = sinon.spy(() => ({ where: whereSpy }));
+        fakeFirebase = {
           firestore: () => ({
             collection: () => ({
               doc: () => ({
@@ -357,8 +387,8 @@ describe('query utils', () => {
             ],
           };
           const orderBySpy = sinon.spy(() => ({}));
-          const docSpy = sinon.spy(() => ({ orderBy: orderBySpy }));
-          const fakeFirebase = {
+          docSpy = sinon.spy(() => ({ orderBy: orderBySpy }));
+          fakeFirebase = {
             firestore: () => ({
               collection: () => ({
                 doc: () => ({
@@ -383,8 +413,8 @@ describe('query utils', () => {
             ],
           };
           const limitSpy = sinon.spy(() => ({}));
-          const docSpy = sinon.spy(() => ({ limit: limitSpy }));
-          const fakeFirebase = {
+          docSpy = sinon.spy(() => ({ limit: limitSpy }));
+          fakeFirebase = {
             firestore: () => ({
               collection: () => ({
                 doc: () => ({
@@ -398,13 +428,65 @@ describe('query utils', () => {
           expect(limitSpy).to.be.calledWith(meta.subcollections[0].limit);
         });
       });
+
+      describe('startAt', () => {
+        it('calls startAt if valid', () => {
+          const { theFirebase, theSpy, theMeta } = fakeFirebaseWith('startAt');
+          result = firestoreRef(theFirebase, dispatch, theMeta);
+          expect(result).to.be.an('object');
+          expect(theSpy).to.be.calledWith(theMeta.subcollections[0].startAt);
+        });
+      });
+
+      describe('startAfter', () => {
+        it('calls startAfter if valid', () => {
+          const { theFirebase, theSpy, theMeta } = fakeFirebaseWith(
+            'startAfter',
+          );
+          result = firestoreRef(theFirebase, dispatch, theMeta);
+          expect(result).to.be.an('object');
+          expect(theSpy).to.be.calledWith(theMeta.subcollections[0].startAfter);
+        });
+      });
+
+      describe('endAt', () => {
+        it('calls endAt if valid', () => {
+          meta = {
+            collection: 'test',
+            doc: 'other',
+            subcollections: [
+              { collection: 'thing', doc: 'again', endAt: 'some' },
+            ],
+          };
+          const { theFirebase, theSpy } = fakeFirebaseWith('endAt');
+          result = firestoreRef(theFirebase, dispatch, meta);
+          expect(result).to.be.an('object');
+          expect(theSpy).to.be.calledWith(meta.subcollections[0].endAt);
+        });
+      });
+
+      describe('endBefore', () => {
+        it('calls endBefore if valid', () => {
+          meta = {
+            collection: 'test',
+            doc: 'other',
+            subcollections: [
+              { collection: 'thing', doc: 'again', endBefore: 'some' },
+            ],
+          };
+          const { theFirebase, theSpy } = fakeFirebaseWith('endBefore');
+          result = firestoreRef(theFirebase, dispatch, meta);
+          expect(result).to.be.an('object');
+          expect(theSpy).to.be.calledWith(meta.subcollections[0].endBefore);
+        });
+      });
     });
 
     describe('where', () => {
       it('calls where if valid', () => {
         meta = { collection: 'test', where: ['other'] };
         const whereSpy = sinon.spy(() => ({}));
-        const fakeFirebase = {
+        fakeFirebase = {
           firestore: () => ({ collection: () => ({ where: whereSpy }) }),
         };
         result = firestoreRef(fakeFirebase, dispatch, meta);
@@ -415,7 +497,7 @@ describe('query utils', () => {
       it('handles array of arrays', () => {
         meta = { collection: 'test', where: [['other', '===', 'test']] };
         const whereSpy = sinon.spy(() => ({}));
-        const fakeFirebase = {
+        fakeFirebase = {
           firestore: () => ({ collection: () => ({ where: whereSpy }) }),
         };
         result = firestoreRef(fakeFirebase, dispatch, meta);
@@ -425,7 +507,7 @@ describe('query utils', () => {
 
       it('throws for invalid where parameter', () => {
         meta = { collection: 'test', where: 'other' };
-        const fakeFirebase = {
+        fakeFirebase = {
           firestore: () => ({ collection: () => ({ where: () => ({}) }) }),
         };
         expect(() => firestoreRef(fakeFirebase, dispatch, meta)).to.throw(
@@ -436,7 +518,7 @@ describe('query utils', () => {
       it('throws for invalid where parameter within array', () => {
         meta = { collection: 'test', where: [false] };
         const whereSpy = sinon.spy(() => ({}));
-        const fakeFirebase = {
+        fakeFirebase = {
           firestore: () => ({ collection: () => ({ where: whereSpy }) }),
         };
         expect(() => firestoreRef(fakeFirebase, dispatch, meta)).to.throw(
@@ -449,7 +531,7 @@ describe('query utils', () => {
       it('calls orderBy if valid', () => {
         meta = { collection: 'test', orderBy: ['other'] };
         const orderBySpy = sinon.spy(() => ({}));
-        const fakeFirebase = {
+        fakeFirebase = {
           firestore: () => ({ collection: () => ({ orderBy: orderBySpy }) }),
         };
         result = firestoreRef(fakeFirebase, dispatch, meta);
@@ -460,7 +542,7 @@ describe('query utils', () => {
       it('handles array of arrays', () => {
         meta = { collection: 'test', orderBy: [['other']] };
         const orderBySpy = sinon.spy(() => ({}));
-        const fakeFirebase = {
+        fakeFirebase = {
           firestore: () => ({ collection: () => ({ orderBy: orderBySpy }) }),
         };
         result = firestoreRef(fakeFirebase, dispatch, meta);
@@ -470,7 +552,7 @@ describe('query utils', () => {
 
       it('throws for invalid orderBy parameter', () => {
         meta = { collection: 'test', orderBy: () => {} };
-        const fakeFirebase = {
+        fakeFirebase = {
           firestore: () => ({ collection: () => ({ orderBy: () => ({}) }) }),
         };
         expect(() => firestoreRef(fakeFirebase, dispatch, meta)).to.throw(
@@ -483,7 +565,7 @@ describe('query utils', () => {
       it('calls limit if valid', () => {
         meta = { collection: 'test', limit: 'other' };
         const limitSpy = sinon.spy(() => ({}));
-        const fakeFirebase = {
+        fakeFirebase = {
           firestore: () => ({ collection: () => ({ limit: limitSpy }) }),
         };
         result = firestoreRef(fakeFirebase, dispatch, meta);
@@ -496,7 +578,7 @@ describe('query utils', () => {
       it('calls startAt if valid', () => {
         meta = { collection: 'test', startAt: 'other' };
         const startAtSpy = sinon.spy(() => ({}));
-        const fakeFirebase = {
+        fakeFirebase = {
           firestore: () => ({ collection: () => ({ startAt: startAtSpy }) }),
         };
         result = firestoreRef(fakeFirebase, dispatch, meta);
@@ -509,7 +591,7 @@ describe('query utils', () => {
       it('calls startAfter if valid', () => {
         meta = { collection: 'test', startAfter: 'other' };
         const startAfterSpy = sinon.spy(() => ({}));
-        const fakeFirebase = {
+        fakeFirebase = {
           firestore: () => ({
             collection: () => ({ startAfter: startAfterSpy }),
           }),
@@ -524,7 +606,7 @@ describe('query utils', () => {
       it('calls endAt if valid', () => {
         meta = { collection: 'test', endAt: 'other' };
         const endAtSpy = sinon.spy(() => ({}));
-        const fakeFirebase = {
+        fakeFirebase = {
           firestore: () => ({ collection: () => ({ endAt: endAtSpy }) }),
         };
         result = firestoreRef(fakeFirebase, dispatch, meta);
@@ -537,7 +619,7 @@ describe('query utils', () => {
       it('calls endBefore if valid', () => {
         meta = { collection: 'test', endBefore: 'other' };
         const endBeforeSpy = sinon.spy(() => ({}));
-        const fakeFirebase = {
+        fakeFirebase = {
           firestore: () => ({
             collection: () => ({ endBefore: endBeforeSpy }),
           }),

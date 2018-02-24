@@ -3,6 +3,7 @@ import { actionTypes } from '../../../src/constants';
 
 const state = {};
 let collection = 'test'; // eslint-disable-line prefer-const
+const doc = 'thing';
 let action = {};
 let payload = {};
 let meta = {};
@@ -54,7 +55,6 @@ describe('dataReducer', () => {
       });
 
       it('merges new state with existing state', () => {
-        const doc = 'someDoc';
         const data = { [doc]: { newData: { field: 'test' } } };
         payload = { data };
         meta = {
@@ -232,6 +232,43 @@ describe('dataReducer', () => {
           preserve: { data: ['some'] },
         };
         expect(dataReducer(data, action)).to.have.property('some', data.some);
+      });
+    });
+
+    describe('DELETE_SUCCESS', () => {
+      it('clears data from state', () => {
+        meta = { collection, doc };
+        action = { meta, type: actionTypes.DELETE_SUCCESS };
+        expect(
+          dataReducer({ [collection]: { [doc]: { thing: 'asdf' } } }, action),
+        ).to.have.nested.property(`${collection}.${doc}`, null);
+      });
+
+      it('preserves keys provided in preserve parameter', () => {
+        meta = { collection };
+        const data = { [collection]: 'asdf' };
+        action = {
+          meta,
+          type: actionTypes.DELETE_SUCCESS,
+          preserve: { data: [collection] },
+        };
+        expect(dataReducer(data, action)).to.have.property(
+          collection,
+          data[collection],
+        );
+      });
+
+      it('sets doc to null', () => {
+        meta = { collection, doc };
+        const data = { [collection]: { [doc]: { other: 'asdf' } } };
+        action = {
+          meta,
+          type: actionTypes.DELETE_SUCCESS,
+        };
+        expect(dataReducer(data, action)).to.have.nested.property(
+          `${collection}.${doc}`,
+          null,
+        );
       });
     });
 

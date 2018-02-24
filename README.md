@@ -280,6 +280,77 @@ Limit the query to a certain number of results
 
 *Should only be used with collections*
 
+##### startAt
+
+> Creates a new query where the results start at the provided document (inclusive)
+
+[From Firebase's `startAt` docs](https://firebase.google.com/docs/reference/js/firebase.firestore.CollectionReference#startAt)
+
+```js
+{
+  collection: 'cities',
+  orderBy: 'population',
+  startAt: 1000000
+},
+```
+
+**NOTE:**
+* *Not yet supported inside of subcollections (only at the top level)*
+* *Should only be used with collections*
+
+##### startAfter
+
+> Creates a new query where the results start after the provided document (exclusive).
+
+[From Firebase's `startAfter` docs](https://firebase.google.com/docs/reference/js/firebase.firestore.CollectionReference#startAfter)
+
+```js
+{
+  collection: 'cities',
+  orderBy: 'population',
+  startAfter: 1000000
+},
+```
+
+**NOTE:**
+* *Not yet supported inside of subcollections (only at the top level)*
+* *Should only be used with collections*
+
+##### endAt
+
+> Creates a new query where the results end at the provided document (inclusive). The end position ...
+
+[From Firebase's `endAt` docs](https://firebase.google.com/docs/reference/js/firebase.firestore.CollectionReference#endAt)
+
+
+```js
+{
+  collection: 'cities',
+  orderBy: 'population',
+  endAt: 1000000
+},
+```
+
+**NOTE:**
+* *Not yet supported inside of subcollections (only at the top level)*
+* *Should only be used with collections*
+
+##### endBefore
+
+Start the query at a specific document
+
+```js
+{
+  collection: 'cities',
+  orderBy: 'population',
+  endBefore: 1000000
+},
+```
+
+**NOTE:**
+* *Not yet supported inside of subcollections (only at the top level)*
+* *Should only be used with collections*
+
 ##### storeAs
 
 Storing data under a different path within redux is as easy as passing the `storeAs` parameter to your query:
@@ -293,6 +364,7 @@ Storing data under a different path within redux is as easy as passing the `stor
 ```
 
 **NOTE:** Not yet supported inside of subcollections (only at the top level)
+
 
 #### Other Firebase Statics
 
