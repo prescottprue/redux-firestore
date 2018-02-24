@@ -79,11 +79,10 @@ export function get(firebase, dispatch, queryOption) {
       actionTypes.GET_REQUEST,
       {
         type: actionTypes.GET_SUCCESS,
-        payload: snap => {
-          const ordered = orderedFromSnap(snap);
-          const data = dataByIdSnapshot(snap);
-          return { data, ordered };
-        },
+        payload: snap => ({
+          data: dataByIdSnapshot(snap),
+          ordered: orderedFromSnap(snap),
+        }),
       },
       actionTypes.GET_FAILURE,
     ],
@@ -91,8 +90,8 @@ export function get(firebase, dispatch, queryOption) {
 }
 
 /**
- * Update a document on Cloud Firestore with the call to
- * the Firebase library being wrapped in action dispatches.
+ * Update a document on Cloud Firestore with the call to the Firebase library
+ * being wrapped in action dispatches.
  * @param {Object} firebase - Internal firebase object
  * @param {Function} dispatch - Redux's dispatch function
  * @param {String} collection - Collection name
@@ -115,8 +114,12 @@ export function update(firebase, dispatch, queryOption, ...args) {
 }
 
 /**
- * Update a document on Cloud Firestore with the call to
- * the Firebase library being wrapped in action dispatches.
+ * Delete a reference on Cloud Firestore with the call to the Firebase library
+ * being wrapped in action dispatches. If attempting to delete a collection
+ * delete promise will be rejected with "Only documents can be deleted" unless
+ * onAttemptCollectionDelete is provided. This is due to the fact that
+ * Collections can not be deleted from a client, it should instead be handled
+ * within a cloud function.
  * @param {Object} firebase - Internal firebase object
  * @param {Function} dispatch - Redux's dispatch function
  * @param {String} collection - Collection name
@@ -125,8 +128,12 @@ export function update(firebase, dispatch, queryOption, ...args) {
  */
 export function deleteRef(firebase, dispatch, queryOption) {
   const meta = getQueryConfig(queryOption);
+  const { config } = firebase._;
   if (!meta.doc) {
-    throw new Error('Only docs can be deleted.');
+    if (isFunction(config.onAttemptCollectionDelete)) {
+      return config.onAttemptCollectionDelete(queryOption, dispatch, firebase);
+    }
+    return Promise.reject(new Error('Only documents can be deleted.'));
   }
   return wrapInDispatch(dispatch, {
     ref: firestoreRef(firebase, dispatch, meta),
@@ -194,7 +201,10 @@ export function setListener(firebase, dispatch, queryOpts, successCb, errorCb) {
 }
 
 /**
- * Set an array of listeners
+ * Set an array of listeners only allowing for one of a specific configuration.
+ * If config.allowMultipleListeners is true or a function
+ * (`(listener, listeners) => {}`) that evaluates to true then multiple
+ * listeners with the same config are attached.
  * @param {Object} firebase - Internal firebase object
  * @param {Function} dispatch - Redux's dispatch function
  * @param {Array} listeners

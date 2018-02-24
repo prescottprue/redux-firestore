@@ -74,6 +74,10 @@ export const constants: {
     enhancerNamespace: string;
     helpersNamespace: string;
     preserveOnListenerError: object;
+    preserveOnDelete: object;
+    logListenerError: boolean;
+    allowMultipleListeners: any;
+    onAttemptCollectionDelete: any;
   };
 };
 

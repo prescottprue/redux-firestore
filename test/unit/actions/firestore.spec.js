@@ -8,21 +8,29 @@ let fakeFirebase;
 let listenerConfig;
 let collectionClass;
 let onSnapshotSpy;
+let deleteSpy;
 
 const fakeConfig = {
   helpersNamespace: 'test',
 };
 
+const successRes = 'success';
+
 describe('firestoreActions', () => {
   beforeEach(() => {
     dispatchSpy = sinon.spy();
+    deleteSpy = sinon.spy(() => Promise.resolve(successRes));
     onSnapshotSpy = sinon.spy((func, func2) => {
       func(sinon.spy());
       func2(sinon.spy());
     });
     listenerConfig = {};
     collectionClass = () => ({
-      doc: () => ({ collection: collectionClass, onSnapshot: onSnapshotSpy }),
+      doc: () => ({
+        collection: collectionClass,
+        onSnapshot: onSnapshotSpy,
+        delete: deleteSpy,
+      }),
       onSnapshot: onSnapshotSpy,
     });
     fakeFirebase = {
@@ -77,14 +85,41 @@ describe('firestoreActions', () => {
     });
 
     describe('deleteRef', () => {
-      it('throws if attempting to delete a collection', () => {
+      it('calls delete with dispatches before and after', async () => {
+        const instance = createFirestoreInstance(
+          fakeFirebase,
+          { helpersNamespace: 'test' },
+          dispatchSpy,
+        );
+        const res = await instance.test.deleteRef({
+          collection: 'test',
+          doc: 'test',
+        });
+        expect(dispatchSpy).to.have.been.calledTwice;
+        expect(res).to.equal(successRes);
+      });
+
+      it('throws if attempting to delete a collection', async () => {
         const instance = createFirestoreInstance(
           {},
           { helpersNamespace: 'test' },
         );
-        expect(() => instance.test.deleteRef({ collection: 'test' })).to.throw(
-          'Only docs can be deleted.',
+        try {
+          await instance.test.deleteRef({ collection: 'test' });
+        } catch (err) {
+          expect(err.message).to.equal('Only documents can be deleted.');
+        }
+      });
+
+      it('calls onAttemptCollectionDelete if provided', async () => {
+        const funcSpy = sinon.spy(() => Promise.resolve('test'));
+        const instance = createFirestoreInstance(
+          {},
+          { helpersNamespace: 'test', onAttemptCollectionDelete: funcSpy },
         );
+        const res = await instance.test.deleteRef({ collection: 'test' });
+        expect(funcSpy).to.have.been.calledOnce;
+        expect(res).to.equal('test');
       });
     });
 

@@ -93,10 +93,17 @@ export const actionTypes = {
  * preserve from state when LISTENER_ERROR action is dispatched.
  * @property {Boolean} enhancerNamespace - `'firestore'` Namespace underwhich
  * enhancer places internal instance on redux store (i.e. store.firestore).
- * @property {Boolean} allowMultipleListeners - `null` Whether or not to allow
- * multiple listeners to be attached for the same query. If a function
+ * @property {Boolean|Function} allowMultipleListeners - `null` Whether or not
+ * to allow multiple listeners to be attached for the same query. If a function
  * is passed the arguments it receives are `listenerToAttach`,
  * `currentListeners`, and the function should return a boolean.
+ * @property {Function} onAttemptCollectionDelete - `null` (arguments:
+ * `(queryOption, dispatch, firebase)`) Function run when attempting to delete
+ * a collection. If not provided (default) delete promise will be rejected with
+ * "Only documents can be deleted" unless. This is due to the fact that
+ * Collections can not be deleted from a client, it should instead be handled
+ * within a cloud function (which can be called by providing a promise
+ * to `onAttemptCollectionDelete` that calls the cloud function).
  * @type {Object}
  */
 export const defaultConfig = {
@@ -104,9 +111,10 @@ export const defaultConfig = {
   logListenerError: true,
   enhancerNamespace: 'firestore',
   helpersNamespace: null,
-  allowMultipleListeners: null,
+  allowMultipleListeners: false,
   preserveOnDelete: null,
   preserveOnListenerError: null,
+  onAttemptCollectionDelete: null,
 };
 
 export default {

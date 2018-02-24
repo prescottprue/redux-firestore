@@ -11,10 +11,15 @@ import { defaultConfig } from './constants';
  * @return {Object} Extended Firebase instance
  */
 export default function createFirestoreInstance(firebase, configs, dispatch) {
-  // Add internal variables to firebase instance
-  const defaultInternals = { listeners: {}, config: defaultConfig };
+  // Setup internal variables
+  const defaultInternals = {
+    // Setup empty listeners object (later used to track listeners)
+    listeners: {},
+    // Extend default config with provided config
+    config: { defaultConfig, ...configs },
+  };
 
-  // Support extending existing firebase internals (using redux-firestore along with redux-firebase)
+  // extend existing firebase internals (using redux-firestore along with redux-firebase)
   firebase._ = merge(defaultInternals, firebase._); // eslint-disable-line no-param-reassign
 
   // Aliases for methods
