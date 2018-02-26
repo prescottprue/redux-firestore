@@ -15,7 +15,8 @@ function addWhereToRef(ref, where) {
   if (isString(where[0])) {
     return where.length > 1 ? ref.where(...where) : ref.where(where[0]);
   }
-  return where.reduce((acc, whereArgs) => addWhereToRef(ref, whereArgs), ref);
+
+  return where.reduce((acc, whereArgs) => addWhereToRef(acc, whereArgs), ref);
 }
 
 /**
@@ -37,7 +38,7 @@ function addOrderByToRef(ref, orderBy) {
     return ref.orderBy(...orderBy);
   }
   return orderBy.reduce(
-    (acc, orderByArgs) => addOrderByToRef(ref, orderByArgs),
+    (acc, orderByArgs) => addOrderByToRef(acc, orderByArgs),
     ref,
   );
 }
