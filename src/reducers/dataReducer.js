@@ -1,5 +1,5 @@
 import { get } from 'lodash';
-import { setWith, assign } from 'lodash/fp';
+import { setWith, merge } from 'lodash/fp';
 import { actionTypes } from '../constants';
 import { pathFromMeta, preserveValuesFromState } from '../utils/reducers';
 
@@ -50,7 +50,7 @@ export default function dataReducer(state = {}, action) {
         return setWith(Object, pathFromMeta(meta), data, state);
       }
       // Otherwise merge with existing data
-      const mergedData = assign(previousData, data);
+      const mergedData = merge(previousData, data);
       // Set data to state (with merge) immutabily (lodash/fp's setWith creates copy)
       return setWith(Object, pathFromMeta(meta), mergedData, state);
     case DELETE_SUCCESS:

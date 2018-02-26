@@ -1,4 +1,5 @@
-import { first } from 'lodash';
+import { first, size, get, mergeWith, isArray } from 'lodash';
+import { merge } from 'lodash/fp';
 import { actionTypes } from '../constants';
 import { updateItemInArray, preserveValuesFromState } from '../utils/reducers';
 
@@ -20,15 +21,14 @@ function updateDocInOrdered(state, action) {
   const itemToAdd = first(action.payload.ordered);
   const subcollection = first(action.meta.subcollections);
   const storeUnderKey = action.meta.storeAs || action.meta.collection;
-  // TODO: Make this recursive so that is supports multiple subcollections
   return {
     ...state,
     [storeUnderKey]: updateItemInArray(
       state[storeUnderKey] || [],
       action.meta.doc,
       item =>
-        Object.assign(
-          {},
+        // Use merge to preserve existing subcollections
+        merge(
           item,
           subcollection
             ? { [subcollection.collection]: action.payload.ordered }
@@ -66,8 +66,31 @@ export default function orderedReducer(state = {}, action) {
         return state;
       }
       // TODO: Support merging
+      const getPath = action.meta.storeAs || action.meta.collection;
+      // Handle doc update (update item in array instead of whole array)
       if (action.meta.doc) {
-        return updateDocInOrdered(state, action);
+        // Merge if data already exists
+        if (size(get(state, getPath))) {
+          return updateDocInOrdered(state, action);
+        }
+      }
+      const currentData = get(state, getPath);
+      // Merge if data already exists
+      if (size(currentData)) {
+        return {
+          ...state,
+          [action.meta.storeAs || action.meta.collection]: mergeWith(
+            currentData,
+            action.payload.ordered,
+            /* eslint-disable consistent-return */
+            (objValue, srcValue) => {
+              if (isArray(objValue)) {
+                return objValue.concat(srcValue);
+              }
+            },
+            /* eslint-enable consistent-return */
+          ),
+        };
       }
       return {
         ...state,
