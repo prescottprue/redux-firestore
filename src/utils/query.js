@@ -62,9 +62,11 @@ function handleSubcollections(ref, subcollectionList) {
       }
       if (subcollection.endAt) ref = ref.endAt(subcollection.endAt);
       if (subcollection.endBefore) ref = ref.endBefore(subcollection.endBefore);
-      handleSubcollections(subcollection.subcollections);
+
+      handleSubcollections(ref, subcollection.subcollections);
     });
   }
+  return ref;
 }
 /* eslint-enable */
 
@@ -97,7 +99,7 @@ export function firestoreRef(firebase, dispatch, meta) {
   let ref = firebase.firestore().collection(collection);
   // TODO: Compare other ways of building ref
   if (doc) ref = ref.doc(doc);
-  handleSubcollections(ref, subcollections);
+  ref = handleSubcollections(ref, subcollections);
   if (where) ref = addWhereToRef(ref, where);
   if (orderBy) ref = addOrderByToRef(ref, orderBy);
   if (limit) ref = ref.limit(limit);
