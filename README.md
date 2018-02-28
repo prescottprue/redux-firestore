@@ -31,7 +31,7 @@ Most likely, you'll want react bindings, for that you will need [react-redux-fir
 npm install --save react-redux-firebase
 ```
 
-[react-redux-firebase](https://github.com/prescottprue/react-redux-firebase) provides [`withFirestore`](http://docs.react-redux-firebase.com/history/v2.0.0/docs/api/withFirestore.html) and [`firestoreConnect`](http://docs.react-redux-firebase.com/history/v2.0.0/docs/api/withFirestore.html) higher order components, which handle automatically calling `redux-firestore` internally based on component's lifecycle (i.e. mounting/un-mounting)
+[react-redux-firebase](https://github.com/prescottprue/react-redux-firebase) provides [`withFirestore`](http://react-redux-firebase.com/docs/api/withFirestore.html) and [`firestoreConnect`](http://react-redux-firebase.com/docs/api/firestoreConnect.html) higher order components, which handle automatically calling `redux-firestore` internally based on component's lifecycle (i.e. mounting/un-mounting)
 
 ## Use
 
@@ -442,6 +442,26 @@ Note: In an effort to keep things simple, the wording from this explanation was 
 
 ## Applications Using This
 * [fireadmin.io](http://fireadmin.io) - Firebase Instance Management Tool (source [available here](https://github.com/prescottprue/fireadmin))
+
+## FAQ
+1. How do I update a document within a subcollection?
+
+    Provide `subcollections` config the same way you do while querying:
+
+    ```js
+    props.firestore.update(
+      {
+        collection: 'cities',
+        doc: 'SF',
+        subcollections: [{ collection: 'counties', doc: 'San Mateo' }],
+      },
+      { some: 'changes' }
+    );
+    ```
+
+1. How do I get auth state in redux?
+
+You will most likely want to use [`react-redux-firebase`](https://github.com/prescottprue/react-redux-firebase) or another redux/firebase connector. For more information please visit the [complementary package section](#complementary-package).
 
 ## Roadmap
 
