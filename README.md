@@ -461,7 +461,11 @@ Note: In an effort to keep things simple, the wording from this explanation was 
 
 1. How do I get auth state in redux?
 
-You will most likely want to use [`react-redux-firebase`](https://github.com/prescottprue/react-redux-firebase) or another redux/firebase connector. For more information please visit the [complementary package section](#complementary-package).
+    You will most likely want to use [`react-redux-firebase`](https://github.com/prescottprue/react-redux-firebase) or another redux/firebase connector. For more information please visit the [complementary package section](#complementary-package).
+
+1. Are there Higher Order Components for use with React?
+
+    [`react-redux-firebase`](https://github.com/prescottprue/react-redux-firebase) contains `firebaseConnect`, `firestoreConnect`, `withFirebase` and `withFirestore` HOCs. For more information please visit the [complementary package section](#complementary-package).
 
 ## Roadmap
 
