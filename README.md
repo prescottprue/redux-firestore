@@ -396,6 +396,61 @@ const enhance = compose(
 export default enhance(SomeComponent)
 ```
 
+## Config Options
+
+#### enableLogging
+Default: `false`
+
+Whether or not to enable Firebase client logging.
+
+#### logListenerError
+Default: `true`
+
+Whether or not to use `console.error` to log listener error objects. Errors from listeners are helpful to developers on multiple occasions including when index needs to be added.
+
+#### enhancerNamespace
+Default: `'firestore'`
+
+Namespace under which enhancer places internal instance on redux store (i.e. `store.firestore`).
+
+#### allowMultipleListeners
+Default: `false`
+
+Whether or not to allow multiple listeners to be attached for the same query. If a function is passed the arguments it receives are `listenerToAttach`, `currentListeners`, and the function should return a boolean.
+
+#### preserveOnDelete
+Default: `null`
+
+Values to preserve from state when DELETE_SUCCESS action is dispatched. Note that this will not prevent the LISTENER_RESPONSE action from removing items from state.ordered if you have a listener attached.
+
+#### preserveOnListenerError
+Default: `null`
+
+Values to preserve from state when LISTENER_ERROR action is dispatched.
+
+#### onAttemptCollectionDelete
+Default: `null`
+
+Arguments:`(queryOption, dispatch, firebase)`
+
+Function run when attempting to delete a collection. If not provided (default) delete promise will be rejected with "Only documents can be deleted" unless. This is due to the fact that Collections can not be deleted from a client, it should instead be handled within a cloud function (which can be called by providing a promise to `onAttemptCollectionDelete` that calls the cloud function).
+
+#### mergeOrdered
+Default: `true`
+
+Whether or not to merge data within `orderedReducer`.
+
+#### mergeOrderedDocUpdate
+Default: `true`
+
+Whether or not to merge data from document listener updates within `orderedReducer`.
+
+
+#### mergeOrderedCollectionUpdates
+Default: `true`
+
+Whether or not to merge data from collection listener updates within `orderedReducer`.
+
 <!-- #### Middleware
 
 `redux-firestore`'s enhancer offers a new middleware setup that was not offered in `react-redux-firebase` (but will eventually make it `redux-firebase`)
