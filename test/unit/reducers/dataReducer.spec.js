@@ -62,17 +62,21 @@ describe('dataReducer', () => {
           doc,
         };
         const existingState = {
-          [collection]: { [doc]: { originalData: { some: {} } } },
+          [collection]: { [doc]: { originalData: { some: { val: 'test' } } } },
         };
-        action = { meta, payload, type: actionTypes.LISTENER_RESPONSE };
+        action = {
+          meta,
+          payload,
+          type: actionTypes.LISTENER_RESPONSE,
+        };
         result = dataReducer(existingState, action);
         expect(result).to.have.nested.property(
           `${collection}.${doc}.newData.field`,
           data[doc].newData.field,
         );
         expect(result).to.have.nested.property(
-          `${collection}.${doc}.originalData.some`,
-          existingState[collection][doc].originalData.some,
+          `${collection}.${doc}.originalData.some.val`,
+          existingState[collection][doc].originalData.some.val,
         );
       });
 

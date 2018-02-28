@@ -14,6 +14,7 @@ let meta;
 let result;
 let docSpy;
 let fakeFirebase;
+const collection = 'test';
 
 const fakeFirebaseWith = spyedName => {
   const theSpy = sinon.spy(() => ({}));
@@ -186,7 +187,6 @@ describe('query utils', () => {
 
     it('calls dispatch with unlisten actionType', () => {
       const callbackSpy = sinon.spy();
-      const collection = 'test';
       detachListener({ _: { listeners: { test: callbackSpy } } }, dispatch, {
         collection,
       });
@@ -313,6 +313,26 @@ describe('query utils', () => {
     });
 
     describe('subcollections', () => {
+      it('throws if trying to get doc not provided', () => {
+        const subcollection = 'thing';
+        meta = {
+          collection,
+          subcollections: [{ collection: subcollection, doc: 'again' }],
+        };
+        fakeFirebase = {
+          firestore: () => ({
+            collection: () => ({
+              doc: () => ({
+                collection: () => ({ doc: docSpy }),
+              }),
+            }),
+          }),
+        };
+        expect(() => firestoreRef(fakeFirebase, dispatch, meta)).to.throw(
+          `Collection can only be run on a document. Check that query config for subcollection: "${subcollection}" contains a doc parameter.`,
+        );
+      });
+
       it('creates ref with collection', () => {
         meta = {
           collection: 'test',

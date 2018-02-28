@@ -69,7 +69,7 @@ function handleSubcollections(ref, subcollectionList) {
       if (subcollection.collection) {
         if (!isFunction(ref.collection)) {
           throw new Error(
-            `Collection can only be created on a document. Check that query config for subcollection: "${
+            `Collection can only be run on a document. Check that query config for subcollection: "${
               subcollection.collection
             }" contains a doc parameter.`,
           );

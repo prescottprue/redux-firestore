@@ -65,7 +65,7 @@ export default function orderedReducer(state = {}, action) {
       if (!action.payload || !action.payload.ordered) {
         return state;
       }
-      const { meta, merge = {} } = action;
+      const { meta, merge = { doc: true, collection: true } } = action;
       const parentPath = meta.storeAs || meta.collection;
       // Handle doc update (update item in array instead of whole array)
       if (meta.doc && merge.doc && size(get(state, parentPath))) {
