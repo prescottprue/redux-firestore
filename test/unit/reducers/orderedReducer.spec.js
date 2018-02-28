@@ -56,6 +56,22 @@ describe('orderedReducer', () => {
         );
       });
 
+      it('merges collection already within state', () => {
+        const id = 'doc';
+        const someField = 'a thing';
+        const orderedData = [{ id, someField }];
+        action = {
+          meta: { collection: 'testing' },
+          type: actionTypes.LISTENER_RESPONSE,
+          payload: { ordered: orderedData },
+        };
+        state = { testing: [{ id: 'some', someField: 'original' }] };
+        expect(orderedReducer(state, action)).to.have.nested.property(
+          'testing.1.someField',
+          someField,
+        );
+      });
+
       describe('doc', () => {
         it.skip('adds a new doc within state', () => {
           const orderedData = { id: 'doc' };

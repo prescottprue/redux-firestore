@@ -31,7 +31,7 @@ Most likely, you'll want react bindings, for that you will need [react-redux-fir
 npm install --save react-redux-firebase
 ```
 
-[react-redux-firebase](https://github.com/prescottprue/react-redux-firebase) provides [`withFirestore`](http://docs.react-redux-firebase.com/history/v2.0.0/docs/api/withFirestore.html) and [`firestoreConnect`](http://docs.react-redux-firebase.com/history/v2.0.0/docs/api/withFirestore.html) higher order components, which handle automatically calling `redux-firestore` internally based on component's lifecycle (i.e. mounting/un-mounting)
+[react-redux-firebase](https://github.com/prescottprue/react-redux-firebase) provides [`withFirestore`](http://react-redux-firebase.com/docs/api/withFirestore.html) and [`firestoreConnect`](http://react-redux-firebase.com/docs/api/firestoreConnect.html) higher order components, which handle automatically calling `redux-firestore` internally based on component's lifecycle (i.e. mounting/un-mounting)
 
 ## Use
 
@@ -396,6 +396,61 @@ const enhance = compose(
 export default enhance(SomeComponent)
 ```
 
+## Config Options
+
+#### enableLogging
+Default: `false`
+
+Whether or not to enable Firebase client logging.
+
+#### logListenerError
+Default: `true`
+
+Whether or not to use `console.error` to log listener error objects. Errors from listeners are helpful to developers on multiple occasions including when index needs to be added.
+
+#### enhancerNamespace
+Default: `'firestore'`
+
+Namespace under which enhancer places internal instance on redux store (i.e. `store.firestore`).
+
+#### allowMultipleListeners
+Default: `false`
+
+Whether or not to allow multiple listeners to be attached for the same query. If a function is passed the arguments it receives are `listenerToAttach`, `currentListeners`, and the function should return a boolean.
+
+#### preserveOnDelete
+Default: `null`
+
+Values to preserve from state when DELETE_SUCCESS action is dispatched. Note that this will not prevent the LISTENER_RESPONSE action from removing items from state.ordered if you have a listener attached.
+
+#### preserveOnListenerError
+Default: `null`
+
+Values to preserve from state when LISTENER_ERROR action is dispatched.
+
+#### onAttemptCollectionDelete
+Default: `null`
+
+Arguments:`(queryOption, dispatch, firebase)`
+
+Function run when attempting to delete a collection. If not provided (default) delete promise will be rejected with "Only documents can be deleted" unless. This is due to the fact that Collections can not be deleted from a client, it should instead be handled within a cloud function (which can be called by providing a promise to `onAttemptCollectionDelete` that calls the cloud function).
+
+#### mergeOrdered
+Default: `true`
+
+Whether or not to merge data within `orderedReducer`.
+
+#### mergeOrderedDocUpdate
+Default: `true`
+
+Whether or not to merge data from document listener updates within `orderedReducer`.
+
+
+#### mergeOrderedCollectionUpdates
+Default: `true`
+
+Whether or not to merge data from collection listener updates within `orderedReducer`.
+
 <!-- #### Middleware
 
 `redux-firestore`'s enhancer offers a new middleware setup that was not offered in `react-redux-firebase` (but will eventually make it `redux-firebase`)
@@ -442,6 +497,30 @@ Note: In an effort to keep things simple, the wording from this explanation was 
 
 ## Applications Using This
 * [fireadmin.io](http://fireadmin.io) - Firebase Instance Management Tool (source [available here](https://github.com/prescottprue/fireadmin))
+
+## FAQ
+1. How do I update a document within a subcollection?
+
+    Provide `subcollections` config the same way you do while querying:
+
+    ```js
+    props.firestore.update(
+      {
+        collection: 'cities',
+        doc: 'SF',
+        subcollections: [{ collection: 'counties', doc: 'San Mateo' }],
+      },
+      { some: 'changes' }
+    );
+    ```
+
+1. How do I get auth state in redux?
+
+    You will most likely want to use [`react-redux-firebase`](https://github.com/prescottprue/react-redux-firebase) or another redux/firebase connector. For more information please visit the [complementary package section](#complementary-package).
+
+1. Are there Higher Order Components for use with React?
+
+    [`react-redux-firebase`](https://github.com/prescottprue/react-redux-firebase) contains `firebaseConnect`, `firestoreConnect`, `withFirebase` and `withFirestore` HOCs. For more information please visit the [complementary package section](#complementary-package).
 
 ## Roadmap
 

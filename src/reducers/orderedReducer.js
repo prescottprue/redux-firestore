@@ -1,4 +1,5 @@
-import { first } from 'lodash';
+import { first, size, get, unionBy } from 'lodash';
+import { merge as mergeObjects } from 'lodash/fp';
 import { actionTypes } from '../constants';
 import { updateItemInArray, preserveValuesFromState } from '../utils/reducers';
 
@@ -20,15 +21,14 @@ function updateDocInOrdered(state, action) {
   const itemToAdd = first(action.payload.ordered);
   const subcollection = first(action.meta.subcollections);
   const storeUnderKey = action.meta.storeAs || action.meta.collection;
-  // TODO: Make this recursive so that is supports multiple subcollections
   return {
     ...state,
     [storeUnderKey]: updateItemInArray(
       state[storeUnderKey] || [],
       action.meta.doc,
       item =>
-        Object.assign(
-          {},
+        // Use merge to preserve existing subcollections
+        mergeObjects(
           item,
           subcollection
             ? { [subcollection.collection]: action.payload.ordered }
@@ -65,13 +65,25 @@ export default function orderedReducer(state = {}, action) {
       if (!action.payload || !action.payload.ordered) {
         return state;
       }
-      // TODO: Support merging
-      if (action.meta.doc) {
+      const { meta, merge = { doc: true, collection: true } } = action;
+      const parentPath = meta.storeAs || meta.collection;
+      // Handle doc update (update item in array instead of whole array)
+      if (meta.doc && merge.doc && size(get(state, parentPath))) {
+        // Merge if data already exists
+        // Merge with existing ordered array if collection merge enabled
         return updateDocInOrdered(state, action);
+      }
+      const parentData = get(state, parentPath);
+      // Merge with existing ordered array if collection merge enabled
+      if (merge.collection && size(parentData)) {
+        return {
+          ...state,
+          [parentPath]: unionBy(parentData, action.payload.ordered, 'id'),
+        };
       }
       return {
         ...state,
-        [action.meta.storeAs || action.meta.collection]: action.payload.ordered,
+        [parentPath]: action.payload.ordered,
       };
     case CLEAR_DATA:
       // support keeping data when logging out - #125

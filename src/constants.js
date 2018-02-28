@@ -91,7 +91,7 @@ export const actionTypes = {
  * state.ordered if you have a listener attached.
  * @property {Object} preserveOnListenerError - `null` Values to
  * preserve from state when LISTENER_ERROR action is dispatched.
- * @property {Boolean} enhancerNamespace - `'firestore'` Namespace underwhich
+ * @property {Boolean} enhancerNamespace - `'firestore'` Namespace under which
  * enhancer places internal instance on redux store (i.e. store.firestore).
  * @property {Boolean|Function} allowMultipleListeners - `null` Whether or not
  * to allow multiple listeners to be attached for the same query. If a function
@@ -115,6 +115,9 @@ export const defaultConfig = {
   preserveOnDelete: null,
   preserveOnListenerError: null,
   onAttemptCollectionDelete: null,
+  mergeOrdered: true,
+  mergeOrderedDocUpdates: true,
+  mergeOrderedCollectionUpdates: true,
 };
 
 export default {
