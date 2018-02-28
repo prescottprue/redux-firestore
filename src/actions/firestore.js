@@ -184,14 +184,26 @@ export function setListener(firebase, dispatch, queryOpts, successCb, errorCb) {
     err => {
       // TODO: Look into whether listener is automatically removed in all cases
       // TODO: Provide a setting that allows for silencing of console error
-      const { config } = firebase._;
+      const {
+        config: {
+          mergeOrdered,
+          logListenerError,
+          mergeOrderedDocUpdates,
+          mergeOrderedCollectionUpdates,
+          preserveOnListenerError,
+        },
+      } = firebase._;
       // Log error handling the case of it not existing
-      if (config.logListenerError) invoke(console, 'error', err);
+      if (logListenerError) invoke(console, 'error', err);
       dispatch({
         type: actionTypes.LISTENER_ERROR,
         meta,
         payload: err,
-        preserve: config.preserveOnListenerError,
+        merge: {
+          docs: mergeOrdered && mergeOrderedDocUpdates,
+          collections: mergeOrdered && mergeOrderedCollectionUpdates,
+        },
+        preserve: preserveOnListenerError,
       });
       // Invoke error callback if it exists
       if (errorCb) errorCb(err);

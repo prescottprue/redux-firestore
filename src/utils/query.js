@@ -1,4 +1,13 @@
-import { isObject, isString, isArray, size, trim, forEach, has } from 'lodash';
+import {
+  isObject,
+  isString,
+  isArray,
+  size,
+  trim,
+  forEach,
+  has,
+  isFunction,
+} from 'lodash';
 import { actionTypes } from '../constants';
 
 /**
@@ -43,11 +52,28 @@ function addOrderByToRef(ref, orderBy) {
   );
 }
 
-/* eslint-disable no-param-reassign */
+/**
+ * Call methods on ref object for provided subcollection list (from queryConfig
+ * object)
+ * @param  {firebase.firestore.CollectionReference} ref - reference on which
+ * to call methods to apply queryConfig
+ * @param  {Array} subcollectionList - List of subcollection settings from
+ * queryConfig object
+ * @return {firebase.firestore.Query} Query object referencing path within
+ * firestore
+ */
 function handleSubcollections(ref, subcollectionList) {
   if (subcollectionList) {
     forEach(subcollectionList, subcollection => {
+      /* eslint-disable no-param-reassign */
       if (subcollection.collection) {
+        if (!isFunction(ref.collection)) {
+          throw new Error(
+            `Collection can only be created on a document. Check that query config for subcollection: "${
+              subcollection.collection
+            }" contains a doc parameter.`,
+          );
+        }
         ref = ref.collection(subcollection.collection);
       }
       if (subcollection.doc) ref = ref.doc(subcollection.doc);
@@ -62,13 +88,13 @@ function handleSubcollections(ref, subcollectionList) {
       }
       if (subcollection.endAt) ref = ref.endAt(subcollection.endAt);
       if (subcollection.endBefore) ref = ref.endBefore(subcollection.endBefore);
+      /* eslint-enable */
 
       handleSubcollections(ref, subcollection.subcollections);
     });
   }
   return ref;
 }
-/* eslint-enable */
 
 /**
  * Create a Cloud Firestore reference for a collection or document

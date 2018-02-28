@@ -1,5 +1,5 @@
-import { first, size, get, mergeWith, isArray } from 'lodash';
-import { merge } from 'lodash/fp';
+import { first, size, get, unionBy } from 'lodash';
+import { merge as mergeObjects } from 'lodash/fp';
 import { actionTypes } from '../constants';
 import { updateItemInArray, preserveValuesFromState } from '../utils/reducers';
 
@@ -28,7 +28,7 @@ function updateDocInOrdered(state, action) {
       action.meta.doc,
       item =>
         // Use merge to preserve existing subcollections
-        merge(
+        mergeObjects(
           item,
           subcollection
             ? { [subcollection.collection]: action.payload.ordered }
@@ -65,36 +65,25 @@ export default function orderedReducer(state = {}, action) {
       if (!action.payload || !action.payload.ordered) {
         return state;
       }
-      // TODO: Support merging
-      const getPath = action.meta.storeAs || action.meta.collection;
+      const { meta, merge = {} } = action;
+      const parentPath = meta.storeAs || meta.collection;
       // Handle doc update (update item in array instead of whole array)
-      if (action.meta.doc) {
+      if (meta.doc && merge.doc && size(get(state, parentPath))) {
         // Merge if data already exists
-        if (size(get(state, getPath))) {
-          return updateDocInOrdered(state, action);
-        }
+        // Merge with existing ordered array if collection merge enabled
+        return updateDocInOrdered(state, action);
       }
-      const currentData = get(state, getPath);
-      // Merge if data already exists
-      if (size(currentData)) {
+      const parentData = get(state, parentPath);
+      // Merge with existing ordered array if collection merge enabled
+      if (merge.collection && size(parentData)) {
         return {
           ...state,
-          [action.meta.storeAs || action.meta.collection]: mergeWith(
-            currentData,
-            action.payload.ordered,
-            /* eslint-disable consistent-return */
-            (objValue, srcValue) => {
-              if (isArray(objValue)) {
-                return objValue.concat(srcValue);
-              }
-            },
-            /* eslint-enable consistent-return */
-          ),
+          [parentPath]: unionBy(parentData, action.payload.ordered, 'id'),
         };
       }
       return {
         ...state,
-        [action.meta.storeAs || action.meta.collection]: action.payload.ordered,
+        [parentPath]: action.payload.ordered,
       };
     case CLEAR_DATA:
       // support keeping data when logging out - #125

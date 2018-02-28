@@ -115,6 +115,9 @@ export const defaultConfig = {
   preserveOnDelete: null,
   preserveOnListenerError: null,
   onAttemptCollectionDelete: null,
+  mergeOrdered: true,
+  mergeOrderedDocUpdates: true,
+  mergeOrderedCollectionUpdates: true,
 };
 
 export default {
