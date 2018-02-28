@@ -47,6 +47,10 @@ export function wrapInDispatch(
       if (successIsObject && successType.preserve) {
         actionObj.preserve = successType.preserve;
       }
+      // Attach merge to action if it is passed
+      if (successIsObject && successType.merge) {
+        actionObj.merge = successType.merge;
+      }
       dispatch(actionObj);
       return result;
     })

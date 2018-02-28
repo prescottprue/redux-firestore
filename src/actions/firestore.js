@@ -71,6 +71,12 @@ export function set(firebase, dispatch, queryOption, ...args) {
 export function get(firebase, dispatch, queryOption) {
   const meta = getQueryConfig(queryOption);
   // Wrap get call in dispatch calls
+  const {
+    mergeOrdered,
+    mergeOrderedDocUpdates,
+    mergeOrderedCollectionUpdates,
+  } =
+    firebase._.config || {};
   return wrapInDispatch(dispatch, {
     ref: firestoreRef(firebase, dispatch, meta),
     method: 'get',
@@ -83,6 +89,10 @@ export function get(firebase, dispatch, queryOption) {
           data: dataByIdSnapshot(snap),
           ordered: orderedFromSnap(snap),
         }),
+        merge: {
+          docs: mergeOrdered && mergeOrderedDocUpdates,
+          collections: mergeOrdered && mergeOrderedCollectionUpdates,
+        },
       },
       actionTypes.GET_FAILURE,
     ],
@@ -167,6 +177,12 @@ export function deleteRef(firebase, dispatch, queryOption) {
  */
 export function setListener(firebase, dispatch, queryOpts, successCb, errorCb) {
   const meta = getQueryConfig(queryOpts);
+  const {
+    mergeOrdered,
+    mergeOrderedDocUpdates,
+    mergeOrderedCollectionUpdates,
+  } =
+    firebase._.config || {};
   // Create listener
   const unsubscribe = firestoreRef(firebase, dispatch, meta).onSnapshot(
     docData => {
@@ -177,23 +193,19 @@ export function setListener(firebase, dispatch, queryOpts, successCb, errorCb) {
           data: dataByIdSnapshot(docData),
           ordered: orderedFromSnap(docData),
         },
+        merge: {
+          docs: mergeOrdered && mergeOrderedDocUpdates,
+          collections: mergeOrdered && mergeOrderedCollectionUpdates,
+        },
       });
       // Invoke success callback if it exists
       if (successCb) successCb(docData);
     },
     err => {
       // TODO: Look into whether listener is automatically removed in all cases
-      // TODO: Provide a setting that allows for silencing of console error
-      const {
-        config: {
-          mergeOrdered,
-          logListenerError,
-          mergeOrderedDocUpdates,
-          mergeOrderedCollectionUpdates,
-          preserveOnListenerError,
-        },
-      } = firebase._;
       // Log error handling the case of it not existing
+      const { logListenerError, preserveOnListenerError } =
+        firebase._.config || {};
       if (logListenerError) invoke(console, 'error', err);
       dispatch({
         type: actionTypes.LISTENER_ERROR,
