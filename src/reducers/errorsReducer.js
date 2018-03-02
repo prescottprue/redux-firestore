@@ -1,5 +1,6 @@
 import { actionTypes } from '../constants';
-import { combineReducers, pathFromMeta } from '../utils/reducers';
+import { getQueryName } from '../utils/query';
+import { combineReducers } from '../utils/reducers';
 
 const { CLEAR_ERRORS, CLEAR_ERROR, LISTENER_ERROR, ERROR } = actionTypes;
 
@@ -15,14 +16,14 @@ function errorsAllIds(state = [], { meta, type }) {
   switch (type) {
     case LISTENER_ERROR:
     case ERROR:
-      if (state.indexOf(pathFromMeta(meta)) !== -1) {
+      if (state.indexOf(getQueryName(meta)) !== -1) {
         return state;
       }
-      return [...state, pathFromMeta(meta)];
+      return [...state, getQueryName(meta)];
     case CLEAR_ERRORS:
       return [];
     case CLEAR_ERROR:
-      return state.filter(lId => lId !== pathFromMeta(meta));
+      return state.filter(lId => lId !== getQueryName(meta));
     default:
       return state;
   }
@@ -42,12 +43,12 @@ function errorsByQuery(state = {}, { meta, payload, type }) {
     case LISTENER_ERROR:
       return {
         ...state,
-        [pathFromMeta(meta)]: payload,
+        [getQueryName(meta)]: payload,
       };
     case CLEAR_ERROR:
       return {
         ...state,
-        [pathFromMeta(meta)]: null,
+        [getQueryName(meta)]: null,
       };
     default:
       return state;
