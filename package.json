@@ -22,6 +22,7 @@
     "build:umd:min": "cross-env BABEL_ENV=commonjs NODE_ENV=production webpack",
     "build": "npm run build:commonjs && npm run build:es && npm run build:umd && npm run build:umd:min",
     "watch": "npm run build:es -- --watch",
+    "watch:commonjs": "npm run build:commonjs -- --watch",
     "test": "mocha -R spec ./test/unit/**",
     "test:cov": "istanbul cover ./node_modules/mocha/bin/_mocha ./test/unit/**",
     "codecov": "cat coverage/lcov.info | codecov",
