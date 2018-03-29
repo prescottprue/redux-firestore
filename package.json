@@ -35,8 +35,7 @@
   },
   "dependencies": {
     "lodash": "^4.17.4",
-    "prop-types": "^15.6.0",
-    "redux-firestore": "https://github.com/compojoom/redux-firestore.git#count_listeners"
+    "prop-types": "^15.6.0"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
