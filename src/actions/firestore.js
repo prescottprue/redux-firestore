@@ -309,12 +309,12 @@ export function unsetListeners(firebase, dispatch, listeners) {
 
   if (oneListenerPerPath) {
     listeners.forEach(listener => {
-      const path = getQueryName(listener)
-      pathListenerCounts[path] -= 1
+      const path = getQueryName(listener);
+      pathListenerCounts[path] -= 1;
 
       // If we aren't supposed to have listners for this path, then remove them
       if (pathListenerCounts[path] === 0) {
-        unsetListener(firebase, dispatch, listener)
+        unsetListener(firebase, dispatch, listener);
       }
     });
 
