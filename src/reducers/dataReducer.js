@@ -10,6 +10,7 @@ const {
   LISTENER_ERROR,
   DELETE_SUCCESS,
   DOCUMENT_CHANGE,
+  DOCUMENT_REMOVED,
 } = actionTypes;
 
 /**
@@ -61,6 +62,7 @@ export default function dataReducer(state = {}, action) {
         action.payload.data,
         state,
       );
+    case DOCUMENT_REMOVED:
     case DELETE_SUCCESS:
       const removePath = pathFromMeta(action.meta);
       const cleanedState = setWith(Object, removePath, null, state);
