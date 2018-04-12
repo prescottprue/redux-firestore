@@ -353,6 +353,38 @@ describe('query utils', () => {
         // expect(docSpy).to.be.calledOnce(meta.subcollections[0].collection);
       });
 
+      it('creates ref with nested collection', () => {
+        const collectionSpy = sinon.spy(() => ({ doc: 'data' }));
+        meta = {
+          collection: 'test',
+          doc: 'other',
+          subcollections: [
+            {
+              collection: 'thing',
+              doc: 'again',
+              subcollections: [{ collection: 'thing2' }],
+            },
+          ],
+        };
+        fakeFirebase = {
+          firestore: () => ({
+            collection: () => ({
+              doc: () => ({
+                collection: () => ({
+                  doc: () => ({
+                    collection: collectionSpy,
+                  }),
+                }),
+              }),
+            }),
+          }),
+        };
+        result = firestoreRef(fakeFirebase, dispatch, meta);
+        expect(result).to.be.an('object');
+        expect(result).to.be.deep.equal({ doc: 'data' });
+        expect(collectionSpy).to.be.calledOnce;
+      });
+
       it('creates ref with doc', () => {
         meta = {
           collection: 'test',

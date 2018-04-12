@@ -88,9 +88,9 @@ function handleSubcollections(ref, subcollectionList) {
       }
       if (subcollection.endAt) ref = ref.endAt(subcollection.endAt);
       if (subcollection.endBefore) ref = ref.endBefore(subcollection.endBefore);
-      /* eslint-enable */
 
-      handleSubcollections(ref, subcollection.subcollections);
+      ref = handleSubcollections(ref, subcollection.subcollections);
+      /* eslint-enable */
     });
   }
   return ref;
