@@ -161,6 +161,21 @@ export function deleteRef(firebase, dispatch, queryOption) {
   });
 }
 
+const changeTypeToEventType = {
+  removed: actionTypes.DOCUMENT_REMOVED,
+  changed: actionTypes.DOCUMENT_CHANGE,
+};
+
+function docChangeEvent(change, originalMeta = {}) {
+  return {
+    type: changeTypeToEventType[change.type] || actionTypes.DOCUMENT_CHANGE,
+    meta: { ...originalMeta, doc: change.doc.id },
+    payload: {
+      data: change.doc.data(),
+    },
+  };
+}
+
 /**
  * Set listener to Cloud Firestore with the call to the Firebase library
  * being wrapped in action dispatches.. Internall calls Firebase's onSnapshot()
@@ -186,18 +201,33 @@ export function setListener(firebase, dispatch, queryOpts, successCb, errorCb) {
   // Create listener
   const unsubscribe = firestoreRef(firebase, dispatch, meta).onSnapshot(
     docData => {
-      dispatch({
-        type: actionTypes.LISTENER_RESPONSE,
-        meta,
-        payload: {
-          data: dataByIdSnapshot(docData),
-          ordered: orderedFromSnap(docData),
-        },
-        merge: {
-          docs: mergeOrdered && mergeOrderedDocUpdates,
-          collections: mergeOrdered && mergeOrderedCollectionUpdates,
-        },
-      });
+      // Dispatch different actions for doc changes (only update doc(s) by key)
+      if (docData.docChanges && docData.docChanges.length < docData.size) {
+        if (docData.docChanges.length === 1) {
+          // Dispatch doc update if there is only one
+          dispatch(docChangeEvent(docData.docChanges[0], meta));
+        } else {
+          // Loop to dispatch for each change if there are multiple
+          // TODO: Option for dispatching multiple changes in single action
+          docData.docChanges.forEach(change => {
+            dispatch(docChangeEvent(change, meta));
+          });
+        }
+      } else {
+        // Dispatch action for whole collection change
+        dispatch({
+          type: actionTypes.LISTENER_RESPONSE,
+          meta,
+          payload: {
+            data: dataByIdSnapshot(docData),
+            ordered: orderedFromSnap(docData),
+          },
+          merge: {
+            docs: mergeOrdered && mergeOrderedDocUpdates,
+            collections: mergeOrdered && mergeOrderedCollectionUpdates,
+          },
+        });
+      }
       // Invoke success callback if it exists
       if (successCb) successCb(docData);
     },
