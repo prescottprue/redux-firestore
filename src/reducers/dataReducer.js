@@ -9,6 +9,7 @@ const {
   LISTENER_RESPONSE,
   LISTENER_ERROR,
   DELETE_SUCCESS,
+  DOCUMENT_CHANGE,
 } = actionTypes;
 
 /**
@@ -53,6 +54,13 @@ export default function dataReducer(state = {}, action) {
       const mergedData = merge(previousData, data);
       // Set data to state (with merge) immutabily (lodash/fp's setWith creates copy)
       return setWith(Object, pathFromMeta(meta), mergedData, state);
+    case DOCUMENT_CHANGE:
+      return setWith(
+        Object,
+        pathFromMeta(action.meta),
+        action.payload.data,
+        state,
+      );
     case DELETE_SUCCESS:
       const removePath = pathFromMeta(action.meta);
       const cleanedState = setWith(Object, removePath, null, state);

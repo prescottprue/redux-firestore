@@ -185,7 +185,25 @@ export function setListener(firebase, dispatch, queryOpts, successCb, errorCb) {
     firebase._.config || {};
   // Create listener
   const unsubscribe = firestoreRef(firebase, dispatch, meta).onSnapshot(
-    docData => {
+    docData => { // eslint-disable-line
+      // eslint-disable-line consistent-return
+      if (docData.docChanges && docData.docChanges.forEach) {
+        const docChangesToDispatch = [];
+        docData.docChanges.forEach(change => {
+          docChangesToDispatch.push({
+            meta: { ...meta, doc: change.doc.id },
+            payload: {
+              data: change.doc.data(),
+            },
+          });
+        });
+        if (docChangesToDispatch.length === 1) {
+          return dispatch({
+            type: actionTypes.DOCUMENT_CHANGE,
+            ...docChangesToDispatch[0],
+          });
+        }
+      }
       dispatch({
         type: actionTypes.LISTENER_RESPONSE,
         meta,

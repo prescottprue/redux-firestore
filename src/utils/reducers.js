@@ -78,7 +78,7 @@ export function pathFromMeta(meta) {
   }
   const { collection, doc, subcollections, storeAs } = meta;
   if (storeAs) {
-    return storeAs;
+    return doc ? `${storeAs}.${doc}` : storeAs;
   }
   if (!collection) {
     throw new Error('Collection is required to construct reducer path.');
