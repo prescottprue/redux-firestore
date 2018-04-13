@@ -136,14 +136,18 @@ export function update(firebase, dispatch, queryOption, ...args) {
  * @param {String} doc - Document name
  * @return {Promise} Resolves with results of update call
  */
-export function deleteRef(firebase, dispatch, queryOption) {
+export function deleteRef(firebase, dispatch, queryOption, options = {}) {
   const meta = getQueryConfig(queryOption);
+  const { runDispatch = true } = options;
   const { config } = firebase._;
   if (!meta.doc) {
     if (isFunction(config.onAttemptCollectionDelete)) {
       return config.onAttemptCollectionDelete(queryOption, dispatch, firebase);
     }
     return Promise.reject(new Error('Only documents can be deleted.'));
+  }
+  if (!runDispatch) {
+    return firestoreRef(firebase, dispatch, meta).delete();
   }
   return wrapInDispatch(dispatch, {
     ref: firestoreRef(firebase, dispatch, meta),
@@ -155,7 +159,6 @@ export function deleteRef(firebase, dispatch, queryOption) {
         type: actionTypes.DELETE_SUCCESS,
         preserve: firebase._.config.preserveOnDelete,
       },
-      actionTypes.DELETE_SUCCESS,
       actionTypes.DELETE_FAILURE,
     ],
   });
@@ -164,14 +167,23 @@ export function deleteRef(firebase, dispatch, queryOption) {
 const changeTypeToEventType = {
   removed: actionTypes.DOCUMENT_REMOVED,
   changed: actionTypes.DOCUMENT_CHANGE,
+  modified: actionTypes.DOCUMENT_CHANGE,
 };
 
+/**
+ * Action creator for document change event. Used to create action objects
+ * to be passed to dispatch.
+ * @param  {Object} change - Document change object from Firebase callback
+ * @param  {Object} [originalMeta={}] - Original meta data of action
+ * @return {Object}                   [description]
+ */
 function docChangeEvent(change, originalMeta = {}) {
   return {
     type: changeTypeToEventType[change.type] || actionTypes.DOCUMENT_CHANGE,
     meta: { ...originalMeta, doc: change.doc.id },
     payload: {
       data: change.doc.data(),
+      ordered: { oldIndex: change.oldIndex, newIndex: change.newIndex },
     },
   };
 }

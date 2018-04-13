@@ -3,7 +3,43 @@ import { merge as mergeObjects } from 'lodash/fp';
 import { actionTypes } from '../constants';
 import { updateItemInArray, preserveValuesFromState } from '../utils/reducers';
 
-const { GET_SUCCESS, LISTENER_RESPONSE, CLEAR_DATA } = actionTypes;
+const {
+  GET_SUCCESS,
+  LISTENER_RESPONSE,
+  CLEAR_DATA,
+  DOCUMENT_REMOVED,
+  DELETE_SUCCESS,
+  DOCUMENT_CHANGE,
+} = actionTypes;
+
+function addItemAtIndex(arr, from, to, item) {
+  arr = arr.slice(); // eslint-disable-line no-param-reassign
+  if (from === -1 || from === to) {
+    arr.splice(to, 0, item);
+  } else {
+    arr.splice(
+      to < 0 ? arr.length + to : to,
+      0,
+      item || arr.splice(from, 1)[0],
+    );
+  }
+  return arr;
+}
+
+function moveDocInOrdered(state, action) {
+  const storeUnderKey = action.meta.storeAs || action.meta.collection;
+  const { oldIndex, newIndex } = get(action, 'payload.ordered', {});
+  const data = get(state, storeUnderKey) || [];
+  return {
+    ...state,
+    [storeUnderKey]: addItemAtIndex(
+      data,
+      oldIndex,
+      newIndex,
+      action.payload.data,
+    ),
+  };
+}
 
 /**
  * Update a document within an array from the ordered state
@@ -17,7 +53,7 @@ const { GET_SUCCESS, LISTENER_RESPONSE, CLEAR_DATA } = actionTypes;
  * @param  {String} action.payload - Data from within the action
  * @return {Object} Ordered state after reduction
  */
-function updateDocInOrdered(state, action) {
+function updateDocInOrdered(state, action, overrideValue) {
   const itemToAdd = first(action.payload.ordered);
   const subcollection = first(action.meta.subcollections);
   const storeUnderKey = action.meta.storeAs || action.meta.collection;
@@ -31,7 +67,10 @@ function updateDocInOrdered(state, action) {
         mergeObjects(
           item,
           subcollection
-            ? { [subcollection.collection]: action.payload.ordered }
+            ? {
+                [subcollection.collection]:
+                  overrideValue || action.payload.ordered,
+              }
             : itemToAdd,
         ),
     ),
@@ -91,6 +130,11 @@ export default function orderedReducer(state = {}, action) {
         return preserveValuesFromState(state, action.preserve.ordered, {});
       }
       return {};
+    case DOCUMENT_CHANGE:
+      return moveDocInOrdered(state, action);
+    case DELETE_SUCCESS:
+    case DOCUMENT_REMOVED:
+      return updateDocInOrdered(state, action, null);
     // TODO: DELETE_SUCCESS that removes item from array in a way that is
     // configurable and aware of listeners (v0.3.0)
     // TODO: LISTENER_ERROR that sets null or removes items in a way that is

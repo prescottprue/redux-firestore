@@ -166,6 +166,23 @@ describe('firestoreActions', () => {
         expect(res).to.equal(successRes);
       });
 
+      it('skips dispatches if option runDispatch: false provided', async () => {
+        const instance = createFirestoreInstance(
+          fakeFirebase,
+          { helpersNamespace: 'test' },
+          dispatchSpy,
+        );
+        const res = await instance.test.deleteRef(
+          {
+            collection: 'test',
+            doc: 'test',
+          },
+          { runDispatch: false },
+        );
+        expect(dispatchSpy).to.have.callCount(0);
+        expect(res).to.equal(successRes);
+      });
+
       it('throws if attempting to delete a collection', async () => {
         const instance = createFirestoreInstance(
           {},
