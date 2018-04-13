@@ -261,6 +261,28 @@ describe('query utils', () => {
       it('with collection', () => {
         expect(getQueryConfigs('test')).to.have.property('collection', 'test');
       });
+
+      it('with nested subcollections', () => {
+        meta = {
+          collection: 'test',
+          doc: 'other',
+          subcollections: [
+            {
+              collection: 'col2',
+              doc: 'doc2',
+              subcollections: [
+                {
+                  collection: 'col3',
+                  doc: 'doc3',
+                  subcollections: [{ collection: 'col4' }],
+                },
+              ],
+            },
+          ],
+        };
+        result = getQueryConfigs('/test/other/col2/doc2/col3/doc3/col4');
+        expect(result).to.be.deep.equal(meta);
+      });
     });
 
     describe('object', () => {
@@ -291,6 +313,28 @@ describe('query utils', () => {
           '0.subcollections.0.collection',
           meta.subcollections[0].collection,
         );
+      });
+
+      it('with nested subcollections', () => {
+        meta = {
+          collection: 'test',
+          doc: 'other',
+          subcollections: [
+            {
+              collection: 'col2',
+              doc: 'doc2',
+              subcollections: [
+                {
+                  collection: 'col3',
+                  doc: 'doc3',
+                  subcollections: [{ collection: 'col4' }],
+                },
+              ],
+            },
+          ],
+        };
+        result = getQueryConfigs(meta);
+        expect(result).to.be.deep.equal([meta]);
       });
     });
   });
@@ -351,6 +395,38 @@ describe('query utils', () => {
         result = firestoreRef(fakeFirebase, dispatch, meta);
         expect(result).to.be.an('object');
         // expect(docSpy).to.be.calledOnce(meta.subcollections[0].collection);
+      });
+
+      it('creates ref with nested collection', () => {
+        const collectionSpy = sinon.spy(() => ({ doc: 'data' }));
+        meta = {
+          collection: 'test',
+          doc: 'other',
+          subcollections: [
+            {
+              collection: 'thing',
+              doc: 'again',
+              subcollections: [{ collection: 'thing2' }],
+            },
+          ],
+        };
+        fakeFirebase = {
+          firestore: () => ({
+            collection: () => ({
+              doc: () => ({
+                collection: () => ({
+                  doc: () => ({
+                    collection: collectionSpy,
+                  }),
+                }),
+              }),
+            }),
+          }),
+        };
+        result = firestoreRef(fakeFirebase, dispatch, meta);
+        expect(result).to.be.an('object');
+        expect(result).to.be.deep.equal({ doc: 'data' });
+        expect(collectionSpy).to.be.calledOnce;
       });
 
       it('creates ref with doc', () => {

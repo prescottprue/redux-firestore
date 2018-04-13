@@ -8,8 +8,11 @@ import {
   orderedFromSnap,
   dataByIdSnapshot,
   getQueryConfig,
+  getQueryName,
   firestoreRef,
 } from '../utils/query';
+
+const pathListenerCounts = {};
 
 /**
  * Add data to a collection or document on Cloud Firestore with the call to
@@ -282,12 +285,31 @@ export function setListeners(firebase, dispatch, listeners) {
     );
   }
 
+  const { config } = firebase._;
+  const oneListenerPerPath = !!config.oneListenerPerPath;
+
+  if (oneListenerPerPath) {
+    return listeners.forEach(listener => {
+      const path = getQueryName(listener);
+      const oldListenerCount = pathListenerCounts[path] || 0;
+      pathListenerCounts[path] = oldListenerCount + 1;
+
+      // If we already have an attached listener exit here
+      if (oldListenerCount > 0) {
+        return;
+      }
+
+      setListener(firebase, dispatch, listener);
+    });
+  }
+
   return listeners.forEach(listener => {
     // Config for supporting attaching of multiple listeners
-    const { config } = firebase._;
+
     const multipleListenersEnabled = isFunction(config.allowMultipleListeners)
       ? config.allowMultipleListeners(listener, firebase._.listeners)
       : config.allowMultipleListeners;
+
     // Only attach listener if it does not already exist or
     // if multiple listeners config is true or is a function which returns
     // truthy value
@@ -323,6 +345,22 @@ export function unsetListeners(firebase, dispatch, listeners) {
     throw new Error(
       'Listeners must be an Array of listener configs (Strings/Objects).',
     );
+  }
+  const { config } = firebase._;
+  const oneListenerPerPath = !!config.oneListenerPerPath;
+
+  if (oneListenerPerPath) {
+    listeners.forEach(listener => {
+      const path = getQueryName(listener);
+      pathListenerCounts[path] -= 1;
+
+      // If we aren't supposed to have listners for this path, then remove them
+      if (pathListenerCounts[path] === 0) {
+        unsetListener(firebase, dispatch, listener);
+      }
+    });
+
+    return;
   }
 
   listeners.forEach(listener => {
