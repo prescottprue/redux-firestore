@@ -263,15 +263,16 @@ export function detachListener(firebase, dispatch, meta) {
  * @param  {String} queryPathStr String to be converted
  * @return {Object} Object containing collection, doc and subcollection
  */
-export function queryStrToObj(queryPathStr) {
-  const pathArr = trim(queryPathStr, ['/']).split('/');
-  const [collection, doc, subCollection, ...other] = pathArr;
-  return {
-    collection,
-    doc,
-    subCollection,
-    other,
-  };
+export function queryStrToObj(queryPathStr, parsedPath) {
+  const pathArr = parsedPath || trim(queryPathStr, ['/']).split('/');
+  const [collection, doc, ...subcollections] = pathArr;
+  const queryObj = {};
+  if (collection) queryObj.collection = collection;
+  if (doc) queryObj.doc = doc;
+  if (subcollections.length) {
+    queryObj.subcollections = [queryStrToObj('', subcollections)];
+  }
+  return queryObj;
 }
 
 /**
