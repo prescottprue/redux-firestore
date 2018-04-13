@@ -231,6 +231,137 @@ describe('firestoreActions', () => {
     });
 
     describe('setListener', () => {
+      describe('docChanges', () => {
+        after(() => {
+          onSnapshotSpy = sinon.spy((func, func2) => {
+            func(sinon.spy());
+            func2(sinon.spy());
+          });
+        });
+
+        it('updates single doc in state when docChanges includes single doc change with type: "modified"', async () => {
+          onSnapshotSpy = sinon.spy((func, func2) => {
+            func({
+              docChanges: [
+                {
+                  doc: { id: '123ABC', data: () => ({ some: 'value' }) },
+                  type: 'modified',
+                },
+              ],
+              size: 2,
+              doc: { id: '123ABC' },
+            });
+            func2(sinon.spy());
+          });
+          listenerConfig = {
+            collection: 'test',
+            doc: '1',
+            subcollections: [{ collection: 'test2', doc: 'test3' }],
+          };
+          const instance = createFirestoreInstance(
+            fakeFirebase,
+            fakeConfig,
+            dispatchSpy,
+          );
+          const expectedAction = {
+            meta: { ...listenerConfig },
+            payload: { name: 'test/1/test2/test3' },
+            type: actionTypes.SET_LISTENER,
+          };
+          await instance.test.setListener(listenerConfig);
+          expect(onSnapshotSpy).to.be.calledOnce;
+          expect(dispatchSpy).to.be.calledWith(expectedAction);
+        });
+
+        it('updates multiple docs in state when docChanges includes multiple doc changes', async () => {
+          onSnapshotSpy = sinon.spy((func, func2) => {
+            func({
+              docChanges: [
+                {
+                  doc: { id: '123ABC', data: () => ({ some: 'value' }) },
+                  type: 'modified',
+                },
+                {
+                  doc: { id: '123ABC', data: () => ({ some: 'value' }) },
+                  type: 'modified',
+                },
+              ],
+              size: 3,
+              doc: { id: '123ABC' },
+            });
+            func2(sinon.spy());
+          });
+          listenerConfig = {
+            collection: 'test',
+            doc: '1',
+            subcollections: [{ collection: 'test2', doc: 'test3' }],
+          };
+          const instance = createFirestoreInstance(
+            fakeFirebase,
+            fakeConfig,
+            dispatchSpy,
+          );
+          const expectedAction = {
+            meta: { ...listenerConfig },
+            payload: { name: 'test/1/test2/test3' },
+            type: actionTypes.SET_LISTENER,
+          };
+          await instance.test.setListener(listenerConfig);
+          expect(onSnapshotSpy).to.be.calledOnce;
+          expect(dispatchSpy).to.be.calledWith(expectedAction);
+        });
+
+        it('still dispatches LISTENER_RESPONSE action type if whole collection is being updated (i.e. docChanges.length === size)', async () => {
+          onSnapshotSpy = sinon.spy(success => {
+            success({
+              docChanges: [
+                {
+                  doc: { id: '123ABC', data: () => ({ some: 'value' }) },
+                  type: 'modified',
+                },
+                {
+                  doc: { id: '123ABC', data: () => ({ some: 'value' }) },
+                  type: 'modified',
+                },
+              ],
+              size: 2,
+              doc: { id: '123ABC' },
+            });
+          });
+          listenerConfig = {
+            collection: 'test',
+            doc: '1',
+            subcollections: [{ collection: 'test2', doc: 'test3' }],
+          };
+          const instance = createFirestoreInstance(
+            fakeFirebase,
+            fakeConfig,
+            dispatchSpy,
+          );
+          const expectedAction = {
+            meta: { ...listenerConfig },
+            payload: { name: 'test/1/test2/test3' },
+            type: actionTypes.SET_LISTENER,
+          };
+          const expectedAction2 = {
+            meta: listenerConfig,
+            payload: { data: null, ordered: [] },
+            merge: { collections: true, docs: true },
+            type: actionTypes.LISTENER_RESPONSE,
+          };
+          await instance.test.setListener(listenerConfig);
+          expect(dispatchSpy).to.be.calledWith(expectedAction);
+          expect(dispatchSpy).to.be.calledWith(expectedAction2);
+          expect(onSnapshotSpy).to.be.calledOnce;
+          // expect(dispatchSpy.withArgs(expectedAction)).to.be.calledOnce;
+          // expect(dispatchSpy.getCall(2)).to.be.calledWith(expectedAction2);
+          // expect(dispatchSpy.firstCall).to.be.calledWith(expectedAction);
+          // expect(dispatchSpy.secondCall).to.be.calledWith(expectedAction2);
+          // expect(dispatchSpy.getCall(2)).to.be.calledWith(expectedAction2);
+          expect(dispatchSpy).to.have.callCount(2);
+        });
+      });
+
       it('throws if Firestore is not initialized', () => {
         const instance = createFirestoreInstance(
           {},
