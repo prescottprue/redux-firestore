@@ -435,8 +435,11 @@ describe('firestoreActions', () => {
           collection: 'test',
           doc: '1',
           subcollections: [
-            { collection: 'test2', doc: 'test3' },
-            { collection: 'test4' },
+            {
+              collection: 'test2',
+              doc: 'test3',
+              subcollections: [{ collection: 'test4' }],
+            },
           ],
         };
         const instance = createFirestoreInstance(
@@ -447,6 +450,33 @@ describe('firestoreActions', () => {
         const expectedAction = {
           meta: { ...listenerConfig },
           payload: { name: 'test/1/test2/test3/test4' },
+          type: actionTypes.SET_LISTENER,
+        };
+        await instance.test.setListener(listenerConfig);
+        expect(onSnapshotSpy).to.be.calledOnce;
+        expect(dispatchSpy).to.be.calledWith(expectedAction);
+      });
+
+      it('supports doc within nested subcollections', async () => {
+        listenerConfig = {
+          collection: 'test',
+          doc: '1',
+          subcollections: [
+            {
+              collection: 'test2',
+              doc: 'test3',
+              subcollections: [{ collection: 'test4', doc: 'test5' }],
+            },
+          ],
+        };
+        const instance = createFirestoreInstance(
+          fakeFirebase,
+          fakeConfig,
+          dispatchSpy,
+        );
+        const expectedAction = {
+          meta: { ...listenerConfig },
+          payload: { name: 'test/1/test2/test3/test4/test5' },
           type: actionTypes.SET_LISTENER,
         };
         await instance.test.setListener(listenerConfig);

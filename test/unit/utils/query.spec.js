@@ -15,7 +15,6 @@ let result;
 let docSpy;
 let fakeFirebase;
 const collection = 'test';
-
 const fakeFirebaseWith = spyedName => {
   const theSpy = sinon.spy(() => ({}));
   const theFirebase = {
