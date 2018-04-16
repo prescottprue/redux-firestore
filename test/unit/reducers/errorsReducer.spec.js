@@ -1,5 +1,5 @@
-import errorsReducer from '../../../src/reducers/errorsReducer';
-import { actionTypes } from '../../../src/constants';
+import errorsReducer from 'reducers/errorsReducer';
+import { actionTypes } from 'constants';
 
 let action;
 let state;

@@ -8,8 +8,11 @@ import {
   orderedFromSnap,
   dataByIdSnapshot,
   getQueryConfig,
+  getQueryName,
   firestoreRef,
 } from '../utils/query';
+
+const pathListenerCounts = {};
 
 /**
  * Add data to a collection or document on Cloud Firestore with the call to
@@ -155,10 +158,33 @@ export function deleteRef(firebase, dispatch, queryOption) {
         type: actionTypes.DELETE_SUCCESS,
         preserve: firebase._.config.preserveOnDelete,
       },
-      actionTypes.DELETE_SUCCESS,
       actionTypes.DELETE_FAILURE,
     ],
   });
+}
+
+const changeTypeToEventType = {
+  added: actionTypes.DOCUMENT_ADDED,
+  removed: actionTypes.DOCUMENT_REMOVED,
+  modified: actionTypes.DOCUMENT_MODIFIED,
+};
+
+/**
+ * Action creator for document change event. Used to create action objects
+ * to be passed to dispatch.
+ * @param  {Object} change - Document change object from Firebase callback
+ * @param  {Object} [originalMeta={}] - Original meta data of action
+ * @return {Object}                   [description]
+ */
+function docChangeEvent(change, originalMeta = {}) {
+  return {
+    type: changeTypeToEventType[change.type] || actionTypes.DOCUMENT_MODIFIED,
+    meta: { ...originalMeta, doc: change.doc.id },
+    payload: {
+      data: change.doc.data(),
+      ordered: { oldIndex: change.oldIndex, newIndex: change.newIndex },
+    },
+  };
 }
 
 /**
@@ -186,18 +212,33 @@ export function setListener(firebase, dispatch, queryOpts, successCb, errorCb) {
   // Create listener
   const unsubscribe = firestoreRef(firebase, dispatch, meta).onSnapshot(
     docData => {
-      dispatch({
-        type: actionTypes.LISTENER_RESPONSE,
-        meta,
-        payload: {
-          data: dataByIdSnapshot(docData),
-          ordered: orderedFromSnap(docData),
-        },
-        merge: {
-          docs: mergeOrdered && mergeOrderedDocUpdates,
-          collections: mergeOrdered && mergeOrderedCollectionUpdates,
-        },
-      });
+      // Dispatch different actions for doc changes (only update doc(s) by key)
+      if (docData.docChanges && docData.docChanges.length < docData.size) {
+        if (docData.docChanges.length === 1) {
+          // Dispatch doc update if there is only one
+          dispatch(docChangeEvent(docData.docChanges[0], meta));
+        } else {
+          // Loop to dispatch for each change if there are multiple
+          // TODO: Option for dispatching multiple changes in single action
+          docData.docChanges.forEach(change => {
+            dispatch(docChangeEvent(change, meta));
+          });
+        }
+      } else {
+        // Dispatch action for whole collection change
+        dispatch({
+          type: actionTypes.LISTENER_RESPONSE,
+          meta,
+          payload: {
+            data: dataByIdSnapshot(docData),
+            ordered: orderedFromSnap(docData),
+          },
+          merge: {
+            docs: mergeOrdered && mergeOrderedDocUpdates,
+            collections: mergeOrdered && mergeOrderedCollectionUpdates,
+          },
+        });
+      }
       // Invoke success callback if it exists
       if (successCb) successCb(docData);
     },
@@ -240,12 +281,31 @@ export function setListeners(firebase, dispatch, listeners) {
     );
   }
 
+  const { config } = firebase._;
+  const oneListenerPerPath = !!config.oneListenerPerPath;
+
+  if (oneListenerPerPath) {
+    return listeners.forEach(listener => {
+      const path = getQueryName(listener);
+      const oldListenerCount = pathListenerCounts[path] || 0;
+      pathListenerCounts[path] = oldListenerCount + 1;
+
+      // If we already have an attached listener exit here
+      if (oldListenerCount > 0) {
+        return;
+      }
+
+      setListener(firebase, dispatch, listener);
+    });
+  }
+
   return listeners.forEach(listener => {
     // Config for supporting attaching of multiple listeners
-    const { config } = firebase._;
+
     const multipleListenersEnabled = isFunction(config.allowMultipleListeners)
       ? config.allowMultipleListeners(listener, firebase._.listeners)
       : config.allowMultipleListeners;
+
     // Only attach listener if it does not already exist or
     // if multiple listeners config is true or is a function which returns
     // truthy value
@@ -281,6 +341,22 @@ export function unsetListeners(firebase, dispatch, listeners) {
     throw new Error(
       'Listeners must be an Array of listener configs (Strings/Objects).',
     );
+  }
+  const { config } = firebase._;
+  const oneListenerPerPath = !!config.oneListenerPerPath;
+
+  if (oneListenerPerPath) {
+    listeners.forEach(listener => {
+      const path = getQueryName(listener);
+      pathListenerCounts[path] -= 1;
+
+      // If we aren't supposed to have listners for this path, then remove them
+      if (pathListenerCounts[path] === 0) {
+        unsetListener(firebase, dispatch, listener);
+      }
+    });
+
+    return;
   }
 
   listeners.forEach(listener => {

@@ -1,5 +1,5 @@
-import orderedReducer from '../../../src/reducers/orderedReducer';
-import { actionTypes } from '../../../src/constants';
+import orderedReducer from 'reducers/orderedReducer';
+import { actionTypes } from 'constants';
 
 let action;
 let state;
@@ -94,7 +94,7 @@ describe('orderedReducer', () => {
           action = {
             meta: { collection: 'testing', doc: 'doc' },
             type: actionTypes.LISTENER_RESPONSE,
-            payload: { ordered: orderedData },
+            payload: { ordered: orderedData, data: orderedData[0] },
           };
           state = { testing: [{ id, someField: 'original' }] };
           expect(orderedReducer(state, action)).to.have.nested.property(

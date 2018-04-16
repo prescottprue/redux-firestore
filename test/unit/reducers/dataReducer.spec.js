@@ -1,5 +1,5 @@
-import dataReducer from '../../../src/reducers/dataReducer';
-import { actionTypes } from '../../../src/constants';
+import dataReducer from 'reducers/dataReducer';
+import { actionTypes } from 'constants';
 
 const state = {};
 let collection = 'test'; // eslint-disable-line prefer-const

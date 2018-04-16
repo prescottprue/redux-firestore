@@ -1,4 +1,4 @@
-import reducer from '../../src/reducer';
+import reducer from 'reducer';
 
 describe('reducer', () => {
   it('is exported', () => {

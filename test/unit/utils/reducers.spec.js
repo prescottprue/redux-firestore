@@ -4,7 +4,7 @@ import {
   getSlashStrPath,
   preserveValuesFromState,
   updateItemInArray,
-} from '../../../src/utils/reducers';
+} from 'utils/reducers';
 
 let subcollections;
 let config;

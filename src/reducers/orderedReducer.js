@@ -1,47 +1,96 @@
-import { first, size, get, unionBy } from 'lodash';
+import { size, get, unionBy } from 'lodash';
 import { merge as mergeObjects } from 'lodash/fp';
 import { actionTypes } from '../constants';
-import { updateItemInArray, preserveValuesFromState } from '../utils/reducers';
+import {
+  updateItemInArray,
+  createReducer,
+  preserveValuesFromState,
+} from '../utils/reducers';
 
-const { GET_SUCCESS, LISTENER_RESPONSE, CLEAR_DATA } = actionTypes;
+const {
+  DOCUMENT_ADDED,
+  GET_SUCCESS,
+  LISTENER_RESPONSE,
+  CLEAR_DATA,
+  DOCUMENT_REMOVED,
+  DOCUMENT_MODIFIED,
+} = actionTypes;
 
 /**
- * Update a document within an array from the ordered state
- * @param  {Object} [state={}] - Current ordered redux state
- * @param  {Object} action - Object containing the action that was dispatched
- * @param  {String} action.type - Type of action that was dispatched
- * @param  {Object} action.meta - Meta data of action
- * @param  {String} action.meta.collection - Name of the collection for the
- * data being passed to the reducer.
- * @param  {Array} action.meta.subcollections - Subcollections which the action
- * @param  {String} action.payload - Data from within the action
- * @return {Object} Ordered state after reduction
+ * Case reducer for adding a document to a collection.
+ * @param  {Array} collectionState - Redux state of current collection
+ * @param  {Object} action - The action that was dispatched
+ * @return {Array} State with document modified
  */
-function updateDocInOrdered(state, action) {
-  const itemToAdd = first(action.payload.ordered);
-  const subcollection = first(action.meta.subcollections);
-  const storeUnderKey = action.meta.storeAs || action.meta.collection;
-  return {
-    ...state,
-    [storeUnderKey]: updateItemInArray(
-      state[storeUnderKey] || [],
-      action.meta.doc,
-      item =>
-        // Use merge to preserve existing subcollections
-        mergeObjects(
-          item,
-          subcollection
-            ? { [subcollection.collection]: action.payload.ordered }
-            : itemToAdd,
-        ),
-    ),
-  };
+function addDoc(array, action) {
+  return [
+    ...array.slice(0, action.payload.ordered.newIndex),
+    { id: action.meta.doc, ...action.payload.data },
+    ...array.slice(action.payload.ordered.newIndex),
+  ];
 }
+
+/**
+ * Case reducer for modifying a document within a collection.
+ * @param  {Array} collectionState - Redux state of current collection
+ * @param  {Object} action - The action that was dispatched
+ * @return {Array} State with document modified
+ */
+function modifyDoc(collectionState, action) {
+  return updateItemInArray(collectionState, action.meta.doc, item =>
+    // Merge is used to prevent the removal of existing subcollections
+    mergeObjects(item, action.payload.data),
+  );
+}
+
+/**
+ * Case reducer for adding a document to a collection.
+ * @param  {Array} collectionState - Redux state of current collection
+ * @param  {Object} action - The action that was dispatched
+ * @return {Array} State with document modified
+ */
+function removeDoc(collectionState, action) {
+  return updateItemInArray(collectionState, action.meta.doc, () => null);
+}
+
+/**
+ * Case reducer for writing/updating a whole collection.
+ * @param  {Array} collectionState - Redux state of current collection
+ * @param  {Object} action - The action that was dispatched
+ * @return {Array} State with document modified
+ */
+function writeCollection(collectionState, action) {
+  const { meta, merge = { doc: true, collection: true } } = action;
+  // Handle doc update (update item in array instead of whole array)
+  if (meta.doc && merge.doc && size(collectionState)) {
+    // Merge if data already exists
+    // Merge with existing ordered array if collection merge enabled
+    return modifyDoc(collectionState, action);
+  }
+  // Merge with existing ordered array if collection merge enabled
+  if (merge.collection && size(collectionState)) {
+    return unionBy(collectionState, action.payload.ordered, 'id');
+  }
+  return action.payload.ordered;
+}
+
+/**
+ * Reducer for an ordered collection (stored under path within ordered reducer)
+ * which is a map of handlers which are called for different action types.
+ * @type {Function}
+ */
+const orderedCollectionReducer = createReducer(undefined, {
+  [DOCUMENT_ADDED]: addDoc,
+  [DOCUMENT_MODIFIED]: modifyDoc,
+  [DOCUMENT_REMOVED]: removeDoc,
+  [LISTENER_RESPONSE]: writeCollection,
+  [GET_SUCCESS]: writeCollection,
+});
 
 /**
  * Reducer for ordered state.
  * @param  {Object} [state={}] - Current ordered redux state
- * @param  {Object} action - Object containing the action that was dispatched
+ * @param  {Object} action - The action that was dispatched
  * @param  {String} action.type - Type of action that was dispatched
  * @param  {String} action.meta.collection - Name of Collection which the action
  * associates with
@@ -59,43 +108,20 @@ function updateDocInOrdered(state, action) {
  * @return {Object} Ordered state after reduction
  */
 export default function orderedReducer(state = {}, action) {
-  switch (action.type) {
-    case GET_SUCCESS:
-    case LISTENER_RESPONSE:
-      if (!action.payload || !action.payload.ordered) {
-        return state;
-      }
-      const { meta, merge = { doc: true, collection: true } } = action;
-      const parentPath = meta.storeAs || meta.collection;
-      // Handle doc update (update item in array instead of whole array)
-      if (meta.doc && merge.doc && size(get(state, parentPath))) {
-        // Merge if data already exists
-        // Merge with existing ordered array if collection merge enabled
-        return updateDocInOrdered(state, action);
-      }
-      const parentData = get(state, parentPath);
-      // Merge with existing ordered array if collection merge enabled
-      if (merge.collection && size(parentData)) {
-        return {
-          ...state,
-          [parentPath]: unionBy(parentData, action.payload.ordered, 'id'),
-        };
-      }
-      return {
-        ...state,
-        [parentPath]: action.payload.ordered,
-      };
-    case CLEAR_DATA:
-      // support keeping data when logging out - #125
-      if (action.preserve && action.preserve.ordered) {
-        return preserveValuesFromState(state, action.preserve.ordered, {});
-      }
-      return {};
-    // TODO: DELETE_SUCCESS that removes item from array in a way that is
-    // configurable and aware of listeners (v0.3.0)
-    // TODO: LISTENER_ERROR that sets null or removes items in a way that is
-    // configurable (v0.3.0)
-    default:
-      return state;
+  if (!action.meta || (!action.meta.storeAs && !action.meta.collection)) {
+    return state;
   }
+  if (action.type === CLEAR_DATA) {
+    // support keeping data when logging out - #125
+    if (action.preserve && action.preserve.ordered) {
+      return preserveValuesFromState(state, action.preserve.ordered, {});
+    }
+    return {};
+  }
+  const storeUnderKey = action.meta.storeAs || action.meta.collection;
+  const collectionStateSlice = get(state, storeUnderKey);
+  return {
+    ...state,
+    [storeUnderKey]: orderedCollectionReducer(collectionStateSlice, action),
+  };
 }

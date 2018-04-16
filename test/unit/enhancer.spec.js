@@ -1,5 +1,5 @@
 import { createStore, compose } from 'redux';
-import reduxFirestore, { getFirestore } from '../../src/enhancer';
+import reduxFirestore, { getFirestore } from 'enhancer';
 
 const reducer = sinon.spy();
 const generateCreateStore = () =>
