@@ -115,6 +115,15 @@ export function updateItemInArray(array, itemId, updateItemCallback) {
   });
 }
 
+/**
+ * A function for expressing reducers as an object mapping from action
+ * types to handlers (mentioned in redux docs:
+ * https://redux.js.org/recipes/reducing-boilerplate#generating-reducers)
+ * @param  {Any} initialState - Initial state of reducer
+ * @param  {Object} handlers - Mapping of action types to handlers
+ * @return {Function} Reducer function which uses each handler only when
+ * the action type matches.
+ */
 export function createReducer(initialState, handlers) {
   return function reducer(state = initialState, action) {
     /* eslint-disable no-prototype-builtins */

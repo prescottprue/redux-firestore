@@ -24,15 +24,15 @@ function addDoc(array, action) {
   ];
 }
 
-// Case reducer
+/**
+ * Case reducer for modifying a document.
+ * @param  {Array} collectionState - Redux state of current collection
+ * @param  {Object} action - The action that was dispatched
+ * @return {Array} State with document modified
+ */
 function modifyDoc(collectionState, action) {
   return updateItemInArray(collectionState, action.meta.doc, item =>
-    Object.assign({}, item, action.payload.data),
-  );
-}
-
-function mergeDoc(collectionState, action) {
-  return updateItemInArray(collectionState, action.meta.doc, item =>
+    // Merge is used to prevent the removal of existing subcollections
     mergeObjects(item, action.payload.data),
   );
 }
@@ -47,7 +47,7 @@ function writeCollection(collectionState, action) {
   if (meta.doc && merge.doc && size(collectionState)) {
     // Merge if data already exists
     // Merge with existing ordered array if collection merge enabled
-    return mergeDoc(collectionState, action);
+    return modifyDoc(collectionState, action);
   }
   // Merge with existing ordered array if collection merge enabled
   if (merge.collection && size(collectionState)) {
@@ -56,31 +56,23 @@ function writeCollection(collectionState, action) {
   return action.payload.ordered;
 }
 
-function clearCollection(collectionState, action) {
-  // support keeping data when logging out - #125
-  if (action.preserve && action.preserve.ordered) {
-    return preserveValuesFromState(
-      collectionState,
-      action.preserve.ordered,
-      {},
-    );
-  }
-  return null;
-}
-
+/**
+ * Reducer for an ordered collection (stored under path within ordered reducer)
+ * which is a map of handlers which are called for different action types.
+ * @type {Function}
+ */
 const orderedCollectionReducer = createReducer(undefined, {
   [DOCUMENT_ADDED]: addDoc,
   [DOCUMENT_MODIFIED]: modifyDoc,
   [DOCUMENT_REMOVED]: removeDoc,
   [LISTENER_RESPONSE]: writeCollection,
   [GET_SUCCESS]: writeCollection,
-  [CLEAR_DATA]: clearCollection,
 });
 
 /**
  * Reducer for ordered state.
  * @param  {Object} [state={}] - Current ordered redux state
- * @param  {Object} action - Object containing the action that was dispatched
+ * @param  {Object} action - The action that was dispatched
  * @param  {String} action.type - Type of action that was dispatched
  * @param  {String} action.meta.collection - Name of Collection which the action
  * associates with
@@ -100,6 +92,13 @@ const orderedCollectionReducer = createReducer(undefined, {
 export default function orderedReducer(state = {}, action) {
   if (!action.meta || (!action.meta.storeAs && !action.meta.collection)) {
     return state;
+  }
+  if (action.type === CLEAR_DATA) {
+    // support keeping data when logging out - #125
+    if (action.preserve && action.preserve.ordered) {
+      return preserveValuesFromState(state, action.preserve.ordered, {});
+    }
+    return {};
   }
   const storeUnderKey = action.meta.storeAs || action.meta.collection;
   const collectionStateSlice = get(state, storeUnderKey);

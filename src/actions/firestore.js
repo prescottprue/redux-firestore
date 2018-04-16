@@ -139,18 +139,14 @@ export function update(firebase, dispatch, queryOption, ...args) {
  * @param {String} doc - Document name
  * @return {Promise} Resolves with results of update call
  */
-export function deleteRef(firebase, dispatch, queryOption, options = {}) {
+export function deleteRef(firebase, dispatch, queryOption) {
   const meta = getQueryConfig(queryOption);
-  const { runDispatch = true } = options;
   const { config } = firebase._;
   if (!meta.doc) {
     if (isFunction(config.onAttemptCollectionDelete)) {
       return config.onAttemptCollectionDelete(queryOption, dispatch, firebase);
     }
     return Promise.reject(new Error('Only documents can be deleted.'));
-  }
-  if (!runDispatch) {
-    return firestoreRef(firebase, dispatch, meta).delete();
   }
   return wrapInDispatch(dispatch, {
     ref: firestoreRef(firebase, dispatch, meta),
