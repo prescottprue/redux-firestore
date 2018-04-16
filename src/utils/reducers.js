@@ -106,13 +106,24 @@ export function pathFromMeta(meta) {
 export function updateItemInArray(array, itemId, updateItemCallback) {
   return array.map(item => {
     // Preserve items that do not have matching ids
-    if (item.id !== itemId) {
+    if (!item || item.id !== itemId) {
       return item;
     }
     // Use the provided callback to create an updated item
     const updatedItem = updateItemCallback(item);
     return updatedItem;
   });
+}
+
+export function createReducer(initialState, handlers) {
+  return function reducer(state = initialState, action) {
+    /* eslint-disable no-prototype-builtins */
+    if (handlers.hasOwnProperty(action.type)) {
+      /* eslint-enable no-prototype-builtins */
+      return handlers[action.type](state, action);
+    }
+    return state;
+  };
 }
 
 /**

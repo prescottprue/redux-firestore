@@ -72,7 +72,8 @@ export const actionTypes = {
   ON_SNAPSHOT_REQUEST: `${actionsPrefix}/ON_SNAPSHOT_REQUEST`,
   ON_SNAPSHOT_SUCCESS: `${actionsPrefix}/ON_SNAPSHOT_SUCCESS`,
   ON_SNAPSHOT_FAILURE: `${actionsPrefix}/ON_SNAPSHOT_FAILURE`,
-  DOCUMENT_CHANGE: `${actionsPrefix}/DOCUMENT_CHANGE`,
+  DOCUMENT_ADDED: `${actionsPrefix}/DOCUMENT_ADDED`,
+  DOCUMENT_MODIFIED: `${actionsPrefix}/DOCUMENT_MODIFIED`,
   DOCUMENT_REMOVED: `${actionsPrefix}/DOCUMENT_REMOVED`,
 };
 

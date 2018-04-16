@@ -168,9 +168,9 @@ export function deleteRef(firebase, dispatch, queryOption, options = {}) {
 }
 
 const changeTypeToEventType = {
+  added: actionTypes.DOCUMENT_ADDED,
   removed: actionTypes.DOCUMENT_REMOVED,
-  changed: actionTypes.DOCUMENT_CHANGE,
-  modified: actionTypes.DOCUMENT_CHANGE,
+  modified: actionTypes.DOCUMENT_MODIFIED,
 };
 
 /**
@@ -182,7 +182,7 @@ const changeTypeToEventType = {
  */
 function docChangeEvent(change, originalMeta = {}) {
   return {
-    type: changeTypeToEventType[change.type] || actionTypes.DOCUMENT_CHANGE,
+    type: changeTypeToEventType[change.type] || actionTypes.DOCUMENT_MODIFIED,
     meta: { ...originalMeta, doc: change.doc.id },
     payload: {
       data: change.doc.data(),

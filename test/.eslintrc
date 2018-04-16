@@ -21,4 +21,5 @@ settings:
   import/resolver:
     node:
       moduleDirectory:
-        - '../../src'
+        - '../node_modules'
+        - '../src'
