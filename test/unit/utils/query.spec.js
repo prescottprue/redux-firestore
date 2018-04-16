@@ -6,8 +6,8 @@ import {
   firestoreRef,
   orderedFromSnap,
   dataByIdSnapshot,
-} from '../../../src/utils/query';
-import { actionTypes } from '../../../src/constants';
+} from 'utils/query';
+import { actionTypes } from 'constants';
 
 let dispatch = sinon.spy();
 let meta;

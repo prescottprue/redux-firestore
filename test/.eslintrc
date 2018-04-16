@@ -16,3 +16,9 @@ globals:
 
 rules:
   no-unused-expressions: [0]
+
+settings:
+  import/resolver:
+    node:
+      moduleDirectory:
+        - '../../src'

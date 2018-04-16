@@ -1,4 +1,4 @@
-import { wrapInDispatch } from '../../../src/utils/actions';
+import { wrapInDispatch } from 'utils/actions';
 
 let dispatchSpy;
 describe('actions utils', () => {

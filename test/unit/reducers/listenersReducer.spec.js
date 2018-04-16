@@ -1,5 +1,5 @@
-import listenersReducer from '../../../src/reducers/listenersReducer';
-import { actionTypes } from '../../../src/constants';
+import listenersReducer from 'reducers/listenersReducer';
+import { actionTypes } from 'constants';
 
 let state;
 let action;
