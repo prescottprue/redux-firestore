@@ -92,6 +92,10 @@ export function reduxFirestore(firebaseInstance: object, otherConfig: object): a
  */
 export function getFirestore(firebaseInstance: object, otherConfig: object): any;
 
+/**
+ * A redux store reducer for Firestore state
+ */
+export function firestoreReducer(state: object, action: object): any;
 
 /**
  * A redux store reducer for Firestore state

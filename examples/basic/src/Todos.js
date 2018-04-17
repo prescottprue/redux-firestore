@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import { compose } from 'redux';
 import { withHandlers, lifecycle } from 'recompose'
 import { connect } from 'react-redux';
-import { withStore } from './utils';
+import { withFirestore } from './utils';
 import Todo from './Todo';
 import NewTodo from './NewTodo';
 
@@ -16,7 +16,7 @@ const Todos = ({ todos, onNewSubmit, onDoneClick }) => (
       : !todos.length
         ? <span>No todos found</span>
         :
-          todos.filter(todo => !!todo).map((todo, i) => (
+          todos.map((todo, i) => (
             <Todo
               key={`${todo.id}-${i}`}
               todo={todo}
@@ -37,19 +37,19 @@ Todos.propTypes = {
 // Create HOC that loads data and adds it as todos prop
 const enhance = compose(
   // add redux store (from react context) as a prop
-  withStore,
+  withFirestore,
   // Handler functions as props
   withHandlers({
-    loadData: props => err => props.store.firestore.setListener({
+    loadData: props => err => props.firestore.setListener({
       collection: 'todos',
       orderBy: ['createdAt', 'desc'],
       limit: 10
     }),
     onNewSubmit: props => newTodo =>
-      props.store.firestore.add('todos', {
+      props.firestore.add('todos', {
         ...newTodo,
         owner: 'Anonymous',
-        createdAt: props.store.firestore.FieldValue.serverTimestamp()
+        createdAt: props.firestore.FieldValue.serverTimestamp()
       }),
   }),
   // Run functionality on component lifecycle
@@ -59,7 +59,7 @@ const enhance = compose(
       this.props.loadData()
     },
     componentWillUnmount() {
-      this.props.store.firestore.unsetListener({
+      this.props.firestore.unsetListener({
         collection: 'todos',
         orderBy: ['createdAt', 'desc'],
         limit: 10
