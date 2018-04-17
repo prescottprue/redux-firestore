@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types'
-import { compose, flattenProp, withHandlers } from 'recompose'
-import { withStore } from './utils';
+import { compose, flattenProp, withHandlers, pure } from 'recompose'
+import { withFirestore } from './utils';
 
 const styles = {
   container: {
@@ -28,7 +28,7 @@ const Todo = ({
 }) => (
   <div style={styles.container}>
     <input
-      value={done}
+      checked={done}
       onChange={onDoneClick}
       disabled={disabled}
       type="checkbox"
@@ -46,21 +46,24 @@ Todo.propTypes = {
   done: PropTypes.bool, // from enhancer (flattenProp)
   disabled: PropTypes.bool, // from enhancer (flattenProp)
   onDoneClick: PropTypes.func.isRequired, // from enhancer (withHandlers)
-  store: PropTypes.shape({
-    firestore: PropTypes.object
+  firestore: PropTypes.shape({
+    update: PropTypes.func.isRequired
   })
 }
 
 const enhance = compose(
   // Add props.firestore
-  withStore,
-  // Flatten todo (creates props.text, props.owner, props.isDone )
+  withFirestore,
+  // Flatten todo prop (creates id, text, owner, done and disabled props)
   flattenProp('todo'),
-  // Handler functions as props
+  // Handlers as props
   withHandlers({
-    onDoneClick: props => () =>
-      props.store.firestore.update(`todos/${props.todo.id}`, { done: !props.done })
-  })
+    onDoneClick: props => () => {
+      return props.firestore.update(`todos/${props.id}`, { done: !props.done })
+    }
+  }),
+  // Prevent unnessesary re-renders by doing shallow comparison of props
+  pure
 )
 
 export default enhance(Todo)
