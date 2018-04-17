@@ -1,4 +1,6 @@
-import React, { Component } from 'react';
+import React from 'react';
+import { get } from 'lodash';
+import { withHandlers, withStateHandlers, compose } from 'recompose'
 
 const styles = {
   container: {
@@ -8,25 +10,34 @@ const styles = {
   }
 };
 
-class NewTodo extends Component {
-  newSubmit = () => {
-    this.props.onNewSubmit({
-      text: this.input.value,
-      done: false
-    });
-    this.input.value = '';
-  }
+const NewTodo = ({ onInputChange, onNewClick }) => (
+  <div style={styles.container}>
+    <input onChange={onInputChange} type="text" />
+    <button onClick={onNewClick}>Submit</button>
+  </div>
+)
 
-  render() {
-    const { text, owner } = this.props;
-    
-    return (
-      <div style={styles.container}>
-        <input ref={ref => this.input = ref} type="text" />
-        <button onClick={this.newSubmit}>Submit</button>
-      </div>
-    )
-  }
-}
+const enhance = compose(
+  withStateHandlers(({
+    initialInputValue = null
+  }) => ({
+    inputValue: initialInputValue
+  }), {
+    onInputChange: (state) => (e) => ({
+      inputValue: get(e, 'target.value', null)
+    })
+  }),
+  withHandlers({
+    onNewClick: props => () => {
+      // Submit new todo
+      props.onNewSubmit({
+        text: props.inputValue,
+        done: false
+      })
+      // Reset input
+      props.onInputChange()
+    }
+  })
+)
 
-export default NewTodo
+export default enhance(NewTodo)

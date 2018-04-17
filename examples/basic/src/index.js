@@ -10,7 +10,7 @@ const styles = {
   textAlign: 'center',
 };
 
-const store = createStore({ firebase: {} })
+const store = createStore()
 
 const App = () => (
   <Provider store={store}>

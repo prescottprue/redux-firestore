@@ -1,13 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types'
 import { compose } from 'redux';
-import {
-  withContext,
-  getContext,
-  withHandlers,
-  lifecycle,
-} from 'recompose'
+import { withHandlers, lifecycle } from 'recompose'
 import { connect } from 'react-redux';
+import { withStore } from './utils';
 import Todo from './Todo';
 import NewTodo from './NewTodo';
 
@@ -15,37 +11,28 @@ const Todos = ({ todos, onNewSubmit, onDoneClick }) => (
   <div>
     <NewTodo onNewSubmit={onNewSubmit} />
     {
-      todos
-      ?
-        todos.map((todo, i) => (
-          <Todo
-            key={`${todo.id}-${i}`}
-            text={todo.text}
-            owner={todo.owner}
-            done={todo.done}
-            onDoneClick={() => onDoneClick(todo.id, !todo.done)}
-          />
-        ))
-      :
-        <span>Loading</span>
+      todos === undefined
+      ? <span>Loading</span>
+      : !todos.length
+        ? <span>No todos found</span>
+        :
+          todos.filter(todo => !!todo).map((todo, i) => (
+            <Todo
+              key={`${todo.id}-${i}`}
+              todo={todo}
+            />
+          ))
     }
   </div>
 )
 
 Todos.propTypes = {
   todos: PropTypes.array,
-  onNewSubmit: PropTypes.func,
-  onDoneClick: PropTypes.func,
+  onNewSubmit: PropTypes.func.isRequired,
   store: PropTypes.shape({
     firestore: PropTypes.object
   })
 }
-
-// Create HOC that gets firestore from react context and passes it as a prop
-const withStore = compose(
-  withContext({ store: PropTypes.object }, () => {}),
-  getContext({ store: PropTypes.object })
-)
 
 // Create HOC that loads data and adds it as todos prop
 const enhance = compose(
@@ -53,17 +40,30 @@ const enhance = compose(
   withStore,
   // Handler functions as props
   withHandlers({
-    loadData: props => err => props.store.firestore.get('todos'),
-    onDoneClick: props => (docId, done = false) =>
-      props.store.firestore.update(`todos/${docId}` { done }),
+    loadData: props => err => props.store.firestore.setListener({
+      collection: 'todos',
+      orderBy: ['createdAt', 'desc'],
+      limit: 10
+    }),
     onNewSubmit: props => newTodo =>
-      props.store.firestore.add('todos', { ...newTodo, owner: 'Anonymous' }),
+      props.store.firestore.add('todos', {
+        ...newTodo,
+        owner: 'Anonymous',
+        createdAt: props.store.firestore.FieldValue.serverTimestamp()
+      }),
   }),
   // Run functionality on component lifecycle
   lifecycle({
     // Load data when component mounts
     componentWillMount() {
       this.props.loadData()
+    },
+    componentWillUnmount() {
+      this.props.store.firestore.unsetListener({
+        collection: 'todos',
+        orderBy: ['createdAt', 'desc'],
+        limit: 10
+      })
     }
   }),
   // Connect todos from redux state to props.todos

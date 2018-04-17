@@ -1,4 +1,7 @@
 import React from 'react';
+import PropTypes from 'prop-types'
+import { compose, flattenProp, withHandlers } from 'recompose'
+import { withStore } from './utils';
 
 const styles = {
   container: {
@@ -19,13 +22,13 @@ const styles = {
 const Todo = ({
   text,
   owner,
-  isDone,
+  done,
   disabled,
   onDoneClick
 }) => (
   <div style={styles.container}>
     <input
-      value={isDone}
+      value={done}
       onChange={onDoneClick}
       disabled={disabled}
       type="checkbox"
@@ -37,4 +40,27 @@ const Todo = ({
   </div>
 );
 
-export default Todo
+Todo.propTypes = {
+  text: PropTypes.string, // from enhancer (flattenProp)
+  owner: PropTypes.string, // from enhancer (flattenProp)
+  done: PropTypes.bool, // from enhancer (flattenProp)
+  disabled: PropTypes.bool, // from enhancer (flattenProp)
+  onDoneClick: PropTypes.func.isRequired, // from enhancer (withHandlers)
+  store: PropTypes.shape({
+    firestore: PropTypes.object
+  })
+}
+
+const enhance = compose(
+  // Add props.firestore
+  withStore,
+  // Flatten todo (creates props.text, props.owner, props.isDone )
+  flattenProp('todo'),
+  // Handler functions as props
+  withHandlers({
+    onDoneClick: props => () =>
+      props.store.firestore.update(`todos/${props.todo.id}`, { done: !props.done })
+  })
+)
+
+export default enhance(Todo)

@@ -1,8 +1,8 @@
 import { combineReducers } from 'redux'
-import { firestoreReducer as firebase } from 'redux-firestore'
+import { firestoreReducer as firestore } from 'redux-firestore'
 
 const rootReducer = combineReducers({
-  firebase,
+  firestore,
 });
 
 export default rootReducer
