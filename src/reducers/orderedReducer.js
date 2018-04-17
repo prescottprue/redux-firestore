@@ -1,4 +1,4 @@
-import { size, get, unionBy } from 'lodash';
+import { size, get, unionBy, reject } from 'lodash';
 import { merge as mergeObjects } from 'lodash/fp';
 import { actionTypes } from '../constants';
 import {
@@ -49,8 +49,8 @@ function modifyDoc(collectionState, action) {
  * @param  {Object} action - The action that was dispatched
  * @return {Array} State with document modified
  */
-function removeDoc(collectionState, action) {
-  return updateItemInArray(collectionState, action.meta.doc, () => null);
+function removeDoc(array, action) {
+  return reject(array, { id: action.meta.doc }); // returns a new array
 }
 
 /**
