@@ -18,7 +18,7 @@ const {
 
 /**
  * Case reducer for adding a document to a collection.
- * @param  {Array} collectionState - Redux state of current collection
+ * @param  {Array} [collectionState=[]] - Redux state of current collection
  * @param  {Object} action - The action that was dispatched
  * @return {Array} State with document modified
  */
