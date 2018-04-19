@@ -26,6 +26,20 @@ describe('dataReducer', () => {
   });
 
   describe('actionTypes', () => {
+    describe('DOCUMENT_ADDED', () => {
+      it('throws for no collection', () => {
+        const someDoc = {};
+        payload = { data: { abc: someDoc } };
+        meta = { collection, doc };
+        action = { meta, payload, type: actionTypes.DOCUMENT_ADDED };
+        result = dataReducer({}, action);
+        expect(result).to.have.nested.property(
+          `${collection}.${doc}.abc`,
+          someDoc,
+        );
+      });
+    });
+
     describe('LISTENER_RESPONSE', () => {
       it('returns state if payload is not defined', () => {
         action = { meta: 'test', type: actionTypes.LISTENER_RESPONSE };

@@ -16,6 +16,24 @@ describe('orderedReducer', () => {
   });
 
   describe('actionTypes', () => {
+    describe('DOCUMENT_ADDED', () => {
+      it('throws for no collection', () => {
+        const collection = 'test1';
+        const doc = 'test2';
+        const someDoc = { id: doc };
+        const payload = {
+          ordered: { newIndex: 0, oldIndex: -1 },
+          data: someDoc,
+        };
+        const meta = { collection, doc };
+        action = { meta, payload, type: actionTypes.DOCUMENT_ADDED };
+        const result = orderedReducer({}, action);
+        expect(result).to.have.nested.property(
+          `${collection}.0.id`,
+          someDoc.id,
+        );
+      });
+    });
     describe('LISTENER_RESPONSE', () => {
       it('returns state if payload is not defined', () => {
         action = { meta: 'test', type: actionTypes.LISTENER_RESPONSE };
