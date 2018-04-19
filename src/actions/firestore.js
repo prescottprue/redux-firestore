@@ -282,9 +282,9 @@ export function setListeners(firebase, dispatch, listeners) {
   }
 
   const { config } = firebase._;
-  const oneListenerPerPath = !!config.oneListenerPerPath;
 
-  if (oneListenerPerPath) {
+  // Only attach one listener (count of matching listener path calls is tracked)
+  if (config.oneListenerPerPath) {
     return listeners.forEach(listener => {
       const path = getQueryName(listener);
       const oldListenerCount = pathListenerCounts[path] || 0;
@@ -300,8 +300,7 @@ export function setListeners(firebase, dispatch, listeners) {
   }
 
   return listeners.forEach(listener => {
-    // Config for supporting attaching of multiple listeners
-
+    // Config for supporting attaching of multiple listener callbacks
     const multipleListenersEnabled = isFunction(config.allowMultipleListeners)
       ? config.allowMultipleListeners(listener, firebase._.listeners)
       : config.allowMultipleListeners;
@@ -343,9 +342,9 @@ export function unsetListeners(firebase, dispatch, listeners) {
     );
   }
   const { config } = firebase._;
-  const oneListenerPerPath = !!config.oneListenerPerPath;
 
-  if (oneListenerPerPath) {
+  // Keep one listener path even when detaching
+  if (config.oneListenerPerPath) {
     listeners.forEach(listener => {
       const path = getQueryName(listener);
       pathListenerCounts[path] -= 1;

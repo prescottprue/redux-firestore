@@ -18,11 +18,11 @@ const {
 
 /**
  * Case reducer for adding a document to a collection.
- * @param  {Array} collectionState - Redux state of current collection
+ * @param  {Array} [collectionState=[]] - Redux state of current collection
  * @param  {Object} action - The action that was dispatched
  * @return {Array} State with document modified
  */
-function addDoc(array, action) {
+function addDoc(array = [], action) {
   return [
     ...array.slice(0, action.payload.ordered.newIndex),
     { id: action.meta.doc, ...action.payload.data },

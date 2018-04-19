@@ -157,6 +157,9 @@ function whereToStr(where) {
  * @return {String} String representing query settings
  */
 export function getQueryName(meta) {
+  if (isString(meta)) {
+    return meta;
+  }
   const { collection, doc, subcollections, where } = meta;
   if (!collection) {
     throw new Error('Collection is required to build query name');
