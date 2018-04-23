@@ -1,4 +1,4 @@
-import { size, get, unionBy, reject, dropRight, drop, last } from 'lodash';
+import { size, get, unionBy, reject } from 'lodash';
 import { merge as mergeObjects } from 'lodash/fp';
 // import dotProp from 'dot-prop-immutable';
 import { actionTypes } from '../constants';
@@ -6,7 +6,6 @@ import {
   updateItemInArray,
   createReducer,
   preserveValuesFromState,
-  pathFromMeta,
 } from '../utils/reducers';
 
 const {
@@ -74,6 +73,31 @@ function writeCollection(collectionState, action) {
   if (merge.collection && size(collectionState)) {
     return unionBy(collectionState, action.payload.ordered, 'id');
   }
+
+  // Handle subcollections
+  if (meta.doc && meta.subcollections) {
+    if (!size(collectionState)) {
+      // Collection state does not already exist, create it with item containing
+      // subcollection
+      return [
+        {
+          id: meta.doc,
+          [meta.subcollections[0].collection]: action.payload.ordered,
+        },
+      ];
+    }
+    // Merge with existing document if collection state exists
+    return updateItemInArray(collectionState, meta.doc, item =>
+      mergeObjects(item, {
+        [meta.subcollections[0].collection]: action.payload.ordered,
+      }),
+    );
+  }
+  if (meta.doc && size(collectionState)) {
+    return updateItemInArray(collectionState, meta.doc, item =>
+      mergeObjects(item, action.payload.ordered[0]),
+    );
+  }
   return action.payload.ordered;
 }
 
@@ -121,56 +145,10 @@ export default function orderedReducer(state = {}, action) {
     }
     return {};
   }
-  const storeUnderKey = pathFromMeta(action.meta);
+  const storeUnderKey = action.meta.storeAs || action.meta.collection;
   const collectionStateSlice = get(state, storeUnderKey);
-  // console.log('new store under:', { storeUnderKey, collectionStateSlice });
-  if (storeUnderKey.split('.').length < 2) {
-    // console.log('first if', storeUnderKey.split('.'));
-    return {
-      ...state,
-      [storeUnderKey]: orderedCollectionReducer(collectionStateSlice, action),
-    };
-  }
-  if (action.type !== LISTENER_RESPONSE) {
-    return state;
-  }
-  const splitPath = pathFromMeta(action.meta).split('.');
-  const newParentKey = drop(splitPath).join('.');
-  const paramKey = last(splitPath);
-  const newStoreUnderKey = dropRight(splitPath).join('.');
-  const newCollectionState = get(state, newParentKey);
-  // console.warn('second if', {
-  //   state,
-  //   action,
-  //   storeUnderKey,
-  //   newStoreUnderKey,
-  //   newParentKey,
-  //   newCollectionState,
-  //   collectionStateSlice,
-  // });
-  // console.warn('result:', {
-  //   ...state,
-  //   [newParentKey]: updateItemInArray(
-  //     newCollectionState,
-  //     action.meta.doc,
-  //     item =>
-  //       mergeObjects(item, {
-  //         [paramKey]: action.payload.data,
-  //       }),
-  //   ),
-  // });
   return {
     ...state,
-    [newParentKey]: updateItemInArray(
-      newCollectionState,
-      action.meta.doc,
-      item =>
-        // console.warn('item in merge:', item);
-        orderedCollectionReducer(get(item, paramKey), {}),
-    ),
+    [storeUnderKey]: orderedCollectionReducer(collectionStateSlice, action),
   };
-  // return dotProp(state, )
-  //   ...state,
-  //   [storeUnderKey]: orderedCollectionReducer(collectionStateSlice, action),
-  // };
 }
