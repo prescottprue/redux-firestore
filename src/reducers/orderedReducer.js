@@ -71,6 +71,31 @@ function writeCollection(collectionState, action) {
   if (merge.collection && size(collectionState)) {
     return unionBy(collectionState, action.payload.ordered, 'id');
   }
+
+  // Handle subcollections
+  if (meta.doc && meta.subcollections) {
+    if (!size(collectionState)) {
+      // Collection state does not already exist, create it with item containing
+      // subcollection
+      return [
+        {
+          id: meta.doc,
+          [meta.subcollections[0].collection]: action.payload.ordered,
+        },
+      ];
+    }
+    // Merge with existing document if collection state exists
+    return updateItemInArray(collectionState, meta.doc, item =>
+      mergeObjects(item, {
+        [meta.subcollections[0].collection]: action.payload.ordered,
+      }),
+    );
+  }
+  if (meta.doc && size(collectionState)) {
+    return updateItemInArray(collectionState, meta.doc, item =>
+      mergeObjects(item, action.payload.ordered[0]),
+    );
+  }
   return action.payload.ordered;
 }
 
