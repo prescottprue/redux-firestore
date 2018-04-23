@@ -1,6 +1,6 @@
 {
   "name": "redux-firestore",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "Redux bindings for Firestore.",
   "main": "lib/index.js",
   "module": "es/index.js",
@@ -34,7 +34,6 @@
     "prepush": "npm run lint"
   },
   "dependencies": {
-    "dot-prop-immutable": "^1.4.0",
     "lodash": "^4.17.4",
     "prop-types": "^15.6.0"
   },
