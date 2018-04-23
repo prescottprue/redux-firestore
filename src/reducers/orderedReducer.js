@@ -1,6 +1,5 @@
 import { size, get, unionBy, reject } from 'lodash';
 import { merge as mergeObjects } from 'lodash/fp';
-// import dotProp from 'dot-prop-immutable';
 import { actionTypes } from '../constants';
 import {
   updateItemInArray,
@@ -38,7 +37,6 @@ function addDoc(array = [], action) {
  * @return {Array} State with document modified
  */
 function modifyDoc(collectionState, action) {
-  // console.log('updating item:', action.meta.doc, action.payload.data);
   return updateItemInArray(collectionState, action.meta.doc, item =>
     // Merge is used to prevent the removal of existing subcollections
     mergeObjects(item, action.payload.data),

@@ -103,7 +103,7 @@ export function pathFromMeta(meta) {
  * @return {Array} Array with item updated
  * @private
  */
-export function updateItemInArray(array = [], itemId, updateItemCallback) {
+export function updateItemInArray(array, itemId, updateItemCallback) {
   return array.map(item => {
     // Preserve items that do not have matching ids
     if (!item || item.id !== itemId) {
