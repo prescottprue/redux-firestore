@@ -1,10 +1,12 @@
-import { size, get, unionBy, reject } from 'lodash';
+import { size, get, unionBy, reject, dropRight, drop, last } from 'lodash';
 import { merge as mergeObjects } from 'lodash/fp';
+// import dotProp from 'dot-prop-immutable';
 import { actionTypes } from '../constants';
 import {
   updateItemInArray,
   createReducer,
   preserveValuesFromState,
+  pathFromMeta,
 } from '../utils/reducers';
 
 const {
@@ -37,6 +39,7 @@ function addDoc(array = [], action) {
  * @return {Array} State with document modified
  */
 function modifyDoc(collectionState, action) {
+  // console.log('updating item:', action.meta.doc, action.payload.data);
   return updateItemInArray(collectionState, action.meta.doc, item =>
     // Merge is used to prevent the removal of existing subcollections
     mergeObjects(item, action.payload.data),
@@ -118,10 +121,56 @@ export default function orderedReducer(state = {}, action) {
     }
     return {};
   }
-  const storeUnderKey = action.meta.storeAs || action.meta.collection;
+  const storeUnderKey = pathFromMeta(action.meta);
   const collectionStateSlice = get(state, storeUnderKey);
+  // console.log('new store under:', { storeUnderKey, collectionStateSlice });
+  if (storeUnderKey.split('.').length < 2) {
+    // console.log('first if', storeUnderKey.split('.'));
+    return {
+      ...state,
+      [storeUnderKey]: orderedCollectionReducer(collectionStateSlice, action),
+    };
+  }
+  if (action.type !== LISTENER_RESPONSE) {
+    return state;
+  }
+  const splitPath = pathFromMeta(action.meta).split('.');
+  const newParentKey = drop(splitPath).join('.');
+  const paramKey = last(splitPath);
+  const newStoreUnderKey = dropRight(splitPath).join('.');
+  const newCollectionState = get(state, newParentKey);
+  // console.warn('second if', {
+  //   state,
+  //   action,
+  //   storeUnderKey,
+  //   newStoreUnderKey,
+  //   newParentKey,
+  //   newCollectionState,
+  //   collectionStateSlice,
+  // });
+  // console.warn('result:', {
+  //   ...state,
+  //   [newParentKey]: updateItemInArray(
+  //     newCollectionState,
+  //     action.meta.doc,
+  //     item =>
+  //       mergeObjects(item, {
+  //         [paramKey]: action.payload.data,
+  //       }),
+  //   ),
+  // });
   return {
     ...state,
-    [storeUnderKey]: orderedCollectionReducer(collectionStateSlice, action),
+    [newParentKey]: updateItemInArray(
+      newCollectionState,
+      action.meta.doc,
+      item =>
+        // console.warn('item in merge:', item);
+        orderedCollectionReducer(get(item, paramKey), {}),
+    ),
   };
+  // return dotProp(state, )
+  //   ...state,
+  //   [storeUnderKey]: orderedCollectionReducer(collectionStateSlice, action),
+  // };
 }
