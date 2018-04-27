@@ -179,7 +179,7 @@ const changeTypeToEventType = {
 function docChangeEvent(change, originalMeta = {}) {
   return {
     type: changeTypeToEventType[change.type] || actionTypes.DOCUMENT_MODIFIED,
-    meta: { ...originalMeta, doc: change.doc.id },
+    meta: { ...originalMeta, doc: change.doc.id, path: change.doc.ref.path },
     payload: {
       data: change.doc.data(),
       ordered: { oldIndex: change.oldIndex, newIndex: change.newIndex },
