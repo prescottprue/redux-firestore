@@ -358,7 +358,7 @@ Storing data under a different path within redux is as easy as passing the `stor
 },
 ```
 
-**NOTE:** Not yet supported inside of subcollections (only at the top level)
+**NOTE:** Usage of `"/"` and `"."` within `storeAs` can cause unexpected behavior when attempting to retrieve from redux state
 
 
 #### Other Firebase Statics
