@@ -75,6 +75,10 @@ function writeCollection(collectionState, action) {
   // Handle subcollections (only when storeAs is not being used)
   if (meta.doc && meta.subcollections && !meta.storeAs) {
     if (!size(collectionState)) {
+      // return storeAs
+      if (meta.storeAs) {
+        return action.payload.ordered;
+      }
       // Collection state does not already exist, create it with item containing
       // subcollection
       return [
