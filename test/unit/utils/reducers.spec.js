@@ -71,6 +71,10 @@ describe('reducer utils', () => {
       pathFromMeta({ storeAs: 'testing' });
     });
 
+    it('uses path as path if provided', () => {
+      expect(pathFromMeta({ path: 'testing' })).to.have.property(0, 'testing');
+    });
+
     describe('updateItemInArray', () => {
       it('is exported', () => {
         expect(updateItemInArray).to.be.a('function');
