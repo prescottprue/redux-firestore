@@ -227,12 +227,20 @@ describe('firestoreActions', () => {
             func({
               docChanges: [
                 {
-                  doc: { id: '123ABC', data: () => ({ some: 'value' }) },
+                  doc: {
+                    id: '123ABC',
+                    data: () => ({ some: 'value' }),
+                    ref: {
+                      path: 'test/1/test2/test3',
+                    },
+                  },
                   type: 'modified',
                 },
               ],
               size: 2,
-              doc: { id: '123ABC' },
+              doc: {
+                id: '123ABC',
+              },
             });
             func2(sinon.spy());
           });
@@ -261,11 +269,23 @@ describe('firestoreActions', () => {
             func({
               docChanges: [
                 {
-                  doc: { id: '123ABC', data: () => ({ some: 'value' }) },
+                  doc: {
+                    id: '123ABC',
+                    data: () => ({ some: 'value' }),
+                    ref: {
+                      path: 'test/1/test2/test3',
+                    },
+                  },
                   type: 'modified',
                 },
                 {
-                  doc: { id: '123ABC', data: () => ({ some: 'value' }) },
+                  doc: {
+                    id: '234ABC',
+                    data: () => ({ some: 'value' }),
+                    ref: {
+                      path: 'test/1/test2/test3',
+                    },
+                  },
                   type: 'modified',
                 },
               ],

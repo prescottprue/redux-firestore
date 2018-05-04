@@ -80,6 +80,9 @@ export function pathFromMeta(meta) {
   if (storeAs) {
     return doc ? `${storeAs}.${doc}` : storeAs;
   }
+  if (meta.path) {
+    return meta.path.split('/');
+  }
   if (!collection) {
     throw new Error('Collection is required to construct reducer path.');
   }

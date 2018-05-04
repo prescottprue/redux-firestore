@@ -72,8 +72,8 @@ function writeCollection(collectionState, action) {
     return unionBy(collectionState, action.payload.ordered, 'id');
   }
 
-  // Handle subcollections
-  if (meta.doc && meta.subcollections) {
+  // Handle subcollections (only when storeAs is not being used)
+  if (meta.doc && meta.subcollections && !meta.storeAs) {
     if (!size(collectionState)) {
       // Collection state does not already exist, create it with item containing
       // subcollection
@@ -91,11 +91,14 @@ function writeCollection(collectionState, action) {
       }),
     );
   }
+
   if (meta.doc && size(collectionState)) {
-    return updateItemInArray(collectionState, meta.doc, item =>
+    // Update item in array (handling storeAs)
+    return updateItemInArray(collectionState, meta.storeAs || meta.doc, item =>
       mergeObjects(item, action.payload.ordered[0]),
     );
   }
+
   return action.payload.ordered;
 }
 

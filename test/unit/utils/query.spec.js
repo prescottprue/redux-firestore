@@ -81,6 +81,7 @@ describe('query utils', () => {
       it('is appended if valid', () => {
         const where1 = 'some';
         const where2 = 'other';
+        const whereOperator = '==';
         meta = {
           collection: 'test',
           doc: 'doc',
@@ -88,7 +89,9 @@ describe('query utils', () => {
         };
         result = getQueryName(meta);
         expect(result).to.equal(
-          `${meta.collection}/${meta.doc}?where::${where1}==${where2}`,
+          `${meta.collection}/${
+            meta.doc
+          }?where=${where1}:${whereOperator}:${where2}`,
         );
       });
     });
