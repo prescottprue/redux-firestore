@@ -143,7 +143,7 @@ export function firestoreRef(firebase, dispatch, meta) {
  */
 function whereToStr(where) {
   return isString(where[0])
-    ? `where::${where.join('')}`
+    ? `where=${where.join(':')}`
     : where.map(whereToStr);
 }
 
@@ -160,7 +160,7 @@ export function getQueryName(meta) {
   if (isString(meta)) {
     return meta;
   }
-  const { collection, doc, subcollections, where } = meta;
+  const { collection, doc, subcollections, where, limit } = meta;
   if (!collection) {
     throw new Error('Collection is required to build query name');
   }
@@ -178,7 +178,11 @@ export function getQueryName(meta) {
     if (!isArray(where)) {
       throw new Error('where parameter must be an array.');
     }
-    return basePath.concat(`?${whereToStr(where)}`);
+    basePath = basePath.concat(`?${whereToStr(where)}`);
+  }
+  if (typeof limit !== 'undefined') {
+    const limitStr = `limit=${limit}`;
+    basePath = basePath.concat(`${where ? '&' : '?'}${limitStr}`);
   }
   return basePath;
 }
