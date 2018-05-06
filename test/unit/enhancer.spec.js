@@ -5,7 +5,7 @@ const reducer = sinon.spy();
 const generateCreateStore = () =>
   compose(
     reduxFirestore(
-      {},
+      { firestore: () => ({ collection: () => ({}) }) },
       {
         userProfile: 'users',
       },
@@ -23,8 +23,12 @@ describe('enhancer', () => {
     expect(store).to.have.property('firestore');
   });
 
-  it('has the right methods', () => {
+  it('adds extended methods', () => {
     expect(store.firestore.setListener).to.be.a('function');
+  });
+
+  it('preserves unmodified internal Firebase methods', () => {
+    expect(store.firestore.collection).to.be.a('function');
   });
 });
 

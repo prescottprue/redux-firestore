@@ -23,7 +23,7 @@ function makePayload({ payload }, valToPass) {
  */
 export function wrapInDispatch(
   dispatch,
-  { ref, meta, method, args = [], types },
+  { ref, meta = {}, method, args = [], types },
 ) {
   const [requestingType, successType, errorType] = types;
   dispatch({

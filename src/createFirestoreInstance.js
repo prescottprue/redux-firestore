@@ -36,17 +36,13 @@ export default function createFirestoreInstance(firebase, configs, dispatch) {
     aliases,
   );
 
-  // Attach helpers to specified namespace
-  if (configs.helpersNamespace) {
-    return {
-      ...firebase,
-      ...firebase.firestore,
-      [configs.helpersNamespace]: methods,
-    };
-  }
-  return {
-    ...firebase,
-    ...firebase.firestore,
-    ...methods,
-  };
+  return Object.assign(
+    firebase && firebase.firestore ? firebase.firestore() : {},
+    firebase.firestore,
+    { _: firebase._ },
+    configs.helpersNamespace
+      ? // Attach helpers to specified namespace
+        { [configs.helpersNamespace]: methods }
+      : methods,
+  );
 }

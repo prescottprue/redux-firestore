@@ -364,6 +364,27 @@ export function unsetListeners(firebase, dispatch, listeners) {
   });
 }
 
+/**
+ * Atomic operation with Firestore (either read or write).
+ * @param {Object} firebase - Internal firebase object
+ * @param {Function} dispatch - Redux's dispatch function
+ * @param  {Function} transactionPromise - Function which runs transaction
+ * operation.
+ * @return {Promise} Resolves with result of transaction operation
+ */
+export function runTransaction(firebase, dispatch, transactionPromise) {
+  return wrapInDispatch(dispatch, {
+    ref: firebase.firestore,
+    method: 'runTransaction',
+    args: [transactionPromise],
+    types: [
+      actionTypes.TRANSACTION_START,
+      actionTypes.TRANSACTION_SUCCESS,
+      actionTypes.TRANSACTION_FAILURE,
+    ],
+  });
+}
+
 export default {
   get,
   firestoreRef,
@@ -373,4 +394,5 @@ export default {
   setListeners,
   unsetListener,
   unsetListeners,
+  runTransaction,
 };
