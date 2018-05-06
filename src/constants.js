@@ -39,6 +39,9 @@ export const actionsPrefix = '@@reduxFirestore';
  * @property {String} ON_SNAPSHOT_REQUEST - `@@reduxFirestore/ON_SNAPSHOT_REQUEST`
  * @property {String} ON_SNAPSHOT_SUCCESS - `@@reduxFirestore/ON_SNAPSHOT_SUCCESS`
  * @property {String} ON_SNAPSHOT_FAILURE - `@@reduxFirestore/ON_SNAPSHOT_FAILURE`
+ * @property {String} TRANSACTION_START - `@@reduxFirestore/TRANSACTION_START`
+ * @property {String} TRANSACTION_SUCCESS - `@@reduxFirestore/TRANSACTION_SUCCESS`
+ * @property {String} TRANSACTION_FAILURE - `@@reduxFirestore/TRANSACTION_FAILURE`
  * @example
  * import { actionTypes } from 'react-redux-firebase'
  * actionTypes.SET === '@@reduxFirestore/SET' // true
@@ -75,6 +78,9 @@ export const actionTypes = {
   DOCUMENT_ADDED: `${actionsPrefix}/DOCUMENT_ADDED`,
   DOCUMENT_MODIFIED: `${actionsPrefix}/DOCUMENT_MODIFIED`,
   DOCUMENT_REMOVED: `${actionsPrefix}/DOCUMENT_REMOVED`,
+  TRANSACTION_START: `${actionsPrefix}/TRANSACTION_START`,
+  TRANSACTION_SUCCESS: `${actionsPrefix}/TRANSACTION_SUCCESS`,
+  TRANSACTION_FAILURE: `${actionsPrefix}/TRANSACTION_FAILURE`,
 };
 
 /**

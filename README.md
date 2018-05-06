@@ -131,7 +131,6 @@ For more information [on using recompose visit the docs](https://github.com/acdl
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
-import { isEqual } from 'lodash'
 import { watchEvents, unWatchEvents } from './actions/query'
 import { getEventsFromInput, createCallable } from './utils'
 
@@ -163,6 +162,58 @@ class Todos extends Component {
 export default connect((state) => ({
   todos: state.firestore.ordered.todos
 }))(Todos)
+```
+### API
+#### Actions
+
+##### get
+```js
+store.firestore.get({ collection: 'cities' }),
+// store.firestore.get({ collection: 'cities', doc: 'SF' }), // doc
+```
+
+##### set
+```js
+store.firestore.set({ collection: 'cities', doc: 'SF' }, { name: 'San Francisco' }),
+```
+
+##### add
+```js
+store.firestore.add({ collection: 'cities' }, { name: 'Some Place' }),
+```
+
+##### update
+```js
+const itemUpdates =  {
+  some: 'value',
+  updatedAt: store.firestore.FieldValue.serverTimestamp()
+}
+
+store.firestore.update({ collection: 'cities', doc: 'SF' }, itemUpdates),
+```
+
+##### delete
+```js
+store.firestore.delete({ collection: 'cities', doc: 'SF' }),
+```
+
+##### runTransaction
+```js
+store.firestore.runTransaction(t => {
+  return t.get(cityRef)
+      .then(doc => {
+        // Add one person to the city population
+        const newPopulation = doc.data().population + 1;
+        t.update(cityRef, { population: newPopulation });
+      });
+})
+.then(result => {
+  // TRANSACTION_SUCCESS action dispatched
+  console.log('Transaction success!');
+}).catch(err => {
+  // TRANSACTION_FAILURE action dispatched
+  console.log('Transaction failure:', err);
+});
 ```
 
 #### Types of Queries
