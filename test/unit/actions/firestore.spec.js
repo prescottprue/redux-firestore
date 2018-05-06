@@ -536,6 +536,70 @@ describe('firestoreActions', () => {
           'Listeners must be an Array of listener configs (Strings/Objects).',
         );
       });
+
+      describe('oneListenerPerPath', () => {
+        it('works with one listener', async () => {
+          const fakeFirebaseWithOneListener = {
+            _: {
+              listeners: {},
+              config: { ...defaultConfig, oneListenerPerPath: true },
+            },
+            firestore: () => ({
+              collection: collectionClass,
+            }),
+          };
+          const instance = createFirestoreInstance(
+            fakeFirebaseWithOneListener,
+            { helpersNamespace: 'test' },
+            dispatchSpy,
+          );
+          const listeners = [
+            {
+              collection: 'test',
+              doc: '1',
+              subcollections: [{ collection: 'test2' }],
+            },
+          ];
+          const forEachMock = sinon.spy(listeners, 'forEach');
+          await instance.test.setListeners(listeners);
+          expect(forEachMock).to.be.calledOnce;
+          // SET_LISTENER, LISTENER_RESPONSE, LISTENER_ERROR
+          expect(dispatchSpy).to.be.calledThrice;
+        });
+
+        it('works with two listeners of the same path (only attaches once)', async () => {
+          const fakeFirebaseWithOneListener = {
+            _: {
+              listeners: {},
+              config: { ...defaultConfig, oneListenerPerPath: true },
+            },
+            firestore: () => ({
+              collection: collectionClass,
+            }),
+          };
+          const instance = createFirestoreInstance(
+            fakeFirebaseWithOneListener,
+            { helpersNamespace: 'test' },
+            dispatchSpy,
+          );
+          const listeners = [
+            {
+              collection: 'test',
+              doc: '1',
+              subcollections: [{ collection: 'test3' }],
+            },
+            {
+              collection: 'test',
+              doc: '1',
+              subcollections: [{ collection: 'test3' }],
+            },
+          ];
+          const forEachMock = sinon.spy(listeners, 'forEach');
+          await instance.test.setListeners(listeners);
+          expect(forEachMock).to.be.calledOnce;
+          expect(dispatchSpy).to.be.calledThrice;
+        });
+      });
     });
 
     describe('unsetListener', () => {
@@ -585,6 +649,62 @@ describe('firestoreActions', () => {
           payload: { name: 'test' },
           type: actionTypes.UNSET_LISTENER,
         });
+      });
+
+      describe('oneListenerPerPath option enabled', () => {
+        it('dispatches UNSET_LISTENER action', async () => {
+          const fakeFirebaseWithOneListener = {
+            _: {
+              listeners: {},
+              config: { ...defaultConfig, oneListenerPerPath: true },
+            },
+            firestore: () => ({
+              collection: collectionClass,
+            }),
+          };
+          const instance = createFirestoreInstance(
+            fakeFirebaseWithOneListener,
+            { helpersNamespace: 'test' },
+            dispatchSpy,
+          );
+          await instance.test.unsetListeners([{ collection: 'test' }]);
+          expect(dispatchSpy).to.have.callCount(0);
+        });
+
+        it('dispatches UNSET_LISTENER action if there is more than one listener', async () => {
+          const fakeFirebaseWithOneListener = {
+            _: {
+              listeners: {},
+              config: { ...defaultConfig, oneListenerPerPath: true },
+            },
+            firestore: () => ({
+              collection: collectionClass,
+            }),
+          };
+          const instance = createFirestoreInstance(
+            fakeFirebaseWithOneListener,
+            { helpersNamespace: 'test' },
+            dispatchSpy,
+          );
+          await instance.test.setListeners([
+            { collection: 'test' },
+            { collection: 'test' },
+          ]);
+          await instance.test.unsetListeners([{ collection: 'test' }]);
+          expect(dispatchSpy).to.be.calledThrice;
+        });
+      });
+    });
+
+    describe('runTransaction', () => {
+      it('throws if invalid path config is provided', () => {
+        const instance = createFirestoreInstance(
+          {},
+          { helpersNamespace: 'test' },
+        );
+        expect(() => instance.test.runTransaction()).to.throw(
+          'dispatch is not a function',
+        );
       });
     });
   });

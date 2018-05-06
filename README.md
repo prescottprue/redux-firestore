@@ -164,6 +164,8 @@ export default connect((state) => ({
 }))(Todos)
 ```
 ### API
+The `store.firestore` instance created by the `reduxFirestore` enhancer extends [Firebase's JS API for Firestore](https://firebase.google.com/docs/reference/js/firebase.firestore). This means all of the methods regularly available through `firebase.firestore()` and the statics available from `firebase.firestore` are available. Certain methods (such as `get`, `set`, and `onSnapshot`) have a different API since they have been extended with action dispatching. The methods which have dispatch actions are listed below:
+
 #### Actions
 
 ##### get
