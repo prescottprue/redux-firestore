@@ -93,8 +93,8 @@ function writeCollection(collectionState, action) {
   }
 
   if (meta.doc && size(collectionState)) {
-    // Update item in array (handling storeAs)
-    return updateItemInArray(collectionState, meta.storeAs || meta.doc, item =>
+    // Update item in array
+    return updateItemInArray(collectionState, meta.doc, item =>
       mergeObjects(item, action.payload.ordered[0]),
     );
   }

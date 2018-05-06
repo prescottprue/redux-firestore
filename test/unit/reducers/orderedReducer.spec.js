@@ -254,6 +254,38 @@ describe('orderedReducer', () => {
           orderedData,
         );
       });
+
+      it('updates doc under storeAs', () => {
+        action = {
+          type: actionTypes.LISTENER_RESPONSE,
+          meta: {
+            collection: 'testing',
+            doc: '123abc',
+            storeAs: 'pathName',
+          },
+          payload: {
+            ordered: [
+              {
+                content: 'new',
+              },
+            ],
+          },
+          merge: {},
+        };
+
+        state = {
+          pathName: [
+            {
+              id: '123abc',
+              content: 'old',
+            },
+          ],
+        };
+        expect(orderedReducer(state, action)).to.have.nested.property(
+          `pathName.0.content`,
+          'new',
+        );
+      });
     });
 
     describe('GET_SUCCESS', () => {
