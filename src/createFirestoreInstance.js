@@ -37,7 +37,7 @@ export default function createFirestoreInstance(firebase, configs, dispatch) {
   );
 
   return Object.assign(
-    firebase.firestore(),
+    firebase && firebase.firestore ? firebase.firestore() : {},
     firebase.firestore,
     { _: firebase._ },
     configs.helpersNamespace
