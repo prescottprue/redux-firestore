@@ -98,7 +98,8 @@ export function pathFromMeta(meta) {
 }
 
 /**
- * Update a single item within an array
+ * Update a single item within an array with support for adding the item if
+ * it does not already exist
  * @param  {Array} array - Array within which to update item
  * @param  {String} itemId - Id of item to update
  * @param  {Function} updateItemCallback - Callback dictacting how the item
@@ -107,15 +108,21 @@ export function pathFromMeta(meta) {
  * @private
  */
 export function updateItemInArray(array, itemId, updateItemCallback) {
-  return array.map(item => {
+  let matchFound = false;
+  const modified = array.map(item => {
     // Preserve items that do not have matching ids
     if (!item || item.id !== itemId) {
       return item;
     }
+    matchFound = true;
     // Use the provided callback to create an updated item
     const updatedItem = updateItemCallback(item);
     return updatedItem;
   });
+  if (!matchFound) {
+    modified.push(updateItemCallback({ id: itemId }));
+  }
+  return modified;
 }
 
 /**
