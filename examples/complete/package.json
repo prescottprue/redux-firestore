@@ -10,12 +10,9 @@
     "build:prod": "echo \"build:prod is deprecated. Use npm run build.\" && npm run build",
     "start": "cross-env NODE_ENV=development webpack-dashboard -p 1234 -c cyan -m -t complete -- node build/scripts/start",
     "start:simple": "cross-env NODE_ENV=development node build/scripts/start",
-    "test": "cross-env NODE_ENV=test karma start build/karma.config",
-    "test:watch": "npm test -- --watch",
     "lint": "eslint .",
     "lint:fix": "npm run lint -- --fix",
-    "format": "prettier --single-quote --no-semi --trailing-comma none --write \"src/**/*.js\"",
-    "codecov": "cat coverage/*/lcov.info | codecov"
+    "format": "prettier --single-quote --no-semi --trailing-comma none --write \"src/**/*.js\""
   },
   "repository": {
     "type": "git",
@@ -24,8 +21,8 @@
   "author": "prescottprue (https://github.com/prescottprue)",
   "license": "MIT",
   "dependencies": {
-    "firebase": "^4.5.0",
-    "lodash": "^4.17.4",
+    "firebase": "4.12.0",
+    "lodash": "^4.17.10",
     "material-ui": "^0.19.2",
     "normalize.css": "^7.0.0",
     "object-assign": "^4.1.1",
