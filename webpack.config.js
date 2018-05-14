@@ -1,10 +1,11 @@
 const path = require('path');
-const webpack = require('webpack');
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
 const libraryName = 'redux-firestore';
 const isProduction = process.env.NODE_ENV === 'production';
 
 const config = {
+  mode: process.env.NODE_ENV || 'production',
   entry: {
     main: path.join(__dirname, 'src/index.js'),
   },
@@ -16,6 +17,22 @@ const config = {
     umdNamedDefine: true,
   },
   externals: [],
+  optimization: {
+    minimizer: isProduction
+      ? [
+          new UglifyJsPlugin({
+            cache: true,
+            parallel: true,
+            uglifyOptions: {
+              compress: true,
+              ecma: 6,
+              mangle: true,
+            },
+            sourceMap: true,
+          }),
+        ]
+      : [],
+  },
   module: {
     rules: [
       {
@@ -27,9 +44,5 @@ const config = {
   },
   plugins: [],
 };
-
-if (isProduction) {
-  config.plugins.push(new webpack.optimize.UglifyJsPlugin({ minimize: true }));
-}
 
 module.exports = config;
