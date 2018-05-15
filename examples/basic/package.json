@@ -4,13 +4,13 @@
   "private": true,
   "dependencies": {
     "firebase": "^4.12.0",
-    "lodash": "^4.17.5",
+    "lodash": "^4.17.10",
     "react": "^16.3.0",
     "react-dom": "^16.3.0",
-    "react-redux": "^5.0.6",
-    "react-scripts": "1.0.14",
-    "recompose": "^0.25.1",
-    "redux": "^3.7.2",
+    "react-redux": "^5.0.7",
+    "react-scripts": "1.1.4",
+    "recompose": "^0.27.0",
+    "redux": "^4.0.0",
     "redux-firestore": "latest"
   },
   "scripts": {

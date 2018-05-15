@@ -81,7 +81,7 @@ describe('reducer utils', () => {
       });
 
       it('returns an array when no arguments are passed', () => {
-        expect(updateItemInArray([])).to.be.an('array');
+        expect(updateItemInArray([], '123', () => ({}))).to.be.an('array');
       });
 
       it('preserves items which do not have matching ids', () => {

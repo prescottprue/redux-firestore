@@ -1,4 +1,4 @@
-import { size, get, unionBy, reject } from 'lodash';
+import { size, get, unionBy, reject, omit } from 'lodash';
 import { merge as mergeObjects } from 'lodash/fp';
 import { actionTypes } from '../constants';
 import {
@@ -12,6 +12,7 @@ const {
   GET_SUCCESS,
   LISTENER_RESPONSE,
   CLEAR_DATA,
+  DELETE_SUCCESS,
   DOCUMENT_REMOVED,
   DOCUMENT_MODIFIED,
 } = actionTypes;
@@ -50,7 +51,38 @@ function modifyDoc(collectionState, action) {
  * @return {Array} State with document modified
  */
 function removeDoc(array, action) {
-  return reject(array, { id: action.meta.doc }); // returns a new array
+  // Update is at doc level (not subcollection level)
+  if (!action.meta.subcollections) {
+    // Remove doc from collection array
+    return reject(array, { id: action.meta.doc }); // returns a new array
+  }
+  // Update is at subcollection level
+  const subcollectionSetting = action.meta.subcollections[0];
+
+  // Meta does not contain doc, remove whole subcollection
+  if (!subcollectionSetting.doc) {
+    return updateItemInArray(
+      array,
+      action.meta.doc,
+      item => omit(item, [action.meta.subcollections[0].collection]), // omit creates a new object
+    );
+  }
+
+  // Meta contains doc setting, remove doc from subcollection
+  return updateItemInArray(array, action.meta.doc, item => {
+    const subcollectionVal = get(item, subcollectionSetting.collection, []);
+    // Subcollection exists within doc, update item within subcollection
+    if (subcollectionVal.length) {
+      return {
+        ...item,
+        [subcollectionSetting.collection]: removeDoc(subcollectionVal, {
+          meta: subcollectionSetting,
+        }),
+      };
+    }
+    // Item does not contain subcollection
+    return item;
+  });
 }
 
 /**
@@ -61,20 +93,23 @@ function removeDoc(array, action) {
  */
 function writeCollection(collectionState, action) {
   const { meta, merge = { doc: true, collection: true } } = action;
+  const collectionStateSize = size(collectionState);
+
   // Handle doc update (update item in array instead of whole array)
-  if (meta.doc && merge.doc && size(collectionState)) {
+  if (meta.doc && merge.doc && collectionStateSize) {
     // Merge if data already exists
     // Merge with existing ordered array if collection merge enabled
     return modifyDoc(collectionState, action);
   }
+
   // Merge with existing ordered array if collection merge enabled
-  if (merge.collection && size(collectionState)) {
+  if (merge.collection && collectionStateSize) {
     return unionBy(collectionState, action.payload.ordered, 'id');
   }
 
   // Handle subcollections (only when storeAs is not being used)
   if (meta.doc && meta.subcollections && !meta.storeAs) {
-    if (!size(collectionState)) {
+    if (!collectionStateSize) {
       // Collection state does not already exist, create it with item containing
       // subcollection
       return [
@@ -92,7 +127,7 @@ function writeCollection(collectionState, action) {
     );
   }
 
-  if (meta.doc && size(collectionState)) {
+  if (meta.doc && collectionStateSize) {
     // Update item in array
     return updateItemInArray(collectionState, meta.doc, item =>
       mergeObjects(item, action.payload.ordered[0]),
@@ -111,6 +146,7 @@ const orderedCollectionReducer = createReducer(undefined, {
   [DOCUMENT_ADDED]: addDoc,
   [DOCUMENT_MODIFIED]: modifyDoc,
   [DOCUMENT_REMOVED]: removeDoc,
+  [DELETE_SUCCESS]: removeDoc,
   [LISTENER_RESPONSE]: writeCollection,
   [GET_SUCCESS]: writeCollection,
 });
