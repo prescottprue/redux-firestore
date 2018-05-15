@@ -60,6 +60,126 @@ describe('orderedReducer', () => {
       });
     });
 
+    describe('DELETE_SUCCESS', () => {
+      it('removes document from collection', () => {
+        const collection = 'test1';
+        const doc = 'test2';
+        const someDoc = { id: doc };
+        const someDoc2 = { id: 'test3' };
+        const payload = {
+          ordered: { newIndex: 0, oldIndex: -1 },
+          data: someDoc,
+        };
+        const meta = { collection, doc };
+        action = { meta, payload, type: actionTypes.DELETE_SUCCESS };
+        const result = orderedReducer(
+          { [collection]: [someDoc, someDoc2] },
+          action,
+        );
+        // Confirm first item is
+        expect(result).to.have.nested.property(
+          `${collection}.0.id`,
+          someDoc2.id,
+        );
+        expect(result[collection]).to.have.length(1);
+      });
+
+      it('removes a subcollection from a document', () => {
+        const collection = 'test1';
+        const doc = 'test2';
+        const someDoc = {
+          id: doc,
+          subtest: [{ id: 'sub1' }, { id: 'nextId' }],
+        };
+        const someDoc2 = { id: 'test3' };
+        const payload = {
+          ordered: { newIndex: 0, oldIndex: -1 },
+          data: someDoc,
+        };
+        const subDocSetting = { collection: 'subtest' };
+        const meta = {
+          collection,
+          doc,
+          subcollections: [subDocSetting],
+        };
+        action = { meta, payload, type: actionTypes.DELETE_SUCCESS };
+        const result = orderedReducer(
+          { [collection]: [someDoc, someDoc2] },
+          action,
+        );
+        // Confirm first item is still original doc
+        expect(result).to.have.nested.property(
+          `${collection}.0.id`,
+          someDoc.id,
+        );
+        // Confirm other item at top level is preserved
+        expect(result[collection]).to.have.length(2);
+        // Removes property in original data
+        expect(result).to.not.have.nested.property(
+          `${collection}.0.subtest`,
+          [],
+        );
+      });
+
+      it('returns original document if subcollection does not exist', () => {
+        const collection = 'test1';
+        const doc = 'test2';
+        const someDoc = {
+          id: doc,
+        };
+        const payload = {
+          ordered: {},
+          data: someDoc,
+        };
+        const meta = {
+          collection,
+          doc,
+          subcollections: [{ collection: 'subtest', doc: 'test' }],
+        };
+        action = { meta, payload, type: actionTypes.DELETE_SUCCESS };
+        const result = orderedReducer({ [collection]: [someDoc] }, action);
+        // Confirm first item is still original doc
+        expect(result).to.have.nested.property(`${collection}.0`, someDoc);
+      });
+
+      it('removes document from a subcollection', () => {
+        const collection = 'test1';
+        const doc = 'test2';
+        const someDoc = {
+          id: doc,
+          subtest: [{ id: 'sub1' }, { id: 'nextId' }],
+        };
+        const someDoc2 = { id: 'test3' };
+        const subDocSetting = { collection: 'subtest', doc: 'sub1' };
+        const payload = {
+          ordered: { newIndex: 0, oldIndex: -1 },
+          data: someDoc,
+        };
+        const meta = {
+          collection,
+          doc,
+          subcollections: [subDocSetting],
+        };
+        action = { meta, payload, type: actionTypes.DELETE_SUCCESS };
+        const result = orderedReducer(
+          { [collection]: [someDoc, someDoc2] },
+          action,
+        );
+        // Confirm first item is still original doc
+        expect(result).to.have.nested.property(
+          `${collection}.0.id`,
+          someDoc.id,
+        );
+        // Confirm other item at top level is preserved
+        expect(result[collection]).to.have.length(2);
+        // Removes property in original data
+        expect(result).to.not.have.nested.property(
+          `${collection}.0.subtest.0.id`,
+          subDocSetting.doc,
+        );
+      });
+    });
+
     describe('LISTENER_RESPONSE', () => {
       it('returns state if payload is not defined', () => {
         action = { meta: 'test', type: actionTypes.LISTENER_RESPONSE };
