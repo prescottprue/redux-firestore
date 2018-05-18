@@ -1,35 +1,32 @@
 import { createStore, compose } from 'redux'
-import rootReducer from './reducer'
 import { reduxFirestore } from 'redux-firestore'
-import firebase from 'firebase'
+import firebase from 'firebase/app'
 import 'firebase/firestore'
+import { fbConfig } from './config'
+import rootReducer from './reducer'
 
-const fbConfig = {
-  apiKey: 'AIzaSyCTUERDM-Pchn_UDTsfhVPiwM4TtNIxots',
-  authDomain: 'redux-firebasev3.firebaseapp.com',
-  databaseURL: 'https://redux-firebasev3.firebaseio.com',
-  storageBucket: 'redux-firebasev3.appspot.com',
-  messagingSenderId: '823357791673',
-  projectId: 'redux-firebasev3'
-}
+// import 'firebase/storage'
 
 firebase.initializeApp(fbConfig)
-firebase.firestore()
+
+// Provide timestamp settings to silence warning about deprecation
+firebase.firestore().settings({ timestampsInSnapshots: true })
 
 export default function configureStore(initialState, history) {
   const enhancers = []
+
+  // Dev tools store enhancer
   const devToolsExtension = window.devToolsExtension;
   if (typeof devToolsExtension === 'function') {
     enhancers.push(devToolsExtension());
   }
+
   const createStoreWithMiddleware = compose(
-    reduxFirestore(firebase,
-      {
-        userProfile: 'users'
-      }
-    ),
+    // Add redux firestore store enhancer
+    reduxFirestore(firebase),
     ...enhancers
   )(createStore)
+
   const store = createStoreWithMiddleware(rootReducer)
 
   return store
