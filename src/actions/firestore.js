@@ -212,15 +212,19 @@ export function setListener(firebase, dispatch, queryOpts, successCb, errorCb) {
   // Create listener
   const unsubscribe = firestoreRef(firebase, dispatch, meta).onSnapshot(
     docData => {
+      const docChanges =
+        typeof docData.docChanges === 'function'
+          ? docData.docChanges()
+          : docData.docChanges;
       // Dispatch different actions for doc changes (only update doc(s) by key)
-      if (docData.docChanges && docData.docChanges.length < docData.size) {
-        if (docData.docChanges.length === 1) {
+      if (docChanges && docChanges.length < docData.size) {
+        if (docChanges.length === 1) {
           // Dispatch doc update if there is only one
-          dispatch(docChangeEvent(docData.docChanges[0], meta));
+          dispatch(docChangeEvent(docChanges[0], meta));
         } else {
           // Loop to dispatch for each change if there are multiple
           // TODO: Option for dispatching multiple changes in single action
-          docData.docChanges.forEach(change => {
+          docChanges.forEach(change => {
             dispatch(docChangeEvent(change, meta));
           });
         }

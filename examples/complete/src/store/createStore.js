@@ -45,7 +45,7 @@ export default (initialState = {}) => {
     compose(
       applyMiddleware(...middleware),
       reduxFirestore(firebase, reduxConfig),
-      reactReduxFirebase(firebase, reduxConfig), // used for auth
+      reactReduxFirebase(firebase, reduxConfig), // used for auth/profile
       ...enhancers
     )
   )

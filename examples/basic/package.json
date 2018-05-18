@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "firebase": "^4.12.0",
+    "firebase": "^5.0.3",
     "lodash": "^4.17.10",
     "react": "^16.3.0",
     "react-dom": "^16.3.0",
@@ -11,7 +11,7 @@
     "react-scripts": "1.1.4",
     "recompose": "^0.27.0",
     "redux": "^4.0.0",
-    "redux-firestore": "latest"
+    "redux-firestore": "^0.5.2"
   },
   "scripts": {
     "start": "react-scripts start",
