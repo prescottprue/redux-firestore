@@ -5,6 +5,7 @@ import {
   updateItemInArray,
   createReducer,
   preserveValuesFromState,
+  pathToArr,
 } from '../utils/reducers';
 
 const {
@@ -18,30 +19,54 @@ const {
 } = actionTypes;
 
 /**
- * Case reducer for adding a document to a collection.
+ * Case reducer for modifying a document within a collection or
+ * subcollection. When storeAs is being used, subcollections are
+ * moved to the level of the storeAs (instead of on their parent doc).
+ * @param  {Array} [collectionState=[]] - Redux state of current collection
+ * @param  {Object} action - The action that was dispatched
+ * @return {Array} State with document modified
+ */
+function modifyDoc(collectionState, action) {
+  if (!action.meta.subcollections || action.meta.storeAs) {
+    return updateItemInArray(collectionState, action.meta.doc, item =>
+      // Merge is used to prevent the removal of existing subcollections
+      mergeObjects(item, action.payload.data),
+    );
+  }
+
+  // TODO: make this recurisve so it will work multiple subcollections deep
+  const [, docId, subcollectionName, subDocId] = pathToArr(action.meta.path);
+
+  // Update document item within top arra
+  return updateItemInArray(collectionState, docId, item => ({
+    ...item, // preserve document (only updating subcollection)
+    [subcollectionName]: updateItemInArray(
+      get(item, subcollectionName, []),
+      subDocId,
+      // Merge with existing subcollection doc (only updates changed keys)
+      subitem => mergeObjects(subitem, action.payload.data),
+    ),
+  }));
+}
+
+/**
+ * Case reducer for adding a document to a collection or subcollection.
  * @param  {Array} [collectionState=[]] - Redux state of current collection
  * @param  {Object} action - The action that was dispatched
  * @return {Array} State with document modified
  */
 function addDoc(array = [], action) {
-  return [
-    ...array.slice(0, action.payload.ordered.newIndex),
-    { id: action.meta.doc, ...action.payload.data },
-    ...array.slice(action.payload.ordered.newIndex),
-  ];
-}
+  const { meta, payload } = action;
+  if (!meta.subcollections || meta.storeAs) {
+    return [
+      ...array.slice(0, payload.ordered.newIndex),
+      { id: meta.doc, ...payload.data },
+      ...array.slice(payload.ordered.newIndex),
+    ];
+  }
 
-/**
- * Case reducer for modifying a document within a collection.
- * @param  {Array} collectionState - Redux state of current collection
- * @param  {Object} action - The action that was dispatched
- * @return {Array} State with document modified
- */
-function modifyDoc(collectionState, action) {
-  return updateItemInArray(collectionState, action.meta.doc, item =>
-    // Merge is used to prevent the removal of existing subcollections
-    mergeObjects(item, action.payload.data),
-  );
+  // Add doc to subcollection by modifying the existing doc at this level
+  return modifyDoc(array, action);
 }
 
 /**

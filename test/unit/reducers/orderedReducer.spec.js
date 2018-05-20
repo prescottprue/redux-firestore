@@ -20,7 +20,7 @@ describe('orderedReducer', () => {
       it('adds a document when collection is empty', () => {
         const collection = 'test1';
         const doc = 'test2';
-        const someDoc = { id: doc };
+        const someDoc = { some: 'value' };
         const payload = {
           ordered: { newIndex: 0, oldIndex: -1 },
           data: someDoc,
@@ -28,9 +28,46 @@ describe('orderedReducer', () => {
         const meta = { collection, doc };
         action = { meta, payload, type: actionTypes.DOCUMENT_ADDED };
         const result = orderedReducer({}, action);
+        // Id is set
+        expect(result).to.have.nested.property(`${collection}.0.id`, doc);
+        // Value is set
         expect(result).to.have.nested.property(
-          `${collection}.0.id`,
-          someDoc.id,
+          `${collection}.0.some`,
+          someDoc.some,
+        );
+      });
+
+      it('adds a subcollection document when collection is empty', () => {
+        const collection = 'test1';
+        const doc = 'test2';
+        const subcollection = 'test3';
+        const subdoc = 'test4';
+        const fakeDoc = { some: 'value' };
+        const payload = {
+          ordered: { newIndex: 0, oldIndex: -1 },
+          data: fakeDoc,
+        };
+        const meta = {
+          collection,
+          doc,
+          subcollections: [{ collection: subcollection }],
+          path: `${collection}/${doc}/${subcollection}/${subdoc}`,
+        };
+        action = {
+          meta,
+          payload,
+          type: actionTypes.DOCUMENT_ADDED,
+        };
+        const result = orderedReducer({}, action);
+        // Id is set
+        expect(result).to.have.nested.property(
+          `${collection}.0.${subcollection}.0.id`,
+          subdoc,
+        );
+        // Value is set
+        expect(result).to.have.nested.property(
+          `${collection}.0.${subcollection}.0.some`,
+          fakeDoc.some,
         );
       });
     });

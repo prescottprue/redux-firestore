@@ -32,7 +32,10 @@ export function add(firebase, dispatch, queryOption, ...args) {
     args,
     types: [
       actionTypes.ADD_REQUEST,
-      actionTypes.ADD_SUCCESS,
+      {
+        type: actionTypes.ADD_SUCCESS,
+        payload: snap => ({ id: snap.id, data: args[0] }),
+      },
       actionTypes.ADD_FAILURE,
     ],
   });
