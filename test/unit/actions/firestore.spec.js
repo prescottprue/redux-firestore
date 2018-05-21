@@ -30,8 +30,9 @@ describe('firestoreActions', () => {
     updateSpy = sinon.spy(() => Promise.resolve(successRes));
     deleteSpy = sinon.spy(() => Promise.resolve(successRes));
     onSnapshotSpy = sinon.spy((func, func2) => {
-      func(sinon.spy());
-      if (callErrorCallback) {
+      if (!callErrorCallback) {
+        func(sinon.spy());
+      } else {
         func2(sinon.spy());
       }
     });
@@ -224,11 +225,48 @@ describe('firestoreActions', () => {
       describe('docChanges', () => {
         after(() => {
           onSnapshotSpy = sinon.spy((func, func2) => {
-            func(sinon.spy());
-            if (callErrorCallback) {
+            if (!callErrorCallback) {
+              func(sinon.spy());
+            } else {
               func2(sinon.spy());
             }
           });
+        });
+
+        it('calls success callback if provided', async () => {
+          listenerConfig = {
+            collection: 'test',
+            doc: '1',
+            subcollections: [{ collection: 'test2', doc: 'test3' }],
+          };
+          const instance = createFirestoreInstance(
+            fakeFirebase,
+            fakeConfig,
+            dispatchSpy,
+          );
+          const successSpy = sinon.spy();
+          await instance.test.setListener(listenerConfig, successSpy);
+          expect(successSpy).to.have.been.calledOnce;
+        });
+
+        it('calls error callback if provided', async () => {
+          callErrorCallback = true;
+          listenerConfig = {
+            collection: 'test',
+            doc: '1',
+            subcollections: [{ collection: 'test2', doc: 'test3' }],
+          };
+          const instance = createFirestoreInstance(
+            fakeFirebase,
+            fakeConfig,
+            dispatchSpy,
+          );
+          const successSpy = sinon.spy();
+          const errorSpy = sinon.spy();
+          await instance.test.setListener(listenerConfig, successSpy, errorSpy);
+          expect(successSpy).to.have.callCount(0);
+          expect(errorSpy).to.have.been.calledOnce;
+          callErrorCallback = false;
         });
 
         describe('as a parameter', () => {
@@ -280,7 +318,7 @@ describe('firestoreActions', () => {
                   id: '123ABC',
                   data: () => ({ some: 'value' }),
                   ref: {
-                    path: 'test/1/test2/test3',
+                    path: 'test/1/test2/123ABC',
                   },
                 },
                 type: 'modified',
@@ -290,7 +328,7 @@ describe('firestoreActions', () => {
                   id: '234ABC',
                   data: () => ({ some: 'value' }),
                   ref: {
-                    path: 'test/1/test2/test3',
+                    path: 'test/1/test2/234ABC',
                   },
                 },
                 type: 'modified',
@@ -303,26 +341,25 @@ describe('firestoreActions', () => {
                 doc: { id: '123ABC' },
               });
             });
+            // subcollection level listener
             listenerConfig = {
               collection: 'test',
               doc: '1',
-              subcollections: [{ collection: 'test2', doc: 'test3' }],
+              subcollections: [{ collection: 'test2' }],
             };
             const instance = createFirestoreInstance(
               fakeFirebase,
               fakeConfig,
               dispatchSpy,
             );
-            const expectedAction = {
-              meta: { ...listenerConfig },
-              payload: { name: `test/1/test2/${docChanges[0].doc.id}` },
-              type: actionTypes.SET_LISTENER,
-            };
             await instance.test.setListener(listenerConfig);
             expect(onSnapshotSpy).to.be.calledOnce;
-            // SET_LISTENER, LISTENER_RESPONSE
-            expect(dispatchSpy).to.have.callCount(2);
-            expect(dispatchSpy).to.be.calledWith(expectedAction);
+            // SET_LISTENER, DOCUMENT_MODIFIED, DOCUMENT_MODIFIED
+            expect(dispatchSpy).to.have.callCount(3);
+            const { args: [{ type: secondType }] } = dispatchSpy.getCall(1);
+            const { args: [{ type: thirdType }] } = dispatchSpy.getCall(0);
+            expect(secondType).to.equal(actionTypes.DOCUMENT_MODIFIED);
+            expect(thirdType).to.equal(actionTypes.DOCUMENT_MODIFIED);
           });
 
           it('still dispatches LISTENER_RESPONSE action type if whole collection is being updated (i.e. docChanges.length === size)', async () => {
@@ -429,7 +466,7 @@ describe('firestoreActions', () => {
                   id: '123ABC',
                   data: () => ({ some: 'value' }),
                   ref: {
-                    path: 'test/1/test2/test3',
+                    path: 'test/1/test2/123ABC',
                   },
                 },
                 type: 'modified',
@@ -439,7 +476,7 @@ describe('firestoreActions', () => {
                   id: '234ABC',
                   data: () => ({ some: 'value' }),
                   ref: {
-                    path: 'test/1/test2/test3',
+                    path: 'test/1/test2/234ABC',
                   },
                 },
                 type: 'modified',
@@ -462,15 +499,14 @@ describe('firestoreActions', () => {
               fakeConfig,
               dispatchSpy,
             );
-            const expectedAction = {
-              meta: { ...listenerConfig },
-              payload: { name: `test/1/test2/${docChanges[0].doc.id}` },
-              type: actionTypes.SET_LISTENER,
-            };
             await instance.test.setListener(listenerConfig);
             expect(onSnapshotSpy).to.be.calledOnce;
-            expect(dispatchSpy).to.be.calledTwice;
-            expect(dispatchSpy).to.be.calledWith(expectedAction);
+            // SET_LISTENER, DOCUMENT_MODIFIED, DOCUMENT_MODIFIED
+            expect(dispatchSpy).to.be.calledThrice;
+            const { args: [{ type: secondType }] } = dispatchSpy.getCall(1);
+            const { args: [{ type: thirdType }] } = dispatchSpy.getCall(0);
+            expect(secondType).to.equal(actionTypes.DOCUMENT_MODIFIED);
+            expect(thirdType).to.equal(actionTypes.DOCUMENT_MODIFIED);
           });
 
           it('still dispatches LISTENER_RESPONSE action type if whole collection is being updated (i.e. docChanges.length === size)', async () => {
