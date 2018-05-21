@@ -1,4 +1,4 @@
-import { isArray, invoke, isFunction } from 'lodash';
+import { isArray, invoke, isFunction, every } from 'lodash';
 import { wrapInDispatch } from '../utils/actions';
 import { actionTypes } from '../constants';
 import {
@@ -145,7 +145,10 @@ export function update(firebase, dispatch, queryOption, ...args) {
 export function deleteRef(firebase, dispatch, queryOption) {
   const meta = getQueryConfig(queryOption);
   const { config } = firebase._;
-  if (!meta.doc) {
+  if (
+    !meta.doc ||
+    (meta.subcollections && !every(meta.subcollections, 'doc'))
+  ) {
     if (isFunction(config.onAttemptCollectionDelete)) {
       return config.onAttemptCollectionDelete(queryOption, dispatch, firebase);
     }

@@ -209,6 +209,37 @@ describe('firestoreActions', () => {
         );
       });
 
+      it('throws if attempting to delete a sub-collection', () => {
+        const instance = createFirestoreInstance(
+          {},
+          { helpersNamespace: 'test' },
+        );
+        expect(() =>
+          instance.test.get({
+            collection: 'test',
+            doc: 'testing',
+            subcollection: [{ collection: 'test' }],
+          }),
+        ).to.throw('Firestore must be required and initalized.');
+      });
+
+      it('throws if attempting to delete a nested sub-collection', () => {
+        const instance = createFirestoreInstance(
+          {},
+          { helpersNamespace: 'test' },
+        );
+        expect(() =>
+          instance.test.get({
+            collection: 'test',
+            doc: 'testing',
+            subcollection: [
+              { collection: 'test', doc: 'asdf' },
+              { collection: 'test2' },
+            ],
+          }),
+        ).to.throw('Firestore must be required and initalized.');
+      });
+
       it('calls dispatch twice', async () => {
         const instance = createFirestoreInstance(
           fakeFirebase,
@@ -305,8 +336,12 @@ describe('firestoreActions', () => {
             expect(onSnapshotSpy).to.be.calledOnce;
             // SET_LISTENER, DOCUMENT_MODIFIED
             expect(dispatchSpy).to.be.calledTwice;
-            const { args: [{ type: secondType }] } = dispatchSpy.getCall(0);
-            const { args: [{ type: firstType }] } = dispatchSpy.getCall(1);
+            const {
+              args: [{ type: secondType }],
+            } = dispatchSpy.getCall(0);
+            const {
+              args: [{ type: firstType }],
+            } = dispatchSpy.getCall(1);
             expect(secondType).to.equal(actionTypes.DOCUMENT_MODIFIED);
             expect(firstType).to.equal(actionTypes.SET_LISTENER);
           });
@@ -356,8 +391,12 @@ describe('firestoreActions', () => {
             expect(onSnapshotSpy).to.be.calledOnce;
             // SET_LISTENER, DOCUMENT_MODIFIED, DOCUMENT_MODIFIED
             expect(dispatchSpy).to.have.callCount(3);
-            const { args: [{ type: secondType }] } = dispatchSpy.getCall(1);
-            const { args: [{ type: thirdType }] } = dispatchSpy.getCall(0);
+            const {
+              args: [{ type: secondType }],
+            } = dispatchSpy.getCall(1);
+            const {
+              args: [{ type: thirdType }],
+            } = dispatchSpy.getCall(0);
             expect(secondType).to.equal(actionTypes.DOCUMENT_MODIFIED);
             expect(thirdType).to.equal(actionTypes.DOCUMENT_MODIFIED);
           });
@@ -503,8 +542,12 @@ describe('firestoreActions', () => {
             expect(onSnapshotSpy).to.be.calledOnce;
             // SET_LISTENER, DOCUMENT_MODIFIED, DOCUMENT_MODIFIED
             expect(dispatchSpy).to.be.calledThrice;
-            const { args: [{ type: secondType }] } = dispatchSpy.getCall(1);
-            const { args: [{ type: thirdType }] } = dispatchSpy.getCall(0);
+            const {
+              args: [{ type: secondType }],
+            } = dispatchSpy.getCall(1);
+            const {
+              args: [{ type: thirdType }],
+            } = dispatchSpy.getCall(0);
             expect(secondType).to.equal(actionTypes.DOCUMENT_MODIFIED);
             expect(thirdType).to.equal(actionTypes.DOCUMENT_MODIFIED);
           });
