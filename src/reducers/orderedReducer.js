@@ -77,7 +77,7 @@ function addDoc(array = [], action) {
  */
 function removeDoc(array, action) {
   // Update is at doc level (not subcollection level)
-  if (!action.meta.subcollections) {
+  if (!action.meta.subcollections || action.meta.storeAs) {
     // Remove doc from collection array
     return reject(array, { id: action.meta.doc }); // returns a new array
   }
@@ -89,7 +89,7 @@ function removeDoc(array, action) {
     return updateItemInArray(
       array,
       action.meta.doc,
-      item => omit(item, [action.meta.subcollections[0].collection]), // omit creates a new object
+      item => omit(item, [subcollectionSetting.collection]), // omit creates a new object
     );
   }
 
@@ -100,8 +100,8 @@ function removeDoc(array, action) {
     if (subcollectionVal.length) {
       return {
         ...item,
-        [subcollectionSetting.collection]: removeDoc(subcollectionVal, {
-          meta: subcollectionSetting,
+        [subcollectionSetting.collection]: reject(array, {
+          id: subcollectionSetting.doc,
         }),
       };
     }

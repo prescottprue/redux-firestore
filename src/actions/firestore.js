@@ -180,9 +180,15 @@ const changeTypeToEventType = {
  * @return {Object}                   [description]
  */
 function docChangeEvent(change, originalMeta = {}) {
+  const meta = { ...originalMeta, path: change.doc.ref.path };
+  if (originalMeta.subcollections && !originalMeta.storeAs) {
+    meta.subcollections[0] = { ...meta.subcollections[0], doc: change.doc.id };
+  } else {
+    meta.doc = change.doc.id;
+  }
   return {
     type: changeTypeToEventType[change.type] || actionTypes.DOCUMENT_MODIFIED,
-    meta: { ...originalMeta, doc: change.doc.id, path: change.doc.ref.path },
+    meta,
     payload: {
       data: change.doc.data(),
       ordered: { oldIndex: change.oldIndex, newIndex: change.newIndex },
