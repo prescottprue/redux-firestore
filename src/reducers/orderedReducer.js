@@ -134,21 +134,35 @@ function writeCollection(collectionState, action) {
 
   // Handle subcollections (only when storeAs is not being used)
   if (meta.doc && meta.subcollections && !meta.storeAs) {
+    const subcollectionConfig = meta.subcollections[0];
     if (!collectionStateSize) {
       // Collection state does not already exist, create it with item containing
       // subcollection
       return [
         {
           id: meta.doc,
-          [meta.subcollections[0].collection]: action.payload.ordered,
+          [subcollectionConfig.collection]: action.payload.ordered,
         },
       ];
     }
     // Merge with existing document if collection state exists
-    return updateItemInArray(collectionState, meta.doc, item =>
-      mergeObjects(item, {
-        [meta.subcollections[0].collection]: action.payload.ordered,
-      }),
+    return updateItemInArray(
+      collectionState,
+      meta.doc,
+      item =>
+        // check if action contains ordered payload
+        action.payload.ordered.length
+          ? // merge with existing subcollection
+            {
+              ...item,
+              [subcollectionConfig.collection]: unionBy(
+                get(item, subcollectionConfig.collection, []),
+                action.payload.ordered,
+                'id',
+              ),
+            }
+          : // remove subcollection if paylod is empty
+            omit(item, [subcollectionConfig.collection]),
     );
   }
 
