@@ -267,45 +267,41 @@ describe('firestoreActions', () => {
             expect(onSnapshotSpy).to.be.calledOnce;
             // SET_LISTENER, DOCUMENT_MODIFIED
             expect(dispatchSpy).to.be.calledTwice;
-            const {
-              args: [{ type: secondType }],
-            } = dispatchSpy.getCall(0);
-            const {
-              args: [{ type: firstType }],
-            } = dispatchSpy.getCall(1);
+            const { args: [{ type: secondType }] } = dispatchSpy.getCall(0);
+            const { args: [{ type: firstType }] } = dispatchSpy.getCall(1);
             expect(secondType).to.equal(actionTypes.DOCUMENT_MODIFIED);
             expect(firstType).to.equal(actionTypes.SET_LISTENER);
           });
 
           it('updates multiple docs in state when docChanges includes multiple doc changes', async () => {
-            onSnapshotSpy = sinon.spy((func, func2) => {
+            const docChanges = [
+              {
+                doc: {
+                  id: '123ABC',
+                  data: () => ({ some: 'value' }),
+                  ref: {
+                    path: 'test/1/test2/test3',
+                  },
+                },
+                type: 'modified',
+              },
+              {
+                doc: {
+                  id: '234ABC',
+                  data: () => ({ some: 'value' }),
+                  ref: {
+                    path: 'test/1/test2/test3',
+                  },
+                },
+                type: 'modified',
+              },
+            ];
+            onSnapshotSpy = sinon.spy(func => {
               func({
-                docChanges: [
-                  {
-                    doc: {
-                      id: '123ABC',
-                      data: () => ({ some: 'value' }),
-                      ref: {
-                        path: 'test/1/test2/test3',
-                      },
-                    },
-                    type: 'modified',
-                  },
-                  {
-                    doc: {
-                      id: '234ABC',
-                      data: () => ({ some: 'value' }),
-                      ref: {
-                        path: 'test/1/test2/test3',
-                      },
-                    },
-                    type: 'modified',
-                  },
-                ],
+                docChanges,
                 size: 3,
                 doc: { id: '123ABC' },
               });
-              func2(sinon.spy());
             });
             listenerConfig = {
               collection: 'test',
@@ -319,12 +315,14 @@ describe('firestoreActions', () => {
             );
             const expectedAction = {
               meta: { ...listenerConfig },
-              payload: { name: 'test/1/test2/test3' },
+              payload: { name: `test/1/test2/${docChanges[0].doc.id}` },
               type: actionTypes.SET_LISTENER,
             };
             await instance.test.setListener(listenerConfig);
             expect(onSnapshotSpy).to.be.calledOnce;
-            // expect(dispatchSpy).to.be.calledWith(expectedAction);
+            // SET_LISTENER, LISTENER_RESPONSE
+            expect(dispatchSpy).to.have.callCount(2);
+            expect(dispatchSpy).to.be.calledWith(expectedAction);
           });
 
           it('still dispatches LISTENER_RESPONSE action type if whole collection is being updated (i.e. docChanges.length === size)', async () => {
@@ -425,34 +423,34 @@ describe('firestoreActions', () => {
           });
 
           it('updates multiple docs in state when docChanges includes multiple doc changes', async () => {
-            onSnapshotSpy = sinon.spy((func, func2) => {
+            const docChanges = [
+              {
+                doc: {
+                  id: '123ABC',
+                  data: () => ({ some: 'value' }),
+                  ref: {
+                    path: 'test/1/test2/test3',
+                  },
+                },
+                type: 'modified',
+              },
+              {
+                doc: {
+                  id: '234ABC',
+                  data: () => ({ some: 'value' }),
+                  ref: {
+                    path: 'test/1/test2/test3',
+                  },
+                },
+                type: 'modified',
+              },
+            ];
+            onSnapshotSpy = sinon.spy(func => {
               func({
-                docChanges: () => [
-                  {
-                    doc: {
-                      id: '123ABC',
-                      data: () => ({ some: 'value' }),
-                      ref: {
-                        path: 'test/1/test2/test3',
-                      },
-                    },
-                    type: 'modified',
-                  },
-                  {
-                    doc: {
-                      id: '234ABC',
-                      data: () => ({ some: 'value' }),
-                      ref: {
-                        path: 'test/1/test2/test3',
-                      },
-                    },
-                    type: 'modified',
-                  },
-                ],
+                docChanges: () => docChanges,
                 size: 3,
                 doc: { id: '123ABC' },
               });
-              func2(sinon.spy());
             });
             listenerConfig = {
               collection: 'test',
@@ -466,12 +464,13 @@ describe('firestoreActions', () => {
             );
             const expectedAction = {
               meta: { ...listenerConfig },
-              payload: { name: 'test/1/test2/test3' },
+              payload: { name: `test/1/test2/${docChanges[0].doc.id}` },
               type: actionTypes.SET_LISTENER,
             };
             await instance.test.setListener(listenerConfig);
             expect(onSnapshotSpy).to.be.calledOnce;
-            // expect(dispatchSpy).to.be.calledWith(expectedAction);
+            expect(dispatchSpy).to.be.calledTwice;
+            expect(dispatchSpy).to.be.calledWith(expectedAction);
           });
 
           it('still dispatches LISTENER_RESPONSE action type if whole collection is being updated (i.e. docChanges.length === size)', async () => {

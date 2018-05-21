@@ -88,8 +88,6 @@ export const actionTypes = {
  * @type {Object}
  * @name defaultConfig
  * @description Default configuration options
- * @property {Boolean} enableLogging - `false` Whether or not firebase
- * database logging is enabled.
  * @property {Boolean} logListenerError - `true` Whether or not to use
  * console.error to log listener error objects. Errors from listeners
  * are helpful to developers on multiple occasions including when index
@@ -116,7 +114,6 @@ export const actionTypes = {
  * @type {Object}
  */
 export const defaultConfig = {
-  enableLogging: false,
   logListenerError: true,
   enhancerNamespace: 'firestore',
   helpersNamespace: null,
