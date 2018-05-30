@@ -390,7 +390,7 @@ export function unsetListeners(firebase, dispatch, listeners) {
  */
 export function runTransaction(firebase, dispatch, transactionPromise) {
   return wrapInDispatch(dispatch, {
-    ref: firebase.firestore,
+    ref: firebase.firestore(),
     method: 'runTransaction',
     args: [transactionPromise],
     types: [

@@ -126,6 +126,17 @@ export const defaultConfig = {
   mergeOrderedCollectionUpdates: true,
 };
 
+export const methodsToAddFromFirestore = [
+  'collection',
+  'doc',
+  'batch',
+  'disableNetwork',
+  'enableNetwork',
+  'enablePersistence',
+  'setLogLevel',
+  'settings',
+];
+
 export default {
   actionsPrefix,
   actionTypes,

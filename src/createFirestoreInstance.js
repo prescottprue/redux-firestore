@@ -1,7 +1,8 @@
+import { reduce } from 'lodash';
 import { merge } from 'lodash/fp';
 import { firestoreActions } from './actions';
 import { mapWithFirebaseAndDispatch } from './utils/actions';
-import { defaultConfig } from './constants';
+import { defaultConfig, methodsToAddFromFirestore } from './constants';
 
 /**
  * Create a firebase instance that has helpers attached for dispatching actions
@@ -36,8 +37,23 @@ export default function createFirestoreInstance(firebase, configs, dispatch) {
     aliases,
   );
 
+  // Only include specific methods from Firestore (list in constants)
+  const methodsFromFirestore = reduce(
+    methodsToAddFromFirestore,
+    (acc, methodName) =>
+      typeof firebase.firestore()[methodName] === 'function'
+        ? {
+            ...acc,
+            [methodName]: firebase
+              .firestore()
+              [methodName].bind(firebase.firestore()),
+          }
+        : acc,
+    {},
+  );
+
   return Object.assign(
-    firebase && firebase.firestore ? firebase.firestore() : {},
+    methodsFromFirestore,
     firebase.firestore,
     { _: firebase._ },
     configs.helpersNamespace
