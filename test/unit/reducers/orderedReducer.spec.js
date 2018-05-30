@@ -442,6 +442,7 @@ describe('orderedReducer', () => {
             ordered: [
               {
                 content: 'new',
+                id: '123abc',
               },
             ],
           },

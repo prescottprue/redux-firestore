@@ -127,9 +127,11 @@ function writeCollection(collectionState, action) {
     return modifyDoc(collectionState, action);
   }
 
-  // Merge with existing ordered array if collection merge enabled
-  if (merge.collection && collectionStateSize) {
-    return unionBy(collectionState, action.payload.ordered, 'id');
+  // Merge with existing ordered array (existing as source) if collection merge enabled
+  if (collectionStateSize && (merge.collection || meta.storeAs)) {
+    return meta.storeAs
+      ? unionBy(action.payload.ordered, collectionState, 'id') // new as source
+      : unionBy(collectionState, action.payload.ordered, 'id');
   }
 
   // Handle subcollections (only when storeAs is not being used)
@@ -161,7 +163,7 @@ function writeCollection(collectionState, action) {
                 'id',
               ),
             }
-          : // remove subcollection if paylod is empty
+          : // remove subcollection if payload is empty
             omit(item, [subcollectionConfig.collection]),
     );
   }

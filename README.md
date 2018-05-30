@@ -38,7 +38,9 @@ npm install --save react-redux-firebase
 ```javascript
 import { createStore, combineReducers, compose } from 'redux'
 import { reduxFirestore, firestoreReducer } from 'redux-firestore'
-import firebase from 'firebase'
+import firebase from 'firebase/app'
+import 'firebase/auth'
+import 'firebase/database'
 import 'firebase/firestore'
 
 const firebaseConfig = {} // from Firebase Console
