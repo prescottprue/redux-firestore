@@ -128,7 +128,7 @@ function writeCollection(collectionState, action) {
   }
 
   // Merge with existing ordered array if collection merge enabled
-  if (merge.collection && collectionStateSize) {
+  if (merge.collections && collectionStateSize) {
     return unionBy(collectionState, action.payload.ordered, 'id');
   }
 
