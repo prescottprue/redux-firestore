@@ -77,7 +77,7 @@ function addDoc(array = [], action) {
  */
 function removeDoc(array, action) {
   // Update is at doc level (not subcollection level)
-  if (!action.meta.subcollections) {
+  if (!action.meta.subcollections || action.meta.storeAs) {
     // Remove doc from collection array
     return reject(array, { id: action.meta.doc }); // returns a new array
   }
@@ -89,7 +89,7 @@ function removeDoc(array, action) {
     return updateItemInArray(
       array,
       action.meta.doc,
-      item => omit(item, [action.meta.subcollections[0].collection]), // omit creates a new object
+      item => omit(item, [subcollectionSetting.collection]), // omit creates a new object
     );
   }
 
@@ -100,8 +100,8 @@ function removeDoc(array, action) {
     if (subcollectionVal.length) {
       return {
         ...item,
-        [subcollectionSetting.collection]: removeDoc(subcollectionVal, {
-          meta: subcollectionSetting,
+        [subcollectionSetting.collection]: reject(array, {
+          id: subcollectionSetting.doc,
         }),
       };
     }
@@ -127,28 +127,42 @@ function writeCollection(collectionState, action) {
     return modifyDoc(collectionState, action);
   }
 
-  // Merge with existing ordered array if collection merge enabled
-  if (merge.collections && collectionStateSize) {
+  // Merge with existing ordered array (existing as source) if collection merge enabled
+  if (collectionStateSize && (merge.collections || meta.storeAs)) {
     return unionBy(collectionState, action.payload.ordered, 'id');
   }
 
   // Handle subcollections (only when storeAs is not being used)
   if (meta.doc && meta.subcollections && !meta.storeAs) {
+    const subcollectionConfig = meta.subcollections[0];
     if (!collectionStateSize) {
       // Collection state does not already exist, create it with item containing
       // subcollection
       return [
         {
           id: meta.doc,
-          [meta.subcollections[0].collection]: action.payload.ordered,
+          [subcollectionConfig.collection]: action.payload.ordered,
         },
       ];
     }
     // Merge with existing document if collection state exists
-    return updateItemInArray(collectionState, meta.doc, item =>
-      mergeObjects(item, {
-        [meta.subcollections[0].collection]: action.payload.ordered,
-      }),
+    return updateItemInArray(
+      collectionState,
+      meta.doc,
+      item =>
+        // check if action contains ordered payload
+        action.payload.ordered.length
+          ? // merge with existing subcollection
+            {
+              ...item,
+              [subcollectionConfig.collection]: unionBy(
+                get(item, subcollectionConfig.collection, []),
+                action.payload.ordered,
+                'id',
+              ),
+            }
+          : // remove subcollection if payload is empty
+            omit(item, [subcollectionConfig.collection]),
     );
   }
 

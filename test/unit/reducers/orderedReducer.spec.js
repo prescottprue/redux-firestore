@@ -397,6 +397,24 @@ describe('orderedReducer', () => {
         });
       });
 
+      it('removes data from subcollection if payload is empty', () => {
+        const original = [{ id: 'subDoc' }];
+        action = {
+          meta: {
+            collection: 'testing',
+            doc: 'doc',
+            subcollections: [{ collection: 'original' }],
+          },
+          merge: {}, // reset merge settings
+          type: actionTypes.LISTENER_RESPONSE,
+          payload: { ordered: [] },
+        };
+        state = { testing: [{ id: 'doc', original }] };
+        const result = orderedReducer(state, action);
+        // Removes subcollection
+        expect(result).to.not.have.nested.property('testing.0.original');
+      });
+
       it('stores data under storeAs', () => {
         const orderedData = [{}];
         const storeAs = 'other';
@@ -424,6 +442,7 @@ describe('orderedReducer', () => {
             ordered: [
               {
                 content: 'new',
+                id: '123abc',
               },
             ],
           },

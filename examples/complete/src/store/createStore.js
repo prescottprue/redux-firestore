@@ -1,7 +1,9 @@
 import { applyMiddleware, compose, createStore } from 'redux'
 import { browserHistory } from 'react-router'
-import firebase from 'firebase'
+import firebase from 'firebase/app'
 import 'firebase/firestore'
+import 'firebase/database'
+import 'firebase/auth'
 import { reduxFirestore } from 'redux-firestore'
 import { reactReduxFirebase } from 'react-redux-firebase'
 import makeRootReducer from './reducers'
@@ -34,7 +36,7 @@ export default (initialState = {}) => {
   }
 
   firebase.initializeApp(fbConfig)
-  firebase.firestore()
+  firebase.firestore().settings({ timestampsInSnapshots: true })
 
   // ======================================================
   // Store Instantiation and HMR Setup
