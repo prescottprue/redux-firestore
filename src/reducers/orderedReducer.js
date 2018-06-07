@@ -117,7 +117,7 @@ function removeDoc(array, action) {
  * @return {Array} State with document modified
  */
 function writeCollection(collectionState, action) {
-  const { meta, merge = { doc: true, collection: true } } = action;
+  const { meta, merge = { doc: true, collections: true } } = action;
   const collectionStateSize = size(collectionState);
 
   // Handle doc update (update item in array instead of whole array)
