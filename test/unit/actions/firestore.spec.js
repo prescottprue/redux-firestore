@@ -805,10 +805,9 @@ describe('firestoreActions', () => {
 
     describe('runTransaction', () => {
       it('throws if invalid path config is provided', () => {
-        const instance = createFirestoreInstance(
-          {},
-          { helpersNamespace: 'test' },
-        );
+        const instance = createFirestoreInstance(fakeFirebase, {
+          helpersNamespace: 'test',
+        });
         expect(() => instance.test.runTransaction()).to.throw(
           'dispatch is not a function',
         );

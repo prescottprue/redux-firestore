@@ -119,6 +119,7 @@ function removeDoc(array, action) {
 function writeCollection(collectionState, action) {
   const { meta, merge = { doc: true, collections: true } } = action;
   const collectionStateSize = size(collectionState);
+  const payloadExists = !!size(action.payload.ordered);
 
   // Handle doc update (update item in array instead of whole array)
   if (meta.doc && merge.doc && collectionStateSize) {
@@ -129,7 +130,13 @@ function writeCollection(collectionState, action) {
 
   // Merge with existing ordered array (existing as source) if collection merge enabled
   if (collectionStateSize && (merge.collections || meta.storeAs)) {
-    return unionBy(collectionState, action.payload.ordered, 'id');
+    // Listener response is empty - empty state
+    if (!payloadExists) {
+      return [];
+    }
+    return meta.storeAs
+      ? unionBy(action.payload.ordered, collectionState, 'id') // new as source
+      : unionBy(collectionState, action.payload.ordered, 'id');
   }
 
   // Handle subcollections (only when storeAs is not being used)
@@ -151,7 +158,7 @@ function writeCollection(collectionState, action) {
       meta.doc,
       item =>
         // check if action contains ordered payload
-        action.payload.ordered.length
+        payloadExists
           ? // merge with existing subcollection
             {
               ...item,

@@ -39,6 +39,7 @@ export default function createFirestoreInstance(firebase, configs, dispatch) {
   const methodsFromFirestore = reduce(
     methodsToAddFromFirestore,
     (acc, methodName) =>
+      firebase.firestore &&
       typeof firebase.firestore()[methodName] === 'function'
         ? {
             ...acc,
