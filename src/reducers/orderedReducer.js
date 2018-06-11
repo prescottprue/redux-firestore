@@ -183,19 +183,21 @@ function writeCollection(collectionState, action) {
   return action.payload.ordered;
 }
 
-/**
- * Reducer for an ordered collection (stored under path within ordered reducer)
- * which is a map of handlers which are called for different action types.
- * @type {Function}
- */
-const orderedCollectionReducer = createReducer(undefined, {
+const actionHandlers = {
   [DOCUMENT_ADDED]: addDoc,
   [DOCUMENT_MODIFIED]: modifyDoc,
   [DOCUMENT_REMOVED]: removeDoc,
   [DELETE_SUCCESS]: removeDoc,
   [LISTENER_RESPONSE]: writeCollection,
   [GET_SUCCESS]: writeCollection,
-});
+};
+
+/**
+ * Reducer for an ordered collection (stored under path within ordered reducer)
+ * which is a map of handlers which are called for different action types.
+ * @type {Function}
+ */
+const orderedCollectionReducer = createReducer(undefined, actionHandlers);
 
 /**
  * Reducer for ordered state.
@@ -218,9 +220,16 @@ const orderedCollectionReducer = createReducer(undefined, {
  * @return {Object} Ordered state after reduction
  */
 export default function orderedReducer(state = {}, action) {
-  if (!action.meta || (!action.meta.storeAs && !action.meta.collection)) {
+  // Return state if action is malformed (i.e. no type, or valid meta)
+  if (
+    !action.type ||
+    !action.meta ||
+    (!action.meta.storeAs && !action.meta.collection)
+  ) {
     return state;
   }
+
+  // Clear state based on config for CLEAR_DATA action type
   if (action.type === CLEAR_DATA) {
     // support keeping data when logging out - #125
     if (action.preserve && action.preserve.ordered) {
@@ -228,6 +237,12 @@ export default function orderedReducer(state = {}, action) {
     }
     return {};
   }
+
+  // Return original state if action type is not within actionHandlers
+  if (!Object.prototype.hasOwnProperty.call(actionHandlers, action.type)) {
+    return state;
+  }
+
   const storeUnderKey = action.meta.storeAs || action.meta.collection;
   const collectionStateSlice = get(state, storeUnderKey);
   return {

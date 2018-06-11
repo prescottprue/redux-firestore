@@ -8,11 +8,20 @@ describe('orderedReducer', () => {
   it('is exported', () => {
     expect(orderedReducer).to.exist;
   });
+
   it('is a function', () => {
     expect(orderedReducer).to.be.a('function');
   });
-  it('returns state for undefined actionType', () => {
+
+  it('returns state for undefined action type', () => {
     expect(orderedReducer({}, {})).to.exist;
+  });
+
+  it('returns state for actionType not matching reducer', () => {
+    state = {};
+    expect(
+      orderedReducer(state, { type: 'testing', meta: { collection: 'test' } }),
+    ).to.equal(state);
   });
 
   describe('actionTypes', () => {
@@ -255,6 +264,38 @@ describe('orderedReducer', () => {
           'testing',
           orderedData,
         );
+      });
+
+      it('removes data for empty listener responses', () => {
+        const orderedData = [];
+        action = {
+          meta: { collection: 'testing' },
+          type: actionTypes.LISTENER_RESPONSE,
+          payload: { ordered: orderedData },
+        };
+        state = { testing: [{ id: 'test' }] };
+        const result = orderedReducer(state, action);
+        // Preserves state parameter
+        expect(result).to.have.property('testing');
+        // Value is an empty array
+        expect(result.testing).to.be.an('array');
+        expect(result.testing).to.be.empty;
+      });
+
+      it('removes data for empty listener responses when using storeAs', () => {
+        const orderedData = [];
+        action = {
+          meta: { collection: 'testing', storeAs: 'another' },
+          type: actionTypes.LISTENER_RESPONSE,
+          payload: { ordered: orderedData },
+        };
+        state = { another: [{ id: 'test' }] };
+        const result = orderedReducer(state, action);
+        // Preserves state parameter
+        expect(result).to.have.property('another');
+        // Value is an empty array
+        expect(result.another).to.be.an('array');
+        expect(result.another).to.be.empty;
       });
 
       it('merges collection already within state', () => {
