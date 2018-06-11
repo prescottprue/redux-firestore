@@ -77,7 +77,7 @@ function addDoc(array = [], action) {
  */
 function removeDoc(array, action) {
   // Update is at doc level (not subcollection level)
-  if (!action.meta.subcollections) {
+  if (!action.meta.subcollections || action.meta.storeAs) {
     // Remove doc from collection array
     return reject(array, { id: action.meta.doc }); // returns a new array
   }
@@ -89,7 +89,7 @@ function removeDoc(array, action) {
     return updateItemInArray(
       array,
       action.meta.doc,
-      item => omit(item, [action.meta.subcollections[0].collection]), // omit creates a new object
+      item => omit(item, [subcollectionSetting.collection]), // omit creates a new object
     );
   }
 
@@ -100,8 +100,8 @@ function removeDoc(array, action) {
     if (subcollectionVal.length) {
       return {
         ...item,
-        [subcollectionSetting.collection]: removeDoc(subcollectionVal, {
-          meta: subcollectionSetting,
+        [subcollectionSetting.collection]: reject(array, {
+          id: subcollectionSetting.doc,
         }),
       };
     }
@@ -117,8 +117,9 @@ function removeDoc(array, action) {
  * @return {Array} State with document modified
  */
 function writeCollection(collectionState, action) {
-  const { meta, merge = { doc: true, collection: true } } = action;
+  const { meta, merge = { doc: true, collections: true } } = action;
   const collectionStateSize = size(collectionState);
+  const payloadExists = !!size(action.payload.ordered);
 
   // Handle doc update (update item in array instead of whole array)
   if (meta.doc && merge.doc && collectionStateSize) {
@@ -127,28 +128,48 @@ function writeCollection(collectionState, action) {
     return modifyDoc(collectionState, action);
   }
 
-  // Merge with existing ordered array if collection merge enabled
-  if (merge.collection && collectionStateSize) {
-    return unionBy(collectionState, action.payload.ordered, 'id');
+  // Merge with existing ordered array (existing as source) if collection merge enabled
+  if (collectionStateSize && (merge.collections || meta.storeAs)) {
+    // Listener response is empty - empty state
+    if (!payloadExists) {
+      return [];
+    }
+    return meta.storeAs
+      ? unionBy(action.payload.ordered, collectionState, 'id') // new as source
+      : unionBy(collectionState, action.payload.ordered, 'id');
   }
 
   // Handle subcollections (only when storeAs is not being used)
   if (meta.doc && meta.subcollections && !meta.storeAs) {
+    const subcollectionConfig = meta.subcollections[0];
     if (!collectionStateSize) {
       // Collection state does not already exist, create it with item containing
       // subcollection
       return [
         {
           id: meta.doc,
-          [meta.subcollections[0].collection]: action.payload.ordered,
+          [subcollectionConfig.collection]: action.payload.ordered,
         },
       ];
     }
     // Merge with existing document if collection state exists
-    return updateItemInArray(collectionState, meta.doc, item =>
-      mergeObjects(item, {
-        [meta.subcollections[0].collection]: action.payload.ordered,
-      }),
+    return updateItemInArray(
+      collectionState,
+      meta.doc,
+      item =>
+        // check if action contains ordered payload
+        payloadExists
+          ? // merge with existing subcollection
+            {
+              ...item,
+              [subcollectionConfig.collection]: unionBy(
+                get(item, subcollectionConfig.collection, []),
+                action.payload.ordered,
+                'id',
+              ),
+            }
+          : // remove subcollection if payload is empty
+            omit(item, [subcollectionConfig.collection]),
     );
   }
 
@@ -162,19 +183,21 @@ function writeCollection(collectionState, action) {
   return action.payload.ordered;
 }
 
-/**
- * Reducer for an ordered collection (stored under path within ordered reducer)
- * which is a map of handlers which are called for different action types.
- * @type {Function}
- */
-const orderedCollectionReducer = createReducer(undefined, {
+const actionHandlers = {
   [DOCUMENT_ADDED]: addDoc,
   [DOCUMENT_MODIFIED]: modifyDoc,
   [DOCUMENT_REMOVED]: removeDoc,
   [DELETE_SUCCESS]: removeDoc,
   [LISTENER_RESPONSE]: writeCollection,
   [GET_SUCCESS]: writeCollection,
-});
+};
+
+/**
+ * Reducer for an ordered collection (stored under path within ordered reducer)
+ * which is a map of handlers which are called for different action types.
+ * @type {Function}
+ */
+const orderedCollectionReducer = createReducer(undefined, actionHandlers);
 
 /**
  * Reducer for ordered state.
@@ -197,9 +220,16 @@ const orderedCollectionReducer = createReducer(undefined, {
  * @return {Object} Ordered state after reduction
  */
 export default function orderedReducer(state = {}, action) {
-  if (!action.meta || (!action.meta.storeAs && !action.meta.collection)) {
+  // Return state if action is malformed (i.e. no type, or valid meta)
+  if (
+    !action.type ||
+    !action.meta ||
+    (!action.meta.storeAs && !action.meta.collection)
+  ) {
     return state;
   }
+
+  // Clear state based on config for CLEAR_DATA action type
   if (action.type === CLEAR_DATA) {
     // support keeping data when logging out - #125
     if (action.preserve && action.preserve.ordered) {
@@ -207,6 +237,12 @@ export default function orderedReducer(state = {}, action) {
     }
     return {};
   }
+
+  // Return original state if action type is not within actionHandlers
+  if (!Object.prototype.hasOwnProperty.call(actionHandlers, action.type)) {
+    return state;
+  }
+
   const storeUnderKey = action.meta.storeAs || action.meta.collection;
   const collectionStateSlice = get(state, storeUnderKey);
   return {

@@ -38,7 +38,9 @@ npm install --save react-redux-firebase
 ```javascript
 import { createStore, combineReducers, compose } from 'redux'
 import { reduxFirestore, firestoreReducer } from 'redux-firestore'
-import firebase from 'firebase'
+import firebase from 'firebase/app'
+import 'firebase/auth'
+import 'firebase/database'
 import 'firebase/firestore'
 
 const firebaseConfig = {} // from Firebase Console
@@ -268,6 +270,7 @@ store.firestore.setListeners([
 // props.store.firestore.get('cities/SF'),
 ```
 
+**Note:** When nesting sub-collections, [`storeAs`](#storeas) should be used for more optimal state updates.
 
 ##### Where
 
@@ -292,7 +295,7 @@ Multiple `where` queries are as simple as passing multiple argument arrays (each
 },
 ```
 
-*Should only be used with collections*
+*Can only be used with collections*
 
 ##### orderBy
 
@@ -318,7 +321,7 @@ Multiple `orderBy`s are as simple as passing multiple argument arrays (each one 
 },
 ```
 
-*Should only be used with collections*
+*Can only be used with collections*
 
 ##### limit
 
@@ -331,7 +334,7 @@ Limit the query to a certain number of results
 },
 ```
 
-*Should only be used with collections*
+*Can only be used with collections*
 
 ##### startAt
 
@@ -347,7 +350,7 @@ Limit the query to a certain number of results
 },
 ```
 
-*Should only be used with collections*
+*Can only be used with collections*
 
 ##### startAfter
 
@@ -363,7 +366,7 @@ Limit the query to a certain number of results
 },
 ```
 
-*Should only be used with collections*
+*Can only be used with collections*
 
 ##### endAt
 
@@ -380,7 +383,7 @@ Limit the query to a certain number of results
 },
 ```
 
-*Should only be used with collections*
+*Can only be used with collections*
 
 ##### endBefore
 
@@ -397,7 +400,7 @@ Limit the query to a certain number of results
 },
 ```
 
-*Should only be used with collections*
+*Can only be used with collections*
 
 ##### storeAs
 
@@ -451,11 +454,6 @@ export default enhance(SomeComponent)
 
 ## Config Options
 
-#### enableLogging
-Default: `false`
-
-Whether or not to enable Firebase client logging.
-
 #### logListenerError
 Default: `true`
 
@@ -471,7 +469,7 @@ Default: `false`
 
 Whether or not to allow multiple listeners to be attached for the same query. If a function is passed the arguments it receives are `listenerToAttach`, `currentListeners`, and the function should return a boolean.
 
-### oneListenerPerPath
+#### oneListenerPerPath
 Default: `false`
 
 If set to true redux-firestore will attach a listener on the same path just once & will count how many the listener was set. When you try to unset the lisnter, it won't unset until you have less than 1 listeners on this path

@@ -1,4 +1,4 @@
-import { isArray, invoke, isFunction } from 'lodash';
+import { isArray, invoke, isFunction, every } from 'lodash';
 import { wrapInDispatch } from '../utils/actions';
 import { actionTypes } from '../constants';
 import {
@@ -145,7 +145,10 @@ export function update(firebase, dispatch, queryOption, ...args) {
 export function deleteRef(firebase, dispatch, queryOption) {
   const meta = getQueryConfig(queryOption);
   const { config } = firebase._;
-  if (!meta.doc) {
+  if (
+    !meta.doc ||
+    (meta.subcollections && !every(meta.subcollections, 'doc'))
+  ) {
     if (isFunction(config.onAttemptCollectionDelete)) {
       return config.onAttemptCollectionDelete(queryOption, dispatch, firebase);
     }
@@ -180,9 +183,15 @@ const changeTypeToEventType = {
  * @return {Object}                   [description]
  */
 function docChangeEvent(change, originalMeta = {}) {
+  const meta = { ...originalMeta, path: change.doc.ref.path };
+  if (originalMeta.subcollections && !originalMeta.storeAs) {
+    meta.subcollections[0] = { ...meta.subcollections[0], doc: change.doc.id };
+  } else {
+    meta.doc = change.doc.id;
+  }
   return {
     type: changeTypeToEventType[change.type] || actionTypes.DOCUMENT_MODIFIED,
-    meta: { ...originalMeta, doc: change.doc.id, path: change.doc.ref.path },
+    meta,
     payload: {
       data: change.doc.data(),
       ordered: { oldIndex: change.oldIndex, newIndex: change.newIndex },
@@ -381,7 +390,7 @@ export function unsetListeners(firebase, dispatch, listeners) {
  */
 export function runTransaction(firebase, dispatch, transactionPromise) {
   return wrapInDispatch(dispatch, {
-    ref: firebase.firestore,
+    ref: firebase.firestore(),
     method: 'runTransaction',
     args: [transactionPromise],
     types: [

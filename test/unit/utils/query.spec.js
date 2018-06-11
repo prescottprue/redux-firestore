@@ -58,6 +58,12 @@ describe('query utils', () => {
       );
     });
 
+    it('returns meta if it is a string (path presumed as name)', () => {
+      meta = 'test';
+      result = getQueryName(meta);
+      expect(result).to.equal(meta);
+    });
+
     it('returns collection name', () => {
       meta = { collection: 'test' };
       result = getQueryName(meta);
@@ -93,6 +99,17 @@ describe('query utils', () => {
             meta.doc
           }?where=${where1}:${whereOperator}:${where2}`,
         );
+      });
+    });
+
+    describe('limit paremeter', () => {
+      it('is appended if valid', () => {
+        meta = {
+          collection: 'test',
+          doc: 'doc',
+          limit: 10,
+        };
+        result = getQueryName(meta);
       });
     });
   });

@@ -4,6 +4,7 @@ import {
   getSlashStrPath,
   preserveValuesFromState,
   updateItemInArray,
+  createReducer,
 } from 'utils/reducers';
 
 let subcollections;
@@ -126,6 +127,21 @@ describe('reducer utils', () => {
       ];
       config = { collection: 'first', doc: 'second', subcollections };
       expect(pathFromMeta(config)).to.equal('first.second.third.forth.fifth');
+    });
+  });
+
+  describe('createReducer', () => {
+    it('calls handler mapped to action type', () => {
+      const actionHandler = sinon.spy();
+      const newReducer = createReducer({}, { test: actionHandler });
+      newReducer({}, { type: 'test' });
+      expect(actionHandler).to.have.been.calledOnce;
+    });
+
+    it('returns state for action types not within handlers', () => {
+      const newReducer = createReducer({}, {});
+      const state = {};
+      expect(newReducer(state, { type: 'testing' })).to.equal(state);
     });
   });
 
