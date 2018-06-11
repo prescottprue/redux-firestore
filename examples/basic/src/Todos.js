@@ -34,17 +34,19 @@ Todos.propTypes = {
   })
 }
 
+const listenerSettings = {
+  collection: 'todos',
+  orderBy: ['createdAt', 'desc'],
+  limit: 10
+}
+
 // Create HOC that loads data and adds it as todos prop
 const enhance = compose(
   // add redux store (from react context) as a prop
   withFirestore,
   // Handler functions as props
   withHandlers({
-    loadData: props => err => props.firestore.setListener({
-      collection: 'todos',
-      orderBy: ['createdAt', 'desc'],
-      limit: 10
-    }),
+    loadData: props => err => props.firestore.setListener(listenerSettings),
     onNewSubmit: props => newTodo =>
       props.firestore.add('todos', {
         ...newTodo,
@@ -59,11 +61,7 @@ const enhance = compose(
       this.props.loadData()
     },
     componentWillUnmount() {
-      this.props.firestore.unsetListener({
-        collection: 'todos',
-        orderBy: ['createdAt', 'desc'],
-        limit: 10
-      })
+      this.props.firestore.unsetListener(listenerSettings)
     }
   }),
   // Connect todos from redux state to props.todos

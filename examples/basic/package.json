@@ -11,7 +11,7 @@
     "react-scripts": "1.1.4",
     "recompose": "^0.27.0",
     "redux": "^4.0.0",
-    "redux-firestore": "^0.5.2"
+    "redux-firestore": "latest"
   },
   "scripts": {
     "start": "react-scripts start",
