@@ -51,7 +51,6 @@ export default function reduxFirestore(firebaseInstance, otherConfig) {
     const store = next(reducer, initialState, middleware);
 
     const configs = { ...defaultConfig, ...otherConfig };
-
     firestoreInstance = createFirestoreInstance(
       firebaseInstance.firebase_ || firebaseInstance, // eslint-disable-line no-underscore-dangle, no-undef, max-len
       configs,

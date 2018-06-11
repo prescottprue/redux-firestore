@@ -22,13 +22,11 @@ export default function createFirestoreInstance(firebase, configs, dispatch) {
 
   // extend existing firebase internals (using redux-firestore along with redux-firebase)
   firebase._ = merge(defaultInternals, firebase._); // eslint-disable-line no-param-reassign
-
   // Aliases for methods
   const aliases = [
     { action: firestoreActions.deleteRef, name: 'delete' },
     { action: firestoreActions.setListener, name: 'onSnapshot' },
   ];
-
   // Create methods with internal firebase object and dispatch passed
   const methods = mapWithFirebaseAndDispatch(
     firebase,

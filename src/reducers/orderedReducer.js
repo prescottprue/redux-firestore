@@ -117,7 +117,7 @@ function removeDoc(array, action) {
  * @return {Array} State with document modified
  */
 function writeCollection(collectionState, action) {
-  const { meta, merge = { doc: true, collection: true } } = action;
+  const { meta, merge = { doc: true, collections: true } } = action;
   const collectionStateSize = size(collectionState);
 
   // Handle doc update (update item in array instead of whole array)
@@ -128,10 +128,8 @@ function writeCollection(collectionState, action) {
   }
 
   // Merge with existing ordered array (existing as source) if collection merge enabled
-  if (collectionStateSize && (merge.collection || meta.storeAs)) {
-    return meta.storeAs
-      ? unionBy(action.payload.ordered, collectionState, 'id') // new as source
-      : unionBy(collectionState, action.payload.ordered, 'id');
+  if (collectionStateSize && (merge.collections || meta.storeAs)) {
+    return unionBy(collectionState, action.payload.ordered, 'id');
   }
 
   // Handle subcollections (only when storeAs is not being used)
