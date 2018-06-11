@@ -135,7 +135,7 @@ function writeCollection(collectionState, action) {
       return [];
     }
     return meta.storeAs
-      ? action.payload.ordered // new as source
+      ? action.payload.ordered
       : unionBy(collectionState, action.payload.ordered, 'id');
   }
 
