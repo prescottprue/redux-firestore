@@ -1,3 +1,4 @@
+import { keyBy, get } from 'lodash';
 import orderedReducer from 'reducers/orderedReducer';
 import { actionTypes } from 'constants';
 
@@ -301,17 +302,63 @@ describe('orderedReducer', () => {
       it('merges collection already within state', () => {
         const id = 'doc';
         const someField = 'a thing';
-        const orderedData = [{ id, someField }];
+        const orderedData = [
+          { id, someField },
+          { id: 'some', newField: 'testing' },
+        ];
         action = {
           meta: { collection: 'testing' },
           type: actionTypes.LISTENER_RESPONSE,
-          payload: { ordered: orderedData },
+          payload: { ordered: orderedData, data: keyBy(orderedData, 'id') },
         };
-        state = { testing: [{ id: 'some', someField: 'original' }] };
+        state = { testing: [{ id, original: 'original' }] };
         expect(orderedReducer(state, action)).to.have.nested.property(
-          'testing.1.someField',
+          'testing.0.someField',
           someField,
         );
+        expect(orderedReducer(state, action)).to.have.nested.property(
+          'testing.0.original',
+          'original',
+        );
+        expect(orderedReducer(state, action)).to.have.nested.property(
+          'testing.0.id',
+          id,
+        );
+        expect(orderedReducer(state, action)).to.have.nested.property(
+          'testing.1.id',
+          'some',
+        );
+      });
+
+      it('merges collection already within state with response', () => {
+        const id = 'doc';
+        const id2 = 'some';
+        const someField = 'a thing';
+        const orderedData = [
+          { id, someField },
+          { id: id2, originalField: 'asdf' },
+        ];
+        action = {
+          meta: { collection: 'testing' },
+          type: actionTypes.LISTENER_RESPONSE,
+          payload: { ordered: orderedData, data: keyBy(orderedData, 'id') },
+        };
+        state = { testing: [{ id, original: 'original' }] };
+        const [firstItem, secondItem, thirdItem] = get(
+          orderedReducer(state, action),
+          'testing',
+          [],
+        );
+        expect(firstItem).to.have.property('id', id);
+        // new parameter is added to document
+        expect(firstItem).to.have.property('someField', someField);
+        expect(firstItem).to.have.property('original', 'original');
+        // existing parameter on document object is preserved
+        // existing doc in new array position
+        expect(secondItem).to.have.property('id', id2);
+        expect(secondItem).to.have.property('originalField', 'asdf');
+        // confirm extra/duplicate data is not written
+        expect(thirdItem).to.not.exist;
       });
 
       describe('doc', () => {
