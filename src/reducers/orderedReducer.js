@@ -1,4 +1,4 @@
-import { size, get, unionBy, reject, omit, map, keyBy } from 'lodash';
+import { size, get, unionBy, reject, omit, map, keyBy, isEqual } from 'lodash';
 import { merge as mergeObjects } from 'lodash/fp';
 import { actionTypes } from '../constants';
 import {
@@ -118,6 +118,9 @@ function removeDoc(array, action) {
  */
 function writeCollection(collectionState, action) {
   const { meta, merge = { doc: true, collections: true } } = action;
+  if (meta.storeAs) {
+    return action.payload.ordered;
+  }
   const collectionStateSize = size(collectionState);
   const payloadExists = !!size(action.payload.ordered);
 
@@ -129,22 +132,25 @@ function writeCollection(collectionState, action) {
   }
 
   // Merge with existing ordered array (existing as source) if collection merge enabled
-  if (collectionStateSize && merge.collections && !meta.storeAs) {
+  if (collectionStateSize && merge.collections) {
     // Listener response is empty - empty state
     if (!payloadExists) {
       return [];
     }
-    // Key existing state collection by id (prevents multiple array lookups)
-    const existingKeys = keyBy(collectionState, 'id');
+    // Key existing state collection by id (used to prevent multiple array lookups)
+    const existingKeys = collectionState && keyBy(collectionState, 'id');
     // Map new doc data with existing doc data (preserves existing sub-collections)
     return map(action.payload.ordered, newDocObj => {
       const existingDoc = get(existingKeys, newDocObj.id);
-      return existingDoc ? { ...existingDoc, ...newDocObj } : newDocObj;
+      // merge with existing doc if existing doc is not equal
+      return !!existingDoc && !isEqual(existingDoc, newDocObj)
+        ? { ...existingDoc, ...newDocObj }
+        : newDocObj;
     });
   }
 
   // Handle subcollections (only when storeAs is not being used)
-  if (meta.doc && meta.subcollections && !meta.storeAs) {
+  if (meta.doc && meta.subcollections) {
     const subcollectionConfig = meta.subcollections[0];
     if (!collectionStateSize) {
       // Collection state does not already exist, create it with item containing
