@@ -1,4 +1,4 @@
-import { size, get, unionBy, reject, omit } from 'lodash';
+import { size, get, unionBy, reject, omit, map, keyBy } from 'lodash';
 import { merge as mergeObjects } from 'lodash/fp';
 import { actionTypes } from '../constants';
 import {
@@ -129,14 +129,18 @@ function writeCollection(collectionState, action) {
   }
 
   // Merge with existing ordered array (existing as source) if collection merge enabled
-  if (collectionStateSize && (merge.collections || meta.storeAs)) {
+  if (collectionStateSize && merge.collections && !meta.storeAs) {
     // Listener response is empty - empty state
     if (!payloadExists) {
       return [];
     }
-    return meta.storeAs
-      ? action.payload.ordered
-      : unionBy(collectionState, action.payload.ordered, 'id');
+    // Key existing state collection by id (prevents multiple array lookups)
+    const existingKeys = keyBy(collectionState, 'id');
+    // Map new doc data with existing doc data (preserves existing sub-collections)
+    return map(action.payload.ordered, newDocObj => {
+      const existingDoc = get(existingKeys, newDocObj.id);
+      return existingDoc ? { ...existingDoc, ...newDocObj } : newDocObj;
+    });
   }
 
   // Handle subcollections (only when storeAs is not being used)
