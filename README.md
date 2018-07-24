@@ -221,8 +221,7 @@ store.firestore.runTransaction(t => {
 ```
 
 #### Types of Queries
-Each of these functions take a queryOptions object with options as described in the [Query Options section of this README](#query-options). Some very simple examples are used here for better comprehension.
-
+Each of these functions take a queryOptions object with options as described in the [Query Options section of this README](#query-options). Some simple query options examples are used here for better comprehension.
 ##### get
 ```js
 props.store.firestore.get({ collection: 'cities' }),
@@ -252,7 +251,7 @@ After setting a listener/multiple listeners, you can unset them with the followi
 store.firestore.unsetListener({ collection: 'cities' }),
 // of for any number of listeners at once :
 store.firestore.unsetListeners([query1Options, query2Options]), 
-// query1Options as in { collection: 'cities' } for example
+// here query1Options as in { collection: 'cities' } for example
 ```
 
 #### Query Options
