@@ -474,7 +474,7 @@ Whether or not to allow multiple listeners to be attached for the same query. If
 #### oneListenerPerPath
 Default: `false`
 
-If set to true redux-firestore will attach a listener on the same path just once & will count how many the listener was set. When you try to unset the lisnter, it won't unset until you have less than 1 listeners on this path
+If set to true redux-firestore will attach a listener on the same path just once & will count how many the listener was set. When you try to unset the listener, it won't unset until you have less than 1 listeners on this path
 
 #### preserveOnDelete
 Default: `null`
