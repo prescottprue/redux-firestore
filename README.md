@@ -44,6 +44,7 @@ import 'firebase/database'
 import 'firebase/firestore'
 
 const firebaseConfig = {} // from Firebase Console
+const rfConfig = {} // optional redux-firestore Config Options
 
 // Initialize firebase instance
 firebase.initializeApp(firebaseConfig)
@@ -52,7 +53,7 @@ firebase.firestore();
 
 // Add reduxFirestore store enhancer to store creator
 const createStoreWithFirebase = compose(
-  reduxFirestore(firebase), // firebase instance as first argument
+  reduxFirestore(firebase, rfConfig), // firebase instance as first argument, rfConfig as optional second
 )(createStore)
 
 // Add Firebase to reducers
@@ -453,6 +454,7 @@ export default enhance(SomeComponent)
 ```
 
 ## Config Options
+Optional configuration options for redux-firestore, provided to reduxFirestore enhancer as optional second argument. Combine any of them together in an object.
 
 #### logListenerError
 Default: `true`
