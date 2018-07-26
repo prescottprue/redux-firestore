@@ -1,3 +1,4 @@
+import reduceReducers from 'reduce-reducers';
 import { combineReducers } from './utils/reducers';
 import {
   statusReducer,
@@ -5,6 +6,8 @@ import {
   orderedReducer,
   listenersReducer,
   errorsReducer,
+  compositeReducer,
+  crossSliceReducer,
 } from './reducers';
 
 /**
@@ -20,10 +23,13 @@ import {
  * @param {Object} action.payload - Data associated with action
  * @return {Object} Firebase redux state
  */
-export default combineReducers({
+const combinedReducers = combineReducers({
   status: statusReducer,
   data: dataReducer,
   ordered: orderedReducer,
   listeners: listenersReducer,
   errors: errorsReducer,
+  composite: compositeReducer,
 });
+
+export default reduceReducers(combinedReducers, crossSliceReducer);
