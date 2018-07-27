@@ -7,7 +7,107 @@ const initialState = {
 };
 
 describe('reducer', () => {
-  describe('LISTENER_RESPONSE', () => {
+  describe('cross slice behaviour', () => {
+    it('handles adds', () => {
+      const doc1 = { key1: 'value1', id: 'testDocId1' }; // initial doc
+      const doc2 = { key1: 'value1', id: 'testDocId2' }; // added doc
+
+      // Initial seed
+      const action1 = {
+        meta: {
+          collection: 'testCollection',
+          storeAs: 'testStoreAs',
+          where: ['abc', '===', 123],
+        },
+        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+
+      const action2 = {
+        meta: {
+          collection: 'testCollection',
+          storeAs: 'testStoreAs',
+          where: ['abc', '===', 123],
+          path: `testCollection/${doc2.id}`,
+          doc: doc2.id,
+        },
+        payload: { data: doc2, ordered: { oldIndex: -1, newIndex: 1 } },
+        type: actionTypes.DOCUMENT_ADDED,
+      };
+
+      const pass1 = reducer(initialState, action1);
+      const pass2 = reducer(pass1, action2);
+
+      expect(pass2.data.testStoreAs[doc1.id]).to.eql(doc1);
+      expect(pass2.data.testStoreAs[doc2.id]).to.eql(doc2);
+    });
+    it('handles updates', () => {
+      const doc1 = { key1: 'value1', id: 'testDocId1' }; // initial doc
+      const doc2 = { key1: 'value2', id: 'testDocId1' }; // updated doc
+
+      // Initial seed
+      const action1 = {
+        meta: {
+          collection: 'testCollection',
+          storeAs: 'testStoreAs',
+          where: ['abc', '===', 123],
+        },
+        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+
+      const action2 = {
+        meta: {
+          collection: 'testCollection',
+          storeAs: 'testStoreAs',
+          where: ['abc', '===', 123],
+          path: `testCollection/${doc2.id}`,
+          doc: doc2.id,
+        },
+        payload: { data: doc2, ordered: { oldIndex: 0, newIndex: 0 } },
+        type: actionTypes.DOCUMENT_MODIFIED,
+      };
+
+      const pass1 = reducer(initialState, action1);
+      expect(pass1.data.testStoreAs[doc1.id]).to.eql(doc1);
+
+      const pass2 = reducer(pass1, action2);
+      expect(pass2.data.testStoreAs[doc1.id]).to.eql(doc2); // both docs have the same id
+    });
+
+    it('handles deletes', () => {
+      const doc1 = { key1: 'value1', id: 'testDocId1' }; // initial doc
+
+      // Initial seed
+      const action1 = {
+        meta: {
+          collection: 'testCollection',
+          storeAs: 'testStoreAs',
+          where: ['abc', '===', 123],
+        },
+        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+
+      const action2 = {
+        meta: {
+          collection: 'testCollection',
+          storeAs: 'testStoreAs',
+          where: ['abc', '===', 123],
+          path: `testCollection/${doc1.id}`,
+          doc: doc1.id,
+        },
+        payload: { data: undefined, ordered: { oldIndex: 0, newIndex: -1 } },
+        type: actionTypes.DOCUMENT_REMOVED,
+      };
+
+      const pass1 = reducer(initialState, action1);
+      expect(pass1.data.testStoreAs[doc1.id]).to.eql(doc1);
+
+      const pass2 = reducer(pass1, action2);
+      expect(pass2.data.testStoreAs[doc1.id]).to.eql(undefined);
+    });
+
     it('updates data from composite', () => {
       const doc1 = { key1: 'value1', id: 'testDocId1' };
       const doc2 = { key1: 'value1', id: 'testDocId2' };
