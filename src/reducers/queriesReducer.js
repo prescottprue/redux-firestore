@@ -8,7 +8,7 @@ import { getBaseQueryName } from '../utils/query';
 export const isComposable = action =>
   get(action, 'meta.where') && get(action, 'meta.collection');
 
-export default function compositeReducer(state = {}, action) {
+export default function queriesReducer(state = {}, action) {
   return produce(state, draft => {
     if (!isComposable(action)) {
       return state;

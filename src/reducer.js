@@ -6,7 +6,7 @@ import {
   orderedReducer,
   listenersReducer,
   errorsReducer,
-  compositeReducer,
+  queriesReducer,
   crossSliceReducer,
 } from './reducers';
 
@@ -29,7 +29,7 @@ const combinedReducers = combineReducers({
   ordered: orderedReducer,
   listeners: listenersReducer,
   errors: errorsReducer,
-  composite: compositeReducer,
+  queries: queriesReducer,
 });
 
 export default reduceReducers(combinedReducers, crossSliceReducer);

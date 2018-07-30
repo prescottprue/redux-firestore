@@ -39,8 +39,8 @@ describe('reducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass2.data.testStoreAs[doc1.id]).to.eql(doc1);
-      expect(pass2.data.testStoreAs[doc2.id]).to.eql(doc2);
+      expect(pass2.composite.testStoreAs[doc1.id]).to.eql(doc1);
+      expect(pass2.composite.testStoreAs[doc2.id]).to.eql(doc2);
     });
     it('handles updates', () => {
       const doc1 = { key1: 'value1', id: 'testDocId1' }; // initial doc
@@ -70,10 +70,10 @@ describe('reducer', () => {
       };
 
       const pass1 = reducer(initialState, action1);
-      expect(pass1.data.testStoreAs[doc1.id]).to.eql(doc1);
+      expect(pass1.composite.testStoreAs[doc1.id]).to.eql(doc1);
 
       const pass2 = reducer(pass1, action2);
-      expect(pass2.data.testStoreAs[doc1.id]).to.eql(doc2); // both docs have the same id
+      expect(pass2.composite.testStoreAs[doc1.id]).to.eql(doc2); // both docs have the same id
     });
 
     it('handles deletes', () => {
@@ -103,10 +103,10 @@ describe('reducer', () => {
       };
 
       const pass1 = reducer(initialState, action1);
-      expect(pass1.data.testStoreAs[doc1.id]).to.eql(doc1);
+      expect(pass1.composite.testStoreAs[doc1.id]).to.eql(doc1);
 
       const pass2 = reducer(pass1, action2);
-      expect(pass2.data.testStoreAs[doc1.id]).to.eql(undefined);
+      expect(pass2.composite.testStoreAs[doc1.id]).to.eql(undefined);
     });
 
     it('handles unset listener', () => {
@@ -134,11 +134,11 @@ describe('reducer', () => {
       };
 
       const pass1 = reducer(initialState, action1);
-      expect(pass1.data.testStoreAs[doc1.id]).to.eql(doc1);
+      expect(pass1.composite.testStoreAs[doc1.id]).to.eql(doc1);
 
       const pass2 = reducer(pass1, action2);
-      display(pass2.data.testStoreAs);
-      expect(pass2.data.testStoreAs).to.eql({});
+      display(pass2.composite.testStoreAs);
+      expect(pass2.composite.testStoreAs).to.eql({});
     });
 
     it('updates data from composite', () => {
@@ -155,8 +155,8 @@ describe('reducer', () => {
       };
 
       const pass1 = reducer(initialState, action1);
-      expect(pass1.data.testStoreAs[doc1.id]).to.eql(doc1);
-      expect(pass1.data.testStoreAs.obsoleteDocId).to.equal(undefined);
+      expect(pass1.composite.testStoreAs[doc1.id]).to.eql(doc1);
+      expect(pass1.composite.testStoreAs.obsoleteDocId).to.equal(undefined);
 
       const action2 = {
         meta: {
@@ -170,8 +170,8 @@ describe('reducer', () => {
 
       // In the second pass, we expect to retain the first doc (since it is a different query) and add the second doc
       const pass2 = reducer(pass1, action2);
-      expect(pass2.data.testStoreAs[doc1.id]).to.eql(doc1);
-      expect(pass2.data.testStoreAs[doc2.id]).to.eql(doc2);
+      expect(pass2.composite.testStoreAs[doc1.id]).to.eql(doc1);
+      expect(pass2.composite.testStoreAs[doc2.id]).to.eql(doc2);
     });
 
     it('handles a where without a storeAs', () => {
@@ -192,8 +192,8 @@ describe('reducer', () => {
         },
         action1,
       );
-      expect(pass1.data.testCollection[doc1.id]).to.eql(doc1);
-      expect(pass1.data.testCollection.obsoleteDocId).to.equal(undefined);
+      expect(pass1.composite.testCollection[doc1.id]).to.eql(doc1);
+      expect(pass1.composite.testCollection.obsoleteDocId).to.equal(undefined);
 
       const action2 = {
         meta: {
@@ -206,8 +206,8 @@ describe('reducer', () => {
 
       // In the second pass, we expect to retain the first doc (since it is a different query) and add the second doc
       const pass2 = reducer(pass1, action2);
-      expect(pass2.data.testCollection[doc1.id]).to.eql(doc1);
-      expect(pass2.data.testCollection[doc2.id]).to.eql(doc2);
+      expect(pass2.composite.testCollection[doc1.id]).to.eql(doc1);
+      expect(pass2.composite.testCollection[doc2.id]).to.eql(doc2);
     });
 
     it('handles a null payload.data', () => {
@@ -222,7 +222,7 @@ describe('reducer', () => {
       };
       const pass1 = reducer(initialState, action1);
 
-      expect(pass1.data.testStoreAs).to.eql({}); // TODO: should this be null, undefined, or an empty object?
+      expect(pass1.composite.testStoreAs).to.eql({}); // TODO: should this be null, undefined, or an empty object?
     });
   });
 });
