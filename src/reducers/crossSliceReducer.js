@@ -14,10 +14,12 @@ export default function crossSliceReducer(state = {}, action) {
   return produce(state, draft => {
     switch (action.type) {
       case actionTypes.GET_SUCCESS:
+      case actionTypes.DELETE_SUCCESS:
       case actionTypes.DOCUMENT_MODIFIED:
       case actionTypes.DOCUMENT_ADDED:
       case actionTypes.DOCUMENT_REMOVED:
       case actionTypes.LISTENER_RESPONSE:
+      case actionTypes.UNSET_LISTENER:
         // Take all of the composite values and plop them into data, replacing the existing data entirely
         const groups = groupBy(
           values(state.composite),
@@ -27,10 +29,11 @@ export default function crossSliceReducer(state = {}, action) {
         for (const storeAs in groups) {
           const updated = {};
           for (const item of groups[storeAs]) {
-            merge(updated, item.data);
+            merge(updated, item.data || {});
           }
-          draft.data[storeAs] = updated; // Since we're operating on the whole cake, instead of just a slice, we want to reduce the referential impact to the bits we're working with.
+          draft.data[storeAs] = updated;
         }
+
         return draft;
       default:
         return state;

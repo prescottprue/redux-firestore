@@ -1,5 +1,6 @@
 import reducer from 'reducer';
 import { actionTypes } from 'constants';
+import { display } from '../helpers';
 
 const initialState = {
   data: { testStoreAs: { obsoleteDocId: {} } },
@@ -106,6 +107,38 @@ describe('reducer', () => {
 
       const pass2 = reducer(pass1, action2);
       expect(pass2.data.testStoreAs[doc1.id]).to.eql(undefined);
+    });
+
+    it('handles unset listener', () => {
+      const doc1 = { key1: 'value1', id: 'testDocId1' }; // initial doc
+
+      // Initial seed
+      const action1 = {
+        meta: {
+          collection: 'testCollection',
+          storeAs: 'testStoreAs',
+          where: ['abc', '===', 123],
+        },
+        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+
+      const action2 = {
+        meta: {
+          collection: 'testCollection',
+          storeAs: 'testStoreAs',
+          where: ['abc', '===', 123],
+        },
+        payload: { name: undefined }, // actually query string
+        type: actionTypes.UNSET_LISTENER,
+      };
+
+      const pass1 = reducer(initialState, action1);
+      expect(pass1.data.testStoreAs[doc1.id]).to.eql(doc1);
+
+      const pass2 = reducer(pass1, action2);
+      display(pass2.data.testStoreAs);
+      expect(pass2.data.testStoreAs).to.eql({});
     });
 
     it('updates data from composite', () => {
