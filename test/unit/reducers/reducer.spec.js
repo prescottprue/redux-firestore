@@ -1,0 +1,228 @@
+import reducer from 'reducer';
+import { actionTypes } from 'constants';
+import { display } from '../helpers';
+
+const initialState = {
+  data: { testStoreAs: { obsoleteDocId: {} } },
+  ordered: {},
+};
+
+describe('reducer', () => {
+  describe('cross slice behaviour', () => {
+    it('handles adds', () => {
+      const doc1 = { key1: 'value1', id: 'testDocId1' }; // initial doc
+      const doc2 = { key1: 'value1', id: 'testDocId2' }; // added doc
+
+      // Initial seed
+      const action1 = {
+        meta: {
+          collection: 'testCollection',
+          storeAs: 'testStoreAs',
+          where: ['abc', '===', 123],
+        },
+        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+
+      const action2 = {
+        meta: {
+          collection: 'testCollection',
+          storeAs: 'testStoreAs',
+          where: ['abc', '===', 123],
+          path: `testCollection/${doc2.id}`,
+          doc: doc2.id,
+        },
+        payload: { data: doc2, ordered: { oldIndex: -1, newIndex: 1 } },
+        type: actionTypes.DOCUMENT_ADDED,
+      };
+
+      const pass1 = reducer(initialState, action1);
+      const pass2 = reducer(pass1, action2);
+
+      expect(pass2.composite.testStoreAs[doc1.id]).to.eql(doc1);
+      expect(pass2.composite.testStoreAs[doc2.id]).to.eql(doc2);
+    });
+    it('handles updates', () => {
+      const doc1 = { key1: 'value1', id: 'testDocId1' }; // initial doc
+      const doc2 = { key1: 'value2', id: 'testDocId1' }; // updated doc
+
+      // Initial seed
+      const action1 = {
+        meta: {
+          collection: 'testCollection',
+          storeAs: 'testStoreAs',
+          where: ['abc', '===', 123],
+        },
+        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+
+      const action2 = {
+        meta: {
+          collection: 'testCollection',
+          storeAs: 'testStoreAs',
+          where: ['abc', '===', 123],
+          path: `testCollection/${doc2.id}`,
+          doc: doc2.id,
+        },
+        payload: { data: doc2, ordered: { oldIndex: 0, newIndex: 0 } },
+        type: actionTypes.DOCUMENT_MODIFIED,
+      };
+
+      const pass1 = reducer(initialState, action1);
+      expect(pass1.composite.testStoreAs[doc1.id]).to.eql(doc1);
+
+      const pass2 = reducer(pass1, action2);
+      expect(pass2.composite.testStoreAs[doc1.id]).to.eql(doc2); // both docs have the same id
+    });
+
+    it('handles deletes', () => {
+      const doc1 = { key1: 'value1', id: 'testDocId1' }; // initial doc
+
+      // Initial seed
+      const action1 = {
+        meta: {
+          collection: 'testCollection',
+          storeAs: 'testStoreAs',
+          where: ['abc', '===', 123],
+        },
+        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+
+      const action2 = {
+        meta: {
+          collection: 'testCollection',
+          storeAs: 'testStoreAs',
+          where: ['abc', '===', 123],
+          path: `testCollection/${doc1.id}`,
+          doc: doc1.id,
+        },
+        payload: { data: undefined, ordered: { oldIndex: 0, newIndex: -1 } },
+        type: actionTypes.DOCUMENT_REMOVED,
+      };
+
+      const pass1 = reducer(initialState, action1);
+      expect(pass1.composite.testStoreAs[doc1.id]).to.eql(doc1);
+
+      const pass2 = reducer(pass1, action2);
+      expect(pass2.composite.testStoreAs[doc1.id]).to.eql(undefined);
+    });
+
+    it('handles unset listener', () => {
+      const doc1 = { key1: 'value1', id: 'testDocId1' }; // initial doc
+
+      // Initial seed
+      const action1 = {
+        meta: {
+          collection: 'testCollection',
+          storeAs: 'testStoreAs',
+          where: ['abc', '===', 123],
+        },
+        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+
+      const action2 = {
+        meta: {
+          collection: 'testCollection',
+          storeAs: 'testStoreAs',
+          where: ['abc', '===', 123],
+        },
+        payload: { name: undefined }, // actually query string
+        type: actionTypes.UNSET_LISTENER,
+      };
+
+      const pass1 = reducer(initialState, action1);
+      expect(pass1.composite.testStoreAs[doc1.id]).to.eql(doc1);
+
+      const pass2 = reducer(pass1, action2);
+      display(pass2.composite.testStoreAs);
+      expect(pass2.composite.testStoreAs).to.eql({});
+    });
+
+    it('updates data from composite', () => {
+      const doc1 = { key1: 'value1', id: 'testDocId1' };
+      const doc2 = { key1: 'value1', id: 'testDocId2' };
+      const action1 = {
+        meta: {
+          collection: 'testCollection',
+          storeAs: 'testStoreAs',
+          where: ['abc', '===', 123],
+        },
+        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+
+      const pass1 = reducer(initialState, action1);
+      expect(pass1.composite.testStoreAs[doc1.id]).to.eql(doc1);
+      expect(pass1.composite.testStoreAs.obsoleteDocId).to.equal(undefined);
+
+      const action2 = {
+        meta: {
+          collection: 'testCollection',
+          storeAs: 'testStoreAs',
+          where: ['abc', '===', 234], // same meta, different where (how an `or` query is implemented in firestore atm)
+        },
+        payload: { data: { [doc2.id]: doc2 }, ordered: [doc2] },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+
+      // In the second pass, we expect to retain the first doc (since it is a different query) and add the second doc
+      const pass2 = reducer(pass1, action2);
+      expect(pass2.composite.testStoreAs[doc1.id]).to.eql(doc1);
+      expect(pass2.composite.testStoreAs[doc2.id]).to.eql(doc2);
+    });
+
+    it('handles a where without a storeAs', () => {
+      const doc1 = { key1: 'value1', id: 'testDocId1' };
+      const doc2 = { key1: 'value1', id: 'testDocId2' };
+      const action1 = {
+        meta: {
+          collection: 'testCollection',
+          where: ['abc', '===', 123],
+        },
+        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+      const pass1 = reducer(
+        {
+          data: { testCollection: { obsoleteDocId: {} } },
+          ordered: {},
+        },
+        action1,
+      );
+      expect(pass1.composite.testCollection[doc1.id]).to.eql(doc1);
+      expect(pass1.composite.testCollection.obsoleteDocId).to.equal(undefined);
+
+      const action2 = {
+        meta: {
+          collection: 'testCollection',
+          where: ['abc', '===', 234], // same meta, different where (how an `or` query is implemented in firestore atm)
+        },
+        payload: { data: { [doc2.id]: doc2 }, ordered: [doc2] },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+
+      // In the second pass, we expect to retain the first doc (since it is a different query) and add the second doc
+      const pass2 = reducer(pass1, action2);
+      expect(pass2.composite.testCollection[doc1.id]).to.eql(doc1);
+      expect(pass2.composite.testCollection[doc2.id]).to.eql(doc2);
+    });
+
+    it('handles a null payload.data', () => {
+      const action1 = {
+        meta: {
+          collection: 'testCollection',
+          storeAs: 'testStoreAs',
+          where: ['abc', '===', 123],
+        },
+        payload: { data: null, ordered: [] },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+      const pass1 = reducer(initialState, action1);
+
+      expect(pass1.composite.testStoreAs).to.eql({}); // TODO: should this be null, undefined, or an empty object?
+    });
+  });
+});

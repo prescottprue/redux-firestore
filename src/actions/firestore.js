@@ -230,16 +230,11 @@ export function setListener(firebase, dispatch, queryOpts, successCb, errorCb) {
           : docData.docChanges;
       // Dispatch different actions for doc changes (only update doc(s) by key)
       if (docChanges && docChanges.length < docData.size) {
-        if (docChanges.length === 1) {
-          // Dispatch doc update if there is only one
-          dispatch(docChangeEvent(docChanges[0], meta));
-        } else {
-          // Loop to dispatch for each change if there are multiple
-          // TODO: Option for dispatching multiple changes in single action
-          docChanges.forEach(change => {
-            dispatch(docChangeEvent(change, meta));
-          });
-        }
+        // Loop to dispatch for each change if there are multiple
+        // TODO: Option for dispatching multiple changes in single action
+        docChanges.forEach(change => {
+          dispatch(docChangeEvent(change, meta));
+        });
       } else {
         // Dispatch action for whole collection change
         dispatch({
