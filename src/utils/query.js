@@ -188,6 +188,44 @@ export function getQueryName(meta) {
 }
 
 /**
+ * Create query name based on query settings for use as object keys (used
+ * in listener management and reducers).
+ * @param  {Object} meta - Metadata object containing query settings
+ * @param  {String} meta.collection - Collection name of query
+ * @param  {String} meta.doc - Document id of query
+ * @param  {Array} meta.subcollections - Subcollections of query
+ * @return {String} String representing query settings
+ */
+export function getBaseQueryName(meta) {
+  if (isString(meta)) {
+    return meta;
+  }
+  const { collection, subcollections, where, limit } = meta;
+  if (!collection) {
+    throw new Error('Collection is required to build query name');
+  }
+  let basePath = collection;
+
+  if (subcollections) {
+    const mappedCollections = subcollections.map(subcollection =>
+      getQueryName(subcollection),
+    );
+    basePath = `${basePath}/${mappedCollections.join('/')}`;
+  }
+  if (where) {
+    if (!isArray(where)) {
+      throw new Error('where parameter must be an array.');
+    }
+    basePath = basePath.concat(`?${whereToStr(where)}`);
+  }
+  if (typeof limit !== 'undefined') {
+    const limitStr = `limit=${limit}`;
+    basePath = basePath.concat(`${where ? '&' : '?'}${limitStr}`);
+  }
+  return basePath;
+}
+
+/**
  * Confirm that meta object exists and that listeners object exists on internal
  * firebase instance. If these required values do not exist, an error is thrown.
  * @param {Object} firebase - Internal firebase object

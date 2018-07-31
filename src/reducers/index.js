@@ -3,6 +3,8 @@ import errorsReducer from './errorsReducer';
 import listenersReducer from './listenersReducer';
 import orderedReducer from './orderedReducer';
 import statusReducer from './statusReducer';
+import queriesReducer from './queriesReducer';
+import crossSliceReducer from './crossSliceReducer';
 
 export {
   dataReducer,
@@ -10,6 +12,8 @@ export {
   listenersReducer,
   orderedReducer,
   statusReducer,
+  queriesReducer,
+  crossSliceReducer,
 };
 
 export default {
@@ -18,4 +22,6 @@ export default {
   listenersReducer,
   orderedReducer,
   statusReducer,
+  queriesReducer,
+  crossSliceReducer,
 };

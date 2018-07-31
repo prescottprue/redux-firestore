@@ -305,6 +305,21 @@ Multiple `where` queries are as simple as passing multiple argument arrays (each
 },
 ```
 
+Firestore doesn't alow you to create `or` style queries.  Instead, you should pass in multiple queries and compose your data.
+
+``` javascript
+['sally', 'john', 'peter'].map(friendId => ({
+  collection: 'users',
+  where: [
+    ['id', '==', friendId],
+    ['isOnline', '==', true]
+  ]
+  storeAs: 'onlineFriends'
+}));
+```
+
+Since the results must be composed, a query like this is unable to be properly ordered.  The results should be pulled from `data`. 
+
 *Can only be used with collections*
 
 ##### orderBy

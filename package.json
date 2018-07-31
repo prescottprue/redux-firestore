@@ -1,6 +1,6 @@
 {
   "name": "redux-firestore",
-  "version": "0.5.7",
+  "version": "0.6.0-alpha",
   "description": "Redux bindings for Firestore.",
   "main": "lib/index.js",
   "module": "es/index.js",
@@ -26,7 +26,7 @@
     "test": "mocha -R spec ./test/unit/**",
     "test:cov": "istanbul cover  $(npm bin)/_mocha ./test/unit/**",
     "codecov": "cat coverage/lcov.info | codecov",
-    "lint": "eslint .",
+    "lint": "eslint src test",
     "lint:fix": "npm run lint -- --fix",
     "format": "prettier --write \"src/**/*.js\" \"test/**/*.js\"",
     "prepare": "npm run clean && npm run build",
@@ -34,10 +34,13 @@
     "prepush": "npm run lint"
   },
   "dependencies": {
+    "immer": "1.5.0",
     "lodash": "^4.17.10",
-    "prop-types": "^15.6.1"
+    "prop-types": "^15.6.1",
+    "reduce-reducers": "0.4.3"
   },
   "devDependencies": {
+    "@types/lodash": "^4.14.114",
     "babel-cli": "^6.26.0",
     "babel-core": "^6.26.0",
     "babel-eslint": "^8.0.1",
@@ -65,7 +68,7 @@
     "husky": "^0.14.3",
     "istanbul": "1.1.0-alpha.1",
     "mocha": "^5.2.0",
-    "prettier": "1.10.0",
+    "prettier": "1.13.7",
     "redux": "^3.7.2",
     "rimraf": "^2.6.2",
     "sinon": "^6.0.0",
@@ -79,6 +82,7 @@
   "keywords": [
     "firestore",
     "redux",
+    "react-firestore",
     "react-redux-firebase",
     "redux-firebase",
     "react-firebase"
