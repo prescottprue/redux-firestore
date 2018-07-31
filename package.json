@@ -26,7 +26,7 @@
     "test": "mocha -R spec ./test/unit/**",
     "test:cov": "istanbul cover  $(npm bin)/_mocha ./test/unit/**",
     "codecov": "cat coverage/lcov.info | codecov",
-    "lint": "eslint .",
+    "lint": "eslint src test",
     "lint:fix": "npm run lint -- --fix",
     "format": "prettier --write \"src/**/*.js\" \"test/**/*.js\"",
     "prepare": "npm run clean && npm run build",
