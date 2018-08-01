@@ -9,7 +9,7 @@ We welcome any type of contribution, not only code. You can help with
 - **Marketing**: writing blog posts, howto's, printing stickers, ...
 - **Community**: presenting the project at meetups, organizing a dedicated meetup for the local community, ...
 - **Code**: take a look at the [open issues](issues). Even if you can't write code, commenting on them, showing that you care about a given issue matters. It helps us triage them.
-- **Money**: we welcome financial contributions in full transparency on our [open collective](https://opencollective.com/redux-firestore).
+- **Money**: we welcome financial contributions in full transparency on our [open collective](https://opencollective.com/react-redux-firebase).
 
 ## Your First Contribution
 
