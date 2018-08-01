@@ -1,26 +1,18 @@
 /* eslint-disable guard-for-in, no-restricted-syntax, no-param-reassign */
 
 import produce from 'immer';
-import { values, groupBy, merge, set } from 'lodash';
+import { values, groupBy, merge, set, get } from 'lodash';
 import { actionTypes } from '../constants';
-import { isComposable } from './queriesReducer';
 
 export default function crossSliceReducer(state = {}, action) {
-  // Only relevant for queries
-  if (!isComposable(action)) {
-    return state;
-  }
-
   return produce(state, draft => {
     switch (action.type) {
-      case actionTypes.GET_SUCCESS:
-      case actionTypes.DELETE_SUCCESS:
       case actionTypes.DOCUMENT_MODIFIED:
       case actionTypes.DOCUMENT_ADDED:
       case actionTypes.DOCUMENT_REMOVED:
       case actionTypes.LISTENER_RESPONSE:
       case actionTypes.UNSET_LISTENER:
-        // Take all of the composite values and plop them into data, replacing the existing data entirely
+        // Take all of the query values and plop them into composite, replacing the existing data entirely
         const groups = groupBy(
           values(state.queries),
           c => c.storeAs || c.collection,
@@ -29,7 +21,7 @@ export default function crossSliceReducer(state = {}, action) {
         for (const storeAs in groups) {
           const updated = {};
           for (const item of groups[storeAs]) {
-            merge(updated, item.data || {});
+            merge(updated, get(item, 'data', {}));
           }
           set(draft, ['composite', storeAs], updated);
         }

@@ -9,6 +9,39 @@ const initialState = {
 
 describe('reducer', () => {
   describe('cross slice behaviour', () => {
+    it('keeps composite when SET_LISTENER is passed', () => {
+      const doc1 = { key1: 'value1', id: 'testDocId1' }; // initial doc
+      const doc2 = { key1: 'value1', id: 'testDocId2' }; // added doc
+
+      // Initial seed
+      const action1 = {
+        meta: {
+          collection: 'testCollection',
+          storeAs: 'testStoreAs',
+          where: ['abc', '===', 123],
+        },
+        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+      const action2 = {
+        type: actionTypes.GET_REQUEST,
+        meta: {
+          collection: 'testCollection',
+          doc: doc2.id,
+        },
+        payload: {
+          args: [],
+        },
+      };
+
+      const pass1 = reducer(initialState, action1);
+      const pass2 = reducer(pass1, action2);
+      expect(pass1.composite.testStoreAs[doc1.id]).to.eql(doc1);
+      expect(pass2.composite.testStoreAs[doc1.id]).to.eql(doc1);
+      const pass3 = reducer(pass2, { type: 'some other type' });
+      expect(pass3.composite.testStoreAs[doc1.id]).to.eql(doc1);
+    });
+
     it('handles adds', () => {
       const doc1 = { key1: 'value1', id: 'testDocId1' }; // initial doc
       const doc2 = { key1: 'value1', id: 'testDocId2' }; // added doc
