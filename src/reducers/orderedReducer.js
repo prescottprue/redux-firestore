@@ -250,7 +250,7 @@ export default function orderedReducer(state = {}, action) {
   }
 
   // Return state if action does not contain valid meta
-  if (!action.meta && !action.meta.storeAs && !action.meta.collection) {
+  if (!action.meta || (!action.meta.storeAs && !action.meta.collection)) {
     return state;
   }
 
