@@ -230,12 +230,8 @@ const orderedCollectionReducer = createReducer(undefined, actionHandlers);
  * @return {Object} Ordered state after reduction
  */
 export default function orderedReducer(state = {}, action) {
-  // Return state if action is malformed (i.e. no type, or valid meta)
-  if (
-    !action.type ||
-    !action.meta ||
-    (!action.meta.storeAs && !action.meta.collection)
-  ) {
+  // Return state if action is malformed (i.e. no type)
+  if (!action.type) {
     return state;
   }
 
@@ -250,6 +246,11 @@ export default function orderedReducer(state = {}, action) {
 
   // Return original state if action type is not within actionHandlers
   if (!Object.prototype.hasOwnProperty.call(actionHandlers, action.type)) {
+    return state;
+  }
+
+  // Return state if action does not contain valid meta
+  if (!action.meta || (!action.meta.storeAs && !action.meta.collection)) {
     return state;
   }
 
