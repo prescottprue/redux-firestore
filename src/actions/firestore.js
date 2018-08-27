@@ -326,6 +326,16 @@ export function setListeners(firebase, dispatch, listeners) {
     // truthy value
     if (!listenerExists(firebase, listener) || multipleListenersEnabled) {
       setListener(firebase, dispatch, listener);
+    } else {
+      const path = getQueryName(listener);
+
+      /* eslint-disable no-console */
+      console.warn(
+        `There are multiple listeners attempting to be set to ${path}. ` +
+          `If you are trying to do this intentionally please set the ` +
+          `configuration option 'allowMultipleListeners' to 'true'.`,
+      );
+      /* eslint-enable no-console */
     }
   });
 }
