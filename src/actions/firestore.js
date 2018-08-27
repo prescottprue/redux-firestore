@@ -4,7 +4,6 @@ import { actionTypes } from '../constants';
 import {
   attachListener,
   detachListener,
-  listenerExists,
   orderedFromSnap,
   dataByIdSnapshot,
   getQueryConfig,
@@ -298,44 +297,20 @@ export function setListeners(firebase, dispatch, listeners) {
   }
 
   const { config } = firebase._;
-
-  // Only attach one listener (count of matching listener path calls is tracked)
-  if (config.oneListenerPerPath) {
-    return listeners.forEach(listener => {
-      const path = getQueryName(listener);
-      const oldListenerCount = pathListenerCounts[path] || 0;
-      pathListenerCounts[path] = oldListenerCount + 1;
-
-      // If we already have an attached listener exit here
-      if (oldListenerCount > 0) {
-        return;
-      }
-
-      setListener(firebase, dispatch, listener);
-    });
-  }
+  const { allowMultipleListeners } = config;
 
   return listeners.forEach(listener => {
-    // Config for supporting attaching of multiple listener callbacks
-    const multipleListenersEnabled = isFunction(config.allowMultipleListeners)
-      ? config.allowMultipleListeners(listener, firebase._.listeners)
-      : config.allowMultipleListeners;
+    const path = getQueryName(listener);
+    const oldListenerCount = pathListenerCounts[path] || 0;
+    const multipleListenersEnabled = isFunction(allowMultipleListeners)
+      ? allowMultipleListeners(listener, firebase._.listeners)
+      : allowMultipleListeners;
 
-    // Only attach listener if it does not already exist or
-    // if multiple listeners config is true or is a function which returns
-    // truthy value
-    if (!listenerExists(firebase, listener) || multipleListenersEnabled) {
+    pathListenerCounts[path] = oldListenerCount + 1;
+
+    // If we already have an attached listener exit here
+    if (oldListenerCount === 0 || multipleListenersEnabled) {
       setListener(firebase, dispatch, listener);
-    } else {
-      const path = getQueryName(listener);
-
-      /* eslint-disable no-console */
-      console.warn(
-        `There are multiple listeners attempting to be set to ${path}. ` +
-          `If you are trying to do this intentionally please set the ` +
-          `configuration option 'allowMultipleListeners' to 'true'.`,
-      );
-      /* eslint-enable no-console */
     }
   });
 }
@@ -368,25 +343,23 @@ export function unsetListeners(firebase, dispatch, listeners) {
     );
   }
   const { config } = firebase._;
+  const { allowMultipleListeners } = config;
 
   // Keep one listener path even when detaching
-  if (config.oneListenerPerPath) {
-    listeners.forEach(listener => {
-      const path = getQueryName(listener);
-      pathListenerCounts[path] -= 1;
+  listeners.forEach(listener => {
+    const path = getQueryName(listener);
+    const listenerExists = pathListenerCounts[path] >= 1;
+    const multipleListenersEnabled = isFunction(allowMultipleListeners)
+      ? allowMultipleListeners(listener, firebase._.listeners)
+      : allowMultipleListeners;
 
+    if (listenerExists) {
+      pathListenerCounts[path] -= 1;
       // If we aren't supposed to have listners for this path, then remove them
-      if (pathListenerCounts[path] === 0) {
+      if (pathListenerCounts[path] === 0 || multipleListenersEnabled) {
         unsetListener(firebase, dispatch, listener);
       }
-    });
-
-    return;
-  }
-
-  listeners.forEach(listener => {
-    // Remove listener only if it exists
-    unsetListener(firebase, dispatch, listener);
+    }
   });
 }
 
