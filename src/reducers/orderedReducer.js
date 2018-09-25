@@ -1,5 +1,5 @@
 import { size, get, unionBy, reject, omit, map, keyBy, isEqual } from 'lodash';
-import { merge as mergeObjects } from 'lodash/fp';
+import { merge as mergeObjects, assign as assignObjects } from 'lodash/fp';
 import { actionTypes } from '../constants';
 import {
   updateItemInArray,
@@ -30,7 +30,7 @@ function modifyDoc(collectionState, action) {
   if (!action.meta.subcollections || action.meta.storeAs) {
     return updateItemInArray(collectionState, action.meta.doc, item =>
       // Merge is used to prevent the removal of existing subcollections
-      mergeObjects(item, action.payload.data),
+      assignObjects(item, action.payload.data),
     );
   }
 
