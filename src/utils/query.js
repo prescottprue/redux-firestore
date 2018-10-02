@@ -154,9 +154,11 @@ function whereToStr(where) {
  * @param  {String} meta.collection - Collection name of query
  * @param  {String} meta.doc - Document id of query
  * @param  {Array} meta.subcollections - Subcollections of query
+ * @param {Object} [options={}] - Options object
+ * @param {Boolean} [options.onlySubcollections=false] - Options object
  * @return {String} String representing query settings
  */
-export function getQueryName(meta) {
+export function getQueryName(meta, options = {}) {
   if (isString(meta)) {
     return meta;
   }
@@ -174,6 +176,13 @@ export function getQueryName(meta) {
     );
     basePath = `${basePath}/${mappedCollections.join('/')}`;
   }
+  const { onlySubcollections } = options || {};
+
+  // Return path only including subcollections (data)
+  if (onlySubcollections) {
+    return basePath;
+  }
+
   if (where) {
     if (!isArray(where)) {
       throw new Error('where parameter must be an array.');

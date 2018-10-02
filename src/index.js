@@ -4,6 +4,8 @@ import { firestoreActions } from './actions';
 import createFirestoreInstance from './createFirestoreInstance';
 import constants, { actionTypes } from './constants';
 import middleware, { CALL_FIRESTORE } from './middleware';
+import { getQueryName } from './utils/query';
+import { firestoreOrderedSelector, firestoreDataSelector } from './selectors';
 
 // converted with transform-inline-environment-variables
 export const version = process.env.npm_package_version;
@@ -15,6 +17,9 @@ export {
   enhancer as reduxFirestore,
   createFirestoreInstance,
   firestoreActions as actions,
+  getQueryName,
+  firestoreOrderedSelector,
+  firestoreDataSelector,
   getFirestore,
   constants,
   actionTypes,

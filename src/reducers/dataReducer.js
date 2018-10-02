@@ -1,7 +1,8 @@
 import { get } from 'lodash';
 import { setWith, assign } from 'lodash/fp';
 import { actionTypes } from '../constants';
-import { pathFromMeta, preserveValuesFromState } from '../utils/reducers';
+import { getQueryName } from '../utils/query';
+import { preserveValuesFromState } from '../utils/reducers';
 
 const {
   CLEAR_DATA,
@@ -37,41 +38,29 @@ export default function dataReducer(state = {}, action) {
       if (!payload || payload.data === undefined) {
         return state;
       }
-      // Get doc from subcollections if they exist
-      const getDocName = data =>
-        data.subcollections
-          ? getDocName(data.subcollections.slice(-1)[0]) // doc from last item of subcollections array
-          : data.doc; // doc from top level meta
-      const docName = getDocName(meta);
-      // Data to set to state is doc if doc name exists within meta
-      const data = docName ? get(payload.data, docName) : payload.data;
+      const queryName = getQueryName(meta, { onlySubcollections: true });
       // Get previous data at path to check for existence
-      const previousData = get(state, meta.storeAs || pathFromMeta(meta));
+      const previousData = get(state, meta.storeAs || queryName);
       // Set data (without merging) if no previous data exists or if there are subcollections
       if (!previousData || meta.subcollections) {
         // Set data to state immutabily (lodash/fp's setWith creates copy)
-        return setWith(Object, meta.storeAs || pathFromMeta(meta), data, state);
+        return setWith(Object, meta.storeAs || queryName, payload.data, state);
       }
       // Otherwise merge with existing data
-      const mergedData = assign(previousData, data);
+      const mergedData = assign(previousData, payload.data);
       // Set data to state (with merge) immutabily (lodash/fp's setWith creates copy)
-      return setWith(
-        Object,
-        meta.storeAs || pathFromMeta(meta),
-        mergedData,
-        state,
-      );
+      return setWith(Object, meta.storeAs || queryName, mergedData, state);
     case DOCUMENT_MODIFIED:
     case DOCUMENT_ADDED:
       return setWith(
         Object,
-        pathFromMeta(action.meta),
+        getQueryName(action.meta),
         action.payload.data,
         state,
       );
     case DOCUMENT_REMOVED:
     case DELETE_SUCCESS:
-      const removePath = pathFromMeta(action.meta);
+      const removePath = getQueryName(action.meta);
       const cleanedState = setWith(Object, removePath, null, state);
       if (action.preserve && action.preserve.data) {
         return preserveValuesFromState(
@@ -89,11 +78,11 @@ export default function dataReducer(state = {}, action) {
       return {};
     case LISTENER_ERROR:
       // Set data to state immutabily (lodash/fp's setWith creates copy)
-      const nextState = setWith(Object, pathFromMeta(action.meta), null, state);
+      const nextState = setWith(Object, getQueryName(action.meta), null, state);
       if (action.preserve && action.preserve.data) {
         return preserveValuesFromState(state, action.preserve.data, nextState);
       }
-      const existingState = get(state, pathFromMeta(action.meta));
+      const existingState = get(state, getQueryName(action.meta));
       // If path contains data already, leave it as it is (other listeners
       // could have placed it there)
       if (existingState) {
