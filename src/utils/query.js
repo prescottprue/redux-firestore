@@ -167,6 +167,11 @@ export function getQueryName(meta, options = {}) {
     throw new Error('Collection is required to build query name');
   }
   let basePath = collection;
+  const { onlySubcollections } = options || {};
+  // Return path only including subcollections (data)
+  if (onlySubcollections && !subcollections) {
+    return basePath;
+  }
   if (doc) {
     basePath = basePath.concat(`/${doc}`);
   }
@@ -176,7 +181,6 @@ export function getQueryName(meta, options = {}) {
     );
     basePath = `${basePath}/${mappedCollections.join('/')}`;
   }
-  const { onlySubcollections } = options || {};
 
   // Return path only including subcollections (data)
   if (onlySubcollections) {

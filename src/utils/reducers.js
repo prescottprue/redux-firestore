@@ -69,6 +69,9 @@ export function combineReducers(reducers) {
  */
 export function updateItemInArray(array, itemId, updateItemCallback) {
   let matchFound = false;
+  if (!array || !array.length) {
+    return [];
+  }
   const modified = array.map(item => {
     // Preserve items that do not have matching ids
     if (!item || item.id !== itemId) {

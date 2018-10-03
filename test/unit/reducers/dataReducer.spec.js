@@ -30,12 +30,10 @@ describe('dataReducer', () => {
       it('throws for no collection', () => {
         const someDoc = {};
         payload = { data: { abc: someDoc } };
-        meta = { collection, doc };
+        meta = {};
         action = { meta, payload, type: actionTypes.DOCUMENT_ADDED };
-        result = dataReducer({}, action);
-        expect(result).to.have.nested.property(
-          `${collection}.${doc}.abc`,
-          someDoc,
+        expect(() => dataReducer({}, action)).to.throw(
+          'Collection is required to build query name',
         );
       });
     });
@@ -64,7 +62,7 @@ describe('dataReducer', () => {
         meta = {};
         action = { meta, payload, type: actionTypes.LISTENER_RESPONSE };
         expect(() => dataReducer(state, action)).to.throw(
-          'Collection is required to construct reducer path.',
+          'Collection is required to build query name',
         );
       });
 
@@ -104,8 +102,8 @@ describe('dataReducer', () => {
             subcollections: [{ collection: 'another' }],
           };
           action = { meta, payload, type: actionTypes.LISTENER_RESPONSE };
-          expect(dataReducer(state, action)).to.have.nested.property(
-            'test.someDoc.another',
+          expect(dataReducer(state, action)).to.have.property(
+            'test/someDoc/another',
             data,
           );
         });
@@ -181,7 +179,7 @@ describe('dataReducer', () => {
         meta = {};
         action = { meta, payload, type: actionTypes.GET_SUCCESS };
         expect(() => dataReducer(state, action)).to.throw(
-          'Collection is required to construct reducer path.',
+          'Collection is required to build query name',
         );
       });
 
@@ -319,7 +317,7 @@ describe('dataReducer', () => {
         payload = {};
         action = { meta: {}, payload, type: actionTypes.LISTENER_ERROR };
         expect(() => dataReducer(state, action)).to.throw(
-          'Collection is required to construct reducer path.',
+          'Collection is required to build query name',
         );
       });
 
