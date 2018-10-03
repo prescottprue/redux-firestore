@@ -156,6 +156,7 @@ function whereToStr(where) {
  * @param  {Array} meta.subcollections - Subcollections of query
  * @param {Object} [options={}] - Options object
  * @param {Boolean} [options.onlySubcollections=false] - Options object
+ * @param {Boolean} [options.withDoc=false] - Options object
  * @return {String} String representing query settings
  */
 export function getQueryName(meta, options = {}) {

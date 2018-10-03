@@ -231,8 +231,9 @@ describe('dataReducer', () => {
             test: { someDoc: { another: { testing: {} } } },
           };
           action = { meta, payload, type: actionTypes.GET_SUCCESS };
-          expect(dataReducer(existingState, action)).to.have.nested.property(
-            'test/someDoc/another/testing.field',
+          result = dataReducer(existingState, action);
+          expect(result['test/someDoc/another/testing']).to.have.property(
+            'field',
             data.testing.field,
           );
         });
@@ -262,9 +263,11 @@ describe('dataReducer', () => {
       it('clears data from state', () => {
         meta = { collection, doc };
         action = { meta, type: actionTypes.DELETE_SUCCESS };
-        expect(
-          dataReducer({ [collection]: { [doc]: { thing: 'asdf' } } }, action),
-        ).to.have.nested.property(`${collection}.${doc}`, null);
+        result = dataReducer(
+          { [collection]: { [doc]: { thing: 'asdf' } } },
+          action,
+        );
+        expect(result).to.have.nested.property(`${collection}.${doc}`, null);
       });
 
       it('preserves keys provided in preserve parameter', () => {

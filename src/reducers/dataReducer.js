@@ -1,8 +1,8 @@
-import { get } from 'lodash';
+import { get, last } from 'lodash';
 import { setWith, assign } from 'lodash/fp';
 import { actionTypes } from '../constants';
 import { getQueryName } from '../utils/query';
-import { preserveValuesFromState } from '../utils/reducers';
+import { preserveValuesFromState, pathToArr } from '../utils/reducers';
 
 const {
   CLEAR_DATA,
@@ -54,14 +54,17 @@ export default function dataReducer(state = {}, action) {
     case DOCUMENT_ADDED:
       return setWith(
         Object,
-        getQueryName(action.meta),
+        getQueryName(action.meta, { onlySubcollections: true }),
         action.payload.data,
         state,
       );
     case DOCUMENT_REMOVED:
     case DELETE_SUCCESS:
-      const removePath = getQueryName(action.meta);
-      const cleanedState = setWith(Object, removePath, null, state);
+      const removePath = getQueryName(action.meta, {
+        onlySubcollections: true,
+      });
+      const id = last(pathToArr(getQueryName(action.meta)));
+      const cleanedState = setWith(Object, `${removePath}.${id}`, null, state);
       if (action.preserve && action.preserve.data) {
         return preserveValuesFromState(
           state,
@@ -78,11 +81,19 @@ export default function dataReducer(state = {}, action) {
       return {};
     case LISTENER_ERROR:
       // Set data to state immutabily (lodash/fp's setWith creates copy)
-      const nextState = setWith(Object, getQueryName(action.meta), null, state);
+      const nextState = setWith(
+        Object,
+        getQueryName(action.meta, { onlySubcollections: true }),
+        null,
+        state,
+      );
       if (action.preserve && action.preserve.data) {
         return preserveValuesFromState(state, action.preserve.data, nextState);
       }
-      const existingState = get(state, getQueryName(action.meta));
+      const existingState = get(
+        state,
+        getQueryName(action.meta, { onlySubcollections: true }),
+      );
       // If path contains data already, leave it as it is (other listeners
       // could have placed it there)
       if (existingState) {

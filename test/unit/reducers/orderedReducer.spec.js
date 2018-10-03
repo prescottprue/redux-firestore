@@ -60,7 +60,7 @@ describe('orderedReducer', () => {
         const meta = {
           collection,
           doc,
-          subcollections: [{ collection: subcollection }],
+          subcollections: [{ collection: subcollection, doc: subdoc }],
           path: `${collection}/${doc}/${subcollection}/${subdoc}`,
         };
         action = {
@@ -69,14 +69,12 @@ describe('orderedReducer', () => {
           type: actionTypes.DOCUMENT_ADDED,
         };
         const result = orderedReducer({}, action);
+        const parentPath = `${collection}/${doc}/${subcollection}`;
         // Id is set
-        expect(result).to.have.nested.property(
-          `${collection}.0.${subcollection}.0.id`,
-          subdoc,
-        );
+        expect(result[parentPath]).to.have.nested.property('0.id', subdoc);
         // Value is set
-        expect(result).to.have.nested.property(
-          `${collection}.0.${subcollection}.0.some`,
+        expect(result[parentPath]).to.have.nested.property(
+          '0.some',
           fakeDoc.some,
         );
       });
@@ -123,11 +121,12 @@ describe('orderedReducer', () => {
           { [collection]: [someDoc, someDoc2] },
           action,
         );
-        // Confirm first item is
+        // Confirm first item is second doc
         expect(result).to.have.nested.property(
           `${collection}.0.id`,
           someDoc2.id,
         );
+        // Confirm first item is second doc
         expect(result[collection]).to.have.length(1);
       });
 
@@ -212,7 +211,7 @@ describe('orderedReducer', () => {
           subDocSetting.doc
         }`;
         const result = orderedReducer(
-          { [slashPath]: [someDoc, someDoc2] },
+          { [collection]: [someDoc], [slashPath]: [someDoc, someDoc2] },
           action,
         );
         // Confirm first item is still original doc
@@ -400,18 +399,21 @@ describe('orderedReducer', () => {
         it('adds a new doc within state with subcollection', () => {
           const orderedData = { id: 'subDoc' };
           const subcollection = { collection: 'testing2' };
+          const collection = 'testing';
+          const doc = 'doc';
           action = {
             meta: {
-              collection: 'testing',
-              doc: 'doc',
+              collection,
+              doc,
               subcollections: [subcollection],
             },
             type: actionTypes.LISTENER_RESPONSE,
             payload: { ordered: [orderedData] },
           };
           state = {};
-          expect(orderedReducer(state, action)).to.have.nested.property(
-            `testing.0.${subcollection.collection}.0.id`,
+          const result = orderedReducer(state, action);
+          expect(result[`${collection}/${doc}`]).to.have.nested.property(
+            '0.id',
             orderedData.id,
           );
         });
@@ -419,35 +421,43 @@ describe('orderedReducer', () => {
         it('adds subcollection to existing doc within state', () => {
           const orderedData = { id: 'subDoc', someOther: 'thing' };
           const subcollection = { collection: 'testing2' };
+          const collection = 'testing';
+          const doc = 'doc';
           action = {
             meta: {
-              collection: 'testing',
-              doc: 'doc',
+              collection,
+              doc,
               subcollections: [subcollection],
             },
             merge: {}, // reset merge settings
             type: actionTypes.LISTENER_RESPONSE,
             payload: { ordered: [orderedData] },
           };
-          state = { testing: [{ id: 'doc', another: 'thing' }] };
-          const result = orderedReducer(state, action);
-          // Adds subcollection to document
-          expect(
-            result[`testing/doc/${subcollection.collection}`],
-          ).to.have.property('0.id', orderedData.id);
+          const originalState = {
+            [collection]: [{ id: 'doc', another: 'thing' }],
+          };
+          const result = orderedReducer(originalState, action);
+          // Adds subcollection
+          expect(result[`${collection}/${doc}`]).to.have.nested.property(
+            '0.id',
+            orderedData.id,
+          );
           // Preserves original value
-          expect(
-            result[`testing/doc/${subcollection.collection}`],
-          ).to.have.property('another', 'thing');
+          expect(result[collection]).to.have.nested.property(
+            '0.id',
+            originalState[collection][0].id,
+          );
         });
 
         it('perserves existing collections on doc updates', () => {
           const orderedData = { id: 'doc', someOther: 'thing' };
           const original = [{ id: 'subDoc' }];
+          const collection = 'testing';
+          const doc = 'doc';
           action = {
             meta: {
-              collection: 'testing',
-              doc: 'doc',
+              collection,
+              doc,
             },
             merge: {}, // reset merge settings
             type: actionTypes.LISTENER_RESPONSE,
@@ -457,7 +467,7 @@ describe('orderedReducer', () => {
           const result = orderedReducer(state, action);
           // Updates parameter in document
           expect(result).to.have.nested.property(
-            `testing.0.someOther`,
+            `${collection}.0.someOther`,
             orderedData.someOther,
           );
           // Preserves documents in original subcollection
@@ -490,12 +500,15 @@ describe('orderedReducer', () => {
       });
 
       it('removes data from subcollection if payload is empty', () => {
-        const original = [{ id: 'subDoc' }];
+        const original = { data: 'asdf' };
+        const collection = 'testing';
+        const doc = 'doc';
+        const subcollection = { collection: 'original' };
         action = {
           meta: {
-            collection: 'testing',
-            doc: 'doc',
-            subcollections: [{ collection: 'original' }],
+            collection,
+            doc,
+            subcollections: [subcollection],
           },
           merge: {}, // reset merge settings
           type: actionTypes.LISTENER_RESPONSE,
@@ -503,8 +516,15 @@ describe('orderedReducer', () => {
         };
         state = { testing: [{ id: 'doc', original }] };
         const result = orderedReducer(state, action);
+        // Does not remove document
+        expect(result).to.have.nested.property(
+          `${collection}.0.original.data`,
+          original.data,
+        );
         // Removes subcollection
-        expect(result).to.not.have.nested.property('testing.0.original');
+        expect(result[`${collection}/${doc}`]).to.not.have.nested.property(
+          `${collection}.0.original`,
+        );
       });
 
       it('stores data under storeAs', () => {

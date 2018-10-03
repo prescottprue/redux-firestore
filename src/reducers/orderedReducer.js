@@ -1,4 +1,13 @@
-import { size, get, reject, dropRight, map, keyBy, isEqual } from 'lodash';
+import {
+  size,
+  get,
+  reject,
+  dropRight,
+  map,
+  keyBy,
+  isEqual,
+  last,
+} from 'lodash';
 import { assign as assignObjects, merge as mergeObjects } from 'lodash/fp';
 import { actionTypes } from '../constants';
 import { getQueryName } from '../utils/query';
@@ -42,9 +51,10 @@ function modifyDoc(collectionState, action) {
  */
 function addDoc(array = [], action) {
   const { meta, payload } = action;
+  const id = last(pathToArr(getQueryName(meta)));
   return [
     ...array.slice(0, payload.ordered.newIndex),
-    { id: meta.doc, ...payload.data },
+    { id, ...payload.data },
     ...array.slice(payload.ordered.newIndex),
   ];
 }
@@ -56,8 +66,9 @@ function addDoc(array = [], action) {
  * @return {Array} State with document modified
  */
 function removeDoc(array, action) {
+  const id = last(pathToArr(getQueryName(action.meta)));
   // Remove doc from collection array
-  return reject(array, { id: action.meta.doc }); // returns a new array
+  return reject(array, { id }); // returns a new array
 }
 
 /**
@@ -180,9 +191,7 @@ export default function orderedReducer(state = {}, action) {
     return state;
   }
 
-  const storeUnderKey = !action.meta.oldStoreAs
-    ? getStoreUnderKey(action)
-    : action.meta.storeAs || action.meta.collection;
+  const storeUnderKey = getStoreUnderKey(action);
   const collectionStateSlice = state[storeUnderKey];
   return {
     ...state,
