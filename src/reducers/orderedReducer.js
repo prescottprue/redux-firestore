@@ -140,10 +140,17 @@ function getStoreUnderKey(action) {
   if (action.meta.oldStoreAs) {
     return action.meta.storeAs || action.meta.collection;
   }
-  const pathArr = pathToArr(getQueryName(action.meta));
+  const queryName = getQueryName(action.meta);
+  // Query contains other query params, store under full queryName
+  if (queryName.includes('?')) {
+    return queryName;
+  }
+  const pathArr = pathToArr(queryName);
+  // Return top level key if path is not multiple "/"
   if (pathArr.length <= '1') {
     return action.meta.storeAs || action.meta.collection;
   }
+  // Remove last / from path
   return dropRight(pathArr).join('/');
 }
 
