@@ -208,8 +208,11 @@ describe('orderedReducer', () => {
           subcollections: [subDocSetting],
         };
         action = { meta, payload, type: actionTypes.DELETE_SUCCESS };
+        const slashPath = `${collection}/${doc}/${subDocSetting.collection}/${
+          subDocSetting.doc
+        }`;
         const result = orderedReducer(
-          { [collection]: [someDoc, someDoc2] },
+          { [slashPath]: [someDoc, someDoc2] },
           action,
         );
         // Confirm first item is still original doc
@@ -218,9 +221,9 @@ describe('orderedReducer', () => {
           someDoc.id,
         );
         // Confirm other item at top level is preserved
-        expect(result[collection]).to.have.length(2);
+        expect(result[slashPath]).to.have.length(2);
         // Removes property in original data
-        expect(result).to.not.have.nested.property(
+        expect(result[slashPath]).to.not.have.nested.property(
           `${collection}.0.subtest.0.id`,
           subDocSetting.doc,
         );
@@ -429,12 +432,13 @@ describe('orderedReducer', () => {
           state = { testing: [{ id: 'doc', another: 'thing' }] };
           const result = orderedReducer(state, action);
           // Adds subcollection to document
-          expect(result).to.have.nested.property(
-            `testing.0.${subcollection.collection}.0.id`,
-            orderedData.id,
-          );
+          expect(
+            result[`testing/doc/${subcollection.collection}`],
+          ).to.have.property('0.id', orderedData.id);
           // Preserves original value
-          expect(result).to.have.nested.property('testing.0.another', 'thing');
+          expect(
+            result[`testing/doc/${subcollection.collection}`],
+          ).to.have.property('another', 'thing');
         });
 
         it('perserves existing collections on doc updates', () => {

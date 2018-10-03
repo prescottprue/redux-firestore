@@ -1,4 +1,4 @@
-import { size, get, unionBy, reject, omit, map, keyBy, isEqual } from 'lodash';
+import { size, get, reject, dropRight, map, keyBy, isEqual } from 'lodash';
 import { assign as assignObjects, merge as mergeObjects } from 'lodash/fp';
 import { actionTypes } from '../constants';
 import { getQueryName } from '../utils/query';
@@ -6,6 +6,7 @@ import {
   updateItemInArray,
   createReducer,
   preserveValuesFromState,
+  pathToArr,
 } from '../utils/reducers';
 
 const {
@@ -98,40 +99,6 @@ function writeCollection(collectionState, action) {
     });
   }
 
-  // Handle subcollections (only when storeAs is not being used)
-  if (meta.doc && meta.subcollections) {
-    const subcollectionConfig = meta.subcollections[0];
-    if (!collectionStateSize) {
-      // Collection state does not already exist, create it with item containing
-      // subcollection
-      return [
-        {
-          id: meta.doc,
-          [subcollectionConfig.collection]: action.payload.ordered,
-        },
-      ];
-    }
-    // Merge with existing document if collection state exists
-    return updateItemInArray(
-      collectionState,
-      meta.doc,
-      item =>
-        // check if action contains ordered payload
-        payloadExists
-          ? // merge with existing subcollection
-            {
-              ...item,
-              [subcollectionConfig.collection]: unionBy(
-                get(item, subcollectionConfig.collection, []),
-                action.payload.ordered,
-                'id',
-              ),
-            }
-          : // remove subcollection if payload is empty
-            omit(item, [subcollectionConfig.collection]),
-    );
-  }
-
   if (meta.doc && collectionStateSize) {
     // Update item in array
     return updateItemInArray(collectionState, meta.doc, item =>
@@ -157,6 +124,17 @@ const actionHandlers = {
  * @type {Function}
  */
 const orderedCollectionReducer = createReducer(undefined, actionHandlers);
+
+function getStoreUnderKey(action) {
+  if (action.meta.oldStoreAs) {
+    return action.meta.storeAs || action.meta.collection;
+  }
+  const pathArr = pathToArr(getQueryName(action.meta));
+  if (pathArr.length <= '1') {
+    return action.meta.storeAs || action.meta.collection;
+  }
+  return dropRight(pathArr).join('/');
+}
 
 /**
  * Reducer for ordered state.
@@ -203,7 +181,7 @@ export default function orderedReducer(state = {}, action) {
   }
 
   const storeUnderKey = !action.meta.oldStoreAs
-    ? getQueryName(action.meta)
+    ? getStoreUnderKey(action)
     : action.meta.storeAs || action.meta.collection;
   const collectionStateSlice = state[storeUnderKey];
   return {

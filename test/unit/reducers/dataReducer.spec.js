@@ -66,7 +66,7 @@ describe('dataReducer', () => {
         );
       });
 
-      it('merges new state with existing state', () => {
+      it('replaces existing doc params with new doc params', () => {
         const data = { [doc]: { newData: { field: 'test' } } };
         payload = { data };
         meta = {
@@ -82,11 +82,15 @@ describe('dataReducer', () => {
           type: actionTypes.LISTENER_RESPONSE,
         };
         result = dataReducer(existingState, action);
+
+        // Contains new data
         expect(result).to.have.nested.property(
           `${collection}.${doc}.newData.field`,
           data[doc].newData.field,
         );
-        expect(result).to.have.nested.property(
+
+        // Does not have original data
+        expect(result).to.not.have.nested.property(
           `${collection}.${doc}.originalData.some.val`,
           existingState[collection][doc].originalData.some.val,
         );
@@ -120,8 +124,10 @@ describe('dataReducer', () => {
             test: { someDoc: { another: { testing: {} } } },
           };
           action = { meta, payload, type: actionTypes.LISTENER_RESPONSE };
-          expect(dataReducer(existingState, action)).to.have.nested.property(
-            'test.someDoc.another.testing.field',
+          result = dataReducer(existingState, action);
+          // console.log('------updates state', result);
+          expect(result['test/someDoc/another/testing']).to.have.property(
+            'field',
             data.testing.field,
           );
         });
@@ -146,10 +152,11 @@ describe('dataReducer', () => {
               },
             };
             action = { meta, payload, type: actionTypes.LISTENER_RESPONSE };
-            expect(dataReducer(existingState, action)).to.have.nested.property(
-              'test.someDoc.subcol1.subdoc1.subcol2.subdoc2.field',
-              data.subdoc2.field,
-            );
+            result = dataReducer(existingState, action);
+            // console.log('------subcollection update', result);
+            expect(
+              result['test/someDoc/subcol1/subdoc1/subcol2/subdoc2'],
+            ).to.have.property('field', data.subdoc2.field);
           });
         });
       });
@@ -207,7 +214,7 @@ describe('dataReducer', () => {
           };
           action = { meta, payload, type: actionTypes.GET_SUCCESS };
           expect(dataReducer(state, action)).to.have.nested.property(
-            'test.someDoc.another',
+            'test/someDoc/another',
             data,
           );
         });
@@ -225,7 +232,7 @@ describe('dataReducer', () => {
           };
           action = { meta, payload, type: actionTypes.GET_SUCCESS };
           expect(dataReducer(existingState, action)).to.have.nested.property(
-            'test.someDoc.another.testing.field',
+            'test/someDoc/another/testing.field',
             data.testing.field,
           );
         });

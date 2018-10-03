@@ -162,7 +162,10 @@ export function getQueryName(meta, options = {}) {
   if (isString(meta)) {
     return meta;
   }
-  const { collection, doc, subcollections, where, limit } = meta;
+  const { collection, doc, subcollections, where, limit, storeAs } = meta;
+  if (storeAs) {
+    return storeAs;
+  }
   if (!collection) {
     throw new Error('Collection is required to build query name');
   }

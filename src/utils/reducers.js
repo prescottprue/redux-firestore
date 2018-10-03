@@ -13,7 +13,7 @@ import {
  * @return {Array} Path as Array
  * @private
  */
-function pathToArr(path) {
+export function pathToArr(path) {
   return path ? path.split(/\//).filter(p => !!p) : [];
 }
 
