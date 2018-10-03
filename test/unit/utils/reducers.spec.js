@@ -1,14 +1,9 @@
 import {
   getDotStrPath,
-  pathFromMeta,
   getSlashStrPath,
   preserveValuesFromState,
-  updateItemInArray,
   createReducer,
 } from 'utils/reducers';
-
-let subcollections;
-let config;
 
 describe('reducer utils', () => {
   describe('getSlashStrPath', () => {
@@ -38,95 +33,6 @@ describe('reducer utils', () => {
     });
     it('returns empty string for undefined input', () => {
       expect(getDotStrPath()).to.equal('');
-    });
-  });
-
-  describe('pathFromMeta', () => {
-    it('is exported', () => {
-      expect(pathFromMeta).to.be.a('function');
-    });
-
-    it('throws for no meta data passed (first argument)', () => {
-      expect(() => pathFromMeta()).to.throw(
-        'Action meta is required to build path for reducers.',
-      );
-    });
-
-    it('returns undefined if provided nothing', () => {
-      expect(() => pathFromMeta({})).to.throw(
-        'Collection is required to construct reducer path.',
-      );
-    });
-
-    it('returns collection if provided', () => {
-      expect(pathFromMeta({ collection: 'test' })).to.equal('test');
-    });
-
-    it('returns collection doc combined into dot path if both provided', () => {
-      expect(pathFromMeta({ collection: 'first', doc: 'second' })).to.equal(
-        'first.second',
-      );
-    });
-
-    it('uses storeAs as path if provided', () => {
-      pathFromMeta({ storeAs: 'testing' });
-    });
-
-    it('uses path as path if provided', () => {
-      expect(pathFromMeta({ path: 'testing' })).to.have.property(0, 'testing');
-    });
-
-    describe('updateItemInArray', () => {
-      it('is exported', () => {
-        expect(updateItemInArray).to.be.a('function');
-      });
-
-      it('returns an array when no arguments are passed', () => {
-        expect(updateItemInArray([], '123', () => ({}))).to.be.an('array');
-      });
-
-      it('preserves items which do not have matching ids', () => {
-        const testId = '123ABC';
-        const result = updateItemInArray(
-          [{ id: 'other' }, { id: testId }],
-          testId,
-          () => 'test',
-        );
-        expect(result[0]).to.have.property('id', 'other');
-      });
-
-      it('updates item with matching id', () => {
-        const testId = '123ABC';
-        const result = updateItemInArray(
-          [{ id: testId }],
-          testId,
-          () => 'test',
-        );
-        expect(result[0]).to.equal('test');
-      });
-    });
-
-    describe('supports a subcollection', () => {
-      it('with collection', () => {
-        subcollections = [{ collection: 'third' }];
-        config = { collection: 'first', doc: 'second', subcollections };
-        expect(pathFromMeta(config)).to.equal('first.second.third');
-      });
-
-      it('with doc', () => {
-        subcollections = [{ collection: 'third', doc: 'forth' }];
-        config = { collection: 'first', doc: 'second', subcollections };
-        expect(pathFromMeta(config)).to.equal('first.second.third.forth');
-      });
-    });
-
-    it('supports multiple subcollections', () => {
-      subcollections = [
-        { collection: 'third', doc: 'forth' },
-        { collection: 'fifth' },
-      ];
-      config = { collection: 'first', doc: 'second', subcollections };
-      expect(pathFromMeta(config)).to.equal('first.second.third.forth.fifth');
     });
   });
 

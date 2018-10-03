@@ -91,6 +91,7 @@ It is common to make react components "functional" meaning that the component is
 
 ```js
 import { connect } from 'react-redux'
+import { firestoreOrderedSelector } from 'redux-firestore'
 import {
   compose,
   withHandlers,
@@ -104,22 +105,30 @@ const withStore = compose(
   getContext({ store: PropTypes.object }),
 )
 
+function todosQuery() {
+  return {
+    collection: 'todos'
+  }
+}
+
+const orderedTodosSelector = firestoreOrderedSelector(todosQuery())
+
 const enhance = compose(
   withStore,
   withHandlers({
-    loadData: props => () => props.store.firestore.get('todos'),
+    loadData: props => () => props.store.firestore.get(todosQuery()),
     onDoneClick: props => (key, done = false) =>
       props.store.firestore.update(`todos/${key}`, { done }),
     onNewSubmit: props => newTodo =>
-      props.store.firestore.add('todos', { ...newTodo, owner: 'Anonymous' }),
+      props.store.firestore.add(todosQuery(), { ...newTodo, owner: 'Anonymous' }),
   }),
   lifecycle({
     componentWillMount(props) {
       props.loadData()
     }
   }),
-  connect(({ firebase }) => ({ // state.firebase
-    todos: firebase.ordered.todos,
+  connect((state) => ({
+    todos: orderedTodosSelector(state),
   }))
 )
 
@@ -161,9 +170,10 @@ class Todos extends Component {
     )
   }
 }
+const orderedTodosSelector = firestoreOrderedSelector(todosQuery())
 
 export default connect((state) => ({
-  todos: state.firestore.ordered.todos
+  todos: orderedTodosSelector(state)
 }))(Todos)
 ```
 ### API

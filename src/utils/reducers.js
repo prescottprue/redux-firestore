@@ -58,46 +58,6 @@ export function combineReducers(reducers) {
 }
 
 /**
- * Get path from meta data. Path is used with lodash's setWith to set deep
- * data within reducers.
- * @param  {Object} meta - Action meta data object
- * @param  {String} meta.collection - Name of Collection for which the action
- * is to be handled.
- * @param  {String} meta.doc - Name of Document for which the action is to be
- * handled.
- * @param  {Array} meta.subcollections - Subcollections of data
- * @param  {String} meta.storeAs - Another key within redux store that the
- * action associates with (used for storing data under a path different
- * from its collection/document)
- * @return {String} String path to be used within reducer
- * @private
- */
-export function pathFromMeta(meta) {
-  if (!meta) {
-    throw new Error('Action meta is required to build path for reducers.');
-  }
-  const { collection, doc, subcollections, storeAs } = meta;
-  if (storeAs) {
-    return doc ? `${storeAs}.${doc}` : storeAs;
-  }
-  if (meta.path) {
-    return meta.path.split('/');
-  }
-  if (!collection) {
-    throw new Error('Collection is required to construct reducer path.');
-  }
-  let basePath = collection;
-  if (doc) {
-    basePath += `.${doc}`;
-  }
-  if (!subcollections) {
-    return basePath;
-  }
-  const mappedCollections = subcollections.map(pathFromMeta);
-  return basePath.concat(`.${mappedCollections.join('.')}`);
-}
-
-/**
  * Update a single item within an array with support for adding the item if
  * it does not already exist
  * @param  {Array} array - Array within which to update item
@@ -109,6 +69,9 @@ export function pathFromMeta(meta) {
  */
 export function updateItemInArray(array, itemId, updateItemCallback) {
   let matchFound = false;
+  if (!array || !array.length) {
+    return [];
+  }
   const modified = array.map(item => {
     // Preserve items that do not have matching ids
     if (!item || item.id !== itemId) {

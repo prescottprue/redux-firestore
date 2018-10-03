@@ -30,12 +30,10 @@ describe('dataReducer', () => {
       it('throws for no collection', () => {
         const someDoc = {};
         payload = { data: { abc: someDoc } };
-        meta = { collection, doc };
+        meta = {};
         action = { meta, payload, type: actionTypes.DOCUMENT_ADDED };
-        result = dataReducer({}, action);
-        expect(result).to.have.nested.property(
-          `${collection}.${doc}.abc`,
-          someDoc,
+        expect(() => dataReducer({}, action)).to.throw(
+          'Collection is required to build query name',
         );
       });
     });
@@ -64,11 +62,11 @@ describe('dataReducer', () => {
         meta = {};
         action = { meta, payload, type: actionTypes.LISTENER_RESPONSE };
         expect(() => dataReducer(state, action)).to.throw(
-          'Collection is required to construct reducer path.',
+          'Collection is required to build query name',
         );
       });
 
-      it('merges new state with existing state', () => {
+      it('replaces existing doc params with new doc params', () => {
         const data = { [doc]: { newData: { field: 'test' } } };
         payload = { data };
         meta = {
@@ -84,11 +82,15 @@ describe('dataReducer', () => {
           type: actionTypes.LISTENER_RESPONSE,
         };
         result = dataReducer(existingState, action);
+
+        // Contains new data
         expect(result).to.have.nested.property(
           `${collection}.${doc}.newData.field`,
           data[doc].newData.field,
         );
-        expect(result).to.have.nested.property(
+
+        // Does not have original data
+        expect(result).to.not.have.nested.property(
           `${collection}.${doc}.originalData.some.val`,
           existingState[collection][doc].originalData.some.val,
         );
@@ -98,61 +100,68 @@ describe('dataReducer', () => {
         it('updates empty state', () => {
           const data = { abc: { field: 'test' } };
           payload = { data };
+          const subcollection = { collection: 'another' };
           meta = {
             collection,
             doc: 'someDoc',
-            subcollections: [{ collection: 'another' }],
+            subcollections: [subcollection],
           };
           action = { meta, payload, type: actionTypes.LISTENER_RESPONSE };
-          expect(dataReducer(state, action)).to.have.nested.property(
-            'test.someDoc.another',
-            data,
-          );
+          result = dataReducer(state, action);
+          expect(
+            result[`test/someDoc/${subcollection.collection}`],
+          ).to.have.property('abc', data.abc);
         });
 
         it('updates state when data already exists', () => {
           const data = { testing: { field: 'test' } };
           payload = { data };
+          const subcollection = { collection: 'another', doc: 'testing' };
           meta = {
             collection,
             doc: 'someDoc',
-            subcollections: [{ collection: 'another', doc: 'testing' }],
+            subcollections: [subcollection],
           };
+          const subcollectionPath = `${collection}/someDoc/${
+            subcollection.collection
+          }`;
           const existingState = {
-            test: { someDoc: { another: { testing: {} } } },
+            [subcollectionPath]: { original: 'data' },
           };
           action = { meta, payload, type: actionTypes.LISTENER_RESPONSE };
-          expect(dataReducer(existingState, action)).to.have.nested.property(
-            'test.someDoc.another.testing.field',
+          result = dataReducer(existingState, action);
+          expect(result[subcollectionPath]).to.have.nested.property(
+            `${subcollection.doc}.field`,
             data.testing.field,
           );
         });
 
-        describe('containing multiple subcollections', () => {
-          it('updates state when data already exists', () => {
-            const data = {
-              subdoc2: { field: 'test' },
-            };
-            payload = { data };
-            meta = {
-              collection,
-              doc: 'someDoc',
-              subcollections: [
-                { collection: 'subcol1', doc: 'subdoc1' },
-                { collection: 'subcol2', doc: 'subdoc2' },
-              ],
-            };
-            const existingState = {
-              test: {
-                someDoc: { subcol1: { subdoc1: { subcol2: { subdoc2: {} } } } },
-              },
-            };
-            action = { meta, payload, type: actionTypes.LISTENER_RESPONSE };
-            expect(dataReducer(existingState, action)).to.have.nested.property(
-              'test.someDoc.subcol1.subdoc1.subcol2.subdoc2.field',
-              data.subdoc2.field,
-            );
-          });
+        it('updates deep subcollection doc when state data already exists', () => {
+          const subcollection1 = { collection: 'subcol1', doc: 'subdoc1' };
+          const subcollection2 = { collection: 'subcol2', doc: 'subdoc2' };
+          const data = {
+            [subcollection2.doc]: { field: 'test' },
+          };
+          payload = { data };
+          meta = {
+            collection,
+            doc,
+            subcollections: [subcollection1, subcollection2],
+          };
+          const subPath = `${collection}/${doc}/${subcollection1.collection}/${
+            subcollection1.doc
+          }/${subcollection2.collection}`;
+          const existingState = {
+            [subPath]: {
+              [subcollection2.doc]: { original: 'data' },
+            },
+          };
+          action = { meta, payload, type: actionTypes.LISTENER_RESPONSE };
+          result = dataReducer(existingState, action);
+          expect(result[subPath]).to.have.nested.property(
+            `${subcollection2.doc}.field`,
+            data.subdoc2.field,
+          );
         });
       });
     });
@@ -181,7 +190,7 @@ describe('dataReducer', () => {
         meta = {};
         action = { meta, payload, type: actionTypes.GET_SUCCESS };
         expect(() => dataReducer(state, action)).to.throw(
-          'Collection is required to construct reducer path.',
+          'Collection is required to build query name',
         );
       });
 
@@ -209,7 +218,7 @@ describe('dataReducer', () => {
           };
           action = { meta, payload, type: actionTypes.GET_SUCCESS };
           expect(dataReducer(state, action)).to.have.nested.property(
-            'test.someDoc.another',
+            'test/someDoc/another',
             data,
           );
         });
@@ -217,17 +226,21 @@ describe('dataReducer', () => {
         it('updates state when data already exists', () => {
           const data = { testing: { field: 'test' } };
           payload = { data };
+          const subcollection = { collection: 'another', doc: 'testing' };
           meta = {
             collection,
             doc: 'someDoc',
-            subcollections: [{ collection: 'another', doc: 'testing' }],
+            subcollections: [subcollection],
           };
           const existingState = {
             test: { someDoc: { another: { testing: {} } } },
           };
           action = { meta, payload, type: actionTypes.GET_SUCCESS };
-          expect(dataReducer(existingState, action)).to.have.nested.property(
-            'test.someDoc.another.testing.field',
+          result = dataReducer(existingState, action);
+          expect(
+            result[`test/someDoc/${subcollection.collection}`],
+          ).to.have.nested.property(
+            `${subcollection.doc}.field`,
             data.testing.field,
           );
         });
@@ -257,9 +270,11 @@ describe('dataReducer', () => {
       it('clears data from state', () => {
         meta = { collection, doc };
         action = { meta, type: actionTypes.DELETE_SUCCESS };
-        expect(
-          dataReducer({ [collection]: { [doc]: { thing: 'asdf' } } }, action),
-        ).to.have.nested.property(`${collection}.${doc}`, null);
+        result = dataReducer(
+          { [collection]: { [doc]: { thing: 'asdf' } } },
+          action,
+        );
+        expect(result).to.have.nested.property(`${collection}.${doc}`, null);
       });
 
       it('preserves keys provided in preserve parameter', () => {
@@ -319,7 +334,7 @@ describe('dataReducer', () => {
         payload = {};
         action = { meta: {}, payload, type: actionTypes.LISTENER_ERROR };
         expect(() => dataReducer(state, action)).to.throw(
-          'Collection is required to construct reducer path.',
+          'Collection is required to build query name',
         );
       });
 

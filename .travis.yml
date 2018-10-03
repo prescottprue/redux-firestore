@@ -47,3 +47,11 @@ deploy:
     on:
       node: '10'
       branch: 'next'
+  - provider: npm
+    skip_cleanup: true
+    email: $NPM_EMAIL
+    api_key: $NPM_TOKEN
+    tag: alpha
+    on:
+      node: '10'
+      branch: 'alpha'

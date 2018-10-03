@@ -1,6 +1,16 @@
-import { size, get, unionBy, reject, omit, map, keyBy, isEqual } from 'lodash';
-import { merge as mergeObjects } from 'lodash/fp';
+import {
+  size,
+  get,
+  reject,
+  dropRight,
+  map,
+  keyBy,
+  isEqual,
+  last,
+} from 'lodash';
+import { assign as assignObjects, merge as mergeObjects } from 'lodash/fp';
 import { actionTypes } from '../constants';
+import { getQueryName } from '../utils/query';
 import {
   updateItemInArray,
   createReducer,
@@ -27,26 +37,10 @@ const {
  * @return {Array} State with document modified
  */
 function modifyDoc(collectionState, action) {
-  if (!action.meta.subcollections || action.meta.storeAs) {
-    return updateItemInArray(collectionState, action.meta.doc, item =>
-      // Merge is used to prevent the removal of existing subcollections
-      mergeObjects(item, action.payload.data),
-    );
-  }
-
-  // TODO: make this recurisve so it will work multiple subcollections deep
-  const [, docId, subcollectionName, subDocId] = pathToArr(action.meta.path);
-
-  // Update document item within top arra
-  return updateItemInArray(collectionState, docId, item => ({
-    ...item, // preserve document (only updating subcollection)
-    [subcollectionName]: updateItemInArray(
-      get(item, subcollectionName, []),
-      subDocId,
-      // Merge with existing subcollection doc (only updates changed keys)
-      subitem => mergeObjects(subitem, action.payload.data),
-    ),
-  }));
+  return updateItemInArray(collectionState, action.meta.doc, item =>
+    // assign is used to prevent the removal of existing subcollections
+    assignObjects(item, action.payload.data),
+  );
 }
 
 /**
@@ -57,16 +51,12 @@ function modifyDoc(collectionState, action) {
  */
 function addDoc(array = [], action) {
   const { meta, payload } = action;
-  if (!meta.subcollections || meta.storeAs) {
-    return [
-      ...array.slice(0, payload.ordered.newIndex),
-      { id: meta.doc, ...payload.data },
-      ...array.slice(payload.ordered.newIndex),
-    ];
-  }
-
-  // Add doc to subcollection by modifying the existing doc at this level
-  return modifyDoc(array, action);
+  const id = last(pathToArr(getQueryName(meta)));
+  return [
+    ...array.slice(0, payload.ordered.newIndex),
+    { id, ...payload.data },
+    ...array.slice(payload.ordered.newIndex),
+  ];
 }
 
 /**
@@ -76,38 +66,9 @@ function addDoc(array = [], action) {
  * @return {Array} State with document modified
  */
 function removeDoc(array, action) {
-  // Update is at doc level (not subcollection level)
-  if (!action.meta.subcollections || action.meta.storeAs) {
-    // Remove doc from collection array
-    return reject(array, { id: action.meta.doc }); // returns a new array
-  }
-  // Update is at subcollection level
-  const subcollectionSetting = action.meta.subcollections[0];
-
-  // Meta does not contain doc, remove whole subcollection
-  if (!subcollectionSetting.doc) {
-    return updateItemInArray(
-      array,
-      action.meta.doc,
-      item => omit(item, [subcollectionSetting.collection]), // omit creates a new object
-    );
-  }
-
-  // Meta contains doc setting, remove doc from subcollection
-  return updateItemInArray(array, action.meta.doc, item => {
-    const subcollectionVal = get(item, subcollectionSetting.collection, []);
-    // Subcollection exists within doc, update item within subcollection
-    if (subcollectionVal.length) {
-      return {
-        ...item,
-        [subcollectionSetting.collection]: reject(array, {
-          id: subcollectionSetting.doc,
-        }),
-      };
-    }
-    // Item does not contain subcollection
-    return item;
-  });
+  const id = last(pathToArr(getQueryName(action.meta)));
+  // Remove doc from collection array
+  return reject(array, { id }); // returns a new array
 }
 
 /**
@@ -149,40 +110,6 @@ function writeCollection(collectionState, action) {
     });
   }
 
-  // Handle subcollections (only when storeAs is not being used)
-  if (meta.doc && meta.subcollections) {
-    const subcollectionConfig = meta.subcollections[0];
-    if (!collectionStateSize) {
-      // Collection state does not already exist, create it with item containing
-      // subcollection
-      return [
-        {
-          id: meta.doc,
-          [subcollectionConfig.collection]: action.payload.ordered,
-        },
-      ];
-    }
-    // Merge with existing document if collection state exists
-    return updateItemInArray(
-      collectionState,
-      meta.doc,
-      item =>
-        // check if action contains ordered payload
-        payloadExists
-          ? // merge with existing subcollection
-            {
-              ...item,
-              [subcollectionConfig.collection]: unionBy(
-                get(item, subcollectionConfig.collection, []),
-                action.payload.ordered,
-                'id',
-              ),
-            }
-          : // remove subcollection if payload is empty
-            omit(item, [subcollectionConfig.collection]),
-    );
-  }
-
   if (meta.doc && collectionStateSize) {
     // Update item in array
     return updateItemInArray(collectionState, meta.doc, item =>
@@ -208,6 +135,24 @@ const actionHandlers = {
  * @type {Function}
  */
 const orderedCollectionReducer = createReducer(undefined, actionHandlers);
+
+function getStoreUnderKey(action) {
+  if (action.meta.oldStoreAs) {
+    return action.meta.storeAs || action.meta.collection;
+  }
+  const queryName = getQueryName(action.meta);
+  // Query contains other query params, store under full queryName
+  if (queryName.includes('?')) {
+    return queryName;
+  }
+  const pathArr = pathToArr(queryName);
+  // Return top level key if path is not multiple "/"
+  if (pathArr.length <= '1') {
+    return action.meta.storeAs || action.meta.collection;
+  }
+  // Remove last / from path
+  return dropRight(pathArr).join('/');
+}
 
 /**
  * Reducer for ordered state.
@@ -253,8 +198,8 @@ export default function orderedReducer(state = {}, action) {
     return state;
   }
 
-  const storeUnderKey = action.meta.storeAs || action.meta.collection;
-  const collectionStateSlice = get(state, storeUnderKey);
+  const storeUnderKey = getStoreUnderKey(action);
+  const collectionStateSlice = state[storeUnderKey];
   return {
     ...state,
     [storeUnderKey]: orderedCollectionReducer(collectionStateSlice, action),
