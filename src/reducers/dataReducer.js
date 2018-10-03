@@ -1,4 +1,4 @@
-import { get, last } from 'lodash';
+import { get, last, dropRight } from 'lodash';
 import { setWith, assign } from 'lodash/fp';
 import { actionTypes } from '../constants';
 import { getQueryName } from '../utils/query';
@@ -41,6 +41,14 @@ export default function dataReducer(state = {}, action) {
       const queryName = getQueryName(meta, { onlySubcollections: true });
       // Get previous data at path to check for existence
       const previousData = get(state, meta.storeAs || queryName);
+      if (meta.subcollections) {
+        const setPath =
+          queryName.split('/').length % 2
+            ? getQueryName(meta)
+            : dropRight(pathToArr(queryName)).join('/');
+        // Set data to state immutabily (lodash/fp's setWith creates copy)
+        return setWith(Object, setPath, payload.data, state);
+      }
       // Set data (without merging) if no previous data exists or if there are subcollections
       if (!previousData || meta.subcollections) {
         // Set data to state immutabily (lodash/fp's setWith creates copy)
