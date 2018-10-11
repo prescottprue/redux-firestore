@@ -46,18 +46,18 @@ export default function dataReducer(state = {}, action) {
       // Data to set to state is doc if doc name exists within meta
       const data = docName ? get(payload.data, docName) : payload.data;
       // Get previous data at path to check for existence
-      const previousData = get(state, meta.storeAs || pathFromMeta(meta));
+      const previousData = get(state, meta.storeAs ? [meta.storeAs] : pathFromMeta(meta));
       // Set data (without merging) if no previous data exists or if there are subcollections
       if (!previousData || meta.subcollections) {
         // Set data to state immutabily (lodash/fp's setWith creates copy)
-        return setWith(Object, meta.storeAs || pathFromMeta(meta), data, state);
+        return setWith(Object, meta.storeAs ? [meta.storeAs] : pathFromMeta(meta), data, state);
       }
       // Otherwise merge with existing data
       const mergedData = assign(previousData, data);
       // Set data to state (with merge) immutabily (lodash/fp's setWith creates copy)
       return setWith(
         Object,
-        meta.storeAs || pathFromMeta(meta),
+        meta.storeAs ? [meta.storeAs] : pathFromMeta(meta),
         mergedData,
         state,
       );

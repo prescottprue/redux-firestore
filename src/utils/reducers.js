@@ -79,7 +79,7 @@ export function pathFromMeta(meta) {
   const { collection, doc, subcollections, storeAs } = meta;
   if (storeAs) {
     // Use array here - if we don't we end up in trouble with docs that contain a dot
-    return doc ? [storeAs, doc] : storeAs;
+    return doc ? [storeAs, doc] : [storeAs];
   }
   if (meta.path) {
     return meta.path.split('/');
