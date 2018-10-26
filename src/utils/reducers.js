@@ -5,6 +5,7 @@ import {
   pick,
   replace,
   trimStart,
+  flatten
 } from 'lodash';
 
 /**
@@ -100,7 +101,8 @@ export function pathFromMeta(meta) {
   }
 
   const mappedCollections = subcollections.map(pathFromMeta);
-  return [...basePath, ...mappedCollections.flat()];
+
+  return [...basePath, ...flatten(mappedCollections)];
 }
 
 /**
