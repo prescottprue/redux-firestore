@@ -5,7 +5,7 @@ import {
   pick,
   replace,
   trimStart,
-  flatten
+  flatten,
 } from 'lodash';
 
 /**
