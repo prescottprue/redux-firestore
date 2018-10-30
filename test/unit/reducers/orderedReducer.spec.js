@@ -587,17 +587,14 @@ describe('orderedReducer', () => {
       it('removes all data from state', () => {
         action = {
           type: actionTypes.CLEAR_DATA,
-          meta: { collection: 'testing' }, // meta is required to trigger ordered reducer
         };
-        state = {};
-        expect(orderedReducer(state, action)).to.be.empty;
+        state = { some: [{ id: 'thing' }] };
         expect(orderedReducer(state, action)).to.be.empty;
       });
 
       it('sets a new reference when clearing', () => {
         action = {
           type: actionTypes.CLEAR_DATA,
-          meta: { collection: 'testing' }, // meta is required to trigger ordered reducer
         };
         state = {};
         expect(orderedReducer(state, action)).to.not.equal(state);
@@ -606,9 +603,7 @@ describe('orderedReducer', () => {
       describe('preserve parameter', () => {
         it('array saves keys from state', () => {
           action = {
-            meta: { collection: 'testing' }, // meta is required to trigger ordered reducer
             type: actionTypes.CLEAR_DATA,
-            payload: {},
             preserve: { ordered: ['some'] },
           };
           state = { some: 'value' };
@@ -617,9 +612,7 @@ describe('orderedReducer', () => {
 
         it('function returns state to save', () => {
           action = {
-            meta: { collection: 'testing' }, // meta is required to trigger ordered reducer
             type: actionTypes.CLEAR_DATA,
-            payload: {},
             preserve: { ordered: currentState => currentState },
           };
           state = { some: 'value' };

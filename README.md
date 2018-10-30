@@ -277,7 +277,7 @@ store.firestore.unsetListeners([query1Options, query2Options]),
 ```js
 { collection: 'cities', doc: 'SF', subcollections: [{ collection: 'zipcodes' }] },
 // or string equivalent
-// props.store.firestore.get('cities/SF'),
+// props.store.firestore.get('cities/SF'/zipcodes),
 ```
 
 **Note:** When nesting sub-collections, [`storeAs`](#storeas) should be used for more optimal state updates.

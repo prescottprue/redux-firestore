@@ -85,12 +85,12 @@ export const constants: {
  * A redux store enhancer that adds store.firebase (passed to React component
  * context through react-redux's <Provider>).
  */
-export function reduxFirestore(firebaseInstance: object, otherConfig: object): any;
+export function reduxFirestore(firebaseInstance: object, otherConfig?: object): any;
 
 /**
  * Get extended firestore instance (attached to store.firestore)
  */
-export function getFirestore(firebaseInstance: object, otherConfig: object): any;
+export function getFirestore(firebaseInstance: object, otherConfig?: object): any;
 
 /**
  * A redux store reducer for Firestore state
