@@ -59,13 +59,13 @@ describe('reducer utils', () => {
     });
 
     it('returns collection if provided', () => {
-      expect(pathFromMeta({ collection: 'test' })).to.equal('test');
+      expect(pathFromMeta({ collection: 'test' })).to.have.property(0, 'test');
     });
 
     it('returns collection doc combined into dot path if both provided', () => {
-      expect(pathFromMeta({ collection: 'first', doc: 'second' })).to.equal(
-        'first.second',
-      );
+      const result = pathFromMeta({ collection: 'first', doc: 'second' });
+      expect(result).to.have.property(0, 'first');
+      expect(result).to.have.property(1, 'second');
     });
 
     it('uses storeAs as path if provided', () => {
@@ -102,7 +102,7 @@ describe('reducer utils', () => {
           testId,
           () => 'test',
         );
-        expect(result[0]).to.equal('test');
+        expect(result).to.have.property(0, 'test');
       });
     });
 
@@ -110,13 +110,20 @@ describe('reducer utils', () => {
       it('with collection', () => {
         subcollections = [{ collection: 'third' }];
         config = { collection: 'first', doc: 'second', subcollections };
-        expect(pathFromMeta(config)).to.equal('first.second.third');
+        const result = pathFromMeta(config);
+        expect(result).to.have.property(0, 'first');
+        expect(result).to.have.property(1, 'second');
+        expect(result).to.have.property(2, 'third');
       });
 
       it('with doc', () => {
         subcollections = [{ collection: 'third', doc: 'forth' }];
         config = { collection: 'first', doc: 'second', subcollections };
-        expect(pathFromMeta(config)).to.equal('first.second.third.forth');
+        const result = pathFromMeta(config);
+        expect(result).to.have.property(0, 'first');
+        expect(result).to.have.property(1, 'second');
+        expect(result).to.have.property(2, 'third');
+        expect(result).to.have.property(3, 'forth');
       });
     });
 
@@ -126,7 +133,11 @@ describe('reducer utils', () => {
         { collection: 'fifth' },
       ];
       config = { collection: 'first', doc: 'second', subcollections };
-      expect(pathFromMeta(config)).to.equal('first.second.third.forth.fifth');
+      const result = pathFromMeta(config);
+      expect(result).to.have.property(0, 'first');
+      expect(result).to.have.property(1, 'second');
+      expect(result).to.have.property(2, 'third');
+      expect(result).to.have.property(4, 'fifth');
     });
   });
 
