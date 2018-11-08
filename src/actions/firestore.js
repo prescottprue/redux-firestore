@@ -4,13 +4,15 @@ import { actionTypes } from '../constants';
 import {
   attachListener,
   detachListener,
-  listenerExists,
   orderedFromSnap,
   dataByIdSnapshot,
   getQueryConfig,
   getQueryName,
   firestoreRef,
+  dispatchListenerResponse,
+  getPopulateActions,
 } from '../utils/query';
+import { to } from '../utils/async';
 
 const pathListenerCounts = {};
 
@@ -26,7 +28,7 @@ const pathListenerCounts = {};
 export function add(firebase, dispatch, queryOption, ...args) {
   const meta = getQueryConfig(queryOption);
   return wrapInDispatch(dispatch, {
-    ref: firestoreRef(firebase, dispatch, meta),
+    ref: firestoreRef(firebase, meta),
     method: 'add',
     meta,
     args,
@@ -53,7 +55,7 @@ export function add(firebase, dispatch, queryOption, ...args) {
 export function set(firebase, dispatch, queryOption, ...args) {
   const meta = getQueryConfig(queryOption);
   return wrapInDispatch(dispatch, {
-    ref: firestoreRef(firebase, dispatch, meta),
+    ref: firestoreRef(firebase, meta),
     method: 'set',
     meta,
     args,
@@ -84,7 +86,7 @@ export function get(firebase, dispatch, queryOption) {
   } =
     firebase._.config || {};
   return wrapInDispatch(dispatch, {
-    ref: firestoreRef(firebase, dispatch, meta),
+    ref: firestoreRef(firebase, meta),
     method: 'get',
     meta,
     types: [
@@ -117,7 +119,7 @@ export function get(firebase, dispatch, queryOption) {
 export function update(firebase, dispatch, queryOption, ...args) {
   const meta = getQueryConfig(queryOption);
   return wrapInDispatch(dispatch, {
-    ref: firestoreRef(firebase, dispatch, meta),
+    ref: firestoreRef(firebase, meta),
     method: 'update',
     meta,
     args,
@@ -155,7 +157,7 @@ export function deleteRef(firebase, dispatch, queryOption) {
     return Promise.reject(new Error('Only documents can be deleted.'));
   }
   return wrapInDispatch(dispatch, {
-    ref: firestoreRef(firebase, dispatch, meta),
+    ref: firestoreRef(firebase, meta),
     method: 'delete',
     meta,
     types: [
@@ -167,36 +169,6 @@ export function deleteRef(firebase, dispatch, queryOption) {
       actionTypes.DELETE_FAILURE,
     ],
   });
-}
-
-const changeTypeToEventType = {
-  added: actionTypes.DOCUMENT_ADDED,
-  removed: actionTypes.DOCUMENT_REMOVED,
-  modified: actionTypes.DOCUMENT_MODIFIED,
-};
-
-/**
- * Action creator for document change event. Used to create action objects
- * to be passed to dispatch.
- * @param  {Object} change - Document change object from Firebase callback
- * @param  {Object} [originalMeta={}] - Original meta data of action
- * @return {Object}                   [description]
- */
-function docChangeEvent(change, originalMeta = {}) {
-  const meta = { ...originalMeta, path: change.doc.ref.path };
-  if (originalMeta.subcollections && !originalMeta.storeAs) {
-    meta.subcollections[0] = { ...meta.subcollections[0], doc: change.doc.id };
-  } else {
-    meta.doc = change.doc.id;
-  }
-  return {
-    type: changeTypeToEventType[change.type] || actionTypes.DOCUMENT_MODIFIED,
-    meta,
-    payload: {
-      data: change.doc.data(),
-      ordered: { oldIndex: change.oldIndex, newIndex: change.newIndex },
-    },
-  };
 }
 
 /**
@@ -215,45 +187,51 @@ function docChangeEvent(change, originalMeta = {}) {
  */
 export function setListener(firebase, dispatch, queryOpts, successCb, errorCb) {
   const meta = getQueryConfig(queryOpts);
-  const {
-    mergeOrdered,
-    mergeOrderedDocUpdates,
-    mergeOrderedCollectionUpdates,
-  } =
-    firebase._.config || {};
+
   // Create listener
-  const unsubscribe = firestoreRef(firebase, dispatch, meta).onSnapshot(
-    docData => {
-      const docChanges =
-        typeof docData.docChanges === 'function'
-          ? docData.docChanges()
-          : docData.docChanges;
-      // Dispatch different actions for doc changes (only update doc(s) by key)
-      if (docChanges && docChanges.length < docData.size) {
-        // Loop to dispatch for each change if there are multiple
-        // TODO: Option for dispatching multiple changes in single action
-        docChanges.forEach(change => {
-          dispatch(docChangeEvent(change, meta));
-        });
-      } else {
-        // Dispatch action for whole collection change
-        dispatch({
-          type: actionTypes.LISTENER_RESPONSE,
-          meta,
-          payload: {
-            data: dataByIdSnapshot(docData),
-            ordered: orderedFromSnap(docData),
-          },
-          merge: {
-            docs: mergeOrdered && mergeOrderedDocUpdates,
-            collections: mergeOrdered && mergeOrderedCollectionUpdates,
-          },
-        });
+  const unsubscribe = firestoreRef(firebase, meta).onSnapshot(
+    async docData => {
+      // Dispatch directly if no populates
+      if (!meta.populates) {
+        dispatchListenerResponse({ dispatch, docData, meta, firebase });
+        // Invoke success callback if it exists
+        if (typeof successCb === 'function') successCb(docData);
+        return;
       }
-      // Invoke success callback if it exists
-      if (successCb) successCb(docData);
+
+      // Run population and dispatch results
+      const [populateErr, populateActions] = await to(
+        getPopulateActions({ firebase, docData, meta }),
+      );
+
+      // Handle errors in population
+      if (populateErr) {
+        if (firebase._.config.logListenerError) {
+          // Log error handling the case of it not existing
+          invoke(console, 'error', `Error populating:`, populateErr);
+        }
+        if (typeof errorCb === 'function') errorCb(populateErr);
+        return;
+      }
+
+      // Dispatch each populate action
+      populateActions.forEach(populateAction => {
+        dispatch({
+          ...populateAction,
+          type: actionTypes.LISTENER_RESPONSE,
+          timestamp: Date.now(),
+        });
+      });
+      // Dispatch original action
+      dispatchListenerResponse({ dispatch, docData, meta, firebase });
     },
     err => {
+      const {
+        mergeOrdered,
+        mergeOrderedDocUpdates,
+        mergeOrderedCollectionUpdates,
+      } =
+        firebase._.config || {};
       // TODO: Look into whether listener is automatically removed in all cases
       // Log error handling the case of it not existing
       const { logListenerError, preserveOnListenerError } =
@@ -270,10 +248,12 @@ export function setListener(firebase, dispatch, queryOpts, successCb, errorCb) {
         preserve: preserveOnListenerError,
       });
       // Invoke error callback if it exists
-      if (errorCb) errorCb(err);
+      if (typeof errorCb === 'function') errorCb(err);
     },
   );
   attachListener(firebase, dispatch, meta, unsubscribe);
+
+  return unsubscribe;
 }
 
 /**
@@ -293,33 +273,19 @@ export function setListeners(firebase, dispatch, listeners) {
   }
 
   const { config } = firebase._;
-
-  // Only attach one listener (count of matching listener path calls is tracked)
-  if (config.oneListenerPerPath) {
-    return listeners.forEach(listener => {
-      const path = getQueryName(listener);
-      const oldListenerCount = pathListenerCounts[path] || 0;
-      pathListenerCounts[path] = oldListenerCount + 1;
-
-      // If we already have an attached listener exit here
-      if (oldListenerCount > 0) {
-        return;
-      }
-
-      setListener(firebase, dispatch, listener);
-    });
-  }
+  const { allowMultipleListeners } = config;
 
   return listeners.forEach(listener => {
-    // Config for supporting attaching of multiple listener callbacks
-    const multipleListenersEnabled = isFunction(config.allowMultipleListeners)
-      ? config.allowMultipleListeners(listener, firebase._.listeners)
-      : config.allowMultipleListeners;
+    const path = getQueryName(listener);
+    const oldListenerCount = pathListenerCounts[path] || 0;
+    const multipleListenersEnabled = isFunction(allowMultipleListeners)
+      ? allowMultipleListeners(listener, firebase._.listeners)
+      : allowMultipleListeners;
 
-    // Only attach listener if it does not already exist or
-    // if multiple listeners config is true or is a function which returns
-    // truthy value
-    if (!listenerExists(firebase, listener) || multipleListenersEnabled) {
+    pathListenerCounts[path] = oldListenerCount + 1;
+
+    // If we already have an attached listener exit here
+    if (oldListenerCount === 0 || multipleListenersEnabled) {
       setListener(firebase, dispatch, listener);
     }
   });
@@ -353,25 +319,23 @@ export function unsetListeners(firebase, dispatch, listeners) {
     );
   }
   const { config } = firebase._;
+  const { allowMultipleListeners } = config;
 
   // Keep one listener path even when detaching
-  if (config.oneListenerPerPath) {
-    listeners.forEach(listener => {
-      const path = getQueryName(listener);
-      pathListenerCounts[path] -= 1;
+  listeners.forEach(listener => {
+    const path = getQueryName(listener);
+    const listenerExists = pathListenerCounts[path] >= 1;
+    const multipleListenersEnabled = isFunction(allowMultipleListeners)
+      ? allowMultipleListeners(listener, firebase._.listeners)
+      : allowMultipleListeners;
 
+    if (listenerExists) {
+      pathListenerCounts[path] -= 1;
       // If we aren't supposed to have listners for this path, then remove them
-      if (pathListenerCounts[path] === 0) {
+      if (pathListenerCounts[path] === 0 || multipleListenersEnabled) {
         unsetListener(firebase, dispatch, listener);
       }
-    });
-
-    return;
-  }
-
-  listeners.forEach(listener => {
-    // Remove listener only if it exists
-    unsetListener(firebase, dispatch, listener);
+    }
   });
 }
 

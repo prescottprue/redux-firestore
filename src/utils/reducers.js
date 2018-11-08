@@ -5,6 +5,7 @@ import {
   pick,
   replace,
   trimStart,
+  flatten,
 } from 'lodash';
 
 /**
@@ -69,7 +70,7 @@ export function combineReducers(reducers) {
  * @param  {String} meta.storeAs - Another key within redux store that the
  * action associates with (used for storing data under a path different
  * from its collection/document)
- * @return {String} String path to be used within reducer
+ * @return {Array} Array with path segments
  * @private
  */
 export function pathFromMeta(meta) {
@@ -78,23 +79,30 @@ export function pathFromMeta(meta) {
   }
   const { collection, doc, subcollections, storeAs } = meta;
   if (storeAs) {
-    return doc ? `${storeAs}.${doc}` : storeAs;
+    // Use array here - if we don't we end up in trouble with docs that contain a dot
+    return doc ? [storeAs, doc] : [storeAs];
   }
   if (meta.path) {
     return meta.path.split('/');
   }
+
   if (!collection) {
     throw new Error('Collection is required to construct reducer path.');
   }
-  let basePath = collection;
+
+  let basePath = [collection];
+
   if (doc) {
-    basePath += `.${doc}`;
+    basePath = [...basePath, doc];
   }
+
   if (!subcollections) {
     return basePath;
   }
+
   const mappedCollections = subcollections.map(pathFromMeta);
-  return basePath.concat(`.${mappedCollections.join('.')}`);
+
+  return [...basePath, ...flatten(mappedCollections)];
 }
 
 /**
