@@ -114,7 +114,7 @@ const enhance = compose(
       props.store.firestore.add('todos', { ...newTodo, owner: 'Anonymous' }),
   }),
   lifecycle({
-    componentWillMount(props) {
+    componentDidMount(props) {
       props.loadData()
     }
   }),
@@ -142,7 +142,7 @@ class Todos extends Component {
     store: PropTypes.object.isRequired
   }
 
-  componentWillMount () {
+  componentDidMount () {
     const { firestore } = this.context.store
     firestore.get('todos')
   }
@@ -447,16 +447,16 @@ Storing data under a different path within redux is as easy as passing the `stor
 Other Firebase statics (such as [FieldValue](https://firebase.google.com/docs/reference/js/firebase.firestore.FieldValue)) are available through the firestore instance:
 
 ```js
+import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import {
   compose,
   withHandlers,
-  lifecycle,
   withContext,
   getContext
 } from 'recompose'
 
-const withFirestore = compose(
+const withStore = compose(
   withContext({ store: PropTypes.object }, () => {}),
   getContext({ store: PropTypes.object }),
 )
@@ -475,6 +475,82 @@ const enhance = compose(
 )
 
 export default enhance(SomeComponent)
+```
+
+### Population
+Population, made popular in [react-redux-firebase](http://react-redux-firebase.com/docs/recipes/populate.html), also works with firestore.
+
+
+#### Automatic Listeners
+```js
+import { connect } from 'react-redux'
+import { firestoreConnect, populate } from 'react-redux-firebase'
+import {
+  compose,
+  withHandlers,
+  lifecycle,
+  withContext,
+  getContext
+} from 'recompose'
+
+const populates = [{ child: 'createdBy', root: 'users' }]
+const collection = 'projects'
+
+const withPopulatedProjects = compose(
+  firestoreConnect((props) => [
+    {
+      collection,
+      populates
+    }
+  ]),
+  connect((state, props) => ({
+    projects: populate(state.firestore, collection, populates)
+  }))
+)
+```
+
+#### Manually using setListeners
+```js
+import { withFirestore, populate } from 'react-redux-firebase'
+import { connect } from 'react-redux'
+import { compose, lifecycle } from 'recompose'
+
+const collection = 'projects'
+const populates = [{ child: 'createdBy', root: 'users' }]
+
+const enhance = compose(
+  withFirestore,
+  lifecycle({
+    componentDidMount() {
+      this.props.firestore.setListener({ collection, populates })
+    }
+  }),
+  connect(({ firestore }) => ({ // state.firestore
+    todos: firestore.ordered.todos,
+  }))
+)
+```
+
+#### Manually using get
+```js
+import { withFirestore, populate } from 'react-redux-firebase'
+import { connect } from 'react-redux'
+import { compose, lifecycle } from 'recompose'
+
+const collection = 'projects'
+const populates = [{ child: 'createdBy', root: 'users' }]
+
+const enhance = compose(
+  withFirestore,
+  lifecycle({
+    componentDidMount() {
+      this.props.store.firestore.get({ collection, populates })
+    }
+  }),
+  connect(({ firestore }) => ({ // state.firestore
+    todos: firestore.ordered.todos,
+  }))
+)
 ```
 
 ## Config Options

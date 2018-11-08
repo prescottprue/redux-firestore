@@ -9,7 +9,8 @@ import {
   getQueryConfig,
   getQueryName,
   firestoreRef,
-  promisesForPopulate,
+  dispatchListenerResponse,
+  getPopulateActions,
 } from '../utils/query';
 import { to } from '../utils/async';
 
@@ -170,71 +171,6 @@ export function deleteRef(firebase, dispatch, queryOption) {
   });
 }
 
-const changeTypeToEventType = {
-  added: actionTypes.DOCUMENT_ADDED,
-  removed: actionTypes.DOCUMENT_REMOVED,
-  modified: actionTypes.DOCUMENT_MODIFIED,
-};
-
-/**
- * Action creator for document change event. Used to create action objects
- * to be passed to dispatch.
- * @param  {Object} change - Document change object from Firebase callback
- * @param  {Object} [originalMeta={}] - Original meta data of action
- * @return {Object}                   [description]
- */
-function docChangeEvent(change, originalMeta = {}) {
-  const meta = { ...originalMeta, path: change.doc.ref.path };
-  if (originalMeta.subcollections && !originalMeta.storeAs) {
-    meta.subcollections[0] = { ...meta.subcollections[0], doc: change.doc.id };
-  } else {
-    meta.doc = change.doc.id;
-  }
-  return {
-    type: changeTypeToEventType[change.type] || actionTypes.DOCUMENT_MODIFIED,
-    meta,
-    payload: {
-      data: change.doc.data(),
-      ordered: { oldIndex: change.oldIndex, newIndex: change.newIndex },
-    },
-  };
-}
-
-async function dispatchListenerResponse({ dispatch, docData, meta, firebase }) {
-  const {
-    mergeOrdered,
-    mergeOrderedDocUpdates,
-    mergeOrderedCollectionUpdates,
-  } =
-    firebase._.config || {};
-  const docChanges =
-    typeof docData.docChanges === 'function'
-      ? docData.docChanges()
-      : docData.docChanges;
-  // Dispatch different actions for doc changes (only update doc(s) by key)
-  if (docChanges && docChanges.length < docData.size) {
-    // Loop to dispatch for each change if there are multiple
-    // TODO: Option for dispatching multiple changes in single action
-    docChanges.forEach(change => {
-      dispatch(docChangeEvent(change, meta));
-    });
-  } else {
-    // Dispatch action for whole collection change
-    dispatch({
-      type: actionTypes.LISTENER_RESPONSE,
-      meta,
-      payload: {
-        data: dataByIdSnapshot(docData),
-        ordered: orderedFromSnap(docData),
-      },
-      merge: {
-        docs: mergeOrdered && mergeOrderedDocUpdates,
-        collections: mergeOrdered && mergeOrderedCollectionUpdates,
-      },
-    });
-  }
-}
-
 /**
  * Set listener to Cloud Firestore with the call to the Firebase library
  * being wrapped in action dispatches.. Internall calls Firebase's onSnapshot()
@@ -255,47 +191,39 @@ export function setListener(firebase, dispatch, queryOpts, successCb, errorCb) {
   // Create listener
   const unsubscribe = firestoreRef(firebase, meta).onSnapshot(
     async docData => {
+      // Dispatch directly if no populates
       if (!meta.populates) {
         dispatchListenerResponse({ dispatch, docData, meta, firebase });
         // Invoke success callback if it exists
         if (typeof successCb === 'function') successCb(docData);
         return;
       }
-      const [populateErr, populateResults] = await to(
-        promisesForPopulate(
-          firebase,
-          docData.id,
-          dataByIdSnapshot(docData),
-          meta.populates,
-        ),
+
+      // Run population and dispatch results
+      const [populateErr, populateActions] = await to(
+        getPopulateActions({ firebase, docData, meta }),
       );
+
+      // Handle errors in population
       if (populateErr) {
-        console.error('Error with populate:', populateErr, meta); // eslint-disable-line no-console
+        if (firebase._.config.logListenerError) {
+          // Log error handling the case of it not existing
+          invoke(console, 'error', `Error populating:`, populateErr);
+        }
         if (typeof errorCb === 'function') errorCb(populateErr);
-        throw populateErr;
+        return;
       }
-      // Dispatch for each child collection
-      Object.keys(populateResults).forEach(resultKey => {
+
+      // Dispatch each populate action
+      populateActions.forEach(populateAction => {
         dispatch({
+          ...populateAction,
           type: actionTypes.LISTENER_RESPONSE,
-          // TODO: Handle population of subcollection queries
-          meta: { collection: resultKey },
-          payload: {
-            data: populateResults[resultKey],
-            // TODO: Write ordered here
-          },
           timestamp: Date.now(),
-          requesting: false,
-          requested: true,
         });
       });
-      // Dispatch results
-      dispatchListenerResponse({
-        dispatch,
-        docData,
-        meta,
-        firebase,
-      });
+      // Dispatch original action
+      dispatchListenerResponse({ dispatch, docData, meta, firebase });
     },
     err => {
       const {
@@ -320,7 +248,7 @@ export function setListener(firebase, dispatch, queryOpts, successCb, errorCb) {
         preserve: preserveOnListenerError,
       });
       // Invoke error callback if it exists
-      if (errorCb) errorCb(err);
+      if (typeof errorCb === 'function') errorCb(err);
     },
   );
   attachListener(firebase, dispatch, meta, unsubscribe);
