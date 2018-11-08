@@ -12,7 +12,7 @@ import {
   set,
   some,
 } from 'lodash';
-
+import { to } from '../utils/async';
 import { actionTypes } from '../constants';
 
 /**
@@ -518,7 +518,6 @@ export function promisesForPopulate(
   const dataHasPopulateChilds = some(populatesForData, populate =>
     has(originalData, populate.child),
   );
-
   if (dataHasPopulateChilds) {
     // Data is a single object, resolve populates directly
     forEach(populatesForData, p => {
@@ -573,7 +572,7 @@ export function promisesForPopulate(
         // Parameter of each list item is a list of ids
         if (isArray(idOrList) || isObject(idOrList)) {
           // Create single promise that includes a promise for each child
-          return promisesArray.push(// eslint-disable-line
+          return promisesArray.push( // eslint-disable-line
             populateList(firebase, idOrList, p, results),
           );
         }
@@ -583,4 +582,104 @@ export function promisesForPopulate(
 
   // Return original data after population promises run
   return Promise.all(promisesArray).then(() => results);
+}
+
+const changeTypeToEventType = {
+  added: actionTypes.DOCUMENT_ADDED,
+  removed: actionTypes.DOCUMENT_REMOVED,
+  modified: actionTypes.DOCUMENT_MODIFIED,
+};
+
+/**
+ * Action creator for document change event. Used to create action objects
+ * to be passed to dispatch.
+ * @param  {Object} change - Document change object from Firebase callback
+ * @param  {Object} [originalMeta={}] - Original meta data of action
+ * @return {Object}                   [description]
+ */
+function docChangeEvent(change, originalMeta = {}) {
+  const meta = { ...originalMeta, path: change.doc.ref.path };
+  if (originalMeta.subcollections && !originalMeta.storeAs) {
+    meta.subcollections[0] = { ...meta.subcollections[0], doc: change.doc.id };
+  } else {
+    meta.doc = change.doc.id;
+  }
+  return {
+    type: changeTypeToEventType[change.type] || actionTypes.DOCUMENT_MODIFIED,
+    meta,
+    payload: {
+      data: change.doc.data(),
+      ordered: { oldIndex: change.oldIndex, newIndex: change.newIndex },
+    },
+  };
+}
+
+export function dispatchListenerResponse({
+  dispatch,
+  docData,
+  meta,
+  firebase,
+}) {
+  const {
+    mergeOrdered,
+    mergeOrderedDocUpdates,
+    mergeOrderedCollectionUpdates,
+  } =
+    firebase._.config || {};
+  const docChanges =
+    typeof docData.docChanges === 'function'
+      ? docData.docChanges()
+      : docData.docChanges;
+  // Dispatch different actions for doc changes (only update doc(s) by key)
+  if (docChanges && docChanges.length < docData.size) {
+    // Loop to dispatch for each change if there are multiple
+    // TODO: Option for dispatching multiple changes in single action
+    docChanges.forEach(change => {
+      dispatch(docChangeEvent(change, meta));
+    });
+  } else {
+    // Dispatch action for whole collection change
+    dispatch({
+      type: actionTypes.LISTENER_RESPONSE,
+      meta,
+      payload: {
+        data: dataByIdSnapshot(docData),
+        ordered: orderedFromSnap(docData),
+      },
+      merge: {
+        docs: mergeOrdered && mergeOrderedDocUpdates,
+        collections: mergeOrdered && mergeOrderedCollectionUpdates,
+      },
+    });
+  }
+}
+
+export async function getPopulateActions({ firebase, docData, meta }) {
+  // Run promises for population
+  const [populateErr, populateResults] = await to(
+    promisesForPopulate(
+      firebase,
+      docData.id,
+      dataByIdSnapshot(docData),
+      meta.populates,
+    ),
+  );
+
+  // Handle errors populating
+  if (populateErr) {
+    console.error('Error with populate:', populateErr, meta); // eslint-disable-line no-console
+    throw populateErr;
+  }
+
+  // Dispatch listener results for each child collection
+  return Object.keys(populateResults).map(resultKey => ({
+    // TODO: Handle population of subcollection queries
+    meta: { collection: resultKey },
+    payload: {
+      data: populateResults[resultKey],
+      // TODO: Write ordered here
+    },
+    requesting: false,
+    requested: true,
+  }));
 }
