@@ -100,7 +100,7 @@ export const actionTypes = {
  * preserve from state when LISTENER_ERROR action is dispatched.
  * @property {Boolean} enhancerNamespace - `'firestore'` Namespace under which
  * enhancer places internal instance on redux store (i.e. store.firestore).
- * @property {Boolean|Function} allowMultipleListeners - `null` Whether or not
+ * @property {Boolean|Function} allowMultipleListeners - `false` Whether or not
  * to allow multiple listeners to be attached for the same query. If a function
  * is passed the arguments it receives are `listenerToAttach`,
  * `currentListeners`, and the function should return a boolean.
