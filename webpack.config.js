@@ -16,7 +16,7 @@ const config = {
     libraryTarget: 'umd',
     umdNamedDefine: true,
   },
-  externals: [],
+  externals: ['immer', 'reduce-reducers', 'prop-types'],
   optimization: {
     minimizer: isProduction
       ? [
