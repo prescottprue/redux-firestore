@@ -43,6 +43,9 @@ function modifyDoc(collectionState, action) {
   );
 }
 
+function lastDocKey(meta) {
+  return meta.subcollections ? last(meta.subcollections).doc : meta.doc;
+}
 /**
  * Case reducer for adding a document to a collection or subcollection.
  * @param  {Array} [collectionState=[]] - Redux state of current collection
@@ -53,7 +56,7 @@ function addDoc(array = [], action) {
   const { meta, payload } = action;
   return [
     ...array.slice(0, payload.ordered.newIndex),
-    { id: meta.doc, ...payload.data },
+    { id: lastDocKey(meta), ...payload.data },
     ...array.slice(payload.ordered.newIndex),
   ];
 }
@@ -66,7 +69,7 @@ function addDoc(array = [], action) {
  */
 function removeDoc(array, action) {
   // Remove doc from collection array
-  return reject(array, { id: action.meta.doc }); // returns a new array
+  return reject(array, { id: lastDocKey(action.meta) }); // returns a new array
 }
 
 /**

@@ -358,7 +358,7 @@ describe('query utils', () => {
     });
   });
 
-  describe('firestoreRef', () => {
+  describe.skip('firestoreRef', () => {
     beforeEach(() => {
       dispatch = sinon.spy();
     });
