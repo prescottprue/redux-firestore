@@ -43,6 +43,9 @@ function modifyDoc(collectionState, action) {
   );
 }
 
+function lastDocKey(meta) {
+  return meta.subcollections ? last(meta.subcollections).doc : meta.doc;
+}
 /**
  * Case reducer for adding a document to a collection or subcollection.
  * @param  {Array} [collectionState=[]] - Redux state of current collection
@@ -51,10 +54,9 @@ function modifyDoc(collectionState, action) {
  */
 function addDoc(array = [], action) {
   const { meta, payload } = action;
-  const id = last(pathToArr(getQueryName(meta)));
   return [
     ...array.slice(0, payload.ordered.newIndex),
-    { id, ...payload.data },
+    { id: lastDocKey(meta), ...payload.data },
     ...array.slice(payload.ordered.newIndex),
   ];
 }
@@ -66,9 +68,8 @@ function addDoc(array = [], action) {
  * @return {Array} State with document modified
  */
 function removeDoc(array, action) {
-  const id = last(pathToArr(getQueryName(action.meta)));
   // Remove doc from collection array
-  return reject(array, { id }); // returns a new array
+  return reject(array, { id: lastDocKey(action.meta) }); // returns a new array
 }
 
 /**
@@ -136,20 +137,47 @@ const actionHandlers = {
  */
 const orderedCollectionReducer = createReducer(undefined, actionHandlers);
 
+/**
+ * Remove the last doc setting from action metadata
+ * @param  {String} meta.subcollections - Subcollections which the action
+ * associates with
+ * @param  {String} meta.doc - Name of Document which the action
+ * associates with
+ */
+function removeLastDocFromMeta(meta) {
+  if (!meta.subcollections) {
+    return { ...meta, doc: undefined };
+  }
+  const lastSubcollection = last(meta.subcollections);
+  const modifiedSubcollections = [
+    ...dropRight(meta.subcollections),
+    { ...lastSubcollection, doc: undefined },
+  ];
+  return { ...meta, subcollections: modifiedSubcollections };
+}
+
+/**
+ * Get key where ordered collection data is stored within state based
+ * on query config.
+ * @param  {Object} action - The action that was dispatched
+ */
 function getStoreUnderKey(action) {
   if (action.meta.oldStoreAs) {
     return action.meta.storeAs || action.meta.collection;
   }
   const queryName = getQueryName(action.meta);
+
   // Query contains other query params, store under full queryName
   if (queryName.includes('?')) {
-    return queryName;
+    // Remove last doc from query (so that path is of parent collection)
+    return getQueryName(removeLastDocFromMeta(action.meta));
   }
   const pathArr = pathToArr(queryName);
   // Return top level key if path is not multiple "/"
   if (pathArr.length <= '1') {
     return action.meta.storeAs || action.meta.collection;
   }
+
   // Remove last / from path
   return dropRight(pathArr).join('/');
 }

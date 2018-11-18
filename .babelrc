@@ -10,8 +10,9 @@
   ],
   "plugins": [
     "lodash",
+    "transform-runtime",
     "transform-object-rest-spread",
-    "transform-object-assign",
+    "transform-object-assign"
   ],
   "env": {
     "es": {
@@ -28,7 +29,6 @@
     },
     "test": {
       "plugins": [
-        "transform-runtime",
         "transform-async-to-generator",
         ["module-resolver", {
          "root": ["./src"]

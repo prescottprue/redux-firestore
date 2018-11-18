@@ -22,6 +22,7 @@ branches:
   only:
     - master
     - next
+    - alpha
 
 script:
   - npm run lint

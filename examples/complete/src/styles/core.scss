@@ -1,8 +1,8 @@
 :global {
-  @import 'base';
-  @import 'device-sizes';
-  @import 'standard-classes';
-  @import '~normalize.css/normalize';
+  @import 'styles/_base.scss';
+  @import 'device-sizes.scss';
+  @import 'standard-classes.scss';
+  // @import '~normalize.css/normalize';
   @import url(https://fonts.googleapis.com/css?family=Roboto:300,400,100,500,900);
 
   // Some best-practice CSS that's useful for most apps
