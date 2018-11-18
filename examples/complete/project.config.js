@@ -1,9 +1,12 @@
 const ip = require('ip')
 const NODE_ENV = process.env.NODE_ENV || 'development'
+const PORT = 3000
 
 module.exports = {
   /** The environment to use when building the project */
   env: NODE_ENV,
+  /** The port that is used for local development */
+  port: PORT,
   /** The full path to the project's root directory */
   basePath: __dirname,
   /** The name of the directory containing the application source code */
@@ -13,7 +16,8 @@ module.exports = {
   /** The name of the directory in which to emit compiled assets */
   outDir: 'dist',
   /** The base path for all projects assets (relative to the website root) */
-  publicPath: NODE_ENV === 'development' ? `http://${ip.address()}:3000/` : '/',
+  publicPath:
+    NODE_ENV === 'development' ? `http://${ip.address()}:${PORT}/` : '/',
   /** Whether to generate sourcemaps */
   sourcemaps: true,
   /** A hash map of keys that the compiler should treat as external to the project */
@@ -31,39 +35,7 @@ module.exports = {
     'redux-thunk',
     'react-router',
     'react-redux-firebase',
-    'material-ui'
-  ],
-  /**
-   * Settings used to create config.js file when running npm run create-config
-   * in ci environment. If you are running locally, go to src/config.js.
-   * NOTE: firebase-ci will soon be able to handle this for you :)
-   */
-  ci: {
-    development: {
-      firebase: {
-        apiKey: 'AIzaSyCTUERDM-Pchn_UDTsfhVPiwM4TtNIxots',
-        authDomain: 'redux-firebasev3.firebaseapp.com',
-        databaseURL: 'https://redux-firebasev3.firebaseio.com',
-        storageBucket: 'redux-firebasev3.appspot.com'
-      },
-      reduxFirebase: {
-        userProfile: 'users', // root that user profiles are written to
-        enableLogging: false, // enable/disable Firebase Database Logging
-        updateProfileOnLogin: false // enable/disable updating of profile on login
-      }
-    },
-    production: {
-      firebase: {
-        apiKey: 'AIzaSyCTUERDM-Pchn_UDTsfhVPiwM4TtNIxots',
-        authDomain: 'redux-firebasev3.firebaseapp.com',
-        databaseURL: 'https://redux-firebasev3.firebaseio.com',
-        storageBucket: 'redux-firebasev3.appspot.com'
-      },
-      reduxFirebase: {
-        userProfile: 'users',
-        enableLogging: false,
-        updateProfileOnLogin: false
-      }
-    }
-  }
+    '@material-ui/core',
+    '@material-ui/icons'
+  ]
 }

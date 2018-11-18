@@ -1,40 +1,30 @@
 {
   "projects": {
-    "master": "redux-firebasev3",
-    "prod": "redux-firebasev3"
+    "default": "redux-firestore",
+    "master": "redux-firestore",
+    "prod": "redux-firestore"
   },
   "ci": {
+    "copyVersion": true,
     "createConfig": {
       "master": {
-        "version": "${npm_package_version}",
-        "env": "development",
+        "env": "staging",
         "firebase": {
-          "apiKey": "AIzaSyCTUERDM-Pchn_UDTsfhVPiwM4TtNIxots",
-          "authDomain": "redux-firebasev3.firebaseapp.com",
-          "databaseURL": "https://redux-firebasev3.firebaseio.com",
-          "projectId": "redux-firebasev3",
-          "storageBucket": "redux-firebasev3.appspot.com"
-        },
-        "reduxFirebase": {
-          "userProfile": "users",
-          "enableLogging": false,
-          "updateProfileOnLogin": false
+          "apiKey": "${STAGE_FIREBASE_API_KEY}",
+          "authDomain": "redux-firestore.firebaseapp.com",
+          "databaseURL": "https://redux-firestore.firebaseio.com",
+          "projectId": "redux-firestore",
+          "storageBucket": "redux-firestore.appspot.com"
         }
       },
       "prod": {
-        "version": "${npm_package_version}",
         "env": "production",
         "firebase": {
-          "apiKey": "AIzaSyCTUERDM-Pchn_UDTsfhVPiwM4TtNIxots",
-          "authDomain": "redux-firebasev3.firebaseapp.com",
-          "databaseURL": "https://redux-firebasev3.firebaseio.com",
-          "projectId": "redux-firebasev3",
-          "storageBucket": "redux-firebasev3.appspot.com"
-        },
-        "reduxFirebase": {
-          "userProfile": "users",
-          "enableLogging": false,
-          "updateProfileOnLogin": false
+          "apiKey": "${PROD_FIREBASE_API_KEY}",
+          "authDomain": "redux-firestore.firebaseapp.com",
+          "databaseURL": "https://redux-firestore.firebaseio.com",
+          "projectId": "redux-firestore",
+          "storageBucket": "redux-firestore.appspot.com"
         }
       }
     }
