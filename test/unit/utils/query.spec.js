@@ -369,7 +369,7 @@ describe('query utils', () => {
         fakeFirebase = {
           firestore: () => ({ collection: () => ({ doc: docSpy }) }),
         };
-        result = firestoreRef(fakeFirebase, dispatch, meta);
+        result = firestoreRef(fakeFirebase, meta);
         expect(result).to.be.an('object');
         expect(docSpy).to.be.calledWith(meta.doc);
       });
@@ -391,7 +391,7 @@ describe('query utils', () => {
             }),
           }),
         };
-        expect(() => firestoreRef(fakeFirebase, dispatch, meta)).to.throw(
+        expect(() => firestoreRef(fakeFirebase, meta)).to.throw(
           `Collection can only be run on a document. Check that query config for subcollection: "${subcollection}" contains a doc parameter.`,
         );
       });
@@ -411,7 +411,7 @@ describe('query utils', () => {
             }),
           }),
         };
-        result = firestoreRef(fakeFirebase, dispatch, meta);
+        result = firestoreRef(fakeFirebase, meta);
         expect(result).to.be.an('object');
         // expect(docSpy).to.be.calledOnce(meta.subcollections[0].collection);
       });
@@ -442,7 +442,7 @@ describe('query utils', () => {
             }),
           }),
         };
-        result = firestoreRef(fakeFirebase, dispatch, meta);
+        result = firestoreRef(fakeFirebase, meta);
         expect(result).to.be.an('object');
         expect(result).to.be.deep.equal({ doc: 'data' });
         expect(collectionSpy).to.be.calledOnce;
@@ -463,7 +463,7 @@ describe('query utils', () => {
             }),
           }),
         };
-        result = firestoreRef(fakeFirebase, dispatch, meta);
+        result = firestoreRef(fakeFirebase, meta);
         expect(docSpy).to.be.calledWith(meta.subcollections[0].doc);
       });
 
@@ -487,7 +487,7 @@ describe('query utils', () => {
             }),
           }),
         };
-        result = firestoreRef(fakeFirebase, dispatch, meta);
+        result = firestoreRef(fakeFirebase, meta);
         expect(docSpy).to.be.calledWith(meta.subcollections[0].doc);
         expect(whereSpy).to.be.calledWith(testVal);
       });
@@ -512,7 +512,7 @@ describe('query utils', () => {
               }),
             }),
           };
-          result = firestoreRef(fakeFirebase, dispatch, meta);
+          result = firestoreRef(fakeFirebase, meta);
           expect(result).to.be.an('object');
           expect(orderBySpy).to.be.calledWith(meta.subcollections[0].orderBy);
         });
@@ -538,7 +538,7 @@ describe('query utils', () => {
               }),
             }),
           };
-          result = firestoreRef(fakeFirebase, dispatch, meta);
+          result = firestoreRef(fakeFirebase, meta);
           expect(result).to.be.an('object');
           expect(limitSpy).to.be.calledWith(meta.subcollections[0].limit);
         });
@@ -547,7 +547,7 @@ describe('query utils', () => {
       describe('startAt', () => {
         it('calls startAt if valid', () => {
           const { theFirebase, theSpy, theMeta } = fakeFirebaseWith('startAt');
-          result = firestoreRef(theFirebase, dispatch, theMeta);
+          result = firestoreRef(theFirebase, theMeta);
           expect(result).to.be.an('object');
           expect(theSpy).to.be.calledWith(theMeta.subcollections[0].startAt);
         });
@@ -558,7 +558,7 @@ describe('query utils', () => {
           const { theFirebase, theSpy, theMeta } = fakeFirebaseWith(
             'startAfter',
           );
-          result = firestoreRef(theFirebase, dispatch, theMeta);
+          result = firestoreRef(theFirebase, theMeta);
           expect(result).to.be.an('object');
           expect(theSpy).to.be.calledWith(theMeta.subcollections[0].startAfter);
         });
@@ -574,7 +574,7 @@ describe('query utils', () => {
             ],
           };
           const { theFirebase, theSpy } = fakeFirebaseWith('endAt');
-          result = firestoreRef(theFirebase, dispatch, meta);
+          result = firestoreRef(theFirebase, meta);
           expect(result).to.be.an('object');
           expect(theSpy).to.be.calledWith(meta.subcollections[0].endAt);
         });
@@ -590,7 +590,7 @@ describe('query utils', () => {
             ],
           };
           const { theFirebase, theSpy } = fakeFirebaseWith('endBefore');
-          result = firestoreRef(theFirebase, dispatch, meta);
+          result = firestoreRef(theFirebase, meta);
           expect(result).to.be.an('object');
           expect(theSpy).to.be.calledWith(meta.subcollections[0].endBefore);
         });
@@ -604,7 +604,7 @@ describe('query utils', () => {
         fakeFirebase = {
           firestore: () => ({ collection: () => ({ where: whereSpy }) }),
         };
-        result = firestoreRef(fakeFirebase, dispatch, meta);
+        result = firestoreRef(fakeFirebase, meta);
         expect(result).to.be.an('object');
         expect(whereSpy).to.be.calledWith(meta.where[0]);
       });
@@ -615,7 +615,7 @@ describe('query utils', () => {
         fakeFirebase = {
           firestore: () => ({ collection: () => ({ where: whereSpy }) }),
         };
-        result = firestoreRef(fakeFirebase, dispatch, meta);
+        result = firestoreRef(fakeFirebase, meta);
         expect(result).to.be.an('object');
         expect(whereSpy).to.be.calledOnce;
       });
@@ -625,7 +625,7 @@ describe('query utils', () => {
         fakeFirebase = {
           firestore: () => ({ collection: () => ({ where: () => ({}) }) }),
         };
-        expect(() => firestoreRef(fakeFirebase, dispatch, meta)).to.throw(
+        expect(() => firestoreRef(fakeFirebase, meta)).to.throw(
           'where parameter must be an array.',
         );
       });
@@ -636,7 +636,7 @@ describe('query utils', () => {
         fakeFirebase = {
           firestore: () => ({ collection: () => ({ where: whereSpy }) }),
         };
-        expect(() => firestoreRef(fakeFirebase, dispatch, meta)).to.throw(
+        expect(() => firestoreRef(fakeFirebase, meta)).to.throw(
           'where parameter must be an array.',
         );
       });
@@ -649,7 +649,7 @@ describe('query utils', () => {
         fakeFirebase = {
           firestore: () => ({ collection: () => ({ orderBy: orderBySpy }) }),
         };
-        result = firestoreRef(fakeFirebase, dispatch, meta);
+        result = firestoreRef(fakeFirebase, meta);
         expect(result).to.be.an('object');
         expect(orderBySpy).to.be.calledWith(meta.orderBy[0]);
       });
@@ -660,7 +660,7 @@ describe('query utils', () => {
         fakeFirebase = {
           firestore: () => ({ collection: () => ({ orderBy: orderBySpy }) }),
         };
-        result = firestoreRef(fakeFirebase, dispatch, meta);
+        result = firestoreRef(fakeFirebase, meta);
         expect(result).to.be.an('object');
         expect(orderBySpy).to.be.calledWith(meta.orderBy[0][0]);
       });
@@ -670,7 +670,7 @@ describe('query utils', () => {
         fakeFirebase = {
           firestore: () => ({ collection: () => ({ orderBy: () => ({}) }) }),
         };
-        expect(() => firestoreRef(fakeFirebase, dispatch, meta)).to.throw(
+        expect(() => firestoreRef(fakeFirebase, meta)).to.throw(
           'orderBy parameter must be an array or string.',
         );
       });
@@ -683,7 +683,7 @@ describe('query utils', () => {
         fakeFirebase = {
           firestore: () => ({ collection: () => ({ limit: limitSpy }) }),
         };
-        result = firestoreRef(fakeFirebase, dispatch, meta);
+        result = firestoreRef(fakeFirebase, meta);
         expect(result).to.be.an('object');
         expect(limitSpy).to.be.calledWith(meta.limit);
       });
@@ -696,7 +696,7 @@ describe('query utils', () => {
         fakeFirebase = {
           firestore: () => ({ collection: () => ({ startAt: startAtSpy }) }),
         };
-        result = firestoreRef(fakeFirebase, dispatch, meta);
+        result = firestoreRef(fakeFirebase, meta);
         expect(result).to.be.an('object');
         expect(startAtSpy).to.be.calledWith(meta.startAt);
       });
@@ -711,7 +711,7 @@ describe('query utils', () => {
             collection: () => ({ startAfter: startAfterSpy }),
           }),
         };
-        result = firestoreRef(fakeFirebase, dispatch, meta);
+        result = firestoreRef(fakeFirebase, meta);
         expect(result).to.be.an('object');
         expect(startAfterSpy).to.be.calledWith(meta.startAfter);
       });
@@ -724,7 +724,7 @@ describe('query utils', () => {
         fakeFirebase = {
           firestore: () => ({ collection: () => ({ endAt: endAtSpy }) }),
         };
-        result = firestoreRef(fakeFirebase, dispatch, meta);
+        result = firestoreRef(fakeFirebase, meta);
         expect(result).to.be.an('object');
         expect(endAtSpy).to.be.calledWith(meta.endAt);
       });
@@ -739,7 +739,7 @@ describe('query utils', () => {
             collection: () => ({ endBefore: endBeforeSpy }),
           }),
         };
-        result = firestoreRef(fakeFirebase, dispatch, meta);
+        result = firestoreRef(fakeFirebase, meta);
         expect(result).to.be.an('object');
         expect(endBeforeSpy).to.be.calledWith(meta.endBefore);
       });

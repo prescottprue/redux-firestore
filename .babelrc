@@ -1,17 +1,24 @@
 {
   "presets": [
-    "react",
-    ["env", {
-      "targets": {
-        "chrome": 52,
-        "browsers": ["last 2 versions", "safari >= 7"]
+    "@babel/preset-react",
+    [
+      "@babel/preset-env",
+      {
+        "targets": {
+          "chrome": 52,
+          "browsers": [
+            "last 2 versions",
+            "safari >= 7"
+          ]
+        }
       }
-    }]
+    ]
   ],
   "plugins": [
     "lodash",
-    "transform-object-rest-spread",
-    "transform-object-assign",
+    "@babel/plugin-transform-runtime",
+    "@babel/plugin-transform-async-to-generator",
+    "@babel/plugin-transform-regenerator"
   ],
   "env": {
     "es": {
@@ -28,8 +35,6 @@
     },
     "test": {
       "plugins": [
-        "transform-runtime",
-        "transform-async-to-generator",
         ["module-resolver", {
          "root": ["./src"]
        }]
