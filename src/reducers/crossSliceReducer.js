@@ -1,7 +1,7 @@
 /* eslint-disable guard-for-in, no-restricted-syntax, no-param-reassign */
 
 import produce from 'immer';
-import { values, groupBy, merge, set, get } from 'lodash';
+import { values, groupBy, merge, set, get, keys } from 'lodash';
 import { actionTypes } from '../constants';
 
 export default function crossSliceReducer(state = {}, action) {
@@ -18,13 +18,14 @@ export default function crossSliceReducer(state = {}, action) {
           c => c.storeAs || c.collection,
         );
 
-        for (const storeAs in groups) {
+        keys(groups).forEach(storeAs => {
           const updated = {};
-          for (const item of groups[storeAs]) {
-            merge(updated, get(item, 'data', {}));
-          }
+          groups[storeAs].forEach(item =>
+            merge(updated, get(item, 'data', {})),
+          );
+
           set(draft, ['composite', storeAs], updated);
-        }
+        });
 
         return draft;
       default:
