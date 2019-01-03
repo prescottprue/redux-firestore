@@ -12,7 +12,6 @@ import {
   dispatchListenerResponse,
   getPopulateActions,
 } from '../utils/query';
-import { to } from '../utils/async';
 
 const pathListenerCounts = {};
 
@@ -190,7 +189,7 @@ export function setListener(firebase, dispatch, queryOpts, successCb, errorCb) {
 
   // Create listener
   const unsubscribe = firestoreRef(firebase, meta).onSnapshot(
-    async docData => {
+    docData => {
       // Dispatch directly if no populates
       if (!meta.populates) {
         dispatchListenerResponse({ dispatch, docData, meta, firebase });
@@ -199,31 +198,27 @@ export function setListener(firebase, dispatch, queryOpts, successCb, errorCb) {
         return;
       }
 
-      // Run population and dispatch results
-      const [populateErr, populateActions] = await to(
-        getPopulateActions({ firebase, docData, meta }),
-      );
-
-      // Handle errors in population
-      if (populateErr) {
-        if (firebase._.config.logListenerError) {
-          // Log error handling the case of it not existing
-          invoke(console, 'error', `Error populating:`, populateErr);
-        }
-        if (typeof errorCb === 'function') errorCb(populateErr);
-        return;
-      }
-
-      // Dispatch each populate action
-      populateActions.forEach(populateAction => {
-        dispatch({
-          ...populateAction,
-          type: actionTypes.LISTENER_RESPONSE,
-          timestamp: Date.now(),
+      getPopulateActions({ firebase, docData, meta })
+        .then(populateActions => {
+          // Dispatch each populate action
+          populateActions.forEach(populateAction => {
+            dispatch({
+              ...populateAction,
+              type: actionTypes.LISTENER_RESPONSE,
+              timestamp: Date.now(),
+            });
+          });
+          // Dispatch original action
+          dispatchListenerResponse({ dispatch, docData, meta, firebase });
+        })
+        .catch(populateErr => {
+          // Handle errors in population
+          if (firebase._.config.logListenerError) {
+            // Log error handling the case of it not existing
+            invoke(console, 'error', `Error populating:`, populateErr);
+          }
+          if (typeof errorCb === 'function') errorCb(populateErr);
         });
-      });
-      // Dispatch original action
-      dispatchListenerResponse({ dispatch, docData, meta, firebase });
     },
     err => {
       const {
