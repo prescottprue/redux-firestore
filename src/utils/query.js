@@ -12,7 +12,6 @@ import {
   set,
   some,
 } from 'lodash';
-import { to } from '../utils/async';
 import { actionTypes } from '../constants';
 
 /**
@@ -597,6 +596,15 @@ function docChangeEvent(change, originalMeta = {}) {
   };
 }
 
+/**
+ * Dispatch action(s) response from listener response.
+ * @private
+ * @param {Object} opts
+ * @param {Function} opts.dispatch - Redux action dispatch function
+ * @param {Object} opts.firebase - Firebase instance
+ * @param {Object} opts.docData - Data object from document
+ * @param {Object} opts.meta - Meta data
+ */
 export function dispatchListenerResponse({
   dispatch,
   docData,
@@ -637,32 +645,38 @@ export function dispatchListenerResponse({
   }
 }
 
-export async function getPopulateActions({ firebase, docData, meta }) {
+/**
+ * Get list of actions for population queries
+ * @private
+ * @param {Object} opts
+ * @param {Object} opts.firebase - Firebase instance
+ * @param {Object} opts.docData - Data object from document
+ * @param {Object} opts.meta - Meta data
+ * @return {Promise}
+ */
+export function getPopulateActions({ firebase, docData, meta }) {
   // Run promises for population
-  const [populateErr, populateResults] = await to(
-    promisesForPopulate(
-      firebase,
-      docData.id,
-      dataByIdSnapshot(docData),
-      meta.populates,
-    ),
-  );
-
-  // Handle errors populating
-  if (populateErr) {
-    console.error('Error with populate:', populateErr, meta); // eslint-disable-line no-console
-    throw populateErr;
-  }
-
-  // Dispatch listener results for each child collection
-  return Object.keys(populateResults).map(resultKey => ({
-    // TODO: Handle population of subcollection queries
-    meta: { collection: resultKey },
-    payload: {
-      data: populateResults[resultKey],
-      // TODO: Write ordered here
-    },
-    requesting: false,
-    requested: true,
-  }));
+  return promisesForPopulate(
+    firebase,
+    docData.id,
+    dataByIdSnapshot(docData),
+    meta.populates,
+  )
+    .then(populateResults =>
+      // Listener results for each child collection
+      Object.keys(populateResults).map(resultKey => ({
+        // TODO: Handle population of subcollection queries
+        meta: { collection: resultKey },
+        payload: {
+          data: populateResults[resultKey],
+          // TODO: Write ordered here
+        },
+        requesting: false,
+        requested: true,
+      })),
+    )
+    .catch(populateErr => {
+      console.error('Error with populate:', populateErr, meta); // eslint-disable-line no-console
+      return Promise.reject(populateErr);
+    });
 }
