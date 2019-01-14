@@ -418,7 +418,7 @@ export function dataByIdSnapshot(snap) {
 export function getPopulateChild(firebase, populate, id) {
   return firestoreRef(firebase, { collection: populate.root, doc: id })
     .get()
-    .then(snap => snap.data());
+    .then(snap => Object.assign({ id: id }, snap.data()));
 }
 
 /**
