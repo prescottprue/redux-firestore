@@ -100,7 +100,7 @@ export function firestoreReducer(state: object, action: object): any;
 /**
  * Create a firestore instance that has helpers attached for dispatching actions
  */
-export function createFirestoreInstance(firebaseInstance: object, configs: object, dispatch: func): object;
+export function createFirestoreInstance(firebaseInstance: object, configs: object, dispatch: () => object): object;
 
 /**
  * A redux store reducer for Firestore state
