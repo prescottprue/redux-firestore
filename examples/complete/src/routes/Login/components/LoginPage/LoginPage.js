@@ -1,22 +1,17 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { Link } from 'react-router'
+import { Link } from 'react-router-dom'
 import GoogleButton from 'react-google-button'
-import Paper from 'material-ui/Paper'
-import { withHandlers, pure, compose } from 'recompose'
-// import { UserIsNotAuthenticated } from 'utils/router'
-import { withNotifications } from 'utils/components'
-import { SIGNUP_PATH } from 'constants'
+import Paper from '@material-ui/core/Paper'
+import { SIGNUP_PATH } from 'constants/paths'
 import LoginForm from '../LoginForm'
 
-import classes from './LoginPage.scss'
-
-export const LoginPage = ({ emailLogin, googleLogin, onSubmitFail }) => (
-  <div className={classes.container}>
+const LoginPage = ({ emailLogin, googleLogin, onSubmitFail, classes }) => (
+  <div className={classes.root}>
     <Paper className={classes.panel}>
       <LoginForm onSubmit={emailLogin} onSubmitFail={onSubmitFail} />
     </Paper>
-    <div className={classes.or}>or</div>
+    <div className={classes.orLabel}>or</div>
     <div className={classes.providers}>
       <GoogleButton onClick={googleLogin} />
     </div>
@@ -30,26 +25,10 @@ export const LoginPage = ({ emailLogin, googleLogin, onSubmitFail }) => (
 )
 
 LoginPage.propTypes = {
-  firebase: PropTypes.shape({
-    // eslint-disable-line react/no-unused-prop-types
-    login: PropTypes.func.isRequired
-  }),
-  emailLogin: PropTypes.func,
-  onSubmitFail: PropTypes.func,
-  googleLogin: PropTypes.func
+  classes: PropTypes.object.isRequired, // from enhancer (withStyles)
+  emailLogin: PropTypes.func.isRequired, // from enhancer (withHandlers)
+  onSubmitFail: PropTypes.func.isRequired, // from enhancer (withHandlers)
+  googleLogin: PropTypes.func.isRequired // from enhancer (withHandlers)
 }
 
-export default compose(
-  // UserIsNotAuthenticated, // redirect to list page if logged in
-  pure,
-  withNotifications, // add props.showError
-  withHandlers({
-    onSubmitFail: props => (formErrs, dispatch, err) =>
-      props.showError(formErrs ? 'Form Invalid' : err.message || 'Error'),
-    googleLogin: ({ firebase, showError }) => e =>
-      firebase
-        .login({ provider: 'google', type: 'popup' })
-        .catch(err => showError(err.message)),
-    emailLogin: ({ firebase }) => creds => firebase.login(creds)
-  })
-)(LoginPage)
+export default LoginPage

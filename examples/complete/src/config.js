@@ -9,15 +9,14 @@ export const env = 'development'
 
 // Config for firebase
 export const firebase = {
-  apiKey: 'AIzaSyBTvAcJwsN8iygsnwAZyzIuy1uleYEpWIo',
-  authDomain: 'redux-firestore.firebaseapp.com',
-  databaseURL: 'https://redux-firestore.firebaseio.com',
-  projectId: 'redux-firestore',
-  storageBucket: 'redux-firestore.appspot.com',
-  messagingSenderId: '502471151289'
+  apiKey: 'AIzaSyCTUERDM-Pchn_UDTsfhVPiwM4TtNIxots',
+  authDomain: 'redux-firebasev3.firebaseapp.com',
+  databaseURL: 'https://redux-firebasev3.firebaseio.com',
+  projectId: 'redux-firebasev3',
+  storageBucket: 'redux-firebasev3.appspot.com'
 }
 
-// Config for react-redux-firebase
+// Config for react-redux-firebase + redux-firestore
 // For more details, visit https://prescottprue.gitbooks.io/react-redux-firebase/content/config.html
 export const reduxFirebase = {
   // collection within Firestore to which user profiles are written (would be
