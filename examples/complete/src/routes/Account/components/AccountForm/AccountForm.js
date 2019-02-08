@@ -1,48 +1,54 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { Field, reduxForm } from 'redux-form'
-import RaisedButton from 'material-ui/RaisedButton'
+import { Field } from 'redux-form'
+import Button from '@material-ui/core/Button'
 import { TextField } from 'redux-form-material-ui'
-import { ACCOUNT_FORM_NAME } from 'constants'
 import ProviderDataForm from '../ProviderDataForm'
-import classes from './AccountForm.scss'
 
-export const AccountForm = ({ account, handleSubmit, submitting }) => (
-  <form className={classes.container} onSubmit={handleSubmit}>
-    <h4>Account</h4>
-    <Field
-      name="displayName"
-      component={TextField}
-      floatingLabelText="Display Name"
-    />
-    <Field name="email" component={TextField} floatingLabelText="Email" />
-    <Field
-      name="avatarUrl"
-      component={TextField}
-      floatingLabelText="Avatar Url"
-    />
-    {!!account &&
-      !!account.providerData && (
+function AccountForm({
+  account,
+  handleSubmit,
+  submitting,
+  pristine,
+  classes
+}) {
+  return (
+    <form className={classes.root} onSubmit={handleSubmit}>
+      <h4>Account</h4>
+      <div className={classes.fields}>
+        <Field
+          fullWidth
+          name="displayName"
+          component={TextField}
+          label="Display Name"
+        />
+        <Field name="email" label="Email" component={TextField} fullWidth />
+        <Field
+          name="avatarUrl"
+          label="Avatar Url"
+          component={TextField}
+          fullWidth
+        />
+      </div>
+      {!!account && !!account.providerData && (
         <div>
           <h4>Linked Accounts</h4>
           <ProviderDataForm providerData={account.providerData} />
         </div>
       )}
-    <RaisedButton
-      primary
-      label="Save"
-      type="submit"
-      className={classes.submit}
-    />
-  </form>
-)
+      <Button color="primary" type="submit" disabled={pristine || submitting}>
+        {submitting ? 'Saving' : 'Save'}
+      </Button>
+    </form>
+  )
+}
 
 AccountForm.propTypes = {
   account: PropTypes.object,
-  handleSubmit: PropTypes.func,
-  submitting: PropTypes.bool
+  classes: PropTypes.object.isRequired, // from enhancer (withStyles)
+  handleSubmit: PropTypes.func.isRequired, // from enhancer (reduxForm)
+  pristine: PropTypes.bool.isRequired, // from enhancer (reduxForm)
+  submitting: PropTypes.bool.isRequired // from enhancer (reduxForm)
 }
 
-export default reduxForm({
-  form: ACCOUNT_FORM_NAME
-})(AccountForm)
+export default AccountForm

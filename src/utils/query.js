@@ -615,8 +615,7 @@ export function dispatchListenerResponse({
     mergeOrdered,
     mergeOrderedDocUpdates,
     mergeOrderedCollectionUpdates,
-  } =
-    firebase._.config || {};
+  } = firebase._.config || {};
   const docChanges =
     typeof docData.docChanges === 'function'
       ? docData.docChanges()
