@@ -1,60 +1,36 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { Link } from 'react-router'
+import { Link } from 'react-router-dom'
 import GoogleButton from 'react-google-button'
-import Paper from 'material-ui/Paper'
-import { withHandlers, pure, compose } from 'recompose'
-import { withNotifications, withFirestore } from 'utils/components'
-import { LOGIN_PATH } from 'constants'
+import Paper from '@material-ui/core/Paper'
+import { LOGIN_PATH } from 'constants/paths'
 import SignupForm from '../SignupForm'
 
-import classes from './SignupPage.scss'
-
-export const SignupPage = ({ emailSignup, googleLogin, onSubmitFail }) => (
-  <div className={classes.container}>
-    <Paper className={classes.panel}>
-      <SignupForm onSubmit={emailSignup} onSubmitFail={onSubmitFail} />
-    </Paper>
-    <div className={classes.or}>or</div>
-    <div className={classes.providers}>
-      <GoogleButton onClick={googleLogin} />
+function SignupPage({ emailSignup, googleLogin, onSubmitFail, classes }) {
+  return (
+    <div className={classes.root}>
+      <Paper className={classes.panel}>
+        <SignupForm onSubmit={emailSignup} onSubmitFail={onSubmitFail} />
+      </Paper>
+      <div className={classes.orLabel}>or</div>
+      <div className={classes.providers}>
+        <GoogleButton onClick={googleLogin} />
+      </div>
+      <div className={classes.login}>
+        <span className={classes.loginLabel}>Already have an account?</span>
+        <Link className={classes.loginLink} to={LOGIN_PATH}>
+          Login
+        </Link>
+      </div>
     </div>
-    <div className={classes.login}>
-      <span className={classes.loginLabel}>Already have an account?</span>
-      <Link className={classes.loginLink} to={LOGIN_PATH}>
-        Login
-      </Link>
-    </div>
-  </div>
-)
-
-SignupPage.propTypes = {
-  firebase: PropTypes.shape({ // eslint-disable-line react/no-unused-prop-types
-    login: PropTypes.func.isRequired,
-    createUser: PropTypes.func.isRequired
-  }),
-  emailSignup: PropTypes.func,
-  onSubmitFail: PropTypes.func,
-  googleLogin: PropTypes.func
+  )
 }
 
-export default compose(
-  // UserIsNotAuthenticated, // redirect to list page if logged in
-  // withFirestore,
-  pure,
-  withNotifications, // add props.showError
-  withHandlers({
-    onSubmitFail: props => (formErrs, dispatch, err) =>
-      props.showError(formErrs ? 'Form Invalid' : err.message || 'Error'),
-    googleLogin: ({ firebase, showError }) => e =>
-      firebase // auth still done through react-redux-firebase
-        .login({ provider: 'google', type: 'popup' })
-        .catch(err => showError(err.message)),
-    emailSignup: ({ firebase }) => creds =>
-      firebase.createUser(creds, {
-        // email signup
-        email: creds.email,
-        username: creds.username
-      })
-  })
-)(SignupPage)
+SignupPage.propTypes = {
+  classes: PropTypes.object.isRequired, // from enhancer (withStyles)
+  emailSignup: PropTypes.func.isRequired, // from enhancer (withHandlers)
+  googleLogin: PropTypes.func.isRequired, // from enhancer (withHandlers)
+  onSubmitFail: PropTypes.func.isRequired // from enhancer (reduxForm)
+}
+
+export default SignupPage

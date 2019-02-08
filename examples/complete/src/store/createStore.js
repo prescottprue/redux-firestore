@@ -1,42 +1,63 @@
 import { applyMiddleware, compose, createStore } from 'redux'
-import { browserHistory } from 'react-router'
+import thunk from 'redux-thunk'
+import { reactReduxFirebase, getFirebase } from 'react-redux-firebase'
+import { reduxFirestore } from 'redux-firestore'
 import firebase from 'firebase/app'
-import 'firebase/firestore'
 import 'firebase/database'
 import 'firebase/auth'
-import { reduxFirestore } from 'redux-firestore'
-import { reactReduxFirebase } from 'react-redux-firebase'
+import 'firebase/storage'
+import 'firebase/firestore'
 import makeRootReducer from './reducers'
-import { firebase as fbConfig, reduxFirebase as reduxConfig } from '../config'
-import { version } from '../../package.json'
-import { updateLocation } from './location'
+import {
+  firebase as fbConfig,
+  reduxFirebase as rrfConfig,
+  env
+} from '../config'
 
 export default (initialState = {}) => {
   // ======================================================
-  // Window Vars Config
+  // Redux + Firebase Config (react-redux-firebase & redux-firestore)
   // ======================================================
-  window.version = version
+  const defaultRRFConfig = {
+    userProfile: 'users', // root that user profiles are written to
+    updateProfileOnLogin: false, // enable/disable updating of profile on login
+    presence: 'presence', // list currently online users under "presence" path in RTDB
+    sessions: null, // Skip storing of sessions
+    enableLogging: false, // enable/disable Firebase Database Logging
+    useFirestoreForProfile: true, // Save profile to Firestore instead of Real Time Database
+    useFirestoreForStorageMeta: true // Metadata associated with storage file uploads goes to Firestore
+    // profileDecorator: (userData) => ({ email: userData.email }) // customize format of user profile
+  }
 
-  // ======================================================
-  // Middleware Configuration
-  // ======================================================
-  const middleware = [
-    // This is where you add other middleware like redux-observable
-  ]
+  // Combine default config with overrides if they exist (set within .firebaserc)
+  const combinedConfig = rrfConfig
+    ? { ...defaultRRFConfig, ...rrfConfig }
+    : defaultRRFConfig
 
   // ======================================================
   // Store Enhancers
   // ======================================================
   const enhancers = []
-  if (__DEV__) {
-    const devToolsExtension = window.devToolsExtension
+
+  if (env === 'local') {
+    const devToolsExtension = window.__REDUX_DEVTOOLS_EXTENSION__
     if (typeof devToolsExtension === 'function') {
       enhancers.push(devToolsExtension())
     }
   }
 
+  // ======================================================
+  // Middleware Configuration
+  // ======================================================
+  const middleware = [
+    thunk.withExtraArgument(getFirebase)
+    // This is where you add other middleware like redux-observable
+  ]
+
+  // ======================================================
+  // Firebase Initialization
+  // ======================================================
   firebase.initializeApp(fbConfig)
-  firebase.firestore().settings({ timestampsInSnapshots: true })
 
   // ======================================================
   // Store Instantiation and HMR Setup
@@ -46,15 +67,13 @@ export default (initialState = {}) => {
     initialState,
     compose(
       applyMiddleware(...middleware),
-      reduxFirestore(firebase, reduxConfig),
-      reactReduxFirebase(firebase, reduxConfig), // used for auth/profile
+      reduxFirestore(firebase),
+      reactReduxFirebase(firebase, combinedConfig),
       ...enhancers
     )
   )
-  store.asyncReducers = {}
 
-  // To unsubscribe, invoke `store.unsubscribeHistory()` anytime
-  store.unsubscribeHistory = browserHistory.listen(updateLocation(store))
+  store.asyncReducers = {}
 
   if (module.hot) {
     module.hot.accept('./reducers', () => {

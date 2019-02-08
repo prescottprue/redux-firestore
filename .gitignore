@@ -5,3 +5,4 @@ es
 *.log
 coverage
 .idea
+.DS_Store

@@ -1,50 +1,53 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { Field, reduxForm } from 'redux-form'
+import { Field } from 'redux-form'
 import { TextField } from 'redux-form-material-ui'
-import RaisedButton from 'material-ui/RaisedButton'
-import { SIGNUP_FORM_NAME } from 'constants'
+import Button from '@material-ui/core/Button'
 import { required, validateEmail } from 'utils/form'
-import classes from './SignupForm.scss'
 
-const SignupForm = ({ pristine, submitting, handleSubmit }) => (
-  <form className={classes.container} onSubmit={handleSubmit}>
-    <Field
-      name="username"
-      component={TextField}
-      floatingLabelText="Username"
-      validate={required}
-    />
-    <Field
-      name="email"
-      component={TextField}
-      floatingLabelText="Email"
-      validate={[required, validateEmail]}
-    />
-    <Field
-      name="password"
-      component={TextField}
-      floatingLabelText="Password"
-      type="password"
-      validate={required}
-    />
-    <div className={classes.submit}>
-      <RaisedButton
-        label="Signup"
-        primary
-        type="submit"
-        disabled={pristine || submitting}
+function SignupForm({ pristine, submitting, handleSubmit, classes }) {
+  return (
+    <form className={classes.root} onSubmit={handleSubmit}>
+      <Field
+        name="username"
+        component={TextField}
+        autoComplete="username"
+        label="Username"
+        validate={required}
       />
-    </div>
-  </form>
-)
-
-SignupForm.propTypes = {
-  pristine: PropTypes.bool.isRequired, // added by redux-form
-  submitting: PropTypes.bool.isRequired, // added by redux-form
-  handleSubmit: PropTypes.func.isRequired // added by redux-form
+      <Field
+        name="email"
+        component={TextField}
+        autoComplete="email"
+        label="Email"
+        validate={[required, validateEmail]}
+      />
+      <Field
+        name="password"
+        component={TextField}
+        autoComplete="current-password"
+        label="Password"
+        type="password"
+        validate={required}
+      />
+      <div className={classes.submit}>
+        <Button
+          color="primary"
+          type="submit"
+          variant="contained"
+          disabled={pristine || submitting}>
+          {submitting ? 'Loading' : 'Sign Up'}
+        </Button>
+      </div>
+    </form>
+  )
 }
 
-export default reduxForm({
-  form: SIGNUP_FORM_NAME
-})(SignupForm)
+SignupForm.propTypes = {
+  classes: PropTypes.object.isRequired, // from enhancer (withStyles)
+  pristine: PropTypes.bool.isRequired, // from enhancer (reduxForm)
+  submitting: PropTypes.bool.isRequired, // from enhancer (reduxForm)
+  handleSubmit: PropTypes.func.isRequired // from enhancer (reduxForm - calls onSubmit)
+}
+
+export default SignupForm

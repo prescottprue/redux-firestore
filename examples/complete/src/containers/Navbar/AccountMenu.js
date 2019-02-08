@@ -1,55 +1,59 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { pure, compose, branch, renderComponent, toClass } from 'recompose'
-import IconMenu from 'material-ui/IconMenu'
-import MenuItem from 'material-ui/MenuItem'
-import IconButton from 'material-ui/IconButton'
-import { ACCOUNT_PATH } from 'constants'
-import { withRouter } from 'utils/components'
-import AuthButtons from './AuthButtons'
-import AccountDropdown from './AccountDropdown'
+import Menu from '@material-ui/core/Menu'
+import MenuItem from '@material-ui/core/MenuItem'
+import IconButton from '@material-ui/core/IconButton'
+import AccountCircle from '@material-ui/icons/AccountCircle'
+import { withStyles } from '@material-ui/core/styles'
 
-export const AccountMenu = ({ account, router, onLogoutClick }) => (
-  <IconMenu
-    iconButtonElement={
-      <IconButton>
-        <AccountDropdown
-          displayName={account.displayName}
-          avatarUrl={account.avatarUrl}
-        />
+const styles = {
+  buttonRoot: {
+    color: 'white'
+  }
+}
+
+function AccountMenu({
+  avatarUrl,
+  displayName,
+  goToAccount,
+  onLogoutClick,
+  closeAccountMenu,
+  anchorEl,
+  handleMenu,
+  classes
+}) {
+  return (
+    <div>
+      <IconButton
+        aria-owns={anchorEl ? 'menu-appbar' : null}
+        aria-haspopup="true"
+        onClick={handleMenu}
+        classes={{ root: classes.buttonRoot }}>
+        <AccountCircle />
       </IconButton>
-    }
-    targetOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-    anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
-    animated={false}>
-    <MenuItem
-      primaryText="Account"
-      onTouchTap={() => router.push(ACCOUNT_PATH)}
-    />
-    <MenuItem primaryText="Sign out" onTouchTap={onLogoutClick} />
-  </IconMenu>
-)
+      <Menu
+        id="menu-appbar"
+        anchorEl={anchorEl}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        open={Boolean(anchorEl)}
+        onClose={closeAccountMenu}>
+        <MenuItem onClick={goToAccount}>Account</MenuItem>
+        <MenuItem onClick={onLogoutClick}>Sign Out</MenuItem>
+      </Menu>
+    </div>
+  )
+}
 
 AccountMenu.propTypes = {
-  account: PropTypes.shape({
-    displayName: PropTypes.string,
-    avatarUrl: PropTypes.string
-  }),
-  onLogoutClick: PropTypes.func,
-  authExists: PropTypes.bool, // eslint-disable-line react/no-unused-prop-types
-  router: PropTypes.shape({
-    push: PropTypes.func // from withRouter
-  })
+  classes: PropTypes.object.isRequired, // from enhancer (withStyles)
+  goToAccount: PropTypes.func.isRequired,
+  onLogoutClick: PropTypes.func.isRequired,
+  closeAccountMenu: PropTypes.func.isRequired,
+  handleMenu: PropTypes.func.isRequired,
+  displayName: PropTypes.string,
+  avatarUrl: PropTypes.string,
+  anchorEl: PropTypes.object
 }
 
-AccountMenu.defaultProps = {
-  account: {},
-  authExists: false
-}
-
-export default compose(
-  withRouter,
-  // pure,
-  // branch(props => !props.authExists, renderComponent(AuthButtons)), // render buttons if auth does not exist
-  toClass
-)(AccountMenu)
+export default withStyles(styles)(AccountMenu)
