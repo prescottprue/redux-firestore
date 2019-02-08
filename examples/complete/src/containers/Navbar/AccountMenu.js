@@ -12,7 +12,7 @@ const styles = {
   }
 }
 
-const AccountMenu = ({
+function AccountMenu({
   avatarUrl,
   displayName,
   goToAccount,
@@ -21,27 +21,29 @@ const AccountMenu = ({
   anchorEl,
   handleMenu,
   classes
-}) => (
-  <div>
-    <IconButton
-      aria-owns={anchorEl ? 'menu-appbar' : null}
-      aria-haspopup="true"
-      onClick={handleMenu}
-      classes={{ root: classes.buttonRoot }}>
-      <AccountCircle />
-    </IconButton>
-    <Menu
-      id="menu-appbar"
-      anchorEl={anchorEl}
-      anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-      transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-      open={Boolean(anchorEl)}
-      onClose={closeAccountMenu}>
-      <MenuItem onClick={goToAccount}>Account</MenuItem>
-      <MenuItem onClick={onLogoutClick}>Sign Out</MenuItem>
-    </Menu>
-  </div>
-)
+}) {
+  return (
+    <div>
+      <IconButton
+        aria-owns={anchorEl ? 'menu-appbar' : null}
+        aria-haspopup="true"
+        onClick={handleMenu}
+        classes={{ root: classes.buttonRoot }}>
+        <AccountCircle />
+      </IconButton>
+      <Menu
+        id="menu-appbar"
+        anchorEl={anchorEl}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        open={Boolean(anchorEl)}
+        onClose={closeAccountMenu}>
+        <MenuItem onClick={goToAccount}>Account</MenuItem>
+        <MenuItem onClick={onLogoutClick}>Sign Out</MenuItem>
+      </Menu>
+    </div>
+  )
+}
 
 AccountMenu.propTypes = {
   classes: PropTypes.object.isRequired, // from enhancer (withStyles)

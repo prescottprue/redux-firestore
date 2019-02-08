@@ -58,7 +58,6 @@ export default (initialState = {}) => {
   // Firebase Initialization
   // ======================================================
   firebase.initializeApp(fbConfig)
-  firebase.firestore().settings({ timestampsInSnapshots: true })
 
   // ======================================================
   // Store Instantiation and HMR Setup

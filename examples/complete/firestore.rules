@@ -22,7 +22,8 @@ service cloud.firestore {
     // Projects
     match /projects/{projectId} {
       // Only projects you own can be viewed
-      allow read, write: if isOwner(request.resource);
+      allow create: if isOwner(request.resource);
+      allow read, update: if isOwner(resource);
       // Rules apply to all child collections
       match /{allChildren=**} {
         allow read, write: if isOwner(get(/databases/$(database)/documents/projects/$(projectId)));

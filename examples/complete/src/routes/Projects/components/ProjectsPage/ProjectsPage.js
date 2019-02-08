@@ -8,7 +8,7 @@ import NewProjectTile from '../NewProjectTile'
 import NewProjectDialog from '../NewProjectDialog'
 import { renderChildren } from 'utils/router'
 
-const ProjectsPage = ({
+function ProjectsPage({
   projects,
   collabProjects,
   auth,
@@ -19,38 +19,40 @@ const ProjectsPage = ({
   classes,
   match,
   goToProject
-}) => (
-  <Switch>
-    {/* Child routes */}
-    {renderChildren([ProjectRoute], match, { auth })}
-    {/* Main Route */}
-    <Route
-      exact
-      path={match.path}
-      render={() => (
-        <div className={classes.root}>
-          <NewProjectDialog
-            onSubmit={addProject}
-            open={newDialogOpen}
-            onRequestClose={toggleDialog}
-          />
-          <div className={classes.tiles}>
-            <NewProjectTile onClick={toggleDialog} />
-            {!isEmpty(projects) &&
-              projects.map((project, ind) => (
-                <ProjectTile
-                  key={`Project-${project.id}-${ind}`}
-                  name={project.name}
-                  onSelect={() => goToProject(project.id)}
-                  onDelete={() => deleteProject(project.id)}
-                />
-              ))}
+}) {
+  return (
+    <Switch>
+      {/* Child routes */}
+      {renderChildren([ProjectRoute], match, { auth })}
+      {/* Main Route */}
+      <Route
+        exact
+        path={match.path}
+        render={() => (
+          <div className={classes.root}>
+            <NewProjectDialog
+              onSubmit={addProject}
+              open={newDialogOpen}
+              onRequestClose={toggleDialog}
+            />
+            <div className={classes.tiles}>
+              <NewProjectTile onClick={toggleDialog} />
+              {!isEmpty(projects) &&
+                projects.map((project, ind) => (
+                  <ProjectTile
+                    key={`Project-${project.id}-${ind}`}
+                    name={project.name}
+                    onSelect={() => goToProject(project.id)}
+                    onDelete={() => deleteProject(project.id)}
+                  />
+                ))}
+            </div>
           </div>
-        </div>
-      )}
-    />
-  </Switch>
-)
+        )}
+      />
+    </Switch>
+  )
+}
 
 ProjectsPage.propTypes = {
   classes: PropTypes.object.isRequired, // from enhancer (withStyles)

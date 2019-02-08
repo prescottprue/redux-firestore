@@ -5,41 +5,43 @@ import Button from '@material-ui/core/Button'
 import { TextField } from 'redux-form-material-ui'
 import ProviderDataForm from '../ProviderDataForm'
 
-export const AccountForm = ({
+function AccountForm({
   account,
   handleSubmit,
   submitting,
   pristine,
   classes
-}) => (
-  <form className={classes.root} onSubmit={handleSubmit}>
-    <h4>Account</h4>
-    <div className={classes.fields}>
-      <Field
-        fullWidth
-        name="displayName"
-        component={TextField}
-        label="Display Name"
-      />
-      <Field name="email" label="Email" component={TextField} fullWidth />
-      <Field
-        name="avatarUrl"
-        label="Avatar Url"
-        component={TextField}
-        fullWidth
-      />
-    </div>
-    {!!account && !!account.providerData && (
-      <div>
-        <h4>Linked Accounts</h4>
-        <ProviderDataForm providerData={account.providerData} />
+}) {
+  return (
+    <form className={classes.root} onSubmit={handleSubmit}>
+      <h4>Account</h4>
+      <div className={classes.fields}>
+        <Field
+          fullWidth
+          name="displayName"
+          component={TextField}
+          label="Display Name"
+        />
+        <Field name="email" label="Email" component={TextField} fullWidth />
+        <Field
+          name="avatarUrl"
+          label="Avatar Url"
+          component={TextField}
+          fullWidth
+        />
       </div>
-    )}
-    <Button color="primary" type="submit" disabled={pristine || submitting}>
-      {submitting ? 'Saving' : 'Save'}
-    </Button>
-  </form>
-)
+      {!!account && !!account.providerData && (
+        <div>
+          <h4>Linked Accounts</h4>
+          <ProviderDataForm providerData={account.providerData} />
+        </div>
+      )}
+      <Button color="primary" type="submit" disabled={pristine || submitting}>
+        {submitting ? 'Saving' : 'Save'}
+      </Button>
+    </form>
+  )
+}
 
 AccountForm.propTypes = {
   account: PropTypes.object,
