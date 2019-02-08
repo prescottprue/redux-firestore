@@ -266,6 +266,26 @@ export function setListeners(firebase, dispatch, listeners) {
   }
 
   const { config } = firebase._;
+
+  // Only attach one listener (count of matching listener path calls is tracked)
+  if (config.oneListenerPerPath) {
+    return listeners.forEach(listener => {
+      const path =
+        getQueryName(listener) +
+        (listener.storeAs ? `-${listener.storeAs}` : '');
+
+      const oldListenerCount = pathListenerCounts[path] || 0;
+      pathListenerCounts[path] = oldListenerCount + 1;
+
+      // If we already have an attached listener exit here
+      if (oldListenerCount > 0) {
+        return;
+      }
+
+      setListener(firebase, dispatch, listener);
+    });
+  }
+
   const { allowMultipleListeners } = config;
 
   return listeners.forEach(listener => {
