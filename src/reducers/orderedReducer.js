@@ -163,23 +163,20 @@ function writeCollection(collectionState, action) {
       ];
     }
     // Merge with existing document if collection state exists
-    return updateItemInArray(
-      collectionState,
-      meta.doc,
-      item =>
-        // check if action contains ordered payload
-        payloadExists
-          ? // merge with existing subcollection
-            {
-              ...item,
-              [subcollectionConfig.collection]: unionBy(
-                get(item, subcollectionConfig.collection, []),
-                action.payload.ordered,
-                'id',
-              ),
-            }
-          : // remove subcollection if payload is empty
-            omit(item, [subcollectionConfig.collection]),
+    return updateItemInArray(collectionState, meta.doc, item =>
+      // check if action contains ordered payload
+      payloadExists
+        ? // merge with existing subcollection
+          {
+            ...item,
+            [subcollectionConfig.collection]: unionBy(
+              get(item, subcollectionConfig.collection, []),
+              action.payload.ordered,
+              'id',
+            ),
+          }
+        : // remove subcollection if payload is empty
+          omit(item, [subcollectionConfig.collection]),
     );
   }
 

@@ -82,8 +82,7 @@ export function get(firebase, dispatch, queryOption) {
     mergeOrdered,
     mergeOrderedDocUpdates,
     mergeOrderedCollectionUpdates,
-  } =
-    firebase._.config || {};
+  } = firebase._.config || {};
   return wrapInDispatch(dispatch, {
     ref: firestoreRef(firebase, meta),
     method: 'get',
@@ -225,8 +224,7 @@ export function setListener(firebase, dispatch, queryOpts, successCb, errorCb) {
         mergeOrdered,
         mergeOrderedDocUpdates,
         mergeOrderedCollectionUpdates,
-      } =
-        firebase._.config || {};
+      } = firebase._.config || {};
       // TODO: Look into whether listener is automatically removed in all cases
       // Log error handling the case of it not existing
       const { logListenerError, preserveOnListenerError } =
