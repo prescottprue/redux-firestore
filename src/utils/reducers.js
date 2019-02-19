@@ -127,7 +127,7 @@ export function updateItemInArray(array, itemId, updateItemCallback) {
       // Use the provided callback to create an updated item
       const updatedItem = updateItemCallback(item);
       return updatedItem;
-    });
+    })
     : []
   if (!matchFound) {
     modified.push(updateItemCallback({ id: itemId }));
