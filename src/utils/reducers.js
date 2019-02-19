@@ -117,7 +117,7 @@ export function pathFromMeta(meta) {
  */
 export function updateItemInArray(array, itemId, updateItemCallback) {
   let matchFound = false;
-  const modified = !Array.isArray(array)
+  const modified = Array.isArray(array)
     ? array.map(item => {
       // Preserve items that do not have matching ids
       if (!item || item.id !== itemId) {
