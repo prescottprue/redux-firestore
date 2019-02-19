@@ -393,6 +393,24 @@ describe('orderedReducer', () => {
         });
       });
 
+      it('removes values from internal arrays', () => {
+        const id = 'doc';
+        const someField = ['single'];
+        const orderedData = [{ id, someField }];
+        action = {
+          meta: { collection: 'testing', doc: 'doc' },
+          type: actionTypes.LISTENER_RESPONSE,
+          payload: { ordered: orderedData, data: orderedData[0] },
+        };
+        state = {
+          testing: [{ id, someField: ['a thing', 'with multiple', 'values'] }],
+        };
+        expect(orderedReducer(state, action)).to.have.nested.property(
+          'testing.0.someField.length',
+          1,
+        );
+      });
+
       describe('subcollections', () => {
         it('adds a new doc within state with subcollection', () => {
           const orderedData = { id: 'subDoc' };
