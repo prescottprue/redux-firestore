@@ -117,16 +117,18 @@ export function pathFromMeta(meta) {
  */
 export function updateItemInArray(array, itemId, updateItemCallback) {
   let matchFound = false;
-  const modified = array.map(item => {
-    // Preserve items that do not have matching ids
-    if (!item || item.id !== itemId) {
-      return item;
-    }
-    matchFound = true;
-    // Use the provided callback to create an updated item
-    const updatedItem = updateItemCallback(item);
-    return updatedItem;
-  });
+  const modified = !Array.isArray(array)
+    ? array.map(item => {
+      // Preserve items that do not have matching ids
+      if (!item || item.id !== itemId) {
+        return item;
+      }
+      matchFound = true;
+      // Use the provided callback to create an updated item
+      const updatedItem = updateItemCallback(item);
+      return updatedItem;
+    });
+    : []
   if (!matchFound) {
     modified.push(updateItemCallback({ id: itemId }));
   }
