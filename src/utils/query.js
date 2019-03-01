@@ -225,7 +225,6 @@ export function getQueryName(meta) {
  * @param  {Object} meta - Metadata object containing query settings
  * @param  {String} meta.collection - Collection name of query
  * @param  {String} meta.doc - Document id of query
- * @param  {String} meta.storeAs - User-defined Redux store name of query
  * @param  {Array} meta.subcollections - Subcollections of query
  * @return {String} String representing query settings
  */
@@ -233,7 +232,7 @@ export function getBaseQueryName(meta) {
   if (isString(meta)) {
     return meta;
   }
-  const { collection, subcollections, storeAs, ...remainingMeta } = meta;
+  const { collection, subcollections, ...remainingMeta } = meta;
   if (!collection) {
     throw new Error('Collection is required to build query name');
   }
