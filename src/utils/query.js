@@ -76,7 +76,7 @@ function handleSubcollections(ref, subcollectionList) {
         if (!isFunction(ref.collection)) {
           throw new Error(
             `Collection can only be run on a document. Check that query config for subcollection: "${
-            subcollection.collection
+              subcollection.collection
             }" contains a doc parameter.`,
           );
         }
@@ -167,8 +167,8 @@ function pickQueryParams(obj) {
 
 function serialize(queryParams) {
   return Object.keys(queryParams)
-    .filter((key) => queryParams[key] !== undefined)
-    .map((key) => arrayToStr(key, queryParams[key]))
+    .filter(key => queryParams[key] !== undefined)
+    .map(key => arrayToStr(key, queryParams[key]))
     .join('&');
 }
 
