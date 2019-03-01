@@ -3,6 +3,8 @@ import {
   isArray,
   isFunction,
   isObject,
+  isNumber,
+  isEmpty,
   size,
   trim,
   forEach,
@@ -142,13 +144,34 @@ export function firestoreRef(firebase, meta) {
 
 /**
  * Convert where parameter into a string notation for use in query name
- * @param  {Array} where - Where config array
+ * @param  {Array} value - Where config array
  * @return {String} String representing where settings for use in query name
  */
-function whereToStr(where) {
-  return isString(where[0])
-    ? `where=${where.join(':')}`
-    : where.map(whereToStr);
+function arrayToStr(key, value) {
+  return isString(value) || isNumber(value)
+    ? `${key}=${value}`
+    : isString(value[0])
+    ? `${key}=${value.join(':')}`
+    : value.map(value => arrayToStr(key, value));
+}
+
+function pickQueryParams(obj) {
+  return [
+    'where',
+    'orderBy',
+    'limit',
+    'startAfter',
+    'startAt',
+    'endAt',
+    'endBefore',
+  ].reduce((acc, key) => (obj[key] ? { ...acc, [key]: obj[key] } : acc), {});
+}
+
+function serialize(queryParams) {
+  return Object.entries(queryParams)
+    .filter(([key, value]) => value !== undefined)
+    .map(([key, value]) => arrayToStr(key, value))
+    .join('&');
 }
 
 /**
@@ -157,6 +180,7 @@ function whereToStr(where) {
  * @param  {Object} meta - Metadata object containing query settings
  * @param  {String} meta.collection - Collection name of query
  * @param  {String} meta.doc - Document id of query
+ * @param  {String} meta.storeAs - User-defined Redux store name of query
  * @param  {Array} meta.subcollections - Subcollections of query
  * @return {String} String representing query settings
  */
@@ -164,10 +188,15 @@ export function getQueryName(meta) {
   if (isString(meta)) {
     return meta;
   }
-  const { collection, doc, subcollections, where, limit } = meta;
+  const { collection, doc, subcollections, storeAs, ...remainingMeta } = meta;
   if (!collection) {
     throw new Error('Collection is required to build query name');
   }
+
+  if (storeAs) {
+    return storeAs;
+  }
+
   let basePath = collection;
   if (doc) {
     basePath = basePath.concat(`/${doc}`);
@@ -178,15 +207,14 @@ export function getQueryName(meta) {
     );
     basePath = `${basePath}/${mappedCollections.join('/')}`;
   }
-  if (where) {
-    if (!isArray(where)) {
+
+  const queryParams = pickQueryParams(remainingMeta);
+
+  if (!isEmpty(queryParams)) {
+    if (queryParams.where && !isArray(queryParams.where)) {
       throw new Error('where parameter must be an array.');
     }
-    basePath = basePath.concat(`?${whereToStr(where)}`);
-  }
-  if (typeof limit !== 'undefined') {
-    const limitStr = `limit=${limit}`;
-    basePath = basePath.concat(`${where ? '&' : '?'}${limitStr}`);
+    basePath = basePath.concat('?', serialize(queryParams));
   }
   return basePath;
 }
@@ -197,6 +225,7 @@ export function getQueryName(meta) {
  * @param  {Object} meta - Metadata object containing query settings
  * @param  {String} meta.collection - Collection name of query
  * @param  {String} meta.doc - Document id of query
+ * @param  {String} meta.storeAs - User-defined Redux store name of query
  * @param  {Array} meta.subcollections - Subcollections of query
  * @return {String} String representing query settings
  */
@@ -204,7 +233,7 @@ export function getBaseQueryName(meta) {
   if (isString(meta)) {
     return meta;
   }
-  const { collection, subcollections, where, limit } = meta;
+  const { collection, subcollections, storeAs, ...remainingMeta } = meta;
   if (!collection) {
     throw new Error('Collection is required to build query name');
   }
@@ -216,16 +245,16 @@ export function getBaseQueryName(meta) {
     );
     basePath = `${basePath}/${mappedCollections.join('/')}`;
   }
-  if (where) {
-    if (!isArray(where)) {
+
+  const queryParams = pickQueryParams(remainingMeta);
+
+  if (!isEmpty(queryParams)) {
+    if (queryParams.where && !isArray(queryParams.where)) {
       throw new Error('where parameter must be an array.');
     }
-    basePath = basePath.concat(`?${whereToStr(where)}`);
+    basePath = basePath.concat('?', serialize(queryParams));
   }
-  if (typeof limit !== 'undefined') {
-    const limitStr = `limit=${limit}`;
-    basePath = basePath.concat(`${where ? '&' : '?'}${limitStr}`);
-  }
+
   return basePath;
 }
 
@@ -540,7 +569,8 @@ export function promisesForPopulate(
 
         // Parameter of each list item is single ID
         if (isString(idOrList)) {
-          return promisesArray.push( // eslint-disable-line
+          return promisesArray.push(
+            // eslint-disable-line
             getPopulateChild(firebase, p, idOrList).then(v => {
               // write child to result object under root name if it is found
               if (v) {
@@ -554,7 +584,8 @@ export function promisesForPopulate(
         // Parameter of each list item is a list of ids
         if (isArray(idOrList) || isObject(idOrList)) {
           // Create single promise that includes a promise for each child
-          return promisesArray.push( // eslint-disable-line
+          return promisesArray.push(
+            // eslint-disable-line
             populateList(firebase, idOrList, p, results),
           );
         }
