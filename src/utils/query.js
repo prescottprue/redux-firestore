@@ -76,7 +76,7 @@ function handleSubcollections(ref, subcollectionList) {
         if (!isFunction(ref.collection)) {
           throw new Error(
             `Collection can only be run on a document. Check that query config for subcollection: "${
-              subcollection.collection
+            subcollection.collection
             }" contains a doc parameter.`,
           );
         }
@@ -148,11 +148,9 @@ export function firestoreRef(firebase, meta) {
  * @return {String} String representing where settings for use in query name
  */
 function arrayToStr(key, value) {
-  return isString(value) || isNumber(value)
-    ? `${key}=${value}`
-    : isString(value[0])
-    ? `${key}=${value.join(':')}`
-    : value.map(value => arrayToStr(key, value));
+  if (isString(value) || isNumber(value)) return `${key}=${value}`;
+  if (isString(value[0])) return;
+  return value.map(val => arrayToStr(key, val));
 }
 
 function pickQueryParams(obj) {
@@ -169,7 +167,7 @@ function pickQueryParams(obj) {
 
 function serialize(queryParams) {
   return Object.entries(queryParams)
-    .filter(([key, value]) => value !== undefined)
+    .filter(([, value]) => value !== undefined)
     .map(([key, value]) => arrayToStr(key, value))
     .join('&');
 }
@@ -568,8 +566,7 @@ export function promisesForPopulate(
 
         // Parameter of each list item is single ID
         if (isString(idOrList)) {
-          return promisesArray.push(
-            // eslint-disable-line
+          return promisesArray.push( // eslint-disable-line
             getPopulateChild(firebase, p, idOrList).then(v => {
               // write child to result object under root name if it is found
               if (v) {
@@ -583,8 +580,7 @@ export function promisesForPopulate(
         // Parameter of each list item is a list of ids
         if (isArray(idOrList) || isObject(idOrList)) {
           // Create single promise that includes a promise for each child
-          return promisesArray.push(
-            // eslint-disable-line
+          return promisesArray.push( // eslint-disable-line
             populateList(firebase, idOrList, p, results),
           );
         }
