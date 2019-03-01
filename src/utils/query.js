@@ -76,7 +76,7 @@ function handleSubcollections(ref, subcollectionList) {
         if (!isFunction(ref.collection)) {
           throw new Error(
             `Collection can only be run on a document. Check that query config for subcollection: "${
-            subcollection.collection
+              subcollection.collection
             }" contains a doc parameter.`,
           );
         }
@@ -149,7 +149,7 @@ export function firestoreRef(firebase, meta) {
  */
 function arrayToStr(key, value) {
   if (isString(value) || isNumber(value)) return `${key}=${value}`;
-  if (isString(value[0])) return;
+  if (isString(value[0])) return `${key}=${value.join(':')}`;
   return value.map(val => arrayToStr(key, val));
 }
 
