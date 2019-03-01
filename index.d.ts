@@ -72,41 +72,41 @@ export const constants: {
   defaultConfig: Config;
 };
 
-interface Config {
-  enableLogging?: boolean;
+export interface Config {
+  enableLogging: boolean;
 
-  helpersNamespace?: string | null;
+  helpersNamespace: string | null;
 
   // https://github.com/prescottprue/redux-firestore#loglistenererror
-  logListenerError?: boolean;
+  logListenerError: boolean;
 
   // https://github.com/prescottprue/redux-firestore#enhancernamespace
-  enhancerNamespace?: string;
+  enhancerNamespace: string;
 
   // https://github.com/prescottprue/redux-firestore#allowmultiplelisteners
-  allowMultipleListeners?:
+  allowMultipleListeners:
     | ((listenerToAttach: any, currentListeners: any) => boolean)
     | boolean;
 
   // https://github.com/prescottprue/redux-firestore#preserveondelete
-  preserveOnDelete?: null | object;
+  preserveOnDelete: null | object;
 
   // https://github.com/prescottprue/redux-firestore#preserveonlistenererror
-  preserveOnListenerError?: null | object;
+  preserveOnListenerError: null | object;
 
   // https://github.com/prescottprue/redux-firestore#onattemptcollectiondelete
-  onAttemptCollectionDelete?:
+  onAttemptCollectionDelete:
     | null
     | ((queryOption, dispatch, firebase) => void);
 
   // https://github.com/prescottprue/redux-firestore#mergeordered
-  mergeOrdered?: boolean;
+  mergeOrdered: boolean;
 
   // https://github.com/prescottprue/redux-firestore#mergeordereddocupdate
-  mergeOrderedDocUpdate?: boolean;
+  mergeOrderedDocUpdate: boolean;
 
   // https://github.com/prescottprue/redux-firestore#mergeorderedcollectionupdates
-  mergeOrderedCollectionUpdates?: boolean;
+  mergeOrderedCollectionUpdates: boolean;
 }
 
 /**
