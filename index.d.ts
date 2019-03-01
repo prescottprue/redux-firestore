@@ -115,7 +115,7 @@ export interface Config {
  */
 export function reduxFirestore(
   firebaseInstance: object,
-  otherConfig?: Config
+  otherConfig?: Partial<Config>
 ): any;
 
 /**
@@ -123,7 +123,7 @@ export function reduxFirestore(
  */
 export function getFirestore(
   firebaseInstance: object,
-  otherConfig?: Config
+  otherConfig?: Partial<Config>
 ): any;
 
 /**
@@ -136,7 +136,7 @@ export function firestoreReducer(state: object, action: object): any;
  */
 export function createFirestoreInstance(
   firebaseInstance: object,
-  configs: Config,
+  configs: Partial<Config>,
   dispatch: () => object
 ): object;
 
