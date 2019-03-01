@@ -1,3 +1,5 @@
+import * as Firebase from 'firebase';
+
 /**
  * Action types used within actions dispatched internally. These action types
  * can be manually dispatched to update state.
@@ -95,9 +97,7 @@ export interface Config {
   preserveOnListenerError: null | object;
 
   // https://github.com/prescottprue/redux-firestore#onattemptcollectiondelete
-  onAttemptCollectionDelete:
-    | null
-    | ((queryOption, dispatch, firebase) => void);
+  onAttemptCollectionDelete: null | ((queryOption, dispatch, firebase) => void);
 
   // https://github.com/prescottprue/redux-firestore#mergeordered
   mergeOrdered: boolean;
@@ -114,16 +114,16 @@ export interface Config {
  * context through react-redux's <Provider>).
  */
 export function reduxFirestore(
-  firebaseInstance: object,
-  otherConfig?: Partial<Config>
+  firebaseInstance: typeof Firebase,
+  otherConfig?: Partial<Config>,
 ): any;
 
 /**
  * Get extended firestore instance (attached to store.firestore)
  */
 export function getFirestore(
-  firebaseInstance: object,
-  otherConfig?: Partial<Config>
+  firebaseInstance: typeof Firebase,
+  otherConfig?: Partial<Config>,
 ): any;
 
 /**
@@ -135,9 +135,9 @@ export function firestoreReducer(state: object, action: object): any;
  * Create a firestore instance that has helpers attached for dispatching actions
  */
 export function createFirestoreInstance(
-  firebaseInstance: object,
+  firebaseInstance: typeof Firebase,
   configs: Partial<Config>,
-  dispatch: () => object
+  dispatch: () => object,
 ): object;
 
 /**
