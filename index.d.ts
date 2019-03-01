@@ -136,7 +136,7 @@ export function firestoreReducer(state: object, action: object): any;
  */
 export function createFirestoreInstance(
   firebaseInstance: object,
-  configs: Config,
+  config: Config,
   dispatch: () => object
 ): object;
 
