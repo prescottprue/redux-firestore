@@ -270,10 +270,7 @@ export function setListeners(firebase, dispatch, listeners) {
   // Only attach one listener (count of matching listener path calls is tracked)
   if (config.oneListenerPerPath) {
     return listeners.forEach(listener => {
-      const path =
-        getQueryName(listener) +
-        (listener.storeAs ? `-${listener.storeAs}` : '');
-
+      const path = getQueryName(listener);
       const oldListenerCount = pathListenerCounts[path] || 0;
       pathListenerCounts[path] = oldListenerCount + 1;
 

@@ -207,6 +207,58 @@ describe('reducer', () => {
       expect(pass2.composite.testStoreAs[doc2.id]).to.eql(doc2);
     });
 
+    it('composes the query key', () => {
+      const doc1 = { key1: 'value1', id: 'testDocId1' };
+      const doc2 = { key1: 'value1', id: 'testDocId2' };
+      const action1 = {
+        meta: {
+          collection: 'testCollection',
+          storeAs: 'testStoreAs',
+          where: ['abc', '===', 123],
+          orderBy: ['id', 'asc'],
+        },
+        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+
+      const pass1 = reducer(initialState, action1);
+
+      const query =
+        pass1.queries['testCollection?where=abc:===:123&orderBy=id:asc'];
+
+      expect(query.data).to.equal(action1.payload.data);
+      expect(query.collection).to.equal(action1.meta.collection);
+      expect(query.storeAs).to.equal(action1.meta.storeAs);
+      expect(query.where).to.equal(action1.meta.where);
+      expect(query.orderBy).to.equal(action1.meta.orderBy);
+
+      const action2 = {
+        meta: {
+          collection: 'testCollection',
+          storeAs: 'testStoreAs',
+          where: ['abc', '===', 234], // same meta, different where (how an `or` query is implemented in firestore atm)
+          orderBy: ['id', 'asc'],
+          startAfter: 100,
+        },
+        payload: { data: { [doc2.id]: doc2 }, ordered: [doc2] },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+
+      // In the second pass, we expect to retain the first doc (since it is a different query) and add the second doc
+      const pass2 = reducer(pass1, action2);
+
+      const query2 =
+        pass2.queries[
+          'testCollection?where=abc:===:234&orderBy=id:asc&startAfter=100'
+        ];
+
+      expect(query2.data).to.equal(action2.payload.data);
+      expect(query2.collection).to.equal(action2.meta.collection);
+      expect(query2.storeAs).to.equal(action2.meta.storeAs);
+      expect(query2.where).to.equal(action2.meta.where);
+      expect(query2.orderBy).to.equal(action2.meta.orderBy);
+    });
+
     it('handles a where without a storeAs', () => {
       const doc1 = { key1: 'value1', id: 'testDocId1' };
       const doc2 = { key1: 'value1', id: 'testDocId2' };
