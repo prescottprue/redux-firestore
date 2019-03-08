@@ -63,7 +63,7 @@ describe('actions utils', () => {
 
     it('handles rejection', () => {
       const opts = {
-        ref: { test: () => Promise.reject() },
+        ref: { test: () => Promise.reject(new Error('test')) },
         types: [{ type: 'test' }, { type: 'test', payload: () => ({}) }],
         method: 'test',
       };

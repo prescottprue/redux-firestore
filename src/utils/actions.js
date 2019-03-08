@@ -19,6 +19,7 @@ function makePayload({ payload }, valToPass) {
  * @param {Function} opts.method - Method to call
  * @param {Array} opts.args - Arguments to call method with
  * @param {Array} opts.types - Action types array ([BEFORE, SUCCESS, FAILURE])
+ * @return {Promise}
  * @private
  */
 export function wrapInDispatch(
@@ -82,6 +83,7 @@ function createWithFirebaseAndDispatch(firebase, dispatch) {
  * @param  {Object} firebase - Internal firebase instance
  * @param  {Function} dispatch - Redux's dispatch function
  * @param  {Object} actions - Action functions to map with firebase and dispatch
+ * @param  {Object} aliases - List of name aliases for wrapped functions
  * @return {Object} Actions mapped with firebase and dispatch
  */
 export function mapWithFirebaseAndDispatch(
