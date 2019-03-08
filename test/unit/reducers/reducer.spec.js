@@ -1,6 +1,5 @@
 import reducer from 'reducer';
 import { actionTypes } from 'constants';
-import { display } from '../helpers';
 
 const initialState = {
   data: { testStoreAs: { obsoleteDocId: {} } },
@@ -170,7 +169,6 @@ describe('reducer', () => {
       expect(pass1.composite.testStoreAs[doc1.id]).to.eql(doc1);
 
       const pass2 = reducer(pass1, action2);
-      display(pass2.composite.testStoreAs);
       expect(pass2.composite.testStoreAs).to.eql({});
     });
 

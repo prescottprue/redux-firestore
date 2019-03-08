@@ -4,6 +4,13 @@ import produce from 'immer';
 import { values, groupBy, merge, set, get, keys } from 'lodash';
 import { actionTypes } from '../constants';
 
+/**
+ * Reducer for crossSlice state
+ * @param  {Object} [state={}] - Current ordered redux state
+ * @param  {Object} action - The action that was dispatched
+ * @param  {String} action.type - Type of action that was dispatched
+ * @return {Object}
+ */
 export default function crossSliceReducer(state = {}, action) {
   return produce(state, draft => {
     switch (action.type) {

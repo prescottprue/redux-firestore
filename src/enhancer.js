@@ -9,8 +9,8 @@ let firestoreInstance;
  * @description Redux store enhancer that accepts configuration options and adds
  * store.firestore. Enhancers are most commonly placed in redux's `compose` call
  * along side applyMiddleware.
- * @property {Object} firebaseInstance - Initiated firebase instance
- * @property {Object} config - Containing react-redux-firebase specific configuration
+ * @param {Object} firebaseInstance - Initiated firebase instance
+ * @param {Object} otherConfig - Containing react-redux-firebase specific configuration
  * @return {Function} That accepts a component and returns a Component which
  * wraps the provided component (higher order component).
  * @return {Function} That enhances a redux store with store.firestore
@@ -66,6 +66,7 @@ export default function reduxFirestore(firebaseInstance, otherConfig) {
 /**
  * @description Expose Firestore instance created internally. Useful for
  * integrations into external libraries such as redux-thunk and redux-observable.
+ * @return {Object} Firebase Instance
  * @example <caption>redux-thunk integration</caption>
  * import { applyMiddleware, compose, createStore } from 'redux';
  * import thunk from 'redux-thunk';

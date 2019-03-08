@@ -8,6 +8,13 @@ import { getBaseQueryName } from '../utils/query';
 export const isComposable = action =>
   get(action, 'meta.where') && get(action, 'meta.collection');
 
+/**
+ *
+ * @param  {Object} [state={}] - Current listenersById redux state
+ * @param  {Object} action - Object containing the action that was dispatched
+ * @param  {String} action.type - Type of action that was dispatched
+ * @return {Object}
+ */
 export default function queriesReducer(state = {}, action) {
   return produce(state, draft => {
     if (!isComposable(action)) {

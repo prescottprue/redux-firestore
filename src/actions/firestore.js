@@ -20,7 +20,7 @@ const pathListenerCounts = {};
  * the Firebase library being wrapped in action dispatches.
  * @param {Object} firebase - Internal firebase object
  * @param {Function} dispatch - Redux's dispatch function
- * @param {String} collection - Collection name
+ * @param {String} queryOption - Options for query
  * @param {String} doc - Document name
  * @return {Promise} Resolves with results of add call
  */
@@ -47,7 +47,7 @@ export function add(firebase, dispatch, queryOption, ...args) {
  * the Firebase library being wrapped in action dispatches.
  * @param {Object} firebase - Internal firebase object
  * @param {Function} dispatch - Redux's dispatch function
- * @param {String} collection - Collection name
+ * @param {String} queryOption - Options for query
  * @param {String} doc - Document name
  * @return {Promise} Resolves with results of set call
  */
@@ -71,7 +71,7 @@ export function set(firebase, dispatch, queryOption, ...args) {
  * the Firebase library being wrapped in action dispatches.
  * @param {Object} firebase - Internal firebase object
  * @param {Function} dispatch - Redux's dispatch function
- * @param {String} collection - Collection name
+ * @param {String} queryOption - Options for query
  * @param {String} doc - Document name
  * @return {Promise} Resolves with results of get call
  */
@@ -110,7 +110,7 @@ export function get(firebase, dispatch, queryOption) {
  * being wrapped in action dispatches.
  * @param {Object} firebase - Internal firebase object
  * @param {Function} dispatch - Redux's dispatch function
- * @param {String} collection - Collection name
+ * @param {String} queryOption - Options for query
  * @param {String} doc - Document name
  * @return {Promise} Resolves with results of update call
  */
@@ -138,7 +138,7 @@ export function update(firebase, dispatch, queryOption, ...args) {
  * within a cloud function.
  * @param {Object} firebase - Internal firebase object
  * @param {Function} dispatch - Redux's dispatch function
- * @param {String} collection - Collection name
+ * @param {String} queryOption - Options for query
  * @param {String} doc - Document name
  * @return {Promise} Resolves with results of update call
  */
@@ -175,13 +175,14 @@ export function deleteRef(firebase, dispatch, queryOption) {
  * method.
  * @param {Object} firebase - Internal firebase object
  * @param {Function} dispatch - Redux's dispatch function
- * @param {Object} meta - Metadata
- * @param {String} meta.collection - Collection name
- * @param {String} meta.doc - Document name
- * @param {Array} meta.where - Where settings for query. Array of strings
+ * @param {String} queryOpts - Options for query
+ * @param {String} queryOpts.collection - Collection name
+ * @param {String} queryOpts.doc - Document name
+ * @param {Array} queryOpts.where - Where settings for query. Array of strings
  * for one where, an Array of Arrays for multiple wheres
  * @param  {Function} successCb - Callback called on success
  * @param  {Function} errorCb - Callback called on error
+ * @return {Function} Unsubscribe
  */
 export function setListener(firebase, dispatch, queryOpts, successCb, errorCb) {
   const meta = getQueryConfig(queryOpts);
@@ -269,7 +270,7 @@ export function setListeners(firebase, dispatch, listeners) {
 
   // Only attach one listener (count of matching listener path calls is tracked)
   if (config.oneListenerPerPath) {
-    return listeners.forEach(listener => {
+    listeners.forEach(listener => {
       const path = getQueryName(listener);
       const oldListenerCount = pathListenerCounts[path] || 0;
       pathListenerCounts[path] = oldListenerCount + 1;
@@ -281,24 +282,24 @@ export function setListeners(firebase, dispatch, listeners) {
 
       setListener(firebase, dispatch, listener);
     });
+  } else {
+    const { allowMultipleListeners } = config;
+
+    listeners.forEach(listener => {
+      const path = getQueryName(listener);
+      const oldListenerCount = pathListenerCounts[path] || 0;
+      const multipleListenersEnabled = isFunction(allowMultipleListeners)
+        ? allowMultipleListeners(listener, firebase._.listeners)
+        : allowMultipleListeners;
+
+      pathListenerCounts[path] = oldListenerCount + 1;
+
+      // If we already have an attached listener exit here
+      if (oldListenerCount === 0 || multipleListenersEnabled) {
+        setListener(firebase, dispatch, listener);
+      }
+    });
   }
-
-  const { allowMultipleListeners } = config;
-
-  return listeners.forEach(listener => {
-    const path = getQueryName(listener);
-    const oldListenerCount = pathListenerCounts[path] || 0;
-    const multipleListenersEnabled = isFunction(allowMultipleListeners)
-      ? allowMultipleListeners(listener, firebase._.listeners)
-      : allowMultipleListeners;
-
-    pathListenerCounts[path] = oldListenerCount + 1;
-
-    // If we already have an attached listener exit here
-    if (oldListenerCount === 0 || multipleListenersEnabled) {
-      setListener(firebase, dispatch, listener);
-    }
-  });
 }
 
 /**
@@ -312,8 +313,8 @@ export function setListeners(firebase, dispatch, listeners) {
  * @return {Promise} Resolves when listener has been attached **not** when data
  * has been gathered by the listener.
  */
-export function unsetListener(firebase, dispatch, opts) {
-  return detachListener(firebase, dispatch, getQueryConfig(opts));
+export function unsetListener(firebase, dispatch, meta) {
+  return detachListener(firebase, dispatch, getQueryConfig(meta));
 }
 
 /**
