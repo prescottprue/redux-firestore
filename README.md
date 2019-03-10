@@ -375,7 +375,7 @@ Limit the query to a certain number of results
 },
 ```
 
-*Can only be used with collections.  Types can be a string or number, but not a Firestore Document Snapshot*
+*Can only be used with collections. Types can be a string, number, or Date object, but not a Firestore Document Snapshot*
 
 ##### startAfter
 
@@ -391,7 +391,7 @@ Limit the query to a certain number of results
 },
 ```
 
-*Can only be used with collections.  Types can be a string or number, but not a Firestore Document Snapshot*
+*Can only be used with collections. Types can be a string, number, or Date object, but not a Firestore Document Snapshot*
 
 ##### endAt
 
@@ -408,7 +408,7 @@ Limit the query to a certain number of results
 },
 ```
 
-*Can only be used with collections.  Types can be a string or number, but not a Firestore Document Snapshot*
+*Can only be used with collections. Types can be a string, number, or Date object, but not a Firestore Document Snapshot*
 
 ##### endBefore
 
@@ -425,7 +425,7 @@ Limit the query to a certain number of results
 },
 ```
 
-*Can only be used with collections.  Types can be a string or number, but not a Firestore Document Snapshot*
+*Can only be used with collections. Types can be a string, number, or Date object, but not a Firestore Document Snapshot*
 
 ##### storeAs
 
