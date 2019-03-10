@@ -150,6 +150,8 @@ export function firestoreRef(firebase, meta) {
 function arrayToStr(key, value) {
   if (isString(value) || isNumber(value)) return `${key}=${value}`;
   if (isString(value[0])) return `${key}=${value.join(':')}`;
+  if (value && value.toString) return `${key}=${value.toString()}`;
+
   return value.map(val => arrayToStr(key, val));
 }
 
