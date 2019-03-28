@@ -1,4 +1,5 @@
 import * as Firebase from 'firebase';
+import { Dispatch } from 'redux';
 
 /**
  * Action types used within actions dispatched internally. These action types
@@ -97,7 +98,7 @@ export interface Config {
   preserveOnListenerError: null | object;
 
   // https://github.com/prescottprue/redux-firestore#onattemptcollectiondelete
-  onAttemptCollectionDelete: null | ((queryOption, dispatch, firebase) => void);
+  onAttemptCollectionDelete: null | ((queryOption: string, dispatch: Dispatch, firebase: Object) => void);
 
   // https://github.com/prescottprue/redux-firestore#mergeordered
   mergeOrdered: boolean;
