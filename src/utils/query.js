@@ -13,6 +13,7 @@ import {
   get,
   set,
   some,
+  cloneDeep
 } from 'lodash';
 import { actionTypes } from '../constants';
 
@@ -624,7 +625,7 @@ const changeTypeToEventType = {
  * @return {Object}                   [description]
  */
 function docChangeEvent(change, originalMeta = {}) {
-  const meta = { ...originalMeta, path: change.doc.ref.path };
+  const meta = { ...cloneDeep(originalMeta), path: change.doc.ref.path };
   if (originalMeta.subcollections && !originalMeta.storeAs) {
     meta.subcollections[0] = { ...meta.subcollections[0], doc: change.doc.id };
   } else {
