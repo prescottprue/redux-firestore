@@ -13,7 +13,7 @@ import {
   get,
   set,
   some,
-  cloneDeep
+  cloneDeep,
 } from 'lodash';
 import { actionTypes } from '../constants';
 
@@ -585,7 +585,8 @@ export function promisesForPopulate(
 
         // Parameter of each list item is single ID
         if (isString(idOrList)) {
-          return promisesArray.push( // eslint-disable-line
+          return promisesArray.push(
+            // eslint-disable-line
             getPopulateChild(firebase, p, idOrList).then(v => {
               // write child to result object under root name if it is found
               if (v) {
@@ -599,7 +600,8 @@ export function promisesForPopulate(
         // Parameter of each list item is a list of ids
         if (isArray(idOrList) || isObject(idOrList)) {
           // Create single promise that includes a promise for each child
-          return promisesArray.push( // eslint-disable-line
+          return promisesArray.push(
+            // eslint-disable-line
             populateList(firebase, idOrList, p, results),
           );
         }
