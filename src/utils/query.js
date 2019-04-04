@@ -578,6 +578,7 @@ export function promisesForPopulate(
         // get value of parameter to be populated (key or list of keys)
         const idOrList = get(d, p.child);
 
+        /* eslint-disable consistent-return */
         // Parameter/child of list item does not exist
         if (!idOrList) {
           return;
