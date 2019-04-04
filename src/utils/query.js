@@ -13,6 +13,7 @@ import {
   get,
   set,
   some,
+  cloneDeep,
 } from 'lodash';
 import { actionTypes } from '../constants';
 
@@ -577,6 +578,7 @@ export function promisesForPopulate(
         // get value of parameter to be populated (key or list of keys)
         const idOrList = get(d, p.child);
 
+        /* eslint-disable consistent-return */
         // Parameter/child of list item does not exist
         if (!idOrList) {
           return;
@@ -584,7 +586,8 @@ export function promisesForPopulate(
 
         // Parameter of each list item is single ID
         if (isString(idOrList)) {
-          return promisesArray.push( // eslint-disable-line
+          return promisesArray.push(
+            // eslint-disable-line
             getPopulateChild(firebase, p, idOrList).then(v => {
               // write child to result object under root name if it is found
               if (v) {
@@ -598,7 +601,8 @@ export function promisesForPopulate(
         // Parameter of each list item is a list of ids
         if (isArray(idOrList) || isObject(idOrList)) {
           // Create single promise that includes a promise for each child
-          return promisesArray.push( // eslint-disable-line
+          return promisesArray.push(
+            // eslint-disable-line
             populateList(firebase, idOrList, p, results),
           );
         }
@@ -624,7 +628,7 @@ const changeTypeToEventType = {
  * @return {Object}                   [description]
  */
 function docChangeEvent(change, originalMeta = {}) {
-  const meta = { ...originalMeta, path: change.doc.ref.path };
+  const meta = { ...cloneDeep(originalMeta), path: change.doc.ref.path };
   if (originalMeta.subcollections && !originalMeta.storeAs) {
     meta.subcollections[0] = { ...meta.subcollections[0], doc: change.doc.id };
   } else {
