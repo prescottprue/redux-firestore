@@ -60,7 +60,7 @@ export default function dataReducer(state = {}, action) {
         );
       }
       // Otherwise merge with existing data
-      const mergedData = assign(previousData, data);
+      const mergedData = payload.data !== null ? assign(previousData, data) : null;
       // Set data to state (with merge) immutabily (lodash/fp's setWith creates copy)
       return setWith(
         Object,
