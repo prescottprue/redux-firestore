@@ -488,7 +488,7 @@ describe('firestoreActions', () => {
             );
             const expectedAction = {
               meta: { ...listenerConfig },
-              payload: { name: `test/1/test2/${docChanges[0].doc.id}` },
+              payload: { name: `test/1/test2` },
               type: actionTypes.SET_LISTENER,
             };
             await instance.test.setListener(listenerConfig);
