@@ -2,7 +2,7 @@ root: true
 
 parser: babel-eslint
 
-extends: [airbnb, prettier]
+extends: [airbnb, google, prettier]
 plugins: [babel, prettier]
 
 env:
@@ -12,9 +12,8 @@ env:
 
 rules:
   prettier/prettier: ['error', {
-    singleQuote: true, # airbnb
-    trailingComma: 'all', # airbnb
-    # arrow-parens: 0 # does not support requireForBlockBody
+    singleQuote: true,
+    trailingComma: 'all'
   }]
   no-console: 'error'
   no-confusing-arrow: 0
