@@ -436,8 +436,8 @@ export function orderedFromSnap(snap) {
  */
 export function dataByIdSnapshot(snap) {
   const data = {};
-  if (snap.data && snap.exists) {
-    data[snap.id] = snap.data();
+  if (snap.data) {
+    data[snap.id] = snap.exists ? snap.data() : null;
   } else if (snap.forEach) {
     snap.forEach(doc => {
       data[doc.id] = doc.data() || doc;

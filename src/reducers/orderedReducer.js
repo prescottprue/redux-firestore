@@ -181,6 +181,10 @@ function writeCollection(collectionState, action) {
   }
 
   if (meta.doc && collectionStateSize) {
+    // don't update ordered if the doc doesn't exist
+    if (!size(action.payload.ordered)) {
+      return collectionState;
+    }
     // Update item in array
     return updateItemInArray(collectionState, meta.doc, item =>
       mergeObjects(item, action.payload.ordered[0]),
