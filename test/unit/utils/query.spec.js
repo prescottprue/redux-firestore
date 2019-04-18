@@ -817,10 +817,20 @@ describe('query utils', () => {
       expect(result).to.have.property(id, fakeData);
     });
 
-    it('returns null if no data returned', () => {
-      const id = 'someId';
-      result = dataByIdSnapshot({ id, data: () => ({}) });
+    it('returns null if no data returned for collection', () => {
+      const forEach = () => ({});
+      const empty = true;
+      result = dataByIdSnapshot({ forEach, empty });
       expect(result).to.be.null;
+    });
+
+    it('returns object with null id if no data returned for a doc', () => {
+      const id = 'someId';
+      const data = () => ({});
+      const exists = false;
+      result = dataByIdSnapshot({ id, exists, data });
+      expect(result).to.be.an('object');
+      expect(result).to.have.property(id, null);
     });
   });
 });
