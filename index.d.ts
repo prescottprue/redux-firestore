@@ -138,7 +138,7 @@ export function firestoreReducer(state: object, action: object): any;
 export function createFirestoreInstance(
   firebaseInstance: typeof Firebase,
   configs: Partial<Config>,
-  dispatch: () => object,
+  dispatch: Dispatch,
 ): object;
 
 /**
