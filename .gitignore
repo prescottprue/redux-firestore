@@ -6,3 +6,4 @@ es
 coverage
 .idea
 .DS_Store
+.nyc_output

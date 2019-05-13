@@ -17,7 +17,7 @@ export default function createFirestoreInstance(firebase, configs, dispatch) {
     // Setup empty listeners object (later used to track listeners)
     listeners: {},
     // Extend default config with provided config
-    config: { defaultConfig, ...configs },
+    config: { ...defaultConfig, ...configs },
   };
 
   // extend existing firebase internals (using redux-firestore along with redux-firebase)

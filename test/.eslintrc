@@ -16,6 +16,7 @@ globals:
 
 rules:
   no-unused-expressions: [0]
+  new-cap: 0
 
 settings:
   import/resolver:

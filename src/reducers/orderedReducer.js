@@ -51,8 +51,8 @@ function modifyDoc(collectionState, action) {
 
 /**
  * Case reducer for adding a document to a collection or subcollection.
- * @param  {Array} [collectionState=[]] - Redux state of current collection
- * @param  {Object} action - The action that was dispatched
+ * @param {Array} [array=[]] - Redux state of current collection
+ * @param {Object} action - The action that was dispatched
  * @return {Array} State with document modified
  */
 function addDoc(array = [], action) {
@@ -71,8 +71,8 @@ function addDoc(array = [], action) {
 
 /**
  * Case reducer for adding a document to a collection.
- * @param  {Array} collectionState - Redux state of current collection
- * @param  {Object} action - The action that was dispatched
+ * @param {Array} array - Redux state of current collection
+ * @param {Object} action - The action that was dispatched
  * @return {Array} State with document modified
  */
 function removeDoc(array, action) {

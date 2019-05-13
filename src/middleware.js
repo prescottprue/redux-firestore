@@ -1,3 +1,4 @@
+/* eslint-disable require-jsdoc,valid-jsdoc */
 /* istanbul ignore next */
 import { isArray } from 'lodash';
 import { actionTypes } from './constants';

@@ -112,6 +112,24 @@ describe('query utils', () => {
         result = getQueryName(meta);
       });
     });
+
+    describe('startAt paremeter', () => {
+      it('is appended if valid', () => {
+        meta = {
+          collection: 'test',
+          startAt: 'asdf',
+        };
+        result = getQueryName(meta);
+      });
+
+      it('appends passed date objects (#186)', () => {
+        meta = {
+          collection: 'test',
+          startAt: new Date(),
+        };
+        result = getQueryName(meta);
+      });
+    });
   });
 
   describe('attachListener', () => {
