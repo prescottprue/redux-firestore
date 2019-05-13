@@ -68,7 +68,7 @@ describe('dataReducer', () => {
         );
       });
 
-      it('merges new state with existing state', () => {
+      it('replaces existing state with new state', () => {
         const data = { [doc]: { newData: { field: 'test' } } };
         payload = { data };
         meta = {
@@ -88,7 +88,7 @@ describe('dataReducer', () => {
           `${collection}.${doc}.newData.field`,
           data[doc].newData.field,
         );
-        expect(result).to.have.nested.property(
+        expect(result).to.not.have.nested.property(
           `${collection}.${doc}.originalData.some.val`,
           existingState[collection][doc].originalData.some.val,
         );
