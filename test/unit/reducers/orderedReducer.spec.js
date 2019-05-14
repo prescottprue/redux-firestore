@@ -376,6 +376,36 @@ describe('orderedReducer', () => {
           );
         });
 
+        it('sets ordered to empty when doc does not exist', () => {
+          action = {
+            meta: { collection: 'testing', doc: 'doc' },
+            merge: {},
+            type: actionTypes.LISTENER_RESPONSE,
+            payload: { ordered: [] },
+          };
+          state = {};
+          const result = orderedReducer(state, action);
+
+          expect(result).to.have.property('testing');
+          // Value is an empty array
+          expect(result.testing).to.be.an('array');
+          expect(result.testing).to.be.empty;
+        });
+
+        it('does not modify existing state when doc does not exist', () => {
+          action = {
+            meta: { collection: 'testing', doc: 'doc' },
+            merge: {},
+            type: actionTypes.LISTENER_RESPONSE,
+            payload: { ordered: [] },
+          };
+          state = { testing: [{ id: 'testing2' }] };
+          const result = orderedReducer(state, action);
+          expect(result).to.have.property('testing');
+          // State not modified
+          expect(result.testing).to.equal(state.testing);
+        });
+
         it('updates doc already within state', () => {
           const id = 'doc';
           const someField = 'a thing';
