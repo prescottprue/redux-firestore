@@ -54,7 +54,7 @@ describe('query utils', () => {
   describe('getQueryName', () => {
     it('throws for no collection name', () => {
       expect(() => getQueryName({})).to.throw(
-        'Collection is required to build query name',
+        'Collection or Collection Group is required to build query name',
       );
     });
 
@@ -289,7 +289,7 @@ describe('query utils', () => {
       it('throws invalid object', () => {
         meta = [{ test: 'test' }];
         expect(() => getQueryConfigs(meta)).to.Throw(
-          'Collection and/or Doc are required parameters within query definition object',
+          'Collection, Collection Group and/or Doc are required parameters within query definition object',
         );
       });
     });

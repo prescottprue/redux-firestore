@@ -128,6 +128,7 @@ export const defaultConfig = {
 
 export const methodsToAddFromFirestore = [
   'collection',
+  'collectionGroup',
   'configureClient',
   'doc',
   'batch',

@@ -280,6 +280,12 @@ store.firestore.unsetListeners([query1Options, query2Options]),
 // props.store.firestore.get('cities/SF'/zipcodes),
 ```
 
+##### Collection Group
+```js
+{ collectionGroup: 'landmarks' },
+// does not support string equivalent
+```
+
 **Note:** When nesting sub-collections, [`storeAs`](#storeas) should be used for more optimal state updates.
 
 ##### Where
