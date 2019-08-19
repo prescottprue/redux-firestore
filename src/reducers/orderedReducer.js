@@ -19,6 +19,31 @@ const {
 } = actionTypes;
 
 /**
+ * Create a new copy of an array with the provided item in a new array index
+ * @param  {Array} [collectionState=[]] - Redux state of current collection
+ * @param {Object} meta - New array metadata
+ * @param {Object} meta.oldIndex - New array index for the item
+ * @param {Object} meta.newIndex -
+ * @param {Object} newValue - New value of the item
+ * @return {Array}
+ */
+function newArrayWithItemMoved(collectionState, meta, newValue) {
+  const { oldIndex, newIndex } = meta || {};
+  // remove oldIndex from array while creating a copy
+  const arrayWithoutItem = [
+    ...collectionState.slice(0, oldIndex),
+    ...collectionState.slice(oldIndex + 1),
+  ];
+  // Insert item in new array while preserving order of other items
+  return [
+    ...arrayWithoutItem.slice(0, newIndex),
+    // set new item (falling back to using a copy of the removed item)
+    newValue || { ...collectionState[oldIndex] },
+    ...arrayWithoutItem.slice(newIndex),
+  ];
+}
+
+/**
  * Case reducer for modifying a document within a collection or
  * subcollection. When storeAs is being used, subcollections are
  * moved to the level of the storeAs (instead of on their parent doc).
@@ -27,6 +52,19 @@ const {
  * @return {Array} State with document modified
  */
 function modifyDoc(collectionState, action) {
+  // Support moving a doc within an array
+  if (action.payload.ordered) {
+    const { newIndex, oldIndex } = action.payload.ordered;
+    // newIndex value exists, item was within array before, and the index has changed
+    if (!!newIndex && oldIndex > -1 && newIndex !== oldIndex) {
+      return newArrayWithItemMoved(
+        collectionState,
+        action.payload.ordered,
+        action.payload.data,
+      );
+    }
+  }
+
   if (!action.meta.subcollections || action.meta.storeAs) {
     return updateItemInArray(collectionState, action.meta.doc, item =>
       // Merge is used to prevent the removal of existing subcollections
@@ -37,7 +75,7 @@ function modifyDoc(collectionState, action) {
   // TODO: make this recurisve so it will work multiple subcollections deep
   const [, docId, subcollectionName, subDocId] = pathToArr(action.meta.path);
 
-  // Update document item within top arra
+  // Update document item within top array
   return updateItemInArray(collectionState, docId, item => ({
     ...item, // preserve document (only updating subcollection)
     [subcollectionName]: updateItemInArray(

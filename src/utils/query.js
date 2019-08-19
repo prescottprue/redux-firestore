@@ -134,7 +134,9 @@ export function firestoreRef(firebase, meta) {
   // TODO: Compare other ways of building ref
 
   if (collection && collectionGroup) {
-    throw new Error('Reference cannot contain both Collection and CollectionGroup.');
+    throw new Error(
+      'Reference cannot contain both Collection and CollectionGroup.',
+    );
   }
 
   if (collection) ref = ref.collection(collection);
@@ -209,16 +211,25 @@ export function getQueryName(meta) {
   if (isString(meta)) {
     return meta;
   }
-  const { collection, collectionGroup, doc, subcollections, storeAs, ...remainingMeta } = meta;
+  const {
+    collection,
+    collectionGroup,
+    doc,
+    subcollections,
+    storeAs,
+    ...remainingMeta
+  } = meta;
   if (!collection && !collectionGroup) {
-    throw new Error('Collection or Collection Group is required to build query name');
+    throw new Error(
+      'Collection or Collection Group is required to build query name',
+    );
   }
 
   if (storeAs) {
     return storeAs;
   }
 
-  let basePath = collection ? collection : collectionGroup;
+  let basePath = collection || collectionGroup;
   if (doc) {
     basePath = basePath.concat(`/${doc}`);
   }
