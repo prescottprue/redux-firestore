@@ -36,6 +36,106 @@ describe('reducer utils', () => {
     });
   });
 
+  describe('pathFromMeta', () => {
+    it('is exported', () => {
+      expect(pathFromMeta).to.be.a('function');
+    });
+
+    it('throws for no meta data passed (first argument)', () => {
+      expect(() => pathFromMeta()).to.throw(
+        'Action meta is required to build path for reducers.',
+      );
+    });
+
+    it('returns undefined if provided nothing', () => {
+      expect(() => pathFromMeta({})).to.throw(
+        'Collection is required to construct reducer path.',
+      );
+    });
+
+    it('returns collection if provided', () => {
+      expect(pathFromMeta({ collection: 'test' })).to.have.property(0, 'test');
+    });
+
+    it('returns collection doc combined into dot path if both provided', () => {
+      const result = pathFromMeta({ collection: 'first', doc: 'second' });
+      expect(result).to.have.property(0, 'first');
+      expect(result).to.have.property(1, 'second');
+    });
+
+    it('uses storeAs as path if provided', () => {
+      pathFromMeta({ storeAs: 'testing' });
+    });
+
+    it('uses path as path if provided', () => {
+      expect(pathFromMeta({ path: 'testing' })).to.have.property(0, 'testing');
+    });
+
+    describe('updateItemInArray', () => {
+      it('is exported', () => {
+        expect(updateItemInArray).to.be.a('function');
+      });
+
+      it('returns an array when no arguments are passed', () => {
+        expect(updateItemInArray([], '123', () => ({}))).to.be.an('array');
+      });
+
+      it('preserves items which do not have matching ids', () => {
+        const testId = '123ABC';
+        const result = updateItemInArray(
+          [{ id: 'other' }, { id: testId }],
+          testId,
+          () => 'test',
+        );
+        expect(result[0]).to.have.property('id', 'other');
+      });
+
+      it('updates item with matching id', () => {
+        const testId = '123ABC';
+        const result = updateItemInArray(
+          [{ id: testId }],
+          testId,
+          () => 'test',
+        );
+        expect(result).to.have.property(0, 'test');
+      });
+    });
+
+    describe('supports a subcollection', () => {
+      it('with collection', () => {
+        subcollections = [{ collection: 'third' }];
+        config = { collection: 'first', doc: 'second', subcollections };
+        const result = pathFromMeta(config);
+        expect(result).to.have.property(0, 'first');
+        expect(result).to.have.property(1, 'second');
+        expect(result).to.have.property(2, 'third');
+      });
+
+      it('with doc', () => {
+        subcollections = [{ collection: 'third', doc: 'forth' }];
+        config = { collection: 'first', doc: 'second', subcollections };
+        const result = pathFromMeta(config);
+        expect(result).to.have.property(0, 'first');
+        expect(result).to.have.property(1, 'second');
+        expect(result).to.have.property(2, 'third');
+        expect(result).to.have.property(3, 'forth');
+      });
+    });
+
+    it('supports multiple subcollections', () => {
+      subcollections = [
+        { collection: 'third', doc: 'forth' },
+        { collection: 'fifth' },
+      ];
+      config = { collection: 'first', doc: 'second', subcollections };
+      const result = pathFromMeta(config);
+      expect(result).to.have.property(0, 'first');
+      expect(result).to.have.property(1, 'second');
+      expect(result).to.have.property(2, 'third');
+      expect(result).to.have.property(4, 'fifth');
+    });
+  });
+
   describe('createReducer', () => {
     it('calls handler mapped to action type', () => {
       const actionHandler = sinon.spy();

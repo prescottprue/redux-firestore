@@ -1,9 +1,16 @@
 /* eslint-disable guard-for-in, no-restricted-syntax, no-param-reassign */
 
 import produce from 'immer';
-import { values, groupBy, merge, set, get } from 'lodash';
+import { values, groupBy, merge, set, get, keys } from 'lodash';
 import { actionTypes } from '../constants';
 
+/**
+ * Reducer for crossSlice state
+ * @param  {Object} [state={}] - Current ordered redux state
+ * @param  {Object} action - The action that was dispatched
+ * @param  {String} action.type - Type of action that was dispatched
+ * @return {Object}
+ */
 export default function crossSliceReducer(state = {}, action) {
   return produce(state, draft => {
     switch (action.type) {
@@ -18,13 +25,14 @@ export default function crossSliceReducer(state = {}, action) {
           c => c.storeAs || c.collection,
         );
 
-        for (const storeAs in groups) {
+        keys(groups).forEach(storeAs => {
           const updated = {};
-          for (const item of groups[storeAs]) {
-            merge(updated, get(item, 'data', {}));
-          }
+          groups[storeAs].forEach(item =>
+            merge(updated, get(item, 'data', {})),
+          );
+
           set(draft, ['composite', storeAs], updated);
-        }
+        });
 
         return draft;
       default:

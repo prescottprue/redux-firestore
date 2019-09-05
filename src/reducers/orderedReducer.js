@@ -48,8 +48,8 @@ function lastDocKey(meta) {
 }
 /**
  * Case reducer for adding a document to a collection or subcollection.
- * @param  {Array} [collectionState=[]] - Redux state of current collection
- * @param  {Object} action - The action that was dispatched
+ * @param {Array} [array=[]] - Redux state of current collection
+ * @param {Object} action - The action that was dispatched
  * @return {Array} State with document modified
  */
 function addDoc(array = [], action) {
@@ -63,8 +63,8 @@ function addDoc(array = [], action) {
 
 /**
  * Case reducer for adding a document to a collection.
- * @param  {Array} collectionState - Redux state of current collection
- * @param  {Object} action - The action that was dispatched
+ * @param {Array} array - Redux state of current collection
+ * @param {Object} action - The action that was dispatched
  * @return {Array} State with document modified
  */
 function removeDoc(array, action) {
@@ -112,6 +112,10 @@ function writeCollection(collectionState, action) {
   }
 
   if (meta.doc && collectionStateSize) {
+    // don't update ordered if the doc doesn't exist
+    if (!size(action.payload.ordered)) {
+      return collectionState;
+    }
     // Update item in array
     return updateItemInArray(collectionState, meta.doc, item =>
       mergeObjects(item, action.payload.ordered[0]),
@@ -203,12 +207,8 @@ function getStoreUnderKey(action) {
  * @return {Object} Ordered state after reduction
  */
 export default function orderedReducer(state = {}, action) {
-  // Return state if action is malformed (i.e. no type, or valid meta)
-  if (
-    !action.type ||
-    !action.meta ||
-    (!action.meta.storeAs && !action.meta.collection)
-  ) {
+  // Return state if action is malformed (i.e. no type)
+  if (!action.type) {
     return state;
   }
 
@@ -226,8 +226,13 @@ export default function orderedReducer(state = {}, action) {
     return state;
   }
 
-  const storeUnderKey = getStoreUnderKey(action);
-  const collectionStateSlice = state[storeUnderKey];
+  // Return state if action does not contain valid meta
+  if (!action.meta || (!action.meta.storeAs && !action.meta.collection)) {
+    return state;
+  }
+
+  const storeUnderKey = action.meta.storeAs || action.meta.collection;
+  const collectionStateSlice = get(state, storeUnderKey);
   return {
     ...state,
     [storeUnderKey]: orderedCollectionReducer(collectionStateSlice, action),

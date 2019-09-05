@@ -488,7 +488,7 @@ describe('firestoreActions', () => {
             );
             const expectedAction = {
               meta: { ...listenerConfig },
-              payload: { name: `test/1/test2/${docChanges[0].doc.id}` },
+              payload: { name: `test/1/test2` },
               type: actionTypes.SET_LISTENER,
             };
             await instance.test.setListener(listenerConfig);
@@ -654,12 +654,12 @@ describe('firestoreActions', () => {
         );
       });
 
-      describe('oneListenerPerPath', () => {
+      describe('allowMultipleListeners', () => {
         it('works with one listener', async () => {
           const fakeFirebaseWithOneListener = {
             _: {
               listeners: {},
-              config: { ...defaultConfig, oneListenerPerPath: true },
+              config: { ...defaultConfig, allowMultipleListeners: false },
             },
             firestore: () => ({
               collection: collectionClass,
@@ -688,7 +688,7 @@ describe('firestoreActions', () => {
           const fakeFirebaseWithOneListener = {
             _: {
               listeners: {},
-              config: { ...defaultConfig, oneListenerPerPath: true },
+              config: { ...defaultConfig, allowMultipleListeners: false },
             },
             firestore: () => ({
               collection: collectionClass,
@@ -769,12 +769,12 @@ describe('firestoreActions', () => {
         });
       });
 
-      describe('oneListenerPerPath option enabled', () => {
+      describe('allowMultipleListeners option enabled', () => {
         it('dispatches UNSET_LISTENER action', async () => {
           const fakeFirebaseWithOneListener = {
             _: {
               listeners: {},
-              config: { ...defaultConfig, oneListenerPerPath: true },
+              config: { ...defaultConfig, allowMultipleListeners: false },
             },
             firestore: () => ({
               collection: collectionClass,
@@ -793,7 +793,7 @@ describe('firestoreActions', () => {
           const fakeFirebaseWithOneListener = {
             _: {
               listeners: {},
-              config: { ...defaultConfig, oneListenerPerPath: true },
+              config: { ...defaultConfig, allowMultipleListeners: false },
             },
             firestore: () => ({
               collection: collectionClass,

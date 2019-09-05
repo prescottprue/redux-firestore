@@ -1,3 +1,6 @@
+import * as Firebase from 'firebase';
+import { Dispatch } from 'redux';
+
 /**
  * Action types used within actions dispatched internally. These action types
  * can be manually dispatched to update state.
@@ -69,28 +72,60 @@ export const constants: {
     ON_SNAPSHOT_FAILURE: string;
   };
   actionsPrefix: string;
-  defaultConfig: {
-    enableLogging: boolean;
-    enhancerNamespace: string;
-    helpersNamespace: string;
-    preserveOnListenerError: object;
-    preserveOnDelete: object;
-    logListenerError: boolean;
-    allowMultipleListeners: any;
-    onAttemptCollectionDelete: any;
-  };
+  defaultConfig: Config;
 };
+
+export interface Config {
+  enableLogging: boolean;
+
+  helpersNamespace: string | null;
+
+  // https://github.com/prescottprue/redux-firestore#loglistenererror
+  logListenerError: boolean;
+
+  // https://github.com/prescottprue/redux-firestore#enhancernamespace
+  enhancerNamespace: string;
+
+  // https://github.com/prescottprue/redux-firestore#allowmultiplelisteners
+  allowMultipleListeners:
+    | ((listenerToAttach: any, currentListeners: any) => boolean)
+    | boolean;
+
+  // https://github.com/prescottprue/redux-firestore#preserveondelete
+  preserveOnDelete: null | object;
+
+  // https://github.com/prescottprue/redux-firestore#preserveonlistenererror
+  preserveOnListenerError: null | object;
+
+  // https://github.com/prescottprue/redux-firestore#onattemptcollectiondelete
+  onAttemptCollectionDelete: null | ((queryOption: string, dispatch: Dispatch, firebase: Object) => void);
+
+  // https://github.com/prescottprue/redux-firestore#mergeordered
+  mergeOrdered: boolean;
+
+  // https://github.com/prescottprue/redux-firestore#mergeordereddocupdate
+  mergeOrderedDocUpdate: boolean;
+
+  // https://github.com/prescottprue/redux-firestore#mergeorderedcollectionupdates
+  mergeOrderedCollectionUpdates: boolean;
+}
 
 /**
  * A redux store enhancer that adds store.firebase (passed to React component
  * context through react-redux's <Provider>).
  */
-export function reduxFirestore(firebaseInstance: object, otherConfig: object): any;
+export function reduxFirestore(
+  firebaseInstance: typeof Firebase,
+  otherConfig?: Partial<Config>,
+): any;
 
 /**
  * Get extended firestore instance (attached to store.firestore)
  */
-export function getFirestore(firebaseInstance: object, otherConfig: object): any;
+export function getFirestore(
+  firebaseInstance: typeof Firebase,
+  otherConfig?: Partial<Config>,
+): any;
 
 /**
  * A redux store reducer for Firestore state
@@ -98,17 +133,24 @@ export function getFirestore(firebaseInstance: object, otherConfig: object): any
 export function firestoreReducer(state: object, action: object): any;
 
 /**
+ * Create a firestore instance that has helpers attached for dispatching actions
+ */
+export function createFirestoreInstance(
+  firebaseInstance: typeof Firebase,
+  configs: Partial<Config>,
+  dispatch: Dispatch,
+): object;
+
+/**
  * A redux store reducer for Firestore state
  */
 export namespace firestoreReducer {
-  const prototype: {
-  };
+  const prototype: {};
 }
 
 /**
  * A redux store reducer for Firestore state
  */
 export namespace reduxFirestore {
-  const prototype: {
-  };
+  const prototype: {};
 }

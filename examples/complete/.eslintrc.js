@@ -1,6 +1,7 @@
 module.exports = {
+  'extends': ['react-app', 'prettier'],
   root: true,
-  extends: ['react-app', 'prettier'],
+  parser: 'babel-eslint',
   plugins: ['import', 'babel', 'react', 'prettier'],
   settings: {
     react: {

@@ -378,6 +378,36 @@ describe('orderedReducer', () => {
           );
         });
 
+        it('sets ordered to empty when doc does not exist', () => {
+          action = {
+            meta: { collection: 'testing', doc: 'doc' },
+            merge: {},
+            type: actionTypes.LISTENER_RESPONSE,
+            payload: { ordered: [] },
+          };
+          state = {};
+          const result = orderedReducer(state, action);
+
+          expect(result).to.have.property('testing');
+          // Value is an empty array
+          expect(result.testing).to.be.an('array');
+          expect(result.testing).to.be.empty;
+        });
+
+        it('does not modify existing state when doc does not exist', () => {
+          action = {
+            meta: { collection: 'testing', doc: 'doc' },
+            merge: {},
+            type: actionTypes.LISTENER_RESPONSE,
+            payload: { ordered: [] },
+          };
+          state = { testing: [{ id: 'testing2' }] };
+          const result = orderedReducer(state, action);
+          expect(result).to.have.property('testing');
+          // State not modified
+          expect(result.testing).to.equal(state.testing);
+        });
+
         it('updates doc already within state', () => {
           const id = 'doc';
           const someField = 'a thing';
@@ -393,6 +423,24 @@ describe('orderedReducer', () => {
             someField,
           );
         });
+      });
+
+      it('removes values from internal arrays', () => {
+        const id = 'doc';
+        const someField = ['single'];
+        const orderedData = [{ id, someField }];
+        action = {
+          meta: { collection: 'testing', doc: 'doc' },
+          type: actionTypes.LISTENER_RESPONSE,
+          payload: { ordered: orderedData, data: orderedData[0] },
+        };
+        state = {
+          testing: [{ id, someField: ['a thing', 'with multiple', 'values'] }],
+        };
+        expect(orderedReducer(state, action)).to.have.nested.property(
+          'testing.0.someField.length',
+          1,
+        );
       });
 
       describe('subcollections', () => {
@@ -611,17 +659,14 @@ describe('orderedReducer', () => {
       it('removes all data from state', () => {
         action = {
           type: actionTypes.CLEAR_DATA,
-          meta: { collection: 'testing' }, // meta is required to trigger ordered reducer
         };
-        state = {};
-        expect(orderedReducer(state, action)).to.be.empty;
+        state = { some: [{ id: 'thing' }] };
         expect(orderedReducer(state, action)).to.be.empty;
       });
 
       it('sets a new reference when clearing', () => {
         action = {
           type: actionTypes.CLEAR_DATA,
-          meta: { collection: 'testing' }, // meta is required to trigger ordered reducer
         };
         state = {};
         expect(orderedReducer(state, action)).to.not.equal(state);
@@ -630,9 +675,7 @@ describe('orderedReducer', () => {
       describe('preserve parameter', () => {
         it('array saves keys from state', () => {
           action = {
-            meta: { collection: 'testing' }, // meta is required to trigger ordered reducer
             type: actionTypes.CLEAR_DATA,
-            payload: {},
             preserve: { ordered: ['some'] },
           };
           state = { some: 'value' };
@@ -641,9 +684,7 @@ describe('orderedReducer', () => {
 
         it('function returns state to save', () => {
           action = {
-            meta: { collection: 'testing' }, // meta is required to trigger ordered reducer
             type: actionTypes.CLEAR_DATA,
-            payload: {},
             preserve: { ordered: currentState => currentState },
           };
           state = { some: 'value' };

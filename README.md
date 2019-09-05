@@ -261,7 +261,7 @@ After setting a listener/multiple listeners, you can unset them with the followi
 ```js
 store.firestore.unsetListener({ collection: 'cities' }),
 // of for any number of listeners at once :
-store.firestore.unsetListeners([query1Options, query2Options]), 
+store.firestore.unsetListeners([query1Options, query2Options]),
 // here query1Options as in { collection: 'cities' } for example
 ```
 
@@ -287,7 +287,7 @@ store.firestore.unsetListeners([query1Options, query2Options]),
 ```js
 { collection: 'cities', doc: 'SF', subcollections: [{ collection: 'zipcodes' }] },
 // or string equivalent
-// props.store.firestore.get('cities/SF'),
+// props.store.firestore.get('cities/SF'/zipcodes),
 ```
 
 **Note:** When nesting sub-collections, [`storeAs`](#storeas) should be used for more optimal state updates.
@@ -385,7 +385,7 @@ Limit the query to a certain number of results
 },
 ```
 
-*Can only be used with collections*
+*Can only be used with collections. Types can be a string, number, or Date object, but not a Firestore Document Snapshot*
 
 ##### startAfter
 
@@ -401,7 +401,7 @@ Limit the query to a certain number of results
 },
 ```
 
-*Can only be used with collections*
+*Can only be used with collections. Types can be a string, number, or Date object, but not a Firestore Document Snapshot*
 
 ##### endAt
 
@@ -418,7 +418,7 @@ Limit the query to a certain number of results
 },
 ```
 
-*Can only be used with collections*
+*Can only be used with collections. Types can be a string, number, or Date object, but not a Firestore Document Snapshot*
 
 ##### endBefore
 
@@ -435,7 +435,7 @@ Limit the query to a certain number of results
 },
 ```
 
-*Can only be used with collections*
+*Can only be used with collections. Types can be a string, number, or Date object, but not a Firestore Document Snapshot*
 
 ##### storeAs
 
@@ -580,11 +580,6 @@ Namespace under which enhancer places internal instance on redux store (i.e. `st
 Default: `false`
 
 Whether or not to allow multiple listeners to be attached for the same query. If a function is passed the arguments it receives are `listenerToAttach`, `currentListeners`, and the function should return a boolean.
-
-#### oneListenerPerPath
-Default: `false`
-
-If set to true redux-firestore will attach a listener on the same path just once & will count how many the listener was set. When you try to unset the listener, it won't unset until you have less than 1 listeners on this path
 
 #### preserveOnDelete
 Default: `null`

@@ -66,7 +66,7 @@ describe('dataReducer', () => {
         );
       });
 
-      it('replaces existing doc params with new doc params', () => {
+      it('replaces existing state with new state', () => {
         const data = { [doc]: { newData: { field: 'test' } } };
         payload = { data };
         meta = {

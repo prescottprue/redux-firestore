@@ -6,10 +6,9 @@ import ListItemIcon from '@material-ui/core/ListItemIcon'
 import ListItemText from '@material-ui/core/ListItemText'
 import ListSubheader from '@material-ui/core/ListSubheader'
 import AccountCircle from '@material-ui/icons/AccountCircle'
-import classes from './ProviderDataForm.scss'
 
-export const ProviderData = ({ providerData }) => (
-  <div className={classes.container}>
+function ProviderData({ providerData }) {
+  return (
     <List subheader={<ListSubheader>Accounts</ListSubheader>}>
       {providerData.map((providerAccount, i) => (
         <ListItem key={i}>
@@ -20,8 +19,8 @@ export const ProviderData = ({ providerData }) => (
         </ListItem>
       ))}
     </List>
-  </div>
-)
+  )
+}
 
 ProviderData.propTypes = {
   providerData: PropTypes.array.isRequired

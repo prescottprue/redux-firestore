@@ -9,43 +9,37 @@ import { Field } from 'redux-form'
 import { TextField } from 'redux-form-material-ui'
 import { required } from 'utils/form'
 
-import classes from './NewProjectDialog.scss'
-
-export const NewProjectDialog = ({
-  open,
-  onRequestClose,
-  submit,
-  handleSubmit
-}) => (
-  <Dialog open={open} onClose={onRequestClose}>
-    <DialogTitle id="simple-dialog-title">New Project</DialogTitle>
-    <form onSubmit={handleSubmit} className={classes.inputs}>
-      <DialogContent>
-        <Field
-          name="name"
-          component={TextField}
-          label="Project Name"
-          validate={[required]}
-        />
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onRequestClose} color="secondary">
-          Cancel
-        </Button>
-        <Button type="submit" color="primary">
-          Create
-        </Button>
-      </DialogActions>
-    </form>
-  </Dialog>
-)
+function NewProjectDialog({ classes, handleSubmit, open, onRequestClose }) {
+  return (
+    <Dialog open={open} onClose={onRequestClose}>
+      <DialogTitle id="new-project-dialog-title">New Project</DialogTitle>
+      <form onSubmit={handleSubmit} className={classes.inputs}>
+        <DialogContent>
+          <Field
+            name="name"
+            component={TextField}
+            label="Project Name"
+            validate={[required]}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={onRequestClose} color="secondary">
+            Cancel
+          </Button>
+          <Button type="submit" color="primary">
+            Create
+          </Button>
+        </DialogActions>
+      </form>
+    </Dialog>
+  )
+}
 
 NewProjectDialog.propTypes = {
+  classes: PropTypes.object.isRequired, // from enhancer (withStyles)
+  handleSubmit: PropTypes.func.isRequired, // from enhancer (reduxForm)
   open: PropTypes.bool.isRequired,
-  onRequestClose: PropTypes.func.isRequired,
-  onSubmit: PropTypes.func.isRequired, // eslint-disable-line react/no-unused-prop-types
-  handleSubmit: PropTypes.func.isRequired, // added by redux-form
-  submit: PropTypes.func.isRequired // added by redux-form
+  onRequestClose: PropTypes.func.isRequired
 }
 
 export default NewProjectDialog

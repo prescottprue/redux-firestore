@@ -19,8 +19,6 @@ export default (initialState = {}) => {
   // Redux + Firebase Config (react-redux-firebase & redux-firestore)
   // ======================================================
   const defaultRRFConfig = {
-    // updateProfileOnLogin: false // enable/disable updating of profile on login
-    // profileDecorator: (userData) => ({ email: userData.email }) // customize format of user profile
     userProfile: 'users', // root that user profiles are written to
     updateProfileOnLogin: false, // enable/disable updating of profile on login
     presence: 'presence', // list currently online users under "presence" path in RTDB
@@ -28,6 +26,7 @@ export default (initialState = {}) => {
     enableLogging: false, // enable/disable Firebase Database Logging
     useFirestoreForProfile: true, // Save profile to Firestore instead of Real Time Database
     useFirestoreForStorageMeta: true // Metadata associated with storage file uploads goes to Firestore
+    // profileDecorator: (userData) => ({ email: userData.email }) // customize format of user profile
   }
 
   // Combine default config with overrides if they exist (set within .firebaserc)
@@ -41,7 +40,7 @@ export default (initialState = {}) => {
   const enhancers = []
 
   if (env === 'local') {
-    const devToolsExtension = window.devToolsExtension
+    const devToolsExtension = window.__REDUX_DEVTOOLS_EXTENSION__
     if (typeof devToolsExtension === 'function') {
       enhancers.push(devToolsExtension())
     }
@@ -59,7 +58,6 @@ export default (initialState = {}) => {
   // Firebase Initialization
   // ======================================================
   firebase.initializeApp(fbConfig)
-  firebase.firestore().settings({ timestampsInSnapshots: true })
 
   // ======================================================
   // Store Instantiation and HMR Setup

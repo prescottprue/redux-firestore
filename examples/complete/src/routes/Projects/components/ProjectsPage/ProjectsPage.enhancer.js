@@ -1,7 +1,7 @@
 import { compose } from 'redux'
 import { connect } from 'react-redux'
 import { LIST_PATH } from 'constants/paths'
-import { withHandlers, withStateHandlers } from 'recompose'
+import { withHandlers, withStateHandlers, setDisplayName } from 'recompose'
 import { withRouter } from 'react-router-dom'
 import { firestoreConnect } from 'react-redux-firebase'
 import { withStyles } from '@material-ui/core/styles'
@@ -11,6 +11,8 @@ import { UserIsAuthenticated } from 'utils/router'
 import styles from './ProjectsPage.styles'
 
 export default compose(
+  // Set component display name (more clear in dev/error tools)
+  setDisplayName('EnhancedProjectsPage'),
   // redirect to /login if user is not logged in
   UserIsAuthenticated,
   // Map auth uid from state to props
@@ -89,5 +91,6 @@ export default compose(
       history.push(`${LIST_PATH}/${projectId}`)
     }
   }),
+  // Add styles as props.classes
   withStyles(styles)
 )

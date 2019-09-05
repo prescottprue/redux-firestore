@@ -16,7 +16,6 @@ const {
 } = actionTypes;
 
 /**
- * @name dataReducer
  * Reducer for data state.
  * @param  {Object} [state={}] - Current data redux state
  * @param  {Object} action - Object containing the action that was dispatched
