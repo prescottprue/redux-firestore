@@ -17,22 +17,24 @@ import {
 } from 'lodash';
 import { to } from '../utils/async';
 import { actionTypes } from '../constants';
-import { QueryConfig, WhereConfig, QueryConfigObject, QueryNameOptions } from '../types';
+import { QueryConfig, QueryConfigObject, QueryNameOptions, PopulateConfig, ReduxFirestoreAction, ReduxFirestoreConfig, WhereConfig, OrderByConfig } from '../types';
 import * as firebase from 'firebase/app'
+import { Dispatch } from 'redux';
 
 /**
  * Add where claues to Cloud Firestore Reference handling invalid formats
  * and multiple where statements (array of arrays)
- * @param {firebase.firestore.Reference} ref - Reference which to add where to
- * @param {Array} where - Where statement to attach to reference
- * @return {firebase.firestore.Reference} Reference with where statement attached
+ * @param ref - Reference which to add where to
+ * @param where - Where statement to attach to reference
+ * @return Reference with where statement attached
  */
-function addWhereToRef(ref: firebase.firestore.CollectionReference, where: any): any {
-  if (!isArray(where)) {
-    throw new Error('where parameter must be an array.');
+function addWhereToRef(ref: firebase.firestore.CollectionReference | firebase.firestore.Query, where: WhereConfig | any): any {
+  if (!Array.isArray(where) || where.length < 3) {
+    throw new Error('where parameter must be an array with at least there arguments.');
   }
+  
   if (isString(where[0])) {
-    return where.length > 1 ? ref.where(...where) : ref.where(where[0]);
+    return ref.where(...where)
   }
 
   return where.reduce((acc, whereArgs) => addWhereToRef(acc, whereArgs), ref);
@@ -46,7 +48,7 @@ function addWhereToRef(ref: firebase.firestore.CollectionReference, where: any):
  * @param {String} [attrName='where'] - Name of attribute
  * @return {firebase.firestore.Reference} Reference with where statement attached
  */
-function addOrderByToRef(ref: firebase.firestore.CollectionReference, orderBy: string[] | string | firebase.firestore.FieldPath): firebase.firestore.Query {
+function addOrderByToRef(ref: firebase.firestore.CollectionReference, orderBy: OrderByConfig): firebase.firestore.Query {
   if (!isArray(orderBy) && !isString(orderBy)) {
     throw new Error('orderBy parameter must be an array or string.');
   }
@@ -72,12 +74,12 @@ function addOrderByToRef(ref: firebase.firestore.CollectionReference, orderBy: s
  * @return {firebase.firestore.Query} Query object referencing path within
  * firestore
  */
-function handleSubcollections(ref: firebase.firestore.Query | firebase.firestore.DocumentReference  | firebase.firestore.CollectionReference, subcollectionList: QueryConfigObject[] | undefined): firebase.firestore.Query {
+function handleSubcollections(ref: firebase.firestore.DocumentReference | firebase.firestore.CollectionReference | firebase.firestore.Query | any, subcollectionList: QueryConfigObject[] | undefined): firebase.firestore.Query {
   if (subcollectionList) {
     forEach(subcollectionList, subcollection => {
       /* eslint-disable no-param-reassign */
-      if (subcollection.collection) {
-        if (!isFunction(ref.collection)) {
+      if (ref instanceof firebase.firestore.DocumentReference && subcollection.collection) {
+        if (typeof ref.collection !== 'function') {
           throw new Error(
             `Collection can only be run on a document. Check that query config for subcollection: "${
               subcollection.collection
@@ -164,7 +166,7 @@ function arrayToStr(key: string, value: string | number | string[][]): string | 
  * @param {Object} obj - Object from which to pick query params
  * @return {Object}
  */
-function pickQueryParams(obj) {
+function pickQueryParams(obj: any): QueryConfigObject {
   return [
     'where',
     'orderBy',
@@ -191,17 +193,17 @@ function serialize(queryParams: QueryConfigObject): string {
 /**
  * Create query name based on query settings for use as object keys (used
  * in listener management and reducers).
- * @param  {Object} meta - Metadata object containing query settings
- * @param  {String} meta.collection - Collection name of query
- * @param  {String} meta.doc - Document id of query
- * @param  {String} meta.storeAs - User-defined Redux store name of query
- * @param  {Array} meta.subcollections - Subcollections of query
- * @param {Object} [options={}] - Options object
- * @param {Boolean} [options.onlySubcollections=false] - Only include collections
+ * @param meta - Metadata object containing query settings
+ * @param meta.collection - Collection name of query
+ * @param meta.doc - Document id of query
+ * @param meta.storeAs - User-defined Redux store name of query
+ * @param meta.subcollections - Subcollections of query
+ * @param [options={}] - Options object
+ * @param [options.onlySubcollections=false] - Only include collections
  * and subcollections in query name
- * @return {String} String representing query settings
+ * @returns String representing query settings
  */
-export function getQueryName(meta: QueryConfig, options?: QueryNameOptions) {
+export function getQueryName(meta: QueryConfig, options?: QueryNameOptions): string {
   if (isString(meta)) {
     return meta;
   }
@@ -249,13 +251,13 @@ export function getQueryName(meta: QueryConfig, options?: QueryNameOptions) {
 /**
  * Create query name based on query settings for use as object keys (used
  * in listener management and reducers).
- * @param  {Object} meta - Metadata object containing query settings
- * @param  {String} meta.collection - Collection name of query
- * @param  {String} meta.doc - Document id of query
- * @param  {Array} meta.subcollections - Subcollections of query
- * @return {String} String representing query settings
+ * @param meta - Metadata object containing query settings
+ * @param meta.collection - Collection name of query
+ * @param meta.doc - Document id of query
+ * @param meta.subcollections - Subcollections of query
+ * @returns String representing query settings
  */
-export function getBaseQueryName(meta) {
+export function getBaseQueryName(meta: any): string {
   if (isString(meta)) {
     return meta;
   }
@@ -266,7 +268,7 @@ export function getBaseQueryName(meta) {
   let basePath = collection;
 
   if (subcollections) {
-    const mappedCollections = subcollections.map(subcollection =>
+    const mappedCollections = subcollections.map((subcollection: any) =>
       getQueryName(subcollection),
     );
     basePath = `${basePath}/${mappedCollections.join('/')}`;
@@ -287,8 +289,8 @@ export function getBaseQueryName(meta) {
 /**
  * Confirm that meta object exists and that listeners object exists on internal
  * firebase instance. If these required values do not exist, an error is thrown.
- * @param {Object} firebase - Internal firebase object
- * @param {Object} meta - Metadata object
+ * @param firebase - Internal firebase object
+ * @param meta - Metadata object
  */
 function confirmMetaAndConfig(firebase: any, meta: any) {
   if (!meta) {
@@ -303,26 +305,26 @@ function confirmMetaAndConfig(firebase: any, meta: any) {
 
 /**
  * Get whether or not a listener is attached at the provided path
- * @param {Object} firebase - Internal firebase object
- * @param {Object} meta - Metadata object
- * @return {Boolean} Whether or not listener exists
+ * @param firebase - Internal firebase object
+ * @param meta - Metadata object
+ * @returns Whether or not listener exists
  */
-export function listenerExists(firebase: any, meta): boolean {
+export function listenerExists(firebase: any, meta: any): boolean {
   confirmMetaAndConfig(firebase, meta);
   const name = getQueryName(meta);
   return !!firebase._.listeners[name];
 }
 
 /**
- * @description Update the number of watchers for a query
- * @param {Object} firebase - Internal firebase object
- * @param {Function} dispatch - Redux's dispatch function
- * @param {Object} meta - Metadata
- * @param {Function} unsubscribe - Unsubscribe function
- * @param {String} doc - Document name
- * @return {Object} Object containing all listeners
+ * Update the number of watchers for a query
+ * @param firebase - Internal firebase object
+ * @param dispatch - Redux's dispatch function
+ * @param meta - Metadata
+ * @param unsubscribe - Unsubscribe function
+ * @param doc - Document name
+ * @returns Object containing all listeners
  */
-export function attachListener(firebase: any, dispatch, meta, unsubscribe) {
+export function attachListener(firebase: any, dispatch: Dispatch, meta: any, unsubscribe: () => void): any {
   confirmMetaAndConfig(firebase, meta);
 
   const name = getQueryName(meta);
@@ -340,14 +342,14 @@ export function attachListener(firebase: any, dispatch, meta, unsubscribe) {
 }
 
 /**
- * @description Remove/Unset a watcher
- * @param {Object} firebase - Internal firebase object
- * @param {Function} dispatch - Redux's dispatch function
- * @param {Object} meta - Metadata
- * @param {String} collection - Collection name
- * @param {String} doc - Document name
+ * Remove/Unset a watcher
+ * @param firebase - Internal firebase object
+ * @param dispatch - Redux's dispatch function
+ * @param meta - Metadata
+ * @param collection - Collection name
+ * @param doc - Document name
  */
-export function detachListener(firebase: any, dispatch, meta) {
+export function detachListener(firebase: any, dispatch: Dispatch, meta: any): void {
   const name = getQueryName(meta);
   if (firebase._.listeners[name]) {
     firebase._.listeners[name]();
@@ -363,14 +365,14 @@ export function detachListener(firebase: any, dispatch, meta) {
 
 /**
  * Turn query string into a query config object
- * @param {String} queryPathStr String to be converted
- * @param {String} parsedPath - Already parsed path (used instead of attempting parse)
- * @return {Object} Object containing collection, doc and subcollection
+ * @param queryPathStr String to be converted
+ * @param parsedPath - Already parsed path (used instead of attempting parse)
+ * @returns Object containing collection, doc and subcollection
  */
-export function queryStrToObj(queryPathStr: string, parsedPath?: string) {
-  const pathArr = parsedPath || trim(queryPathStr, ['/']).split('/');
+export function queryStrToObj(queryPathStr: string, parsedPath?: string[]): QueryConfigObject {
+  const pathArr = parsedPath || trim(queryPathStr, '/').split('/');
   const [collection, doc, ...subcollections] = pathArr;
-  const queryObj = {};
+  const queryObj: QueryConfigObject = {};
   if (collection) queryObj.collection = collection;
   if (doc) queryObj.doc = doc;
   if (subcollections.length) {
@@ -380,12 +382,12 @@ export function queryStrToObj(queryPathStr: string, parsedPath?: string) {
 }
 
 /**
- * @description Convert array of querys into an array of query config objects.
+ * Convert array of querys into an array of query config objects.
  * This normalizes things for later use.
- * @param {Object|String} query - Query setups in the form of objects or strings
- * @return {Object} Query setup normalized into a queryConfig object
+ * @param query - Query setups in the form of objects or strings
+ * @returns Query setup normalized into a queryConfig object
  */
-export function getQueryConfig(query) {
+export function getQueryConfig(query: QueryConfig): QueryConfigObject {
   if (isString(query)) {
     return queryStrToObj(query);
   }
@@ -403,16 +405,16 @@ export function getQueryConfig(query) {
 }
 
 /**
- * @description Convert array of querys into an array of queryConfig objects
+ * Convert array of querys into an array of queryConfig objects
  * @param {Array} queries - Array of query strings/objects
- * @return {Array} watchEvents - Array of watch events
+ * @returns {Array} watchEvents - Array of watch events
  */
-export function getQueryConfigs(queries) {
-  if (isArray(queries)) {
+export function getQueryConfigs(queries: string | any[] | QueryConfigObject): QueryConfigObject[] {
+  if (Array.isArray(queries)) {
     return queries.map(getQueryConfig);
   }
   if (isString(queries)) {
-    return queryStrToObj(queries);
+    return [queryStrToObj(queries)];
   }
   if (isObject(queries)) {
     return [getQueryConfig(queries)];
@@ -422,19 +424,19 @@ export function getQueryConfigs(queries) {
 
 /**
  * Get ordered array from snapshot
- * @param  {firebase.database.DataSnapshot} snap - Data for which to create
+ * @param snap - Data for which to create
  * an ordered array.
- * @return {Array|Null} Ordered list of children from snapshot or null
+ * @returns Ordered list of children from snapshot or null
  */
-export function orderedFromSnap(snap) {
+export function orderedFromSnap(snap: firebase.firestore.DocumentSnapshot | firebase.firestore.QuerySnapshot): DocumentsDataArray[] {
   const ordered = [];
-  if (snap.data && snap.exists) {
+  if (snap instanceof firebase.firestore.DocumentSnapshot && snap.data && snap.exists) {
     const obj = isObject(snap.data())
       ? { id: snap.id, ...(snap.data() || snap.data) }
       : { id: snap.id, data: snap.data() };
     ordered.push(obj);
-  } else if (snap.forEach) {
-    snap.forEach(doc => {
+  } else if (snap instanceof firebase.firestore.QuerySnapshot && snap.forEach) {
+    snap.forEach((doc: any) => {
       const obj = isObject(doc.data())
         ? { id: doc.id, ...(doc.data() || doc.data) }
         : { id: doc.id, data: doc.data() };
@@ -444,17 +446,27 @@ export function orderedFromSnap(snap) {
   return ordered;
 }
 
+interface DocumentsDataArray {
+  id: string
+  data?: firebase.firestore.DocumentData | null | undefined
+  [k: string]: any
+}
+
+interface DocumentsDataByIdObject {
+  [docId: string]: firebase.firestore.DocumentData | null | undefined
+}
+
 /**
  * Create data object with values for each document with keys being doc.id.
- * @param  {firebase.database.DataSnapshot} snap - Data for which to create
+ * @param snap - Data for which to create
  * an ordered array.
- * @return {Object|Null} Object documents from snapshot or null
+ * @returns Object documents from snapshot or null
  */
-export function dataByIdSnapshot(snap) {
-  const data = {};
-  if (snap.data) {
+export function dataByIdSnapshot(snap: firebase.firestore.DocumentSnapshot | firebase.firestore.QuerySnapshot): DocumentsDataByIdObject | null {
+  const data: DocumentsDataByIdObject = {};
+  if (snap instanceof firebase.firestore.DocumentSnapshot && snap.data) {
     data[snap.id] = snap.exists ? snap.data() : null;
-  } else if (snap.forEach) {
+  } else if (snap instanceof firebase.firestore.QuerySnapshot && snap.forEach) {
     snap.forEach(doc => {
       data[doc.id] = doc.data() || doc;
     });
@@ -465,13 +477,13 @@ export function dataByIdSnapshot(snap) {
 /**
  * @private
  * @description Create an array of promises for population of an object or list
- * @param {Object} firebase - Internal firebase object
- * @param {Object} populate - Object containing root to be populate
- * @param {Object} populate.root - Firebase root path from which to load populate item
- * @param {String} id - String id
- * @returns {Promise}
+ * @param firebase - Internal firebase object
+ * @param populate - Object containing root to be populate
+ * @param populate.root - Firebase root path from which to load populate item
+ * @param id - String id
+ * @returns Resolves with child for population
  */
-export function getPopulateChild(firebase: any, populate, id: string): Promise<any> {
+export function getPopulateChild(firebase: any, populate: PopulateConfig, id: string): Promise<any> {
   return firestoreRef(firebase, { collection: populate.root, doc: id })
     .get()
     .then((snap: firebase.firestore.DocumentData) => Object.assign({ id }, snap.data()));
@@ -486,13 +498,13 @@ export function getPopulateChild(firebase: any, populate, id: string): Promise<a
  * @param {Object} results - Object containing results of population from other populates
  * @returns {Promise}
  */
-export function populateList(firebase, originalObj, p, results): Promise<any[]> {
+export function populateList(firebase: any, originalObj: any, p: PopulateConfig, results: any): Promise<any[]> {
   // Handle root not being defined
   if (!results[p.root]) {
     set(results, p.root, {});
   }
   return Promise.all(
-    map(originalObj, (id, childKey) => {
+    map(originalObj, (id, childKey): any => {
       // handle list of keys
       const populateKey = id === true || p.populateByKey ? childKey : id;
       return getPopulateChild(firebase, p, populateKey).then(pc => {
@@ -512,7 +524,7 @@ export function populateList(firebase, originalObj, p, results): Promise<any[]> 
  * @param {String|Object} str - String or Object to standardize into populate object
  * @returns {Object}
  */
-function getPopulateObj(str: any) {
+function getPopulateObj(str: any): PopulateConfig {
   if (!isString(str)) {
     return str;
   }
@@ -527,11 +539,11 @@ function getPopulateObj(str: any) {
  * @param {Array} arr - Array of items to get populate objects for
  * @returns {Array}
  */
-function getPopulateObjs(arr) {
+function getPopulateObjs(arr: (string | PopulateConfig | any)[]): PopulateConfig[] {
   if (!isArray(arr)) {
     return arr;
   }
-  return arr.map(o => (isObject(o) ? o : getPopulateObj(o)));
+  return arr.map(o => (isObject(o) ? (o as PopulateConfig) : getPopulateObj(o)));
 }
 
 /**
@@ -585,7 +597,7 @@ export function promisesForPopulate(
     // { '1': {someobject}, '2': {someobject} }
     forEach(originalData, (d, key) => {
       // generate populates for this data item if a fn was passed
-      const populatesForDataItem = getPopulateObj(
+      const populatesForDataItem = getPopulateObjs(
         isFunction(populatesIn) ? populatesIn(key, d) : populatesIn,
       );
 
@@ -643,7 +655,7 @@ const changeTypeToEventType = {
  * @param  {Object} [originalMeta={}] - Original meta data of action
  * @returns {Object}
  */
-function docChangeEvent(change, originalMeta?: any) {
+function docChangeEvent(change: firebase.firestore.DocumentChange, originalMeta?: any): ReduxFirestoreAction {
   const meta = { ...cloneDeep(originalMeta), path: change.doc.ref.path };
   if (originalMeta && originalMeta.subcollections && !originalMeta.storeAs) {
     meta.subcollections[0] = { ...meta.subcollections[0], doc: change.doc.id };
@@ -660,6 +672,13 @@ function docChangeEvent(change, originalMeta?: any) {
   };
 }
 
+interface DispatchListenerResponseOptions {
+  dispatch: Dispatch
+  docData?: any
+  meta: any
+  firebase: any
+}
+
 /**
  * Dispatch action(s) response from listener response.
  * @private
@@ -669,17 +688,18 @@ function docChangeEvent(change, originalMeta?: any) {
  * @param {Object} opts.docData - Data object from document
  * @param {Object} opts.meta - Meta data
  */
-export function dispatchListenerResponse({
-  dispatch,
-  docData,
-  meta,
-  firebase,
-}) {
+export function dispatchListenerResponse(opts: DispatchListenerResponseOptions) {
+  const {
+    dispatch,
+    docData,
+    meta,
+    firebase,
+  } = opts
   const {
     mergeOrdered,
     mergeOrderedDocUpdates,
     mergeOrderedCollectionUpdates,
-  } = firebase._.config || {};
+  } = (firebase._.config as ReduxFirestoreConfig) || ({} as ReduxFirestoreConfig);
   const docChanges =
     typeof docData.docChanges === 'function'
       ? docData.docChanges()
@@ -688,7 +708,7 @@ export function dispatchListenerResponse({
   if (docChanges && docChanges.length < docData.size) {
     // Loop to dispatch for each change if there are multiple
     // TODO: Option for dispatching multiple changes in single action
-    docChanges.forEach(change => {
+    docChanges.forEach((change: firebase.firestore.DocumentChange) => {
       dispatch(docChangeEvent(change, meta));
     });
   } else {
@@ -708,6 +728,13 @@ export function dispatchListenerResponse({
   }
 }
 
+
+interface GetPopulateActionOptions {
+  docData?: any
+  meta: any
+  firebase: any
+}
+
 /**
  * Get list of actions for population queries
  * @private
@@ -717,7 +744,8 @@ export function dispatchListenerResponse({
  * @param {Object} opts.meta - Meta data
  * @returns {Promise}
  */
-export async function getPopulateActions({ firebase, docData, meta }) {
+export async function getPopulateActions(opts: GetPopulateActionOptions): Promise<Partial<ReduxFirestoreAction>[]> {
+  const { firebase, docData, meta } = opts
   // Run promises for population
   const [populateErr, populateResults] = await to(
     promisesForPopulate(

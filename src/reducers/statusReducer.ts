@@ -1,6 +1,9 @@
+import { combineReducers } from 'redux';
+import { TimestampsState, RequestedState, RequestingState } from './../types'
 import { actionTypes } from '../constants';
-import { getSlashStrPath, combineReducers } from '../utils/reducers';
+import { getSlashStrPath } from '../utils/reducers';
 import { getQueryName } from '../utils/query';
+import { ReduxFirestoreAction } from '../types';
 
 const { SET_LISTENER, LISTENER_ERROR, LISTENER_RESPONSE } = actionTypes;
 
@@ -13,7 +16,8 @@ const { SET_LISTENER, LISTENER_ERROR, LISTENER_RESPONSE } = actionTypes;
  * @param  {String} action.meta - The meta information of the query
  * @return {Object} Profile state after reduction
  */
-export function requestingReducer(state = {}, { type, meta }) {
+export function requestingReducer(state: RequestingState = {}, action: ReduxFirestoreAction): RequestingState {
+  const { type, meta } = action
   switch (type) {
     case SET_LISTENER:
       return {
@@ -40,7 +44,8 @@ export function requestingReducer(state = {}, { type, meta }) {
  * @param  {String} action.meta - The meta information of the query
  * @return {Object} Profile state after reduction
  */
-export function requestedReducer(state = {}, { type, meta }) {
+export function requestedReducer(state: RequestedState = {}, action: ReduxFirestoreAction): RequestedState {
+  const { type, meta } = action
   switch (type) {
     case SET_LISTENER:
       return {
@@ -66,7 +71,8 @@ export function requestedReducer(state = {}, { type, meta }) {
  * @param  {String} action.path - Path of action that was dispatched
  * @return {Object} Profile state after reduction
  */
-export function timestampsReducer(state = {}, { type, meta }) {
+export function timestampsReducer(state = {}, action: ReduxFirestoreAction): TimestampsState {
+  const { type, meta } = action
   switch (type) {
     case SET_LISTENER:
       return {

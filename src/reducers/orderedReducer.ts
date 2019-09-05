@@ -17,6 +17,7 @@ import {
   preserveValuesFromState,
   pathToArr,
 } from '../utils/reducers';
+import { OrderedState, ReduxFirestoreAction } from '../types';
 
 const {
   DOCUMENT_ADDED,
@@ -32,28 +33,32 @@ const {
  * Case reducer for modifying a document within a collection or
  * subcollection. When storeAs is being used, subcollections are
  * moved to the level of the storeAs (instead of on their parent doc).
- * @param  {Array} [collectionState=[]] - Redux state of current collection
- * @param  {Object} action - The action that was dispatched
- * @return {Array} State with document modified
+ * @param [collectionState=[]] - Redux state of current collection
+ * @param action - The action that was dispatched
+ * @returns State with document modified
  */
-function modifyDoc(collectionState, action) {
+function modifyDoc(collectionState: any[] | undefined, action: ReduxFirestoreAction): any[] {
   return updateItemInArray(collectionState, action.meta.doc, item =>
     // assign is used to prevent the removal of existing subcollections
     assignObjects(item, action.payload.data),
   );
 }
 
-function lastDocKey(meta) {
-  return meta.subcollections ? last(meta.subcollections).doc : meta.doc;
+function lastDocKey(meta: any): string {
+  return meta.subcollections ? meta.subcollections.slice(-1)[0].doc : meta.doc;
 }
+
 /**
  * Case reducer for adding a document to a collection or subcollection.
- * @param {Array} [array=[]] - Redux state of current collection
- * @param {Object} action - The action that was dispatched
- * @return {Array} State with document modified
+ * @param [array=[]] - Redux state of current collection
+ * @param action - The action that was dispatched
+ * @returns State with document modified
  */
-function addDoc(array = [], action) {
+function addDoc(array: any[] | undefined = [], action: ReduxFirestoreAction): any[] {
   const { meta, payload } = action;
+  if (!payload.ordered) {
+    return array.concat([{ id: lastDocKey(meta), ...payload.data }])
+  }
   return [
     ...array.slice(0, payload.ordered.newIndex),
     { id: lastDocKey(meta), ...payload.data },
@@ -63,11 +68,11 @@ function addDoc(array = [], action) {
 
 /**
  * Case reducer for adding a document to a collection.
- * @param {Array} array - Redux state of current collection
- * @param {Object} action - The action that was dispatched
- * @return {Array} State with document modified
+ * @param array - Redux state of current collection
+ * @param action - The action that was dispatched
+ * @returns State with document modified
  */
-function removeDoc(array, action) {
+function removeDoc(array: any[], action: ReduxFirestoreAction): any[] {
   // Remove doc from collection array
   return reject(array, { id: lastDocKey(action.meta) }); // returns a new array
 }
@@ -78,7 +83,7 @@ function removeDoc(array, action) {
  * @param  {Object} action - The action that was dispatched
  * @return {Array} State with document modified
  */
-function writeCollection(collectionState, action) {
+function writeCollection(collectionState: any[] | undefined, action: ReduxFirestoreAction): any[] | undefined {
   const { meta, merge = { doc: true, collections: true } } = action;
   if (meta.storeAs) {
     return action.payload.ordered;
@@ -148,7 +153,7 @@ const orderedCollectionReducer = createReducer(undefined, actionHandlers);
  * @param  {String} meta.doc - Name of Document which the action
  * associates with
  */
-function removeLastDocFromMeta(meta) {
+function removeLastDocFromMeta(meta: any): any {
   if (!meta.subcollections) {
     return { ...meta, doc: undefined };
   }
@@ -163,9 +168,9 @@ function removeLastDocFromMeta(meta) {
 /**
  * Get key where ordered collection data is stored within state based
  * on query config.
- * @param  {Object} action - The action that was dispatched
+ * @param action - The action that was dispatched
  */
-function getStoreUnderKey(action) {
+function getStoreUnderKey(action: any) {
   if (action.meta.oldStoreAs) {
     return action.meta.storeAs || action.meta.collection;
   }
@@ -178,7 +183,7 @@ function getStoreUnderKey(action) {
   }
   const pathArr = pathToArr(queryName);
   // Return top level key if path is not multiple "/"
-  if (pathArr.length <= '1') {
+  if (pathArr.length <= 1) {
     return action.meta.storeAs || action.meta.collection;
   }
 
@@ -206,7 +211,7 @@ function getStoreUnderKey(action) {
  * action
  * @return {Object} Ordered state after reduction
  */
-export default function orderedReducer(state = {}, action) {
+export default function orderedReducer(state: OrderedState = {}, action: ReduxFirestoreAction): OrderedState {
   // Return state if action is malformed (i.e. no type)
   if (!action.type) {
     return state;

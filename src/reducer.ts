@@ -1,5 +1,5 @@
+import { combineReducers } from 'redux';
 import reduceReducers from 'reduce-reducers';
-import { combineReducers } from './utils/reducers';
 import {
   statusReducer,
   dataReducer,

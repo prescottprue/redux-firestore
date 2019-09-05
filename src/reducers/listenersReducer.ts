@@ -1,6 +1,6 @@
+import { combineReducers } from 'redux';
 import { omit } from 'lodash';
 import { actionTypes } from '../constants';
-import { combineReducers } from '../utils/reducers';
 
 /**
  * Reducer for listeners ids. Changed by `SET_LISTENER` and `UNSET_LISTENER`

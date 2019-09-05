@@ -3,6 +3,7 @@ import { setWith, assign } from 'lodash/fp';
 import { actionTypes } from '../constants';
 import { getQueryName } from '../utils/query';
 import { preserveValuesFromState, pathToArr } from '../utils/reducers';
+import { DataState, ReduxFirestoreAction } from '../types';
 
 const {
   CLEAR_DATA,
@@ -28,7 +29,7 @@ const {
  * which to store values.
  * @return {Object} Data state after reduction
  */
-export default function dataReducer(state = {}, action) {
+export default function dataReducer(state: DataState = {}, action: ReduxFirestoreAction): DataState {
   switch (action.type) {
     case GET_SUCCESS:
     case LISTENER_RESPONSE:

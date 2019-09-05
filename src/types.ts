@@ -1,29 +1,114 @@
-import { add, set, get, update, deleteRef, setListener, setListeners, runTransaction, unsetListener, unsetListeners } from './actions/firestore'
+import {
+  add,
+  set,
+  get,
+  update,
+  deleteRef,
+  setListener,
+  setListeners,
+  runTransaction,
+  unsetListener,
+  unsetListeners
+} from './actions/firestore'
+import { Dispatch } from 'redux'
+
+export interface PreserveSettingObject {
+  data: PreserveSetting
+  ordered: PreserveSetting
+}
+
+export type PreserveSetting = boolean | string[] | any // TODO: support function (state: any, nextState: any) => any
+
+export interface RequestingState {
+  [slashPath: string]: boolean
+}
+
+export interface RequestedState {
+  [slashPath: string]: boolean
+}
+
+export interface TimestampsState {
+  [slashPath: string]: number
+}
+
+export interface StatusState {
+  requesting: RequestingState
+  requested: RequestedState
+  timestamps: TimestampsState
+}
+
+export interface DataState {
+  [dataPath: string]: firebase.firestore.DocumentData | null | undefined
+}
+
+export interface OrderedState {
+  [dataPath: string]: (firebase.firestore.DocumentData | null | undefined)[]
+}
+
+export interface FirestoreState {
+  data?: DataState
+  errors?: any
+  listeners?: any
+  ordered?: OrderedState
+  status?: StatusState
+  queries?: any
+  composite?: any
+}
+
+interface OrderedActionPayload {
+  oldIndex: number
+  newIndex: number
+}
+
+interface ActionPayload {
+  data: firebase.firestore.DocumentData
+  ordered?: OrderedActionPayload | any[]
+}
+
+type ActionMeta = QueryConfigObject & {
+  path?: string // added in docChangeEvent
+}
+
+export interface ReduxFirestoreAction {
+  type: string
+  meta: ActionMeta
+  payload: ActionPayload
+  timestamp?: number
+  preserve?: PreserveSettingObject
+}
 
 export type QueryConfig = string | QueryConfigObject
 
-export type WhereConfig = string[] | string[][]
-
 export interface PopulateConfig {
   root: string
+  child: string
+  populateByKey?: boolean
 }
 
 export interface QueryNameOptions {
   onlySubcollections?: boolean
 }
 
+type SingleWhereConfig = [string | firebase.firestore.FieldPath, firebase.firestore.WhereFilterOp, any]
+export type WhereConfig = SingleWhereConfig | SingleWhereConfig[]
+
+type OrderDirectionString = 'desc' | 'asc' | undefined
+
+export type OrderByConfig = string | firebase.firestore.FieldPath | [string | firebase.firestore.FieldPath, OrderDirectionString]
+
 export interface QueryConfigObject {
   collection?: string
   doc?: string
   subcollections?: QueryConfigObject[] | undefined
   where?: WhereConfig
-  orderBy: string | string[] | firebase.firestore.FieldPath
-  limit?: string
+  orderBy?: OrderByConfig
+  limit?: number
   storeAs?: string
   endBefore?: string
   endAt?: string
   startAt?: string
   startAfter?: string
+  populates?: PopulateConfig[]
 }
 
 export interface ReduxFirestoreConfig {

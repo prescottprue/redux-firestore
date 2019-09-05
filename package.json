@@ -38,6 +38,9 @@
     "lodash": "^4.17.11",
     "reduce-reducers": "0.4.3"
   },
+  "peerDependencies": {
+    "redux": "^4.0.0"    
+  },
   "devDependencies": {
     "@babel/cli": "^7.2.3",
     "@babel/core": "^7.2.2",

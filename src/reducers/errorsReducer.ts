@@ -1,6 +1,6 @@
+import { combineReducers } from 'redux';
 import { actionTypes } from '../constants';
 import { getQueryName } from '../utils/query';
-import { combineReducers } from '../utils/reducers';
 
 const { CLEAR_ERRORS, CLEAR_ERROR, LISTENER_ERROR, ERROR } = actionTypes;
 

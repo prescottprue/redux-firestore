@@ -1,5 +1,5 @@
 import { isObject, isFunction, mapValues } from 'lodash';
-import { Dispatch } from 'redux';
+import { Dispatch, Action } from 'redux';
 
 /**
  * Build payload by invoking payload function if it a function, otherwise
@@ -9,7 +9,7 @@ import { Dispatch } from 'redux';
  * @param  {Any} valToPass - Value to pass to custom payload function
  * @return {Any} Result of building payload
  */
-function makePayload(payloadSettings: ActionTypeObject, valToPass: any) {
+function makePayload(payloadSettings: ActionTypeObject, valToPass: any): any {
   const { payload } = payloadSettings
   return isFunction(payload) ? payload(valToPass) : payload;
 }
@@ -30,7 +30,7 @@ interface WrapInDispatchOptions {
   method: string
   types: (ActionTypeObject|string)[]
   ref: any
-  meta: any
+  meta?: any
   args?: string[]
 }
 
@@ -41,7 +41,7 @@ interface WrapInDispatchOptions {
  * @param opts.method - Method to call
  * @param opts.args - Arguments to call method with
  * @param opts.types - Action types array ([BEFORE, SUCCESS, FAILURE])
- * @return {Promise}
+ * @returns Resolves with result of calling promise
  * @private
  */
 export function wrapInDispatch(
@@ -96,7 +96,7 @@ export function wrapInDispatch(
  * @return {Function} A wrapper that accepts a function to wrap with firebase
  * and dispatch.
  */
-function createWithFirebaseAndDispatch<TFunc>(firebase: any, dispatch: Dispatch) {
+function createWithFirebaseAndDispatch<TFunc>(firebase: any, dispatch: Dispatch): any {
   return (func: TFunc | any) => (...args: any[]) =>
     func.apply(firebase, [firebase, dispatch, ...args]);
 }

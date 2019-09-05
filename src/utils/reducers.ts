@@ -5,70 +5,51 @@ import {
   pick,
   replace,
   trimStart,
-  flatten,
 } from 'lodash';
+import { AnyAction } from 'redux';
+import { PreserveSetting } from '../types';
 
 /**
  * Create a path array from path string
- * @param  {String} path - Path seperated with slashes
- * @return {Array} Path as Array
+ * @param path - Path seperated with slashes
+ * @returns Path as Array
  * @private
  */
-export function pathToArr(path) {
+export function pathToArr(path: string): string[] {
   return path ? path.split(/\//).filter(p => !!p) : [];
 }
 
 /**
  * Trim leading slash from path for use with state
- * @param  {String} path - Path seperated with slashes
- * @return {String} Path seperated with slashes
+ * @param path - Path seperated with slashes
+ * @returns Path seperated with slashes
  * @private
  */
-export function getSlashStrPath(path) {
+export function getSlashStrPath(path: string): string {
   return trimStart(replace(path, /[.]/g, '/'), '/');
 }
 
 /**
  * Convert path with slashes to dot seperated path (for use with lodash get/set)
- * @param  {String} path - Path seperated with slashes
- * @return {String} Path seperated with dots
+ * @param path - Path seperated with slashes
+ * @returns Path seperated with dots
  * @private
  */
-export function getDotStrPath(path) {
+export function getDotStrPath(path: string): string {
   return pathToArr(path).join('.');
-}
-
-/**
- * Combine reducers utility (abreveated version of redux's combineReducer).
- * Turns an object whose values are different reducer functions, into a single
- * reducer function.
- * @param {Object} reducers An object whose values correspond to different
- * reducer functions that need to be combined into one.
- * @return {Function} A reducer function that invokes every reducer inside the
- * passed object, and builds a state object with the same shape.
- * @private
- */
-export function combineReducers(reducers) {
-  return (state = {}, action) =>
-    Object.keys(reducers).reduce((nextState, key) => {
-      /* eslint-disable no-param-reassign */
-      nextState[key] = reducers[key](state[key], action);
-      /* eslint-enable no-param-reassign */
-      return nextState;
-    }, {});
 }
 
 /**
  * Update a single item within an array with support for adding the item if
  * it does not already exist
- * @param  {Array} array - Array within which to update item
- * @param  {String} itemId - Id of item to update
- * @param  {Function} updateItemCallback - Callback dictacting how the item
+ * @param array - Array within which to update item
+ * @param itemId - Id of item to update
+ * @param updateItemCallback - Callback dictacting how the item
  * is updated
- * @return {Array} Array with item updated
+ * @returns Array with item updated
  * @private
  */
-export function updateItemInArray(array, itemId, updateItemCallback) {
+export function updateItemInArray(array: any[] | undefined, itemId: string | undefined, updateItemCallback: (item: any) => any): any[] {
   let matchFound = false;
   if (!array || !array.length) {
     return [];
@@ -93,13 +74,13 @@ export function updateItemInArray(array, itemId, updateItemCallback) {
  * A function for expressing reducers as an object mapping from action
  * types to handlers (mentioned in redux docs:
  * https://redux.js.org/recipes/reducing-boilerplate#generating-reducers)
- * @param  {Any} initialState - Initial state of reducer
- * @param  {Object} handlers - Mapping of action types to handlers
- * @return {Function} Reducer function which uses each handler only when
+ * @param initialState - Initial state of reducer
+ * @param handlers - Mapping of action types to handlers
+ * @returns Reducer function which uses each handler only when
  * the action type matches.
  */
-export function createReducer(initialState, handlers) {
-  return function reducer(state = initialState, action) {
+export function createReducer(initialState: any, handlers: any): (state: any, action: AnyAction) => any {
+  return function reducer(state = initialState, action: AnyAction) {
     /* eslint-disable no-prototype-builtins */
     if (handlers.hasOwnProperty(action.type)) {
       /* eslint-enable no-prototype-builtins */
@@ -112,14 +93,14 @@ export function createReducer(initialState, handlers) {
 /**
  * Preserve slice of state based on preserve settings for that slice. Settings
  * for support can be any of type `Boolean`, `Function`, or `Array`.
- * @param  {Object} state - slice of redux state to be preserved
- * @param  {Boolean|Function|Array} preserveSetting [description]
- * @param  {Object} nextState - What state would have been set to if preserve
+ * @param state - slice of redux state to be preserved
+ * @param preserveSetting - Settings for which values to preserve
+ * @param nextState - What state would have been set to if preserve
  * was not occuring.
- * @return {Object} Slice of state with values preserved
+ * @return Slice of state with values preserved
  * @private
  */
-export function preserveValuesFromState(state, preserveSetting, nextState) {
+export function preserveValuesFromState(state: any, preserveSetting: PreserveSetting, nextState: any): any {
   // Return original state if preserve is true
   if (isBoolean(preserveSetting)) {
     return nextState ? { ...state, ...nextState } : state;

@@ -14,18 +14,18 @@ import {
   getPopulateActions,
 } from '../utils/query';
 import { to } from '../utils/async';
-import { QueryConfigObject, ReduxFirestoreConfig } from '../types';
+import { QueryConfigObject, ReduxFirestoreConfig, QueryConfig } from '../types';
 
 const pathListenerCounts: any = {};
 
 /**
  * Add data to a collection or document on Cloud Firestore with the call to
  * the Firebase library being wrapped in action dispatches.
- * @param {Object} firebase - Internal firebase object
- * @param {Function} dispatch - Redux's dispatch function
+ * @param firebase - Internal firebase object
+ * @param dispatch - Redux's dispatch function
  * @param queryOption - Options for query
  * @param doc - Document name
- * @return {Promise} Resolves with results of add call
+ * @returns Resolves with results of add call
  */
 export function add(firebase: any, dispatch: Dispatch, queryOption: any, ...args: any[]): Promise<any> {
   const meta = getQueryConfig(queryOption);
@@ -52,7 +52,7 @@ export function add(firebase: any, dispatch: Dispatch, queryOption: any, ...args
  * @param dispatch - Redux's dispatch function
  * @param queryOption - Options for query
  * @param doc - Document name
- * @return {Promise} Resolves with results of set call
+ * @returns Resolves with results of set call
  */
 export function set(firebase: any, dispatch: Dispatch, queryOption: any, ...args: any[]): Promise<any> {
   const meta = getQueryConfig(queryOption);
@@ -113,9 +113,9 @@ export function get(firebase: any, dispatch: Dispatch, queryOption: any): Promis
  * being wrapped in action dispatches.
  * @param firebase - Internal firebase object
  * @param dispatch - Redux's dispatch function
- * @param {String} queryOption - Options for query
- * @param {String} doc - Document name
- * @return {Promise} Resolves with results of update call
+ * @param queryOption - Options for query
+ * @param doc - Document name
+ * @returns Resolves with results of update call
  */
 export function update(firebase: any, dispatch: Dispatch, queryOption: any, ...args: any[]): Promise<any> {
   const meta = getQueryConfig(queryOption);
@@ -141,9 +141,9 @@ export function update(firebase: any, dispatch: Dispatch, queryOption: any, ...a
  * within a cloud function.
  * @param {Object} firebase - Internal firebase object
  * @param dispatch - Redux's dispatch function
- * @param {String} queryOption - Options for query
- * @param {String} doc - Document name
- * @return {Promise} Resolves with results of update call
+ * @param queryOption - Options for query
+ * @param doc - Document name
+ * @returns Resolves with results of update call
  */
 export function deleteRef(firebase: any, dispatch: Dispatch, queryOption: any): Promise<any> {
   const meta = getQueryConfig(queryOption);
@@ -176,18 +176,18 @@ export function deleteRef(firebase: any, dispatch: Dispatch, queryOption: any): 
  * Set listener to Cloud Firestore with the call to the Firebase library
  * being wrapped in action dispatches.. Internall calls Firebase's onSnapshot()
  * method.
- * @param {Object} firebase - Internal firebase object
+ * @param firebase - Internal firebase object
  * @param dispatch - Redux's dispatch function
- * @param {String} queryOpts - Options for query
- * @param {String} queryOpts.collection - Collection name
- * @param {String} queryOpts.doc - Document name
- * @param {Array} queryOpts.where - Where settings for query. Array of strings
+ * @param queryOpts - Options for query
+ * @param queryOpts.collection - Collection name
+ * @param queryOpts.doc - Document name
+ * @param queryOpts.where - Where settings for query. Array of strings
  * for one where, an Array of Arrays for multiple wheres
- * @param  {Function} successCb - Callback called on success
- * @param  {Function} errorCb - Callback called on error
- * @return {Function} Unsubscribe
+ * @param successCb - Callback called on success
+ * @param errorCb - Callback called on error
+ * @return Unsubscribe
  */
-export function setListener(firebase: any, dispatch: Dispatch, queryOpts: any, successCb?: any, errorCb?: any) {
+export function setListener(firebase: any, dispatch: Dispatch, queryOpts: QueryConfig, successCb?: any, errorCb?: any): () => void {
   const meta = getQueryConfig(queryOpts);
 
   // Create listener
@@ -217,7 +217,7 @@ export function setListener(firebase: any, dispatch: Dispatch, queryOpts: any, s
       }
 
       // Dispatch each populate action
-      populateActions.forEach(populateAction => {
+      populateActions.forEach((populateAction: Partial<ReduxFirestoreConfig>) => {
         dispatch({
           ...populateAction,
           type: actionTypes.LISTENER_RESPONSE,
@@ -262,9 +262,9 @@ export function setListener(firebase: any, dispatch: Dispatch, queryOpts: any, s
  * If config.allowMultipleListeners is true or a function
  * (`(listener, listeners) => {}`) that evaluates to true then multiple
  * listeners with the same config are attached.
- * @param {Object} firebase - Internal firebase object
- * @param {Function} dispatch - Redux's dispatch function
- * @param {Array} listeners
+ * @param firebase - Internal firebase object
+ * @param dispatch - Redux's dispatch function
+ * @param listeners - Configs for listeners to be set
  */
 export function setListeners(firebase: any, dispatch: Dispatch, listeners: QueryConfigObject[]) {
   if (!isArray(listeners)) {
@@ -315,12 +315,12 @@ export function setListeners(firebase: any, dispatch: Dispatch, listeners: Query
  * @param {Object} firebase - Internal firebase object
  * @param {Function} dispatch - Redux's dispatch function
  * @param {Object} meta - Metadata
- * @param {String} meta.collection - Collection name
- * @param {String} meta.doc - Document name
+ * @param meta.collection - Collection name
+ * @param meta.doc - Document name
  * @return {Promise} Resolves when listener has been attached **not** when data
  * has been gathered by the listener.
  */
-export function unsetListener(firebase: any, dispatch: Dispatch, meta: QueryConfigObject) {
+export function unsetListener(firebase: any, dispatch: Dispatch, meta: QueryConfigObject): void {
   return detachListener(firebase, dispatch, getQueryConfig(meta));
 }
 
@@ -330,7 +330,7 @@ export function unsetListener(firebase: any, dispatch: Dispatch, meta: QueryConf
  * @param {Function} dispatch - Redux's dispatch function
  * @param {Array} listeners - Array of listener configs
  */
-export function unsetListeners(firebase: any, dispatch: Dispatch, listeners: any[]) {
+export function unsetListeners(firebase: any, dispatch: Dispatch, listeners: any[]): void {
   if (!isArray(listeners)) {
     throw new Error(
       'Listeners must be an Array of listener configs (Strings/Objects).',
@@ -363,9 +363,9 @@ export function unsetListeners(firebase: any, dispatch: Dispatch, listeners: any
  * @param {Function} dispatch - Redux's dispatch function
  * @param  {Function} transactionPromise - Function which runs transaction
  * operation.
- * @return {Promise} Resolves with result of transaction operation
+ * @return Resolves with result of transaction operation
  */
-export function runTransaction(firebase, dispatch: Dispatch, transactionPromise) {
+export function runTransaction(firebase: any, dispatch: Dispatch, transactionPromise: any): Promise<any> {
   return wrapInDispatch(dispatch, {
     ref: firebase.firestore(),
     method: 'runTransaction',
@@ -377,15 +377,3 @@ export function runTransaction(firebase, dispatch: Dispatch, transactionPromise)
     ],
   });
 }
-
-export default {
-  get,
-  firestoreRef,
-  add,
-  update,
-  setListener,
-  setListeners,
-  unsetListener,
-  unsetListeners,
-  runTransaction,
-};
