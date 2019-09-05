@@ -1,4 +1,5 @@
 import { isObject, isFunction, mapValues } from 'lodash';
+import { Dispatch } from 'redux';
 
 /**
  * Build payload by invoking payload function if it a function, otherwise
@@ -8,24 +9,46 @@ import { isObject, isFunction, mapValues } from 'lodash';
  * @param  {Any} valToPass - Value to pass to custom payload function
  * @return {Any} Result of building payload
  */
-function makePayload({ payload }, valToPass) {
+function makePayload(payloadSettings: ActionTypeObject, valToPass: any) {
+  const { payload } = payloadSettings
   return isFunction(payload) ? payload(valToPass) : payload;
+}
+
+interface MergeSettings {
+  docs: boolean | undefined
+  collections: boolean | undefined
+}
+
+interface ActionTypeObject {
+  type: string
+  payload?: any
+  preserve?: boolean
+  merge?: MergeSettings
+}
+
+interface WrapInDispatchOptions {
+  method: string
+  types: (ActionTypeObject|string)[]
+  ref: any
+  meta: any
+  args?: string[]
 }
 
 /**
  * @description Wrap method call in dispatched actions
- * @param {Function} dispatch - Action dispatch function
- * @param {Object} opts - Options object
- * @param {Function} opts.method - Method to call
- * @param {Array} opts.args - Arguments to call method with
- * @param {Array} opts.types - Action types array ([BEFORE, SUCCESS, FAILURE])
+ * @param dispatch - Action dispatch function
+ * @param opts - Options object
+ * @param opts.method - Method to call
+ * @param opts.args - Arguments to call method with
+ * @param opts.types - Action types array ([BEFORE, SUCCESS, FAILURE])
  * @return {Promise}
  * @private
  */
 export function wrapInDispatch(
-  dispatch,
-  { ref, meta = {}, method, args = [], types },
-) {
+  dispatch: Dispatch,
+  wrapOptions: WrapInDispatchOptions,
+): Promise<any> {
+  const { ref, meta = {}, method, args = [], types } = wrapOptions
   const [requestingType, successType, errorType] = types;
   dispatch({
     type: isObject(requestingType) ? requestingType.type : requestingType,
@@ -33,7 +56,7 @@ export function wrapInDispatch(
     payload: isObject(requestingType) ? requestingType.payload : { args },
   });
   return ref[method](...args)
-    .then(result => {
+    .then((result: any) => {
       const successIsObject = isObject(successType);
       // Built action object handling function for custom payload
       const actionObj = {
@@ -55,7 +78,7 @@ export function wrapInDispatch(
       dispatch(actionObj);
       return result;
     })
-    .catch(err => {
+    .catch((err: Error) => {
       dispatch({
         type: errorType,
         meta,
@@ -73,9 +96,15 @@ export function wrapInDispatch(
  * @return {Function} A wrapper that accepts a function to wrap with firebase
  * and dispatch.
  */
-function createWithFirebaseAndDispatch(firebase, dispatch) {
-  return func => (...args) =>
+function createWithFirebaseAndDispatch<TFunc>(firebase: any, dispatch: Dispatch) {
+  return (func: TFunc | any) => (...args: any[]) =>
     func.apply(firebase, [firebase, dispatch, ...args]);
+}
+
+
+interface MethodAliasSettings {
+  action: any
+  name: string
 }
 
 /**
@@ -87,11 +116,11 @@ function createWithFirebaseAndDispatch(firebase, dispatch) {
  * @return {Object} Actions mapped with firebase and dispatch
  */
 export function mapWithFirebaseAndDispatch(
-  firebase,
-  dispatch,
-  actions,
-  aliases,
-) {
+  firebase: any,
+  dispatch: Dispatch,
+  actions: any,
+  aliases: MethodAliasSettings[],
+): any {
   const withFirebaseAndDispatch = createWithFirebaseAndDispatch(
     firebase,
     dispatch,

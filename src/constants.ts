@@ -80,7 +80,7 @@ export const actionTypes = {
   DOCUMENT_REMOVED: `${actionsPrefix}/DOCUMENT_REMOVED`,
   TRANSACTION_START: `${actionsPrefix}/TRANSACTION_START`,
   TRANSACTION_SUCCESS: `${actionsPrefix}/TRANSACTION_SUCCESS`,
-  TRANSACTION_FAILURE: `${actionsPrefix}/TRANSACTION_FAILURE`,
+  TRANSACTION_FAILURE: `${actionsPrefix}/TRANSACTION_FAILURE`
 };
 
 /**
@@ -123,7 +123,7 @@ export const defaultConfig = {
   onAttemptCollectionDelete: null,
   mergeOrdered: true,
   mergeOrderedDocUpdates: true,
-  mergeOrderedCollectionUpdates: true,
+  mergeOrderedCollectionUpdates: true
 };
 
 export const methodsToAddFromFirestore = [
@@ -136,11 +136,11 @@ export const methodsToAddFromFirestore = [
   'enablePersistence',
   'ensureClientConfigured',
   'setLogLevel',
-  'settings',
+  'settings'
 ];
 
 export default {
   actionsPrefix,
   actionTypes,
-  defaultConfig,
+  defaultConfig
 };

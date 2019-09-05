@@ -1,12 +1,13 @@
-/* eslint-disable require-jsdoc,valid-jsdoc */
+/* eslint-disable import/no-extraneous-dependencies, require-jsdoc,valid-jsdoc */
 /* istanbul ignore next */
 import { isArray } from 'lodash';
+import { Store } from 'redux';
 import { actionTypes } from './constants';
 
 // Fetches an API response and normalizes the result JSON according to schema.
 // This makes every API response have the same shape, regardless of how nested it was.
 /* istanbul ignore next not yet in use */
-function callFirestore(firebaseInstance, callInfoObj) {
+function callFirestore(firebaseInstance: any, callInfoObj: any): any {
   // console.log('calling devshare:', callInfoObj, Devshare)
   const { method } = callInfoObj;
   let { modelArgs, methodArgs } = callInfoObj;
@@ -31,15 +32,15 @@ const typesMap = {
   get: [
     actionTypes.GET_REQUEST,
     actionTypes.GET_SUCCESS,
-    actionTypes.GET_FAILURE,
-  ],
+    actionTypes.GET_FAILURE
+  ]
 };
 
 // A Redux middleware that interprets actions with CALL_FIRESTORE info specified.
 // Performs the call and promises when such actions are dispatched.
 /* istanbul ignore next not yet in use */
-export default function reduxFirestoreMiddleware(firestore) {
-  return store => next => action => {
+export default function reduxFirestoreMiddleware(firestore: any) {
+  return (store: Store) => (next: any) => (action: any): Promise<any> => {
     const callAPI = action.type === CALL_FIRESTORE ? action : undefined;
     if (typeof callAPI === 'undefined') return next(action);
 
@@ -50,7 +51,7 @@ export default function reduxFirestoreMiddleware(firestore) {
     if (typeof method !== 'string') throw new Error('Specify a method.');
 
     const { args } = callAPI;
-    const types = typesMap[method];
+    const types = (typesMap as any)[method];
 
     if (!Array.isArray(types) || types.length !== 3) {
       throw new Error('Expected an array of three action types.');
@@ -60,7 +61,7 @@ export default function reduxFirestoreMiddleware(firestore) {
       throw new Error('Expected action types to be strings.');
     }
 
-    function actionWith(data) {
+    function actionWith(data: any): any {
       const finalAction = Object.assign({}, action, data);
       delete finalAction[CALL_FIRESTORE];
       return finalAction;
@@ -70,12 +71,12 @@ export default function reduxFirestoreMiddleware(firestore) {
     next({ type: requestType });
     const callInfoObj = { method };
     return callFirestore(firestore, callInfoObj)
-      .then(response => next({ response, method, args, type: successType }))
-      .catch(error =>
+      .then((response: any) => next({ response, method, args, type: successType }))
+      .catch((error: Error) =>
         next(
           actionWith({
             type: failureType,
-            error: error.message || error || 'Something bad happened',
+            error: error.message || error || 'Something bad happened'
           }),
         ),
       );
