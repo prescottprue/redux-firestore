@@ -95,9 +95,7 @@ describe('query utils', () => {
         };
         result = getQueryName(meta);
         expect(result).to.equal(
-          `${meta.collection}/${
-            meta.doc
-          }?where=${where1}:${whereOperator}:${where2}`,
+          `${meta.collection}/${meta.doc}?where=${where1}:${whereOperator}:${where2}`,
         );
       });
     });
@@ -193,9 +191,7 @@ describe('query utils', () => {
         expect(dispatch).to.be.calledWith({
           meta,
           payload: {
-            name: `${meta.collection}/${meta.doc}/${
-              meta.subcollections[0].collection
-            }`,
+            name: `${meta.collection}/${meta.doc}/${meta.subcollections[0].collection}`,
           },
           type: '@@reduxFirestore/SET_LISTENER',
         });

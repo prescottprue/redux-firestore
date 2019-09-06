@@ -77,9 +77,7 @@ function handleSubcollections(ref, subcollectionList) {
       if (subcollection.collection) {
         if (!isFunction(ref.collection)) {
           throw new Error(
-            `Collection can only be run on a document. Check that query config for subcollection: "${
-              subcollection.collection
-            }" contains a doc parameter.`,
+            `Collection can only be run on a document. Check that query config for subcollection: "${subcollection.collection}" contains a doc parameter.`,
           );
         }
         ref = ref.collection(subcollection.collection);
@@ -480,7 +478,7 @@ export function dataByIdSnapshot(snap) {
 export function getPopulateChild(firebase, populate, id) {
   return firestoreRef(firebase, { collection: populate.root, doc: id })
     .get()
-    .then(snap => Object.assign({ id }, snap.data()));
+    .then(snap => ({ id, ...snap.data() }));
 }
 
 /**
