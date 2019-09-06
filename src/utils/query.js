@@ -29,6 +29,10 @@ function addWhereToRef(ref, where) {
     throw new Error('where parameter must be an array.');
   }
 
+  if (Array.isArray(where[0])) {
+    return where.reduce((acc, whereArgs) => addWhereToRef(acc, whereArgs), ref);
+  }
+
   return ref.where(...where);
 }
 
