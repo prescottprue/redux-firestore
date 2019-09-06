@@ -25,14 +25,11 @@ import { actionTypes } from '../constants';
  * @return {firebase.firestore.Reference} Reference with where statement attached
  */
 function addWhereToRef(ref, where) {
-  if (!isArray(where)) {
+  if (!Array.isArray(where)) {
     throw new Error('where parameter must be an array.');
   }
-  if (isString(where[0])) {
-    return where.length > 1 ? ref.where(...where) : ref.where(where[0]);
-  }
 
-  return where.reduce((acc, whereArgs) => addWhereToRef(acc, whereArgs), ref);
+  return ref.where(...where);
 }
 
 /**
@@ -44,7 +41,7 @@ function addWhereToRef(ref, where) {
  * @return {firebase.firestore.Reference} Reference with where statement attached
  */
 function addOrderByToRef(ref, orderBy) {
-  if (!isArray(orderBy) && !isString(orderBy)) {
+  if (!Array.isArray(orderBy) && !isString(orderBy)) {
     throw new Error('orderBy parameter must be an array or string.');
   }
   if (isString(orderBy)) {
