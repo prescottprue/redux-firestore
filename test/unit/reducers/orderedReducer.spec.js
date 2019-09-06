@@ -82,6 +82,42 @@ describe('orderedReducer', () => {
       });
     });
 
+    describe('DOCUMENT_MODIFIED', () => {
+      it('moves document within collection - #230', () => {
+        const collection = 'test1';
+        const doc = 'test2';
+        const someDoc = { id: doc, some: 'value' };
+        const otherDoc = { id: 'id1' };
+        const newIndex = 2;
+        const oldIndex = 0;
+        const payload = {
+          ordered: { newIndex, oldIndex },
+          data: someDoc,
+        };
+        const meta = { collection, doc };
+        action = { meta, payload, type: actionTypes.DOCUMENT_MODIFIED };
+        const fakeState = {
+          [collection]: [someDoc, otherDoc, { id: 'id2' }],
+        };
+        const result = orderedReducer(fakeState, action);
+        // ID on first item no longer matches
+        expect(result).to.not.have.nested.property(
+          `${collection}.${oldIndex}.id`,
+          doc,
+        );
+        // Old item is moved into removed index
+        expect(result).to.have.nested.property(
+          `${collection}.${oldIndex}.id`,
+          otherDoc.id,
+        );
+        // Value is set to new item index
+        expect(result).to.have.nested.property(
+          `${collection}.${newIndex}.some`,
+          someDoc.some,
+        );
+      });
+    });
+
     describe('DOCUMENT_REMOVED', () => {
       it('removes document from collection', () => {
         const collection = 'test1';

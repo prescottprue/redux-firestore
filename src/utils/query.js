@@ -25,14 +25,15 @@ import { actionTypes } from '../constants';
  * @return {firebase.firestore.Reference} Reference with where statement attached
  */
 function addWhereToRef(ref, where) {
-  if (!isArray(where)) {
+  if (!Array.isArray(where)) {
     throw new Error('where parameter must be an array.');
   }
-  if (isString(where[0])) {
-    return where.length > 1 ? ref.where(...where) : ref.where(where[0]);
+
+  if (Array.isArray(where[0])) {
+    return where.reduce((acc, whereArgs) => addWhereToRef(acc, whereArgs), ref);
   }
 
-  return where.reduce((acc, whereArgs) => addWhereToRef(acc, whereArgs), ref);
+  return ref.where(...where);
 }
 
 /**
@@ -44,7 +45,7 @@ function addWhereToRef(ref, where) {
  * @return {firebase.firestore.Reference} Reference with where statement attached
  */
 function addOrderByToRef(ref, orderBy) {
-  if (!isArray(orderBy) && !isString(orderBy)) {
+  if (!Array.isArray(orderBy) && !isString(orderBy)) {
     throw new Error('orderBy parameter must be an array or string.');
   }
   if (isString(orderBy)) {
@@ -76,9 +77,7 @@ function handleSubcollections(ref, subcollectionList) {
       if (subcollection.collection) {
         if (!isFunction(ref.collection)) {
           throw new Error(
-            `Collection can only be run on a document. Check that query config for subcollection: "${
-              subcollection.collection
-            }" contains a doc parameter.`,
+            `Collection can only be run on a document. Check that query config for subcollection: "${subcollection.collection}" contains a doc parameter.`,
           );
         }
         ref = ref.collection(subcollection.collection);
@@ -108,6 +107,7 @@ function handleSubcollections(ref, subcollectionList) {
  * @param {Object} firebase - Internal firebase object
  * @param {Object} meta - Metadata
  * @param {String} meta.collection - Collection name
+ * @param {String} meta.collectionGroup - Collection Group name
  * @param {String} meta.doc - Document name
  * @param {Array} meta.where - List of argument arrays
  * @return {firebase.firestore.Reference} Resolves with results of add call
@@ -118,6 +118,7 @@ export function firestoreRef(firebase, meta) {
   }
   const {
     collection,
+    collectionGroup,
     doc,
     subcollections,
     where,
@@ -128,8 +129,17 @@ export function firestoreRef(firebase, meta) {
     endAt,
     endBefore,
   } = meta;
-  let ref = firebase.firestore().collection(collection);
+  let ref = firebase.firestore();
   // TODO: Compare other ways of building ref
+
+  if (collection && collectionGroup) {
+    throw new Error(
+      'Reference cannot contain both Collection and CollectionGroup.',
+    );
+  }
+
+  if (collection) ref = ref.collection(collection);
+  if (collectionGroup) ref = ref.collectionGroup(collectionGroup);
   if (doc) ref = ref.doc(doc);
   ref = handleSubcollections(ref, subcollections);
   if (where) ref = addWhereToRef(ref, where);
@@ -190,6 +200,7 @@ function serialize(queryParams) {
  * in listener management and reducers).
  * @param  {Object} meta - Metadata object containing query settings
  * @param  {String} meta.collection - Collection name of query
+ * @param  {String} meta.collectionGroup - Collection Group name of query
  * @param  {String} meta.doc - Document id of query
  * @param  {String} meta.storeAs - User-defined Redux store name of query
  * @param  {Array} meta.subcollections - Subcollections of query
@@ -199,20 +210,29 @@ export function getQueryName(meta) {
   if (isString(meta)) {
     return meta;
   }
-  const { collection, doc, subcollections, storeAs, ...remainingMeta } = meta;
-  if (!collection) {
-    throw new Error('Collection is required to build query name');
+  const {
+    collection,
+    collectionGroup,
+    doc,
+    subcollections,
+    storeAs,
+    ...remainingMeta
+  } = meta;
+  if (!collection && !collectionGroup) {
+    throw new Error(
+      'Collection or Collection Group is required to build query name',
+    );
   }
 
   if (storeAs) {
     return storeAs;
   }
 
-  let basePath = collection;
+  let basePath = collection || collectionGroup;
   if (doc) {
     basePath = basePath.concat(`/${doc}`);
   }
-  if (subcollections) {
+  if (collection && subcollections) {
     const mappedCollections = subcollections.map(subcollection =>
       getQueryName(subcollection),
     );
@@ -249,7 +269,7 @@ export function getBaseQueryName(meta) {
   }
   let basePath = collection;
 
-  if (subcollections) {
+  if (collection && subcollections) {
     const mappedCollections = subcollections.map(subcollection =>
       getQueryName(subcollection),
     );
@@ -374,9 +394,9 @@ export function getQueryConfig(query) {
     return queryStrToObj(query);
   }
   if (isObject(query)) {
-    if (!query.collection && !query.doc) {
+    if (!query.collection && !query.collectionGroup && !query.doc) {
       throw new Error(
-        'Collection and/or Doc are required parameters within query definition object.',
+        'Collection, Collection Group and/or Doc are required parameters within query definition object.',
       );
     }
     return query;
@@ -458,7 +478,7 @@ export function dataByIdSnapshot(snap) {
 export function getPopulateChild(firebase, populate, id) {
   return firestoreRef(firebase, { collection: populate.root, doc: id })
     .get()
-    .then(snap => Object.assign({ id }, snap.data()));
+    .then(snap => ({ id, ...snap.data() }));
 }
 
 /**

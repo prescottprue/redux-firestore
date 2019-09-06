@@ -2,7 +2,12 @@ import { actionTypes } from '../constants';
 import { getSlashStrPath, combineReducers } from '../utils/reducers';
 import { getQueryName } from '../utils/query';
 
-const { SET_LISTENER, LISTENER_ERROR, LISTENER_RESPONSE } = actionTypes;
+const {
+  SET_LISTENER,
+  UNSET_LISTENER,
+  LISTENER_ERROR,
+  LISTENER_RESPONSE,
+} = actionTypes;
 
 /**
  * Reducer for requesting state.Changed by `START`, `NO_VALUE`, and `SET` actions.
@@ -22,6 +27,7 @@ export function requestingReducer(state = {}, { type, meta }) {
       };
     case LISTENER_ERROR:
     case LISTENER_RESPONSE:
+    case UNSET_LISTENER:
       return {
         ...state,
         [getSlashStrPath(getQueryName(meta))]: false,
@@ -43,6 +49,7 @@ export function requestingReducer(state = {}, { type, meta }) {
 export function requestedReducer(state = {}, { type, meta }) {
   switch (type) {
     case SET_LISTENER:
+    case UNSET_LISTENER:
       return {
         ...state,
         [getQueryName(meta)]: false,

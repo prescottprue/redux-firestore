@@ -54,7 +54,7 @@ describe('query utils', () => {
   describe('getQueryName', () => {
     it('throws for no collection name', () => {
       expect(() => getQueryName({})).to.throw(
-        'Collection is required to build query name',
+        'Collection or Collection Group is required to build query name',
       );
     });
 
@@ -95,9 +95,7 @@ describe('query utils', () => {
         };
         result = getQueryName(meta);
         expect(result).to.equal(
-          `${meta.collection}/${
-            meta.doc
-          }?where=${where1}:${whereOperator}:${where2}`,
+          `${meta.collection}/${meta.doc}?where=${where1}:${whereOperator}:${where2}`,
         );
       });
     });
@@ -193,9 +191,7 @@ describe('query utils', () => {
         expect(dispatch).to.be.calledWith({
           meta,
           payload: {
-            name: `${meta.collection}/${meta.doc}/${
-              meta.subcollections[0].collection
-            }`,
+            name: `${meta.collection}/${meta.doc}/${meta.subcollections[0].collection}`,
           },
           type: '@@reduxFirestore/SET_LISTENER',
         });
@@ -289,7 +285,7 @@ describe('query utils', () => {
       it('throws invalid object', () => {
         meta = [{ test: 'test' }];
         expect(() => getQueryConfigs(meta)).to.Throw(
-          'Collection and/or Doc are required parameters within query definition object',
+          'Collection, Collection Group and/or Doc are required parameters within query definition object',
         );
       });
     });
@@ -628,31 +624,24 @@ describe('query utils', () => {
       });
 
       it('handles array of arrays', () => {
-        meta = { collection: 'test', where: [['other', '===', 'test']] };
-        const whereSpy = sinon.spy(() => ({}));
+        const where1 = ['other', '===', 'test'];
+        const where2 = ['second', '===', 'value'];
+        meta = { collection: 'test', where: [where1, where2] };
+        const where2Spy = sinon.spy(() => ({}));
+        const whereSpy = sinon.spy(() => ({ where: where2Spy }));
         fakeFirebase = {
           firestore: () => ({ collection: () => ({ where: whereSpy }) }),
         };
         result = firestoreRef(fakeFirebase, meta);
         expect(result).to.be.an('object');
-        expect(whereSpy).to.be.calledOnce;
+        expect(whereSpy).to.be.calledWith(...where1);
+        expect(where2Spy).to.be.calledWith(...where2);
       });
 
       it('throws for invalid where parameter', () => {
         meta = { collection: 'test', where: 'other' };
         fakeFirebase = {
           firestore: () => ({ collection: () => ({ where: () => ({}) }) }),
-        };
-        expect(() => firestoreRef(fakeFirebase, meta)).to.throw(
-          'where parameter must be an array.',
-        );
-      });
-
-      it('throws for invalid where parameter within array', () => {
-        meta = { collection: 'test', where: [false] };
-        const whereSpy = sinon.spy(() => ({}));
-        fakeFirebase = {
-          firestore: () => ({ collection: () => ({ where: whereSpy }) }),
         };
         expect(() => firestoreRef(fakeFirebase, meta)).to.throw(
           'where parameter must be an array.',
