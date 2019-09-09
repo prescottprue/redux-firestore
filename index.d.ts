@@ -425,7 +425,25 @@ declare module "reducers/index" {
     export default _default_3;
 }
 declare module "reducer" {
-    const _default_4: import("redux").Reducer<any, import("redux").AnyAction>;
+    const _default_4: import("reduce-reducers").Reducer<import("redux").Reducer<{
+        status: {
+            requesting: any;
+            requested: any;
+            timestamps: any;
+        };
+        data: import("types").DataState;
+        ordered: import("types").OrderedState;
+        listeners: {
+            byId: any;
+            allIds: any;
+        };
+        errors: {
+            byQuery: any;
+            allIds: any;
+        };
+        queries: import("reducers/queriesReducer").QueriesState;
+        composite: any;
+    }, import("redux").AnyAction>>;
     export default _default_4;
 }
 declare module "middleware" {
@@ -450,8 +468,44 @@ declare module "index" {
     export { reducer, reducer as firestoreReducer, createFirestoreInstance, firestoreActions as actions, getQueryName, firestoreOrderedSelector, firestoreDataSelector, getFirestore, constants, actionTypes, middleware, CALL_FIRESTORE };
     const _default_5: {
         version: string | undefined;
-        reducer: import("redux").Reducer<any, import("redux").AnyAction>;
-        firestoreReducer: import("redux").Reducer<any, import("redux").AnyAction>;
+        reducer: import("reduce-reducers").Reducer<import("redux").Reducer<{
+            status: {
+                requesting: any;
+                requested: any;
+                timestamps: any;
+            };
+            data: import("types").DataState;
+            ordered: import("types").OrderedState;
+            listeners: {
+                byId: any;
+                allIds: any;
+            };
+            errors: {
+                byQuery: any;
+                allIds: any;
+            };
+            queries: import("reducers/queriesReducer").QueriesState;
+            composite: any;
+        }, import("redux").AnyAction>>;
+        firestoreReducer: import("reduce-reducers").Reducer<import("redux").Reducer<{
+            status: {
+                requesting: any;
+                requested: any;
+                timestamps: any;
+            };
+            data: import("types").DataState;
+            ordered: import("types").OrderedState;
+            listeners: {
+                byId: any;
+                allIds: any;
+            };
+            errors: {
+                byQuery: any;
+                allIds: any;
+            };
+            queries: import("reducers/queriesReducer").QueriesState;
+            composite: any;
+        }, import("redux").AnyAction>>;
         createFirestoreInstance: typeof createFirestoreInstance;
         actions: typeof firestoreActions;
         getFirestore: typeof getFirestore;
