@@ -1,3 +1,4 @@
+import { ActionMeta } from './../types'
 import {
   size,
   get,
@@ -31,15 +32,15 @@ const {
 
 /**
  * Create a new copy of an array with the provided item in a new array index
- * @param  {Array} [collectionState=[]] - Redux state of current collection
- * @param {Object} meta - New array metadata
- * @param {Object} meta.oldIndex - New array index for the item
- * @param {Object} meta.newIndex -
- * @param {Object} newValue - New value of the item
- * @return {Array}
+ * @param [collectionState=[]] - Redux state of current collection
+ * @param meta - New array metadata
+ * @param meta.oldIndex - New array index for the item
+ * @param meta.newIndex -
+ * @param newValue - New value of the item
+ * @returns
  */
-function newArrayWithItemMoved(collectionState, meta, newValue) {
-  const { oldIndex, newIndex } = meta || {};
+function newArrayWithItemMoved(collectionState: any[], meta: any = {}, newValue: any) {
+  const { oldIndex, newIndex } = meta;
   // remove oldIndex from array while creating a copy
   const arrayWithoutItem = [
     ...collectionState.slice(0, oldIndex),
@@ -63,10 +64,39 @@ function newArrayWithItemMoved(collectionState, meta, newValue) {
  * @returns State with document modified
  */
 function modifyDoc(collectionState: any[] | undefined, action: ReduxFirestoreAction): any[] {
-  return updateItemInArray(collectionState, action.meta.doc, item =>
-    // assign is used to prevent the removal of existing subcollections
-    assignObjects(item, action.payload.data),
-  );
+  // Support moving a doc within an array
+  if (action.payload.ordered && !!(action.payload.ordered as any).newIndex) {
+    const { newIndex, oldIndex } = (action.payload.ordered as any);
+    // newIndex value exists, item was within array before, and the index has changed
+    if (collectionState && !!newIndex && oldIndex > -1 && newIndex !== oldIndex) {
+      return newArrayWithItemMoved(
+        collectionState,
+        action.payload.ordered,
+        action.payload.data,
+      );
+    }
+  }
+  
+  if (!action.meta.subcollections || action.meta.storeAs) {
+    return updateItemInArray(collectionState, action.meta.doc, item =>
+      // Merge is used to prevent the removal of existing subcollections
+      assignObjects(item, action.payload.data),
+    );
+  }
+
+  // TODO: make this recurisve so it will work multiple subcollections deep
+  const [, docId, subcollectionName, subDocId] = pathToArr(action.meta.path);
+
+  // Update document item within top array
+  return updateItemInArray(collectionState, docId, item => ({
+    ...item, // preserve document (only updating subcollection)
+    [subcollectionName]: updateItemInArray(
+      get(item, subcollectionName, []),
+      subDocId,
+      // Merge with existing subcollection doc (only updates changed keys)
+      subitem => mergeObjects(subitem, action.payload.data),
+    ),
+  }));
 }
 
 function lastDocKey(meta: any): string {
@@ -104,9 +134,9 @@ function removeDoc(array: any[], action: ReduxFirestoreAction): any[] {
 
 /**
  * Case reducer for writing/updating a whole collection.
- * @param  {Array} collectionState - Redux state of current collection
- * @param  {Object} action - The action that was dispatched
- * @return {Array} State with document modified
+ * @param collectionState - Redux state of current collection
+ * @param action - The action that was dispatched
+ * @returns State with document modified
  */
 function writeCollection(collectionState: any[] | undefined, action: ReduxFirestoreAction): OrderedActionPayload | any[] | undefined {
   const { meta, merge = { doc: true, collections: true } } = action;
@@ -167,15 +197,14 @@ const actionHandlers = {
 /**
  * Reducer for an ordered collection (stored under path within ordered reducer)
  * which is a map of handlers which are called for different action types.
- * @type {Function}
  */
 const orderedCollectionReducer = createReducer(undefined, actionHandlers);
 
 /**
  * Remove the last doc setting from action metadata
- * @param  {String} meta.subcollections - Subcollections which the action
+ * @param meta.subcollections - Subcollections which the action
  * associates with
- * @param  {String} meta.doc - Name of Document which the action
+ * @param meta.doc - Name of Document which the action
  * associates with
  */
 function removeLastDocFromMeta(meta: any): any {
@@ -218,23 +247,23 @@ function getStoreUnderKey(action: any) {
 
 /**
  * Reducer for ordered state.
- * @param  {Object} [state={}] - Current ordered redux state
- * @param  {Object} action - The action that was dispatched
- * @param  {String} action.type - Type of action that was dispatched
- * @param  {String} action.meta.collection - Name of Collection which the action
+ * @param [state={}] - Current ordered redux state
+ * @param action - The action that was dispatched
+ * @param action.type - Type of action that was dispatched
+ * @param action.meta.collection - Name of Collection which the action
  * associates with
- * @param  {String} action.meta.doc - Name of Document which the action
+ * @param action.meta.doc - Name of Document which the action
  * associates with
- * @param  {Array} action.meta.subcollections - Subcollections which the action
+ * @param action.meta.subcollections - Subcollections which the action
  * associates with
- * @param  {String} action.meta.storeAs - Another key within redux store that the
+ * @param action.meta.storeAs - Another key within redux store that the
  * action associates with (used for storing data under a path different
  * from its collection/document)
- * @param  {Object} action.payload - Object containing data associated with
+ * @param action.payload - Object containing data associated with
  * action
- * @param  {Array} action.payload.ordered - Ordered Array Data associated with
+ * @param action.payload.ordered - Ordered Array Data associated with
  * action
- * @return {Object} Ordered state after reduction
+ * @return Ordered state after reduction
  */
 export default function orderedReducer(state: OrderedState = {}, action: ReduxFirestoreAction): OrderedState {
   // Return state if action is malformed (i.e. no type)

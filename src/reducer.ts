@@ -12,16 +12,16 @@ import {
 
 /**
  * @name firestoreReducer
- * @description Reducer for firestore state. This function is called
+ * Reducer for firestore state. This function is called
  * automatically by redux every time an action is fired. Based on which action
  * is called and its payload, the reducer will update redux state with relevant
  * changes.
- * @param {Object} state - Current Redux State
- * @param {Object} action - Action which will modify state
- * @param {String} action.type - Type of Action being called
- * @param {Object} action.meta - Metadata associated with action
- * @param {Object} action.payload - Data associated with action
- * @return {Object} Firebase redux state
+ * @param state - Current Redux State
+ * @param action - Action which will modify state
+ * @param action.type - Type of Action being called
+ * @param action.meta - Metadata associated with action
+ * @param action.payload - Data associated with action
+ * @returns Firebase redux state
  */
 const combinedReducers = combineReducers({
   status: statusReducer,

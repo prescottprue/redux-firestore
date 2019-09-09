@@ -15,7 +15,7 @@ import { PreserveSetting } from '../types';
  * @returns Path as Array
  * @private
  */
-export function pathToArr(path: string): string[] {
+export function pathToArr(path: string | undefined): string[] {
   return path ? path.split(/\//).filter(p => !!p) : [];
 }
 

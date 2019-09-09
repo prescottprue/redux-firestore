@@ -66,7 +66,7 @@ interface ActionPayload {
   name?: string
 }
 
-type ActionMeta = QueryConfigObject & {
+export type ActionMeta = QueryConfigObject & {
   path?: string // added in docChangeEvent
 }
 
@@ -101,6 +101,7 @@ export type OrderByConfig = string | firebase.firestore.FieldPath | [string | fi
 
 export interface QueryConfigObject {
   collection?: string
+  collectionGroup?: string
   doc?: string
   subcollections?: QueryConfigObject[] | undefined
   where?: WhereConfig

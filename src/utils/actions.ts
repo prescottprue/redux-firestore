@@ -4,10 +4,10 @@ import { Dispatch } from 'redux';
 /**
  * Build payload by invoking payload function if it a function, otherwise
  * returning the payload.
- * @param  {Function|Object|Boolean} payload - Payload value (invoked if it
+ * @param payload - Payload value (invoked if it
  * is a function)
- * @param  {Any} valToPass - Value to pass to custom payload function
- * @return {Any} Result of building payload
+ * @param valToPass - Value to pass to custom payload function
+ * @returns Result of building payload
  */
 function makePayload(payloadSettings: ActionTypeObject, valToPass: any): any {
   const { payload } = payloadSettings
@@ -36,7 +36,7 @@ interface WrapInDispatchOptions {
 }
 
 /**
- * @description Wrap method call in dispatched actions
+ * Wrap method call in dispatched actions
  * @param dispatch - Action dispatch function
  * @param opts - Options object
  * @param opts.method - Method to call
@@ -90,16 +90,15 @@ export function wrapInDispatch(
 /**
  * Function that builds a factory that passes firebase and dispatch as
  * first two arguments.
- * @param  {Object} firebase - Internal firebase instance
- * @param  {Function} dispatch - Redux's dispatch function
- * @return {Function} A wrapper that accepts a function to wrap with firebase
+ * @param  firebase - Internal firebase instance
+ * @param  dispatch - Redux's dispatch function
+ * @returns A wrapper that accepts a function to wrap with firebase
  * and dispatch.
  */
 function createWithFirebaseAndDispatch<TFunc>(firebase: any, dispatch: Dispatch): any {
   return (func: TFunc | any) => (...args: any[]) =>
     func.apply(firebase, [firebase, dispatch, ...args]);
 }
-
 
 interface MethodAliasSettings {
   action: any
@@ -108,11 +107,11 @@ interface MethodAliasSettings {
 
 /**
  * Map each action with Firebase and Dispatch. Includes aliasing of actions.
- * @param  {Object} firebase - Internal firebase instance
- * @param  {Function} dispatch - Redux's dispatch function
- * @param  {Object} actions - Action functions to map with firebase and dispatch
- * @param  {Object} aliases - List of name aliases for wrapped functions
- * @return {Object} Actions mapped with firebase and dispatch
+ * @param firebase - Internal firebase instance
+ * @param dispatch - Redux's dispatch function
+ * @param actions - Action functions to map with firebase and dispatch
+ * @param aliases - List of name aliases for wrapped functions
+ * @returns Actions mapped with firebase and dispatch
  */
 export function mapWithFirebaseAndDispatch(
   firebase: any,

@@ -11,10 +11,10 @@ let firestoreInstance: any
 
 /**
  * Create a firebase instance that has helpers attached for dispatching actions
- * @param  {Object} firebase - Firebase instance which to extend
- * @param  {Object} configs - Configuration object
- * @param  {Function} dispatch - Action dispatch function
- * @return {Object} Extended Firebase instance
+ * @param firebase - Firebase instance which to extend
+ * @param configs - Configuration object
+ * @param dispatch - Action dispatch function
+ * @return Extended Firebase instance
  */
 export default function createFirestoreInstance(firebase: any, configs: ReduxFirestoreConfig, dispatch: Dispatch): any {
   // Setup internal variables
@@ -72,9 +72,9 @@ export default function createFirestoreInstance(firebase: any, configs: ReduxFir
 
 
 /**
- * @description Expose Firestore instance created internally. Useful for
+ * Expose Firestore instance created internally. Useful for
  * integrations into external libraries such as redux-thunk and redux-observable.
- * @return {Object} Firebase Instance
+ * @returns Firebase Instance
  * @example <caption>redux-thunk integration</caption>
  * import { applyMiddleware, compose, createStore } from 'redux';
  * import thunk from 'redux-thunk';
@@ -95,14 +95,16 @@ export default function createFirestoreInstance(firebase: any, configs: ReduxFir
  *   )
  * );
  * // then later
- * export const addTodo = (newTodo) =>
- *  (dispatch, getState, getFirestore) => {
- *    const firebase = getFirestore()
- *    firebase
- *      .add('todos', newTodo)
- *      .then(() => {
- *        dispatch({ type: 'SOME_ACTION' })
- *      })
+ * export function addTodo(newTodo) {
+ *   return (dispatch, getState, getFirestore) => {
+  *    const firebase = getFirestore()
+  *    firebase
+  *      .add('todos', newTodo)
+  *      .then(() => {
+  *        dispatch({ type: 'SOME_ACTION' })
+  *      })
+ *   }
+ *  
  * };
  *
  */

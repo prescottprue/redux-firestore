@@ -17,7 +17,16 @@ import {
 } from 'lodash';
 import { to } from '../utils/async';
 import { actionTypes } from '../constants';
-import { QueryConfig, QueryConfigObject, QueryNameOptions, PopulateConfig, ReduxFirestoreAction, ReduxFirestoreConfig, WhereConfig, OrderByConfig } from '../types';
+import {
+  QueryConfig,
+  QueryConfigObject,
+  QueryNameOptions,
+  PopulateConfig,
+  ReduxFirestoreAction,
+  ReduxFirestoreConfig,
+  WhereConfig,
+  OrderByConfig
+} from '../types';
 import * as firebase from 'firebase/app'
 import { Dispatch } from 'redux';
 
@@ -26,7 +35,7 @@ import { Dispatch } from 'redux';
  * and multiple where statements (array of arrays)
  * @param ref - Reference which to add where to
  * @param where - Where statement to attach to reference
- * @return Reference with where statement attached
+ * @returns Reference with where statement attached
  */
 function addWhereToRef(ref: firebase.firestore.CollectionReference | firebase.firestore.Query, where: WhereConfig | any): any {
   if (!Array.isArray(where) || where.length < 3) {
@@ -43,10 +52,10 @@ function addWhereToRef(ref: firebase.firestore.CollectionReference | firebase.fi
 /**
  * Add attribute to Cloud Firestore Reference handling invalid formats
  * and multiple orderBy statements (array of arrays). Used for orderBy and where
- * @param {firebase.firestore.Reference} ref - Reference which to add where to
- * @param {Array} orderBy - Statement to attach to reference
- * @param {String} [attrName='where'] - Name of attribute
- * @return {firebase.firestore.Reference} Reference with where statement attached
+ * @param ref - Reference which to add where to
+ * @param orderBy - Statement to attach to reference
+ * @param [attrName='where'] - Name of attribute
+ * @returns Reference with where statement attached
  */
 function addOrderByToRef(ref: firebase.firestore.CollectionReference, orderBy: OrderByConfig | undefined): firebase.firestore.Query {
   if (!Array.isArray(orderBy) && typeof orderBy !== 'string') {
@@ -67,12 +76,10 @@ function addOrderByToRef(ref: firebase.firestore.CollectionReference, orderBy: O
 /**
  * Call methods on ref object for provided subcollection list (from queryConfig
  * object)
- * @param  {firebase.firestore.CollectionReference} ref - reference on which
- * to call methods to apply queryConfig
- * @param  {Array} subcollectionList - List of subcollection settings from
+ * @param ref - reference on which to call methods to apply queryConfig
+ * @param subcollectionList - List of subcollection settings from
  * queryConfig object
- * @return {firebase.firestore.Query} Query object referencing path within
- * firestore
+ * @returns Query object referencing path within firestore
  */
 function handleSubcollections(
   ref: firebase.firestore.DocumentReference | firebase.firestore.CollectionReference | firebase.firestore.Query | any,

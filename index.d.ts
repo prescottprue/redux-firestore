@@ -178,7 +178,7 @@ declare module "types" {
         ordered?: OrderedActionPayload | any[];
         name?: string;
     }
-    type ActionMeta = QueryConfigObject & {
+    export type ActionMeta = QueryConfigObject & {
         path?: string;
     };
     export interface ReduxFirestoreAction extends AnyAction {
@@ -205,6 +205,7 @@ declare module "types" {
     export type OrderByConfig = string | firebase.firestore.FieldPath | [string | firebase.firestore.FieldPath, OrderDirectionString];
     export interface QueryConfigObject {
         collection?: string;
+        collectionGroup?: string;
         doc?: string;
         subcollections?: QueryConfigObject[] | undefined;
         where?: WhereConfig;
@@ -316,7 +317,7 @@ declare module "createFirestoreInstance" {
 declare module "utils/reducers" {
     import { AnyAction } from 'redux';
     import { PreserveSetting } from "types";
-    export function pathToArr(path: string): string[];
+    export function pathToArr(path: string | undefined): string[];
     export function getSlashStrPath(path: string): string;
     export function getDotStrPath(path: string): string;
     export function updateItemInArray(array: any[] | undefined, itemId: string | undefined, updateItemCallback: (item: any) => any): any[];
