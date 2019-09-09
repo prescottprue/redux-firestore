@@ -5,7 +5,12 @@ import { getSlashStrPath } from '../utils/reducers';
 import { getQueryName } from '../utils/query';
 import { ReduxFirestoreAction } from '../types';
 
-const { SET_LISTENER, LISTENER_ERROR, LISTENER_RESPONSE } = actionTypes;
+const {
+  SET_LISTENER,
+  UNSET_LISTENER,
+  LISTENER_ERROR,
+  LISTENER_RESPONSE,
+} = actionTypes;
 
 /**
  * Reducer for requesting state.Changed by `START`, `NO_VALUE`, and `SET` actions.
@@ -26,6 +31,7 @@ export function requestingReducer(state: RequestingState = {}, action: ReduxFire
       };
     case LISTENER_ERROR:
     case LISTENER_RESPONSE:
+    case UNSET_LISTENER:
       return {
         ...state,
         [getSlashStrPath(getQueryName(meta))]: false,
@@ -48,6 +54,7 @@ export function requestedReducer(state: RequestedState = {}, action: ReduxFirest
   const { type, meta } = action
   switch (type) {
     case SET_LISTENER:
+    case UNSET_LISTENER:
       return {
         ...state,
         [getQueryName(meta)]: false,

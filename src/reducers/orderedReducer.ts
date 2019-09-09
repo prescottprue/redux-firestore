@@ -30,6 +30,31 @@ const {
 } = actionTypes;
 
 /**
+ * Create a new copy of an array with the provided item in a new array index
+ * @param  {Array} [collectionState=[]] - Redux state of current collection
+ * @param {Object} meta - New array metadata
+ * @param {Object} meta.oldIndex - New array index for the item
+ * @param {Object} meta.newIndex -
+ * @param {Object} newValue - New value of the item
+ * @return {Array}
+ */
+function newArrayWithItemMoved(collectionState, meta, newValue) {
+  const { oldIndex, newIndex } = meta || {};
+  // remove oldIndex from array while creating a copy
+  const arrayWithoutItem = [
+    ...collectionState.slice(0, oldIndex),
+    ...collectionState.slice(oldIndex + 1),
+  ];
+  // Insert item in new array while preserving order of other items
+  return [
+    ...arrayWithoutItem.slice(0, newIndex),
+    // set new item (falling back to using a copy of the removed item)
+    newValue || { ...collectionState[oldIndex] },
+    ...arrayWithoutItem.slice(newIndex),
+  ];
+}
+
+/**
  * Case reducer for modifying a document within a collection or
  * subcollection. When storeAs is being used, subcollections are
  * moved to the level of the storeAs (instead of on their parent doc).

@@ -87,16 +87,11 @@ describe('statusReducer', () => {
     });
 
     describe('UNSET_LISTENER', () => {
-      it('returns state if payload is not defined', () => {
+      it('sets requesting status to false when unsetting listener', () => {
         action = { meta: 'test', type: actionTypes.UNSET_LISTENER };
-        expect(statusReducer(state, action).requesting).to.be.empty;
-      });
-
-      it('does not set state', () => {
-        meta = { collection };
-        payload = {};
-        action = { meta, payload, type: actionTypes.UNSET_LISTENER };
-        expect(statusReducer(state, action).requesting).to.be.empty;
+        expect(statusReducer(state, action).requesting).to.deep.equal({
+          test: false,
+        });
       });
     });
   });

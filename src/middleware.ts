@@ -62,7 +62,7 @@ export default function reduxFirestoreMiddleware(firestore: any) {
     }
 
     function actionWith(data: any): any {
-      const finalAction = Object.assign({}, action, data);
+      const finalAction = { ...action, ...data }
       delete finalAction[CALL_FIRESTORE];
       return finalAction;
     }
