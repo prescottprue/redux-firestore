@@ -1,22 +1,27 @@
 /* eslint-disable no-param-reassign */
-
 import produce from 'immer';
-import { set, get, unset } from 'lodash';
+import { set, unset } from 'lodash';
 import { actionTypes } from '../constants';
 import { getBaseQueryName } from '../utils/query';
+import { ReduxFirestoreAction } from '../types';
 
-export const isComposable = action =>
-  get(action, 'meta.where') && get(action, 'meta.collection');
+export function isComposable(action: ReduxFirestoreAction) {
+  return action && action.meta && action.meta.where && action.meta.collection;
+}
+  
+export interface QueriesState {
+  [k: string]: any
+}
 
 /**
  *
- * @param  {Object} [state={}] - Current listenersById redux state
- * @param  {Object} action - Object containing the action that was dispatched
- * @param  {String} action.type - Type of action that was dispatched
- * @return {Object}
+ * @param [state={}] - Current listenersById redux state
+ * @param action - Object containing the action that was dispatched
+ * @param action.type - Type of action that was dispatched
+ * @returns Queries state
  */
-export default function queriesReducer(state = {}, action) {
-  return produce(state, draft => {
+export default function queriesReducer(state = {}, action: ReduxFirestoreAction): QueriesState {
+  return produce(state, (draft: any) => {
     if (!isComposable(action)) {
       return state;
     }
@@ -39,11 +44,11 @@ export default function queriesReducer(state = {}, action) {
         return draft;
       case actionTypes.DOCUMENT_ADDED:
       case actionTypes.DOCUMENT_MODIFIED:
-        set(draft, [key, 'data', action.meta.doc], action.payload.data);
+        set(draft, ([key, 'data', action.meta.doc]) as any, action.payload.data);
         return draft;
       case actionTypes.DOCUMENT_REMOVED:
       case actionTypes.DELETE_SUCCESS:
-        unset(draft, [key, 'data', action.meta.doc]);
+        unset(draft, ([key, 'data', action.meta.doc] as any));
         return draft;
       default:
         return state;

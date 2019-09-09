@@ -3,16 +3,25 @@
 import produce from 'immer';
 import { values, groupBy, merge, set, get, keys } from 'lodash';
 import { actionTypes } from '../constants';
+import { ReduxFirestoreAction } from '../types';
+
+export interface CrossSliceQueriesState {
+  [k: string]: any
+}
+
+export interface CrossSliceState {
+  queries: CrossSliceQueriesState
+}
 
 /**
  * Reducer for crossSlice state
- * @param  {Object} [state={}] - Current ordered redux state
- * @param  {Object} action - The action that was dispatched
- * @param  {String} action.type - Type of action that was dispatched
- * @return {Object}
+ * @param [state={}] - Current ordered redux state
+ * @param action - The action that was dispatched
+ * @param action.type - Type of action that was dispatched
+ * @return
  */
-export default function crossSliceReducer(state = {}, action) {
-  return produce(state, draft => {
+export default function crossSliceReducer(state: CrossSliceState, action: ReduxFirestoreAction): CrossSliceQueriesState {
+  return produce(state, (draft: any) => {
     switch (action.type) {
       case actionTypes.DOCUMENT_MODIFIED:
       case actionTypes.DOCUMENT_ADDED:

@@ -1,5 +1,5 @@
-import { isObject, isFunction, mapValues } from 'lodash';
-import { Dispatch, Action } from 'redux';
+import { isObject, mapValues } from 'lodash';
+import { Dispatch } from 'redux';
 
 /**
  * Build payload by invoking payload function if it a function, otherwise
@@ -11,7 +11,7 @@ import { Dispatch, Action } from 'redux';
  */
 function makePayload(payloadSettings: ActionTypeObject, valToPass: any): any {
   const { payload } = payloadSettings
-  return isFunction(payload) ? payload(valToPass) : payload;
+  return typeof payload === 'function' ? payload(valToPass) : payload;
 }
 
 interface MergeSettings {
@@ -24,6 +24,7 @@ interface ActionTypeObject {
   payload?: any
   preserve?: boolean
   merge?: MergeSettings
+  meta?: any
 }
 
 interface WrapInDispatchOptions {
@@ -57,22 +58,20 @@ export function wrapInDispatch(
   });
   return ref[method](...args)
     .then((result: any) => {
-      const successIsObject = isObject(successType);
       // Built action object handling function for custom payload
-      const actionObj = {
-        type: successIsObject ? successType.type : successType,
+      const actionObj: ActionTypeObject = {
+        type: typeof successType === 'string' ? successType : successType.type,
         meta,
-        payload:
-          successIsObject && successType.payload
+        payload: typeof successType !== 'string'
             ? makePayload(successType, result)
             : { args },
       };
       // Attach preserve to action if it is passed
-      if (successIsObject && successType.preserve) {
+      if (typeof successType !== 'string' && successType.preserve) {
         actionObj.preserve = successType.preserve;
       }
       // Attach merge to action if it is passed
-      if (successIsObject && successType.merge) {
+      if (typeof successType !== 'string' && successType.merge) {
         actionObj.merge = successType.merge;
       }
       dispatch(actionObj);

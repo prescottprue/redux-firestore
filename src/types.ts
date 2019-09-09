@@ -1,3 +1,4 @@
+import { Dispatch, AnyAction } from 'redux'
 import {
   add,
   set,
@@ -10,7 +11,6 @@ import {
   unsetListener,
   unsetListeners
 } from './actions/firestore'
-import { Dispatch } from 'redux'
 
 export interface PreserveSettingObject {
   data: PreserveSetting
@@ -55,7 +55,7 @@ export interface FirestoreState {
   composite?: any
 }
 
-interface OrderedActionPayload {
+export interface OrderedActionPayload {
   oldIndex: number
   newIndex: number
 }
@@ -63,18 +63,21 @@ interface OrderedActionPayload {
 interface ActionPayload {
   data: firebase.firestore.DocumentData
   ordered?: OrderedActionPayload | any[]
+  name?: string
 }
 
 type ActionMeta = QueryConfigObject & {
   path?: string // added in docChangeEvent
 }
 
-export interface ReduxFirestoreAction {
+export interface ReduxFirestoreAction extends AnyAction {
   type: string
   meta: ActionMeta
   payload: ActionPayload
   timestamp?: number
   preserve?: PreserveSettingObject
+  path?: string
+  merge?: any
 }
 
 export type QueryConfig = string | QueryConfigObject

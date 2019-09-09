@@ -17,7 +17,7 @@ import {
   preserveValuesFromState,
   pathToArr,
 } from '../utils/reducers';
-import { OrderedState, ReduxFirestoreAction } from '../types';
+import { OrderedState, ReduxFirestoreAction, OrderedActionPayload } from '../types';
 
 const {
   DOCUMENT_ADDED,
@@ -56,7 +56,7 @@ function lastDocKey(meta: any): string {
  */
 function addDoc(array: any[] | undefined = [], action: ReduxFirestoreAction): any[] {
   const { meta, payload } = action;
-  if (!payload.ordered) {
+  if (!payload.ordered || Array.isArray(payload.ordered)) {
     return array.concat([{ id: lastDocKey(meta), ...payload.data }])
   }
   return [
@@ -83,7 +83,7 @@ function removeDoc(array: any[], action: ReduxFirestoreAction): any[] {
  * @param  {Object} action - The action that was dispatched
  * @return {Array} State with document modified
  */
-function writeCollection(collectionState: any[] | undefined, action: ReduxFirestoreAction): any[] | undefined {
+function writeCollection(collectionState: any[] | undefined, action: ReduxFirestoreAction): OrderedActionPayload | any[] | undefined {
   const { meta, merge = { doc: true, collections: true } } = action;
   if (meta.storeAs) {
     return action.payload.ordered;
@@ -107,7 +107,7 @@ function writeCollection(collectionState: any[] | undefined, action: ReduxFirest
     // Key existing state collection by id (used to prevent multiple array lookups)
     const existingKeys = collectionState && keyBy(collectionState, 'id');
     // Map new doc data with existing doc data (preserves existing sub-collections)
-    return map(action.payload.ordered, newDocObj => {
+    return map(action.payload.ordered, (newDocObj: any) => {
       const existingDoc = get(existingKeys, newDocObj.id);
       // merge with existing doc if existing doc is not equal
       return !!existingDoc && !isEqual(existingDoc, newDocObj)
@@ -123,7 +123,7 @@ function writeCollection(collectionState: any[] | undefined, action: ReduxFirest
     }
     // Update item in array
     return updateItemInArray(collectionState, meta.doc, item =>
-      mergeObjects(item, action.payload.ordered[0]),
+      mergeObjects(item, (action.payload.ordered as any)[0]),
     );
   }
 
@@ -231,12 +231,12 @@ export default function orderedReducer(state: OrderedState = {}, action: ReduxFi
     return state;
   }
 
+  const storeUnderKey = action.meta.storeAs || action.meta.collection;
   // Return state if action does not contain valid meta
-  if (!action.meta || (!action.meta.storeAs && !action.meta.collection)) {
+  if (!action.meta || !storeUnderKey) {
     return state;
   }
 
-  const storeUnderKey = action.meta.storeAs || action.meta.collection;
   const collectionStateSlice = get(state, storeUnderKey);
   return {
     ...state,

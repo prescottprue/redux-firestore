@@ -216,14 +216,17 @@ export function setListener(firebase: any, dispatch: Dispatch, queryOpts: QueryC
         return;
       }
 
-      // Dispatch each populate action
-      populateActions.forEach((populateAction: Partial<ReduxFirestoreConfig>) => {
-        dispatch({
-          ...populateAction,
-          type: actionTypes.LISTENER_RESPONSE,
-          timestamp: Date.now(),
+      if (populateActions) {
+        // Dispatch each populate action
+        populateActions.forEach((value: any) => {
+          dispatch({
+            ...value,
+            type: actionTypes.LISTENER_RESPONSE,
+            timestamp: Date.now(),
+          });
         });
-      });
+      }
+
       // Dispatch original action
       dispatchListenerResponse({ dispatch, docData, meta, firebase });
     },

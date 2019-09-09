@@ -33,11 +33,11 @@ function addWhereToRef(ref: firebase.firestore.CollectionReference | firebase.fi
     throw new Error('where parameter must be an array with at least there arguments.');
   }
   
-  if (isString(where[0])) {
-    return ref.where(...where)
+  if (Array.isArray(where[0])) {
+    return where.reduce((acc, whereArgs) => addWhereToRef(acc, whereArgs), ref);
   }
-
-  return where.reduce((acc, whereArgs) => addWhereToRef(acc, whereArgs), ref);
+  
+  return ref.where(where[0], where[1], where[2])
 }
 
 /**
@@ -48,19 +48,19 @@ function addWhereToRef(ref: firebase.firestore.CollectionReference | firebase.fi
  * @param {String} [attrName='where'] - Name of attribute
  * @return {firebase.firestore.Reference} Reference with where statement attached
  */
-function addOrderByToRef(ref: firebase.firestore.CollectionReference, orderBy: OrderByConfig): firebase.firestore.Query {
-  if (!isArray(orderBy) && !isString(orderBy)) {
+function addOrderByToRef(ref: firebase.firestore.CollectionReference, orderBy: OrderByConfig | undefined): firebase.firestore.Query {
+  if (!Array.isArray(orderBy) && typeof orderBy !== 'string') {
     throw new Error('orderBy parameter must be an array or string.');
   }
-  if (isString(orderBy)) {
+  if (typeof orderBy === 'string') {
     return ref.orderBy(orderBy);
   }
-  if (isString(orderBy[0])) {
+  if (typeof orderBy[0] === 'string') {
     return ref.orderBy(...orderBy);
   }
   return orderBy.reduce(
     (acc, orderByArgs) => addOrderByToRef(acc, orderByArgs),
-    ref,
+    (ref as any),
   );
 }
 
@@ -74,7 +74,10 @@ function addOrderByToRef(ref: firebase.firestore.CollectionReference, orderBy: O
  * @return {firebase.firestore.Query} Query object referencing path within
  * firestore
  */
-function handleSubcollections(ref: firebase.firestore.DocumentReference | firebase.firestore.CollectionReference | firebase.firestore.Query | any, subcollectionList: QueryConfigObject[] | undefined): firebase.firestore.Query {
+function handleSubcollections(
+  ref: firebase.firestore.DocumentReference | firebase.firestore.CollectionReference | firebase.firestore.Query | any,
+  subcollectionList: QueryConfigObject[] | undefined
+): firebase.firestore.Query {
   if (subcollectionList) {
     forEach(subcollectionList, subcollection => {
       /* eslint-disable no-param-reassign */
@@ -153,12 +156,11 @@ export function firestoreRef(firebase: any, meta: QueryConfigObject): firebase.f
  * @param  {Array} value - Where config array
  * @return {String} String representing where settings for use in query name
  */
-function arrayToStr(key: string, value: string | number | string[][]): string | string[] {
-  if (isString(value) || isNumber(value)) return `${key}=${value}`;
-  if (isString(value[0])) return `${key}=${value.join(':')}`;
+function arrayToStr(key: string, value: string | number | string[]): string {
+  if (typeof value === 'string' || isNumber(value)) return `${key}=${value}`;
+  if (typeof value[0] === 'string') return `${key}=${value.join(':')}`;
   if (value && value.toString) return `${key}=${value.toString()}`;
-
-  return value.map(val => arrayToStr(key, val));
+  return value.map(val => arrayToStr(key, val)).join(':');
 }
 
 /**
@@ -744,7 +746,7 @@ interface GetPopulateActionOptions {
  * @param {Object} opts.meta - Meta data
  * @returns {Promise}
  */
-export async function getPopulateActions(opts: GetPopulateActionOptions): Promise<Partial<ReduxFirestoreAction>[]> {
+export async function getPopulateActions(opts: GetPopulateActionOptions): Promise<(Partial<ReduxFirestoreAction>)[]> {
   const { firebase, docData, meta } = opts
   // Run promises for population
   const [populateErr, populateResults] = await to(

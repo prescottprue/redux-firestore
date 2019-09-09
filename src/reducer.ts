@@ -33,4 +33,4 @@ const combinedReducers = combineReducers({
   composite: (state: any) => state // mock reducer to retain info created by cross slice reducer
 });
 
-export default reduceReducers(combinedReducers, crossSliceReducer);
+export default reduceReducers(combinedReducers, (crossSliceReducer as any));
