@@ -1,8 +1,8 @@
 /* eslint-disable import/prefer-default-export */
 /**
  * Async await wrapper for easy error handling
- * @param  {Promise} promise - Promise to wrap responses of
- * @return {Promise} Resolves and rejects with an array
+ * @param promise - Promise to wrap responses of in array
+ * @returns Resolves and rejects with an array
  */
 export function to<T, U = Error> (
   promise: Promise<T>,

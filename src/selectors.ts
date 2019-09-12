@@ -5,6 +5,7 @@ import { QueryConfig } from './types';
 /**
  * Create state value selector for firestore data by key
  * @param queryConfig - Configuration for query
+ * @returns Data selected from firestore data state
  */
 export function firestoreDataSelector(queryConfig: QueryConfig) {
   return (state: any, getPath: string): any => {
@@ -19,6 +20,7 @@ export function firestoreDataSelector(queryConfig: QueryConfig) {
 /**
  * Create state value selector for firestore ordered data (array)
  * @param queryConfig - Configuration for query
+ * @returns Data selected from firestore ordered state
  */
 export function firestoreOrderedSelector(queryConfig: QueryConfig) {
   return (state: any, getPath: string): any => {

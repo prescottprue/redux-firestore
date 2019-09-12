@@ -5,7 +5,7 @@ import { Dispatch } from 'redux'
 import { firestoreActions } from './actions';
 import { mapWithFirebaseAndDispatch } from './utils/actions';
 import { defaultConfig, methodsToAddFromFirestore } from './constants';
-import { ReduxFirestoreConfig } from './types'
+import { ReduxFirestoreConfig, ExtendedFirestoreInstance } from './types'
 
 let firestoreInstance: any
 
@@ -16,7 +16,11 @@ let firestoreInstance: any
  * @param dispatch - Action dispatch function
  * @return Extended Firebase instance
  */
-export default function createFirestoreInstance(firebase: any, configs: ReduxFirestoreConfig, dispatch: Dispatch): any {
+export default function createFirestoreInstance(
+  firebase: any,
+  configs: ReduxFirestoreConfig,
+  dispatch: Dispatch
+): ExtendedFirestoreInstance {
   // Setup internal variables
   const defaultInternals = {
     // Setup empty listeners object (later used to track listeners)

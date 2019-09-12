@@ -139,7 +139,7 @@ export function update(firebase: any, dispatch: Dispatch, queryOption: any, ...a
  * onAttemptCollectionDelete is provided. This is due to the fact that
  * Collections can not be deleted from a client, it should instead be handled
  * within a cloud function.
- * @param {Object} firebase - Internal firebase object
+ * @param firebase - Internal firebase object
  * @param dispatch - Redux's dispatch function
  * @param queryOption - Options for query
  * @param doc - Document name
@@ -315,12 +315,12 @@ export function setListeners(firebase: any, dispatch: Dispatch, listeners: Query
 /**
  * Unset previously set listener to Cloud Firestore. Listener must have been
  * set with setListener(s) in order to be tracked.
- * @param {Object} firebase - Internal firebase object
- * @param {Function} dispatch - Redux's dispatch function
- * @param {Object} meta - Metadata
+ * @param firebase - Internal firebase object
+ * @param dispatch - Redux's dispatch function
+ * @param meta - Metadata
  * @param meta.collection - Collection name
  * @param meta.doc - Document name
- * @return {Promise} Resolves when listener has been attached **not** when data
+ * @return Resolves when listener has been attached **not** when data
  * has been gathered by the listener.
  */
 export function unsetListener(firebase: any, dispatch: Dispatch, meta: QueryConfigObject): void {
@@ -329,9 +329,9 @@ export function unsetListener(firebase: any, dispatch: Dispatch, meta: QueryConf
 
 /**
  * Unset a list of listeners
- * @param {Object} firebase - Internal firebase object
- * @param {Function} dispatch - Redux's dispatch function
- * @param {Array} listeners - Array of listener configs
+ * @param firebase - Internal firebase object
+ * @param dispatch - Redux's dispatch function
+ * @param listeners - Array of listener configs
  */
 export function unsetListeners(firebase: any, dispatch: Dispatch, listeners: any[]): void {
   if (!isArray(listeners)) {
@@ -362,9 +362,9 @@ export function unsetListeners(firebase: any, dispatch: Dispatch, listeners: any
 
 /**
  * Atomic operation with Firestore (either read or write).
- * @param {Object} firebase - Internal firebase object
- * @param {Function} dispatch - Redux's dispatch function
- * @param  {Function} transactionPromise - Function which runs transaction
+ * @param firebase - Internal firebase object
+ * @param dispatch - Redux's dispatch function
+ * @param transactionPromise - Function which runs transaction
  * operation.
  * @return Resolves with result of transaction operation
  */
