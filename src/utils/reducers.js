@@ -1,17 +1,9 @@
-import {
-  isFunction,
-  isBoolean,
-  isArray,
-  pick,
-  replace,
-  trimStart,
-  flatten,
-} from 'lodash';
+import { isBoolean, pick, replace, trimStart, flatten } from 'lodash';
 
 /**
  * Create a path array from path string
- * @param  {String} path - Path seperated with slashes
- * @return {Array} Path as Array
+ * @param {string} path - Path seperated with slashes
+ * @returns {Array} Path as Array
  * @private
  */
 export function pathToArr(path) {
@@ -20,8 +12,8 @@ export function pathToArr(path) {
 
 /**
  * Trim leading slash from path for use with state
- * @param  {String} path - Path seperated with slashes
- * @return {String} Path seperated with slashes
+ * @param {string} path - Path seperated with slashes
+ * @returns {string} Path seperated with slashes
  * @private
  */
 export function getSlashStrPath(path) {
@@ -30,8 +22,8 @@ export function getSlashStrPath(path) {
 
 /**
  * Convert path with slashes to dot seperated path (for use with lodash get/set)
- * @param  {String} path - Path seperated with slashes
- * @return {String} Path seperated with dots
+ * @param {string} path - Path seperated with slashes
+ * @returns {string} Path seperated with dots
  * @private
  */
 export function getDotStrPath(path) {
@@ -42,9 +34,9 @@ export function getDotStrPath(path) {
  * Combine reducers utility (abreveated version of redux's combineReducer).
  * Turns an object whose values are different reducer functions, into a single
  * reducer function.
- * @param {Object} reducers An object whose values correspond to different
+ * @param {object} reducers An object whose values correspond to different
  * reducer functions that need to be combined into one.
- * @return {Function} A reducer function that invokes every reducer inside the
+ * @returns {Function} A reducer function that invokes every reducer inside the
  * passed object, and builds a state object with the same shape.
  * @private
  */
@@ -61,16 +53,16 @@ export function combineReducers(reducers) {
 /**
  * Get path from meta data. Path is used with lodash's setWith to set deep
  * data within reducers.
- * @param  {Object} meta - Action meta data object
- * @param  {String} meta.collection - Name of Collection for which the action
+ * @param {object} meta - Action meta data object
+ * @param {string} meta.collection - Name of Collection for which the action
  * is to be handled.
- * @param  {String} meta.doc - Name of Document for which the action is to be
+ * @param {string} meta.doc - Name of Document for which the action is to be
  * handled.
- * @param  {Array} meta.subcollections - Subcollections of data
- * @param  {String} meta.storeAs - Another key within redux store that the
+ * @param {Array} meta.subcollections - Subcollections of data
+ * @param {string} meta.storeAs - Another key within redux store that the
  * action associates with (used for storing data under a path different
  * from its collection/document)
- * @return {Array} Array with path segments
+ * @returns {Array} Array with path segments
  * @private
  */
 export function pathFromMeta(meta) {
@@ -108,11 +100,11 @@ export function pathFromMeta(meta) {
 /**
  * Update a single item within an array with support for adding the item if
  * it does not already exist
- * @param  {Array} array - Array within which to update item
- * @param  {String} itemId - Id of item to update
- * @param  {Function} updateItemCallback - Callback dictacting how the item
+ * @param {Array} array - Array within which to update item
+ * @param {string} itemId - Id of item to update
+ * @param {Function} updateItemCallback - Callback dictacting how the item
  * is updated
- * @return {Array} Array with item updated
+ * @returns {Array} Array with item updated
  * @private
  */
 export function updateItemInArray(array, itemId, updateItemCallback) {
@@ -139,9 +131,9 @@ export function updateItemInArray(array, itemId, updateItemCallback) {
  * A function for expressing reducers as an object mapping from action
  * types to handlers (mentioned in redux docs:
  * https://redux.js.org/recipes/reducing-boilerplate#generating-reducers)
- * @param  {Any} initialState - Initial state of reducer
- * @param  {Object} handlers - Mapping of action types to handlers
- * @return {Function} Reducer function which uses each handler only when
+ * @param {any} initialState - Initial state of reducer
+ * @param {object} handlers - Mapping of action types to handlers
+ * @returns {Function} Reducer function which uses each handler only when
  * the action type matches.
  */
 export function createReducer(initialState, handlers) {
@@ -158,11 +150,11 @@ export function createReducer(initialState, handlers) {
 /**
  * Preserve slice of state based on preserve settings for that slice. Settings
  * for support can be any of type `Boolean`, `Function`, or `Array`.
- * @param  {Object} state - slice of redux state to be preserved
- * @param  {Boolean|Function|Array} preserveSetting [description]
- * @param  {Object} nextState - What state would have been set to if preserve
+ * @param {object} state - slice of redux state to be preserved
+ * @param {boolean|Function|Array} preserveSetting [description]
+ * @param {object} nextState - What state would have been set to if preserve
  * was not occuring.
- * @return {Object} Slice of state with values preserved
+ * @returns {object} Slice of state with values preserved
  * @private
  */
 export function preserveValuesFromState(state, preserveSetting, nextState) {
@@ -172,12 +164,12 @@ export function preserveValuesFromState(state, preserveSetting, nextState) {
   }
 
   // Return result of function if preserve is a function
-  if (isFunction(preserveSetting)) {
+  if (typeof preserveSetting === 'function') {
     return preserveSetting(state, nextState);
   }
 
   // Return keys listed within array
-  if (isArray(preserveSetting)) {
+  if (Array.isArray(preserveSetting)) {
     return pick(state, preserveSetting); // pick returns a new object
   }
 

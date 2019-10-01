@@ -6,25 +6,24 @@ let firestoreInstance;
 /**
  * @name reduxFirestore
  * @external
- * @description Redux store enhancer that accepts configuration options and adds
+ * Redux store enhancer that accepts configuration options and adds
  * store.firestore. Enhancers are most commonly placed in redux's `compose` call
  * along side applyMiddleware.
- * @param {Object} firebaseInstance - Initiated firebase instance
- * @param {Object} otherConfig - Containing react-redux-firebase specific configuration
- * @return {Function} That accepts a component and returns a Component which
+ * @param {object} firebaseInstance - Initiated firebase instance
+ * @param {object} otherConfig - Containing react-redux-firebase specific configuration
+ * @returns {Function} That accepts a component and returns a Component which
  * wraps the provided component (higher order component).
- * @return {Function} That enhances a redux store with store.firestore
  * @example <caption>Setup</caption>
  * import { createStore, compose } from 'redux'
  * import { reduxFirestore } from 'redux-firestore'
  * import firebase from 'firebase' // must be 4.5.0 or higher
  import 'firebase/firestore' // make sure you add this for firestore
-
+ 
  * // Redux Firestore Config
  * const config = {
  *   // here is where you place other config options
  * }
-
+ 
  * // initialize script from Firestore page
  * const fbConfg = {} // firebase config object
  * firebase.initializeApp(fbConfig)
@@ -64,9 +63,9 @@ export default function reduxFirestore(firebaseInstance, otherConfig) {
 }
 
 /**
- * @description Expose Firestore instance created internally. Useful for
+ * Expose Firestore instance created internally. Useful for
  * integrations into external libraries such as redux-thunk and redux-observable.
- * @return {Object} Firebase Instance
+ * @returns {object} Firebase Instance
  * @example <caption>redux-thunk integration</caption>
  * import { applyMiddleware, compose, createStore } from 'redux';
  * import thunk from 'redux-thunk';
@@ -98,7 +97,7 @@ export default function reduxFirestore(firebaseInstance, otherConfig) {
  * };
  *
  */
-export const getFirestore = () => {
+export function getFirestore() {
   // TODO: Handle recieveing config and creating firebase instance if it doesn't exist
   /* istanbul ignore next: Firebase instance always exists during tests */
   if (!firestoreInstance) {
@@ -108,4 +107,4 @@ export const getFirestore = () => {
   }
   // TODO: Create new firebase here with config passed in
   return firestoreInstance;
-};
+}

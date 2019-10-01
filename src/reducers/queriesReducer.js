@@ -9,11 +9,11 @@ export const isComposable = action =>
   get(action, 'meta.where') && get(action, 'meta.collection');
 
 /**
- *
- * @param  {Object} [state={}] - Current listenersById redux state
- * @param  {Object} action - Object containing the action that was dispatched
- * @param  {String} action.type - Type of action that was dispatched
- * @return {Object}
+ * Reducer for queries state
+ * @param {object} [state={}] - Current listenersById redux state
+ * @param {object} action - Object containing the action that was dispatched
+ * @param {string} action.type - Type of action that was dispatched
+ * @returns {object} Queries state
  */
 export default function queriesReducer(state = {}, action) {
   return produce(state, draft => {
