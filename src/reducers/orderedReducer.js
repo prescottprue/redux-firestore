@@ -1,5 +1,5 @@
 import { size, get, unionBy, reject, omit, map, keyBy, isEqual } from 'lodash';
-import { merge as mergeObjects, assign as assignObjects } from 'lodash/fp';
+import { merge as mergeObjects } from 'lodash/fp';
 import { actionTypes } from '../constants';
 import {
   updateItemInArray,
