@@ -116,6 +116,29 @@ describe('orderedReducer', () => {
           someDoc.some,
         );
       });
+
+      it('removes deleted value from existing document - #243', () => {
+        const collection = 'test1';
+        const doc = 'test2';
+        const originalDoc = { id: doc, some: 'value', another: 'value' };
+        const newDoc = { id: doc, some: 'value' };
+        const newIndex = 0;
+        const oldIndex = -1;
+        const payload = {
+          ordered: { newIndex, oldIndex },
+          data: newDoc,
+        };
+        const meta = { collection, doc };
+        action = { meta, payload, type: actionTypes.DOCUMENT_MODIFIED };
+        const fakeState = {
+          [collection]: [originalDoc, { id: 'id2' }],
+        };
+        const result = orderedReducer(fakeState, action);
+        // Value is set to new item index
+        expect(result).to.not.have.nested.property(
+          `${collection}.${newIndex}.another`,
+        );
+      });
     });
 
     describe('DOCUMENT_REMOVED', () => {

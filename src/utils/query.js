@@ -236,6 +236,11 @@ export function getQueryName(meta) {
     basePath = basePath.concat(`/${doc}`);
   }
   if (collection && subcollections) {
+    /* eslint-disable no-console */
+    console.error(
+      'Queries with subcollections must use "storeAs" to prevent invalid store updates. This closley matches the upcoming major release (v1), which stores subcollections at the top level by default.',
+    );
+    /* eslint-enable no-console */
     const mappedCollections = subcollections.map(subcollection =>
       getQueryName(subcollection),
     );
