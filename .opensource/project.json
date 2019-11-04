@@ -1,0 +1,16 @@
+{
+  "name": "redux-firestore",
+  "platforms": [
+    "Web"
+  ],
+  "content": "README.md",
+  "related": [
+    "prescottprue/react-redux-firebase",
+    "facebook/react",
+    "reduxjs/redux"
+  ],
+  "tabs": [
+    "https://github.com/prescottprue/react-redux-firebase",
+    "https://github.com/prescottprue/redux-firestore"
+  ]
+}
