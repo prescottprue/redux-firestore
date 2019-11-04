@@ -1,16 +1,18 @@
 {
   "name": "redux-firestore",
   "platforms": [
-    "Web"
+    "Web",
+    "iOS",
+    "Android"
   ],
   "content": "README.md",
   "related": [
     "prescottprue/react-redux-firebase",
-    "facebook/react",
-    "reduxjs/redux"
+    "prescottprue/generator-react-firebase",
+    "invertase/react-native-firebase"
   ],
   "tabs": [
-    "https://github.com/prescottprue/react-redux-firebase",
-    "https://github.com/prescottprue/redux-firestore"
+    { "title": "NPM", "href": "https://npmjs.com/package/redux-firestore" },
+    { "title": "API Reference", "href": "https://github.com/prescottprue/redux-firestore/blob/master/README.md" }
   ]
 }
