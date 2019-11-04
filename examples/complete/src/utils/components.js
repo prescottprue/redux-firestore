@@ -1,20 +1,19 @@
-/* eslint-disable no-console */
-import React, { Component } from 'react'
-import PropTypes from 'prop-types'
-import { pick, some } from 'lodash'
-import { isLoaded } from 'react-redux-firebase'
+import React from 'react'
+import { get } from 'lodash'
+import { isLoaded, isEmpty } from 'react-redux-firebase/lib/helpers'
 import LoadableComponent from 'react-loadable'
-import { mapProps, branch, renderComponent } from 'recompose'
+import { branch, renderComponent } from 'recompose'
 import LoadingSpinner from 'components/LoadingSpinner'
 
 /**
  * Show a loading spinner when a condition is truthy. Used within
  * spinnerWhileLoading. Accepts a test function and a higher-order component.
- * @param  {Function} condition - Condition function for when to show spinner
- * @return {HigherOrderComponent}
+ * @param {Function} condition - Condition function for when to show spinner
+ * @returns {HigherOrderComponent}
  */
-export const spinnerWhile = condition =>
-  branch(condition, renderComponent(LoadingSpinner))
+export function spinnerWhile(condition) {
+  return branch(condition, renderComponent(LoadingSpinner))
+}
 
 /**
  * Show a loading spinner while props are loading . Checks
@@ -22,87 +21,114 @@ export const spinnerWhile = condition =>
  * `profile.isLoaded`). **NOTE:** Meant to be used with props which are passed
  * as props from state.firebase using connect (from react-redux), which means
  * it could have unexpected results for other props
- * @example Spinner While Data Loading
+ * @param {Array} propNames - List of prop names to check loading for
+ * @returns {HigherOrderComponent}
+ * @example <caption>Spinner While Data Loading</caption>
  * import { compose } from 'redux'
  * import { connect } from 'react-redux'
- * import { firebaseConnect } from 'react-redux-firebase'
+ * import firebaseConnect from 'react-redux-firebase/lib/firebaseConnect'
  *
  * const enhance = compose(
- *   firebaseConnect(['projects']),
- *   connect(({ firebase: { data: { projects } } })),
+ *   firebaseConnect(() => ['projects']),
+ *   connect(({ firebase: { data: { projects } } }) => ({ projects })),
  *   spinnerWhileLoading(['projects'])
  * )
  *
  * export default enhance(SomeComponent)
- * @param  {Array} propNames - List of prop names to check loading for
- * @return {HigherOrderComponent}
  */
-export const spinnerWhileLoading = propNames =>
-  spinnerWhile(props => some(propNames, name => !isLoaded(props[name])))
-
-/**
- * HOC that logs props using console.log. Accepts an array list of prop names
- * to log, if none provided all props are logged. **NOTE:** Only props at
- * available to the HOC will be logged.
- * @example Log Single Prop
- * import { compose } from 'redux'
- * import { connect } from 'react-redux'
- * import { firebaseConnect } from 'react-redux-firebase'
- *
- * const enhance = compose(
- *   withProps(() => ({ projectName: 'test' })),
- *   logProps(['projectName']) // 'test' would be logged to console when SomeComponent is rendered
- * )
- *
- * export default enhance(SomeComponent)
- * @param  {Array} propNames - List of prop names to log. If none provided, all
- * are logged
- * @return {HigherOrderComponent}
- */
-export const logProps = (propNames, logName = '') =>
-  mapProps(ownerProps => {
-    console.log(
-      `${logName} props:`,
-      propNames ? pick(ownerProps, propNames) : ownerProps
-    )
-    return ownerProps
-  })
-
-export function createWithFromContext(withVar) {
-  return WrappedComponent => {
-    class WithFromContext extends Component {
-      render() {
-        const props = { [withVar]: this.context[withVar] }
-        if (this.context.store && this.context.store.dispatch) {
-          props.dispatch = this.context.store.dispatch
-        }
-        return <WrappedComponent {...this.props} {...props} />
-      }
-    }
-
-    WithFromContext.contextTypes = {
-      [withVar]: PropTypes.object.isRequired
-    }
-
-    return WithFromContext
+export function spinnerWhileLoading(propNames) {
+  if (!propNames || !Array.isArray(propNames)) {
+    const missingPropNamesErrMsg =
+      'spinnerWhileLoading requires propNames array'
+    console.error(missingPropNamesErrMsg) // eslint-disable-line no-console
+    throw new Error(missingPropNamesErrMsg)
   }
+  return spinnerWhile(props =>
+    propNames.some(name => !isLoaded(get(props, name)))
+  )
 }
 
 /**
- * HOC that adds store to props
- * @return {HigherOrderComponent}
+ * HOC that shows a component while condition is true
+ * @param {Function} condition - function which returns a boolean indicating
+ * whether to render the provided component or not
+ * @param {React.Component} component - React component to render if condition
+ * is true
+ * @returns {HigherOrderComponent}
  */
-export const withStore = createWithFromContext('store')
+export function renderWhile(condition, component) {
+  return branch(condition, renderComponent(component))
+}
+
+/**
+ * HOC that shows a component while any of a list of props loaded from Firebase
+ * is empty (uses react-redux-firebase's isEmpty).
+ * @param {Array} propNames - List of prop names to check loading for
+ * @param {React.Component} component - React component to render if prop loaded
+ * from Firebase is empty
+ * @returns {HigherOrderComponent}
+ * @example
+ * renderWhileEmpty(['todos'], () => <div>Todos Not Found</div>),
+ */
+export function renderWhileEmpty(propNames, component) {
+  if (!propNames || !Array.isArray(propNames)) {
+    const missingPropNamesErrMsg = 'renderWhileEmpty requires propNames array'
+    console.error(missingPropNamesErrMsg) // eslint-disable-line no-console
+    throw new Error(missingPropNamesErrMsg)
+  }
+  return renderWhile(
+    // Any of the listed prop name correspond to empty props (supporting dot path names)
+    props =>
+      propNames.some(propNames, name => {
+        const propValue = get(props, name)
+        return (
+          isLoaded(propValue) &&
+          (isEmpty(propValue) ||
+            (Array.isArray(propValue) && !Object.keys(propValue).length))
+        )
+      }),
+    component
+  )
+}
 
 /**
  * Create component which is loaded async, showing a loading spinner
  * in the meantime.
- * @param {Object} opts - Loading options
+ * @param {object} opts - Loading options
  * @param {Function} opts.loader - Loader function (should return import promise)
+ * @returns {React.Component}
  */
 export function Loadable(opts) {
   return LoadableComponent({
     loading: LoadingSpinner,
     ...opts
   })
+}
+
+export class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = { hasError: false }
+  }
+
+  static getDerivedStateFromError(error) {
+    // Update state so the next render will show the fallback UI.
+    return { hasError: true }
+  }
+
+  componentDidCatch(error, errorInfo) {
+    // You can also log the error to an error reporting service
+    // logErrorToMyService(error, errorInfo);
+    // TODO: Report error to sentry
+    console.log('error:', error, errorInfo) // eslint-disable-line no-console
+  }
+
+  render() {
+    if (this.state.hasError) {
+      // You can render any custom fallback UI
+      return <h1>Something went wrong.</h1>
+    }
+
+    return this.props.children
+  }
 }

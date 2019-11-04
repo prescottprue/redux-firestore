@@ -4,7 +4,7 @@
  * This is done so that environment specific settings can be applied.
  */
 
-export const env = 'local'
+export const env = 'dev'
 
 // Config for firebase
 export const firebase = {
