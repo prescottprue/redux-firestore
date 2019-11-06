@@ -1,15 +1,14 @@
 /* eslint-disable guard-for-in, no-restricted-syntax, no-param-reassign */
-
 import produce from 'immer';
-import { values, groupBy, merge, set, get, keys } from 'lodash';
+import { groupBy, merge, set, get } from 'lodash';
 import { actionTypes } from '../constants';
 
 /**
  * Reducer for crossSlice state
- * @param  {Object} [state={}] - Current ordered redux state
- * @param  {Object} action - The action that was dispatched
- * @param  {String} action.type - Type of action that was dispatched
- * @return {Object}
+ * @param  {object} [state={}] - Current ordered redux state
+ * @param  {object} action - The action that was dispatched
+ * @param  {string} action.type - Type of action that was dispatched
+ * @returns {object} Cross slice state
  */
 export default function crossSliceReducer(state = {}, action) {
   return produce(state, draft => {
@@ -21,11 +20,11 @@ export default function crossSliceReducer(state = {}, action) {
       case actionTypes.UNSET_LISTENER:
         // Take all of the query values and plop them into composite, replacing the existing data entirely
         const groups = groupBy(
-          values(state.queries),
+          (!!state.queries && Object.values(state.queries)) || [],
           c => c.storeAs || c.collection,
         );
 
-        keys(groups).forEach(storeAs => {
+        Object.keys(groups).forEach(storeAs => {
           const updated = {};
           groups[storeAs].forEach(item =>
             merge(updated, get(item, 'data', {})),

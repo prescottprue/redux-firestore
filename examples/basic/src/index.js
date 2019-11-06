@@ -12,14 +12,16 @@ const styles = {
 
 const store = createStore()
 
-const App = () => (
-  <Provider store={store}>
-    <div style={styles}>
-      <h2>Start editing to see some magic happen {'\u2728'}</h2>
-      <Todos />
-    </div>
-  </Provider>
-);
+function App() {
+  return (
+    <Provider store={store}>
+      <div style={styles}>
+        <h2>Start editing to see some magic happen {'\u2728'}</h2>
+        <Todos />
+      </div>
+    </Provider>
+  );
+}
 
 render(<App />, document.getElementById('root'));
 

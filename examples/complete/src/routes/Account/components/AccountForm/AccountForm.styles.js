@@ -6,6 +6,7 @@ export default theme => ({
     height: '100%'
   },
   fields: {
-    width: '60%'
+    width: '100%',
+    marginBottom: '2rem'
   }
 })

@@ -389,6 +389,25 @@ describe('query utils', () => {
       });
     });
 
+    describe('collectionGroup', () => {
+      it('throws if collection and collectionGroup are both provided', () => {
+        const queryMeta = { collectionGroup: 'test', collection: 'other' };
+        expect(() => firestoreRef(fakeFirebase, queryMeta)).to.Throw(
+          'Reference cannot contain both Collection and CollectionGroup.',
+        );
+      });
+
+      it('calls collectionGroup', () => {
+        const queryMeta = { collectionGroup: 'test' };
+        const collectionGroupSpy = sinon.spy();
+        fakeFirebase = {
+          firestore: () => ({ collectionGroup: collectionGroupSpy }),
+        };
+        firestoreRef(fakeFirebase, queryMeta);
+        expect(collectionGroupSpy).to.be.calledWith(queryMeta.collectionGroup);
+      });
+    });
+
     describe('subcollections', () => {
       it('throws if trying to get doc not provided', () => {
         const subcollection = 'thing';

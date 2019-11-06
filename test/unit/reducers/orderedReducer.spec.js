@@ -116,6 +116,43 @@ describe('orderedReducer', () => {
           someDoc.some,
         );
       });
+
+      it('removes deleted value from existing document (including in an array) - #243', () => {
+        const collection = 'test1';
+        const doc = 'test2';
+        const originalDoc = {
+          id: doc,
+          some: 'value',
+          another: ['item1', 'item2'],
+        };
+        const newDoc = { id: doc, some: 'value', another: ['item1'] };
+        const newIndex = 0;
+        const oldIndex = -1;
+        const payload = {
+          ordered: { newIndex, oldIndex },
+          data: newDoc,
+        };
+        const meta = { collection, doc };
+        action = { meta, payload, type: actionTypes.DOCUMENT_MODIFIED };
+        const fakeState = {
+          [collection]: [originalDoc, { id: 'id2' }],
+        };
+        const result = orderedReducer(fakeState, action);
+        // Confirm that original parameter is removed
+        expect(result).to.not.have.nested.property(
+          `${collection}.${newIndex}.another.1`,
+        );
+        // Confirm that other item in array remains
+        expect(result).to.have.nested.property(
+          `${collection}.${newIndex}.another.0`,
+          originalDoc.another[0],
+        );
+        // Confirm that unchanged value is preserved
+        expect(result).to.have.nested.property(
+          `${collection}.${newIndex}.some`,
+          originalDoc.some,
+        );
+      });
     });
 
     describe('DOCUMENT_REMOVED', () => {
