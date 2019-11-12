@@ -4,14 +4,15 @@ import { wrapInDispatch } from '../utils/actions';
 import { actionTypes } from '../constants';
 import {
   attachListener,
-  detachListener,
-  orderedFromSnap,
   dataByIdSnapshot,
+  detachListener,
+  dispatchListenerResponse,
+  firestoreRef,
+  getPopulateActions,
   getQueryConfig,
   getQueryName,
-  firestoreRef,
-  dispatchListenerResponse,
-  getPopulateActions,
+  orderedFromSnap,
+  snapshotCache,
 } from '../utils/query';
 
 const pathListenerCounts = {};
@@ -34,7 +35,11 @@ export function add(firebase, dispatch, queryOption, ...args) {
       actionTypes.ADD_REQUEST,
       {
         type: actionTypes.ADD_SUCCESS,
-        payload: snap => ({ id: snap.id, data: args[0] }),
+        payload: snap => {
+          const obj = { id: snap.id, data: args[0] };
+          snapshotCache.set(obj, snap);
+          return obj;
+        },
       },
       actionTypes.ADD_FAILURE,
     ],
