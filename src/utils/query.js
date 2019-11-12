@@ -460,18 +460,18 @@ export function orderedFromSnap(snap) {
     const obj = isObject(snap.data())
       ? { id: snap.id, ...(snap.data() || snap.data) }
       : { id: snap.id, data: snap.data() };
-    snapshotCache.add(obj, snap);
+    snapshotCache.set(obj, snap);
     ordered.push(obj);
   } else if (snap.forEach) {
     snap.forEach(doc => {
       const obj = isObject(doc.data())
         ? { id: doc.id, ...(doc.data() || doc.data) }
         : { id: doc.id, data: doc.data() };
-      snapshotCache.add(obj, snap);
+      snapshotCache.set(obj, snap);
       ordered.push(obj);
     });
   }
-  snapshotCache.add(ordered, snap);
+  snapshotCache.set(ordered, snap);
   return ordered;
 }
 
@@ -486,18 +486,18 @@ export function dataByIdSnapshot(snap) {
   if (snap.data) {
     const snapData = snap.exists ? snap.data() : null;
     if (snapData) {
-      snapshotCache.add(snapData, snap);
+      snapshotCache.set(snapData, snap);
     }
     data[snap.id] = snapData;
   } else if (snap.forEach) {
     snap.forEach(doc => {
       const snapData = doc.data() || doc;
-      snapshotCache.add(snapData, snap);
+      snapshotCache.set(snapData, snap);
       data[doc.id] = snapData;
     });
   }
   if (!!data && Object.keys(data).length) {
-    snapshotCache.add(data, snap);
+    snapshotCache.set(data, snap);
     return data;
   }
   return null;
