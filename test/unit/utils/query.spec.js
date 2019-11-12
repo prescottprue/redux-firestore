@@ -6,6 +6,7 @@ import {
   firestoreRef,
   orderedFromSnap,
   dataByIdSnapshot,
+  getSnapshotByObject,
 } from 'utils/query';
 import { actionTypes } from 'constants';
 
@@ -811,14 +812,14 @@ describe('query utils', () => {
   describe('dataByIdSnapshot', () => {
     it('sets data by id if valid', () => {
       const id = 'someId';
-      const fakeData = 'some';
+      const fakeData = { some: 'thing' };
       result = dataByIdSnapshot({ id, data: () => fakeData, exists: true });
       expect(result).to.have.property(id, fakeData);
     });
 
     it('supports collection data', () => {
       const id = 'someId';
-      const fakeData = 'some';
+      const fakeData = { some: 'thing' };
       result = dataByIdSnapshot({
         forEach: func => func({ data: () => fakeData, id }),
       });
@@ -839,6 +840,44 @@ describe('query utils', () => {
       result = dataByIdSnapshot({ id, exists, data });
       expect(result).to.be.an('object');
       expect(result).to.have.property(id, null);
+    });
+  });
+
+  describe('dataByIdSnapshot', () => {
+    it('retrieve snapshot with data from data state ', () => {
+      const id = 'someId';
+      const fakeData = { some: 'thing' };
+      const fakeSnap = { id, data: () => fakeData, exists: true };
+      result = dataByIdSnapshot(fakeSnap);
+      expect(getSnapshotByObject(result)).to.equal(fakeSnap);
+    });
+
+    it('retrieve snapshot with data from data collection state ', () => {
+      const id = 'someId';
+      const fakeData = { some: 'thing' };
+      const fakeDocSnap = { id, data: () => fakeData, exists: true };
+      const docArray = [fakeDocSnap];
+      const fakeSnap = { forEach: docArray.forEach.bind(docArray) };
+      result = dataByIdSnapshot(fakeSnap);
+      expect(getSnapshotByObject(result)).to.equal(fakeSnap);
+    });
+
+    it('retrieve snapshot with data from ordered state', () => {
+      const id = 'someId';
+      const fakeData = { some: 'thing' };
+      const fakeSnap = { id, data: () => fakeData, exists: true };
+      result = orderedFromSnap(fakeSnap);
+      expect(getSnapshotByObject(result)).to.equal(fakeSnap);
+    });
+
+    it('retrieve snapshot with data from ordered collection state ', () => {
+      const id = 'someId';
+      const fakeData = { some: 'thing' };
+      const fakeDocSnap = { id, data: () => fakeData, exists: true };
+      const docArray = [fakeDocSnap];
+      const fakeSnap = { forEach: docArray.forEach.bind(docArray) };
+      result = orderedFromSnap(fakeSnap);
+      expect(getSnapshotByObject(result)).to.equal(fakeSnap);
     });
   });
 });
