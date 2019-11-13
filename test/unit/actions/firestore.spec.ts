@@ -1,7 +1,9 @@
-import createFirestoreInstance from 'createFirestoreInstance';
-import { firestoreActions } from 'actions';
-import { setListeners } from 'actions/firestore';
-import { actionTypes, defaultConfig } from 'constants';
+import sinon from 'sinon'
+import { expect } from 'chai';
+import createFirestoreInstance from '../../../src/createFirestoreInstance';
+import { firestoreActions } from '../../../src/actions';
+import { setListeners } from '../../../src/actions/firestore';
+import { actionTypes, defaultConfig } from '../../../src/constants';
 
 let dispatchSpy;
 let fakeFirebase;

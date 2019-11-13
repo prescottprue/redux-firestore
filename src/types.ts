@@ -13,8 +13,8 @@ import {
 } from './actions/firestore'
 
 export interface PreserveSettingObject {
-  data: PreserveSetting
-  ordered: PreserveSetting
+  data?: PreserveSetting
+  ordered?: PreserveSetting
 }
 
 export type PreserveSetting = boolean | string[] | any // TODO: support function (state: any, nextState: any) => any

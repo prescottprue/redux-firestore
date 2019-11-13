@@ -1,5 +1,6 @@
-import statusReducer from 'reducers/statusReducer';
-import { actionTypes } from 'constants';
+import { expect } from 'chai';
+import statusReducer from '../../../src/reducers/statusReducer';
+import { actionTypes } from '../../../src/constants';
 
 const state = {};
 let collection = 'test'; // eslint-disable-line prefer-const

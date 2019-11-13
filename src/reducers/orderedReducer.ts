@@ -207,11 +207,14 @@ const orderedCollectionReducer = createReducer(undefined, actionHandlers);
  * @param meta.doc - Name of Document which the action
  * associates with
  */
-function removeLastDocFromMeta(meta: any): any {
+function removeLastDocFromMeta(meta: ActionMeta): any {
   if (!meta.subcollections) {
     return { ...meta, doc: undefined };
   }
   const lastSubcollection = last(meta.subcollections);
+  if (!lastSubcollection) {
+    return meta
+  }
   const modifiedSubcollections = [
     ...dropRight(meta.subcollections),
     { ...lastSubcollection, doc: undefined },

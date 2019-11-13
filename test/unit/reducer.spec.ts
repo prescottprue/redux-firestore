@@ -1,4 +1,5 @@
-import reducer from 'reducer';
+import { expect } from 'chai';
+import reducer from '../../../src/reducer';
 
 describe('reducer', () => {
   it('is exported', () => {

@@ -303,15 +303,11 @@ declare module "actions/firestore" {
 declare module "actions/index" {
     import * as firestoreActions from "actions/firestore";
     export { firestoreActions };
-    const _default_1: {
-        firestoreActions: typeof firestoreActions;
-    };
-    export default _default_1;
 }
 declare module "createFirestoreInstance" {
     import { Dispatch } from 'redux';
-    import { ReduxFirestoreConfig } from "types";
-    export default function createFirestoreInstance(firebase: any, configs: ReduxFirestoreConfig, dispatch: Dispatch): any;
+    import { ReduxFirestoreConfig, ExtendedFirestoreInstance } from "types";
+    export default function createFirestoreInstance(firebase: any, configs: ReduxFirestoreConfig, dispatch: Dispatch): ExtendedFirestoreInstance;
     export function getFirestore(): any;
 }
 declare module "utils/reducers" {
@@ -340,7 +336,7 @@ declare module "reducers/errorsReducer" {
     }
     const errorsReducer: import("redux").Reducer<{
         byQuery: ErrorsByQueryState;
-        allIds: string[];
+        allIds: AllErrorIdsState;
     }, AnyAction>;
     export default errorsReducer;
 }
@@ -355,7 +351,7 @@ declare module "reducers/listenersReducer" {
     }
     const listenersReducer: import("redux").Reducer<{
         byId: ListenersByIdState;
-        allIds: (string | undefined)[];
+        allIds: AllListenerIdsState;
     }, import("redux").AnyAction>;
     export default listenersReducer;
 }
@@ -369,12 +365,12 @@ declare module "reducers/statusReducer" {
     export function requestingReducer(state: RequestingState | undefined, action: ReduxFirestoreAction): RequestingState;
     export function requestedReducer(state: RequestedState | undefined, action: ReduxFirestoreAction): RequestedState;
     export function timestampsReducer(state: {} | undefined, action: ReduxFirestoreAction): TimestampsState;
-    const _default_2: import("redux").Reducer<{
+    const _default_1: import("redux").Reducer<{
         requesting: RequestingState;
         requested: RequestedState;
         timestamps: TimestampsState;
     }, import("redux").AnyAction>;
-    export default _default_2;
+    export default _default_1;
 }
 declare module "reducers/queriesReducer" {
     import { ReduxFirestoreAction } from "types";
@@ -403,7 +399,7 @@ declare module "reducers/index" {
     import queriesReducer from "reducers/queriesReducer";
     import crossSliceReducer from "reducers/crossSliceReducer";
     export { dataReducer, errorsReducer, listenersReducer, orderedReducer, statusReducer, queriesReducer, crossSliceReducer, };
-    const _default_3: {
+    const _default_2: {
         dataReducer: typeof dataReducer;
         errorsReducer: import("redux").Reducer<{
             byQuery: import("reducers/errorsReducer").ErrorsByQueryState;
@@ -422,10 +418,10 @@ declare module "reducers/index" {
         queriesReducer: typeof queriesReducer;
         crossSliceReducer: typeof crossSliceReducer;
     };
-    export default _default_3;
+    export default _default_2;
 }
 declare module "reducer" {
-    const _default_4: import("reduce-reducers").Reducer<import("redux").Reducer<{
+    const _default_3: import("reduce-reducers").Reducer<import("redux").Reducer<{
         status: {
             requesting: any;
             requested: any;
@@ -444,7 +440,7 @@ declare module "reducer" {
         queries: import("reducers/queriesReducer").QueriesState;
         composite: any;
     }, import("redux").AnyAction>>;
-    export default _default_4;
+    export default _default_3;
 }
 declare module "middleware" {
     import { Store } from 'redux';
@@ -466,7 +462,7 @@ declare module "index" {
     import { firestoreOrderedSelector, firestoreDataSelector } from "selectors";
     export const version: string | undefined;
     export { reducer, reducer as firestoreReducer, createFirestoreInstance, firestoreActions as actions, getQueryName, firestoreOrderedSelector, firestoreDataSelector, getFirestore, constants, actionTypes, middleware, CALL_FIRESTORE };
-    const _default_5: {
+    const _default_4: {
         version: string | undefined;
         reducer: import("reduce-reducers").Reducer<import("redux").Reducer<{
             status: {
@@ -599,5 +595,5 @@ declare module "index" {
         middleware: typeof middleware;
         CALL_FIRESTORE: string;
     };
-    export default _default_5;
+    export default _default_4;
 }

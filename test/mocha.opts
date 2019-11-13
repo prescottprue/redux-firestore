@@ -1,5 +1,4 @@
---require @babel/register
---require ./test/setup
+--require ./test/setup.ts
 --recursive
 --colors
 --report lcov

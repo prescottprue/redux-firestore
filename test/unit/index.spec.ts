@@ -1,3 +1,4 @@
+import { expect } from 'chai';
 import src from '../../src';
 
 describe('module', () => {

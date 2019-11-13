@@ -1,5 +1,6 @@
-import reducer from 'reducer';
-import { actionTypes } from 'constants';
+import { expect } from 'chai';
+import reducer from '../../../src/reducer';
+import { actionTypes } from '../../../src/constants';
 
 const initialState = {
   data: { testStoreAs: { obsoleteDocId: {} } },

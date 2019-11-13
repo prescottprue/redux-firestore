@@ -1,6 +1,7 @@
 import { keyBy, get } from 'lodash';
-import orderedReducer from 'reducers/orderedReducer';
-import { actionTypes } from 'constants';
+import { expect } from 'chai';
+import orderedReducer from '../../../src/reducers/orderedReducer';
+import { actionTypes } from '../../../src/constants';
 
 let action;
 let state;

@@ -1,10 +1,10 @@
-import dataReducer from 'reducers/dataReducer';
-import { actionTypes } from 'constants';
+import { expect } from 'chai';
+import dataReducer from '../../../src/reducers/dataReducer';
+import { actionTypes } from '../../../src/constants';
 
 const state = {};
 let collection = 'test'; // eslint-disable-line prefer-const
 const doc = 'thing';
-let action = {};
 let payload = {};
 let meta = {};
 let result;
@@ -22,16 +22,18 @@ describe('dataReducer', () => {
   });
 
   it('returns state for undefined actionType', () => {
-    expect(dataReducer({}, {})).to.be.empty;
+    expect(dataReducer({}, { type: 'asdf', meta: {}, payload: { data: {} } })).to.be.empty;
   });
 
   describe('actionTypes', () => {
     describe('DOCUMENT_ADDED', () => {
       it('throws for no collection', () => {
         const someDoc = {};
-        payload = { data: { abc: someDoc } };
-        meta = {};
-        action = { meta, payload, type: actionTypes.DOCUMENT_ADDED };
+        const action = {
+          meta: {},
+          payload: { data: { abc: someDoc } },
+          type: actionTypes.DOCUMENT_ADDED
+        };
         expect(() => dataReducer({}, action)).to.throw(
           'Collection is required to build query name',
         );
@@ -40,27 +42,27 @@ describe('dataReducer', () => {
 
     describe('LISTENER_RESPONSE', () => {
       it('returns state if payload is not defined', () => {
-        action = { meta: 'test', type: actionTypes.LISTENER_RESPONSE };
+        const action = { meta: 'test', type: actionTypes.LISTENER_RESPONSE };
         expect(dataReducer(state, action)).to.equal(state);
       });
 
       it('returns state if payload does not contain data', () => {
         payload = {};
-        action = { meta: {}, payload, type: actionTypes.LISTENER_RESPONSE };
+        const action = { meta: {}, payload, type: actionTypes.LISTENER_RESPONSE };
         expect(dataReducer(state, action)).to.equal(state);
       });
 
       it('updates collection', () => {
         payload = { data: { abc: { field: 'test' } } };
         meta = { collection };
-        action = { meta, payload, type: actionTypes.LISTENER_RESPONSE };
+        const action = { meta, payload, type: actionTypes.LISTENER_RESPONSE };
         expect(dataReducer(state, action).test.abc.field).to.equal('test');
       });
 
       it('throws for no collection', () => {
         payload = { data: { abc: {} } };
         meta = {};
-        action = { meta, payload, type: actionTypes.LISTENER_RESPONSE };
+        const action = { meta, payload, type: actionTypes.LISTENER_RESPONSE };
         expect(() => dataReducer(state, action)).to.throw(
           'Collection is required to build query name',
         );
@@ -76,7 +78,7 @@ describe('dataReducer', () => {
         const existingState = {
           [collection]: { [doc]: { originalData: { some: { val: 'test' } } } },
         };
-        action = {
+        const action = {
           meta,
           payload,
           type: actionTypes.LISTENER_RESPONSE,
@@ -106,7 +108,7 @@ describe('dataReducer', () => {
             doc: 'someDoc',
             subcollections: [subcollection],
           };
-          action = { meta, payload, type: actionTypes.LISTENER_RESPONSE };
+          const action = { meta, payload, type: actionTypes.LISTENER_RESPONSE };
           result = dataReducer(state, action);
           expect(
             result[`test/someDoc/${subcollection.collection}`],
@@ -128,7 +130,7 @@ describe('dataReducer', () => {
           const existingState = {
             [subcollectionPath]: { original: 'data' },
           };
-          action = { meta, payload, type: actionTypes.LISTENER_RESPONSE };
+          const action = { meta, payload, type: actionTypes.LISTENER_RESPONSE };
           result = dataReducer(existingState, action);
           expect(result[subcollectionPath]).to.have.nested.property(
             `${subcollection.doc}.field`,
@@ -156,7 +158,7 @@ describe('dataReducer', () => {
               [subcollection2.doc]: { original: 'data' },
             },
           };
-          action = { meta, payload, type: actionTypes.LISTENER_RESPONSE };
+          const action = { meta, payload, type: actionTypes.LISTENER_RESPONSE };
           result = dataReducer(existingState, action);
           expect(result[subPath]).to.have.nested.property(
             `${subcollection2.doc}.field`,
@@ -168,27 +170,27 @@ describe('dataReducer', () => {
 
     describe('GET_SUCCESS', () => {
       it('returns state if payload is not defined', () => {
-        action = { meta: 'test', type: actionTypes.GET_SUCCESS };
+        const action = { meta: 'test', type: actionTypes.GET_SUCCESS };
         expect(dataReducer(state, action)).to.equal(state);
       });
 
       it('returns state if payload does not contain data', () => {
         payload = {};
-        action = { meta: {}, payload, type: actionTypes.GET_SUCCESS };
+        const action = { meta: {}, payload, type: actionTypes.GET_SUCCESS };
         expect(dataReducer(state, action)).to.equal(state);
       });
 
       it('updates collection', () => {
         payload = { data: { abc: { field: 'test' } } };
         meta = { collection };
-        action = { meta, payload, type: actionTypes.GET_SUCCESS };
+        const action = { meta, payload, type: actionTypes.GET_SUCCESS };
         expect(dataReducer(state, action).test.abc.field).to.equal('test');
       });
 
       it('throws for no collection', () => {
         payload = { data: { abc: {} } };
         meta = {};
-        action = { meta, payload, type: actionTypes.GET_SUCCESS };
+        const action = { meta, payload, type: actionTypes.GET_SUCCESS };
         expect(() => dataReducer(state, action)).to.throw(
           'Collection is required to build query name',
         );
@@ -200,7 +202,7 @@ describe('dataReducer', () => {
         payload = { data };
         meta = { collection, doc: 'someDoc' };
         const existingState = { test: { someDoc: { another: 'test' } } };
-        action = { meta, payload, type: actionTypes.GET_SUCCESS };
+        const action = { meta, payload, type: actionTypes.GET_SUCCESS };
         expect(dataReducer(existingState, action)).to.have.nested.property(
           'test',
           {},
@@ -216,7 +218,7 @@ describe('dataReducer', () => {
             doc: 'someDoc',
             subcollections: [{ collection: 'another' }],
           };
-          action = { meta, payload, type: actionTypes.GET_SUCCESS };
+          const action = { meta, payload, type: actionTypes.GET_SUCCESS };
           expect(dataReducer(state, action)).to.have.nested.property(
             'test/someDoc/another',
             data,
@@ -235,7 +237,7 @@ describe('dataReducer', () => {
           const existingState = {
             test: { someDoc: { another: { testing: {} } } },
           };
-          action = { meta, payload, type: actionTypes.GET_SUCCESS };
+          const action = { meta, payload, type: actionTypes.GET_SUCCESS };
           result = dataReducer(existingState, action);
           expect(
             result[`test/someDoc/${subcollection.collection}`],
@@ -250,14 +252,14 @@ describe('dataReducer', () => {
     describe('CLEAR_DATA', () => {
       it('clears data from state', () => {
         meta = {};
-        action = { meta, type: actionTypes.CLEAR_DATA };
+        const action = { meta, type: actionTypes.CLEAR_DATA };
         expect(dataReducer({ data: { some: {} } }, action)).to.be.empty;
       });
 
       it('preserves keys provided in preserve parameter', () => {
         meta = {};
         const data = { some: 'test' };
-        action = {
+        const action = {
           meta,
           type: actionTypes.CLEAR_DATA,
           preserve: { data: ['some'] },
@@ -269,7 +271,7 @@ describe('dataReducer', () => {
     describe('DELETE_SUCCESS', () => {
       it('clears data from state', () => {
         meta = { collection, doc };
-        action = { meta, type: actionTypes.DELETE_SUCCESS };
+        const action = { meta, type: actionTypes.DELETE_SUCCESS };
         result = dataReducer(
           { [collection]: { [doc]: { thing: 'asdf' } } },
           action,
@@ -280,7 +282,7 @@ describe('dataReducer', () => {
       it('preserves keys provided in preserve parameter', () => {
         meta = { collection };
         const data = { [collection]: 'asdf' };
-        action = {
+        const action = {
           meta,
           type: actionTypes.DELETE_SUCCESS,
           preserve: { data: [collection] },
@@ -294,7 +296,7 @@ describe('dataReducer', () => {
       it('sets doc to null', () => {
         meta = { collection, doc };
         const data = { [collection]: { [doc]: { other: 'asdf' } } };
-        action = {
+        const action = {
           meta,
           type: actionTypes.DELETE_SUCCESS,
         };
@@ -308,7 +310,7 @@ describe('dataReducer', () => {
     describe('LISTENER_ERROR', () => {
       it('sets state to null for collection', () => {
         const data = { testing: { field: 'test' } };
-        action = {
+        const action = {
           meta: { collection },
           payload: { data },
           type: actionTypes.LISTENER_ERROR,
@@ -320,7 +322,7 @@ describe('dataReducer', () => {
 
       it('preserves existing state (to not run over existing data)', () => {
         const data = { testing: { field: 'test' } };
-        action = {
+        const action = {
           meta: { collection },
           payload: { data },
           type: actionTypes.LISTENER_ERROR,
@@ -331,8 +333,7 @@ describe('dataReducer', () => {
       });
 
       it('throws if meta does not contain collection', () => {
-        payload = {};
-        action = { meta: {}, payload, type: actionTypes.LISTENER_ERROR };
+        const action = { meta: {}, payload: { data: {} }, type: actionTypes.LISTENER_ERROR };
         expect(() => dataReducer(state, action)).to.throw(
           'Collection is required to build query name',
         );
@@ -341,7 +342,7 @@ describe('dataReducer', () => {
       describe('preserve parameter', () => {
         it('list of keys preserve state', () => {
           const data = { testing: { field: 'test' } };
-          action = {
+          const action = {
             meta: { collection },
             payload: { data },
             preserve: { data: [collection] },
@@ -354,7 +355,7 @@ describe('dataReducer', () => {
 
         it('list of keys preserve state', () => {
           const data = { testing: { field: 'test' } };
-          action = {
+          const action = {
             meta: { collection },
             payload: { data },
             preserve: { data: currentState => currentState },

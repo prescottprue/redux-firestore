@@ -1,9 +1,11 @@
+import sinon from 'sinon';
+import { expect } from 'chai';
 import {
   getDotStrPath,
   getSlashStrPath,
   preserveValuesFromState,
   createReducer,
-} from 'utils/reducers';
+} from '../../../src/utils/reducers';
 
 describe('reducer utils', () => {
   describe('getSlashStrPath', () => {
@@ -17,7 +19,7 @@ describe('reducer utils', () => {
       expect(getSlashStrPath('.some.other.thing')).to.equal('some/other/thing');
     });
     it('returns empty string for undefined input', () => {
-      expect(getSlashStrPath()).to.equal('');
+      expect(getSlashStrPath('')).to.equal('');
     });
   });
 
@@ -32,7 +34,7 @@ describe('reducer utils', () => {
       expect(getDotStrPath('/some/other/thing')).to.equal('some.other.thing');
     });
     it('returns empty string for undefined input', () => {
-      expect(getDotStrPath()).to.equal('');
+      expect(getDotStrPath('')).to.equal('');
     });
   });
 

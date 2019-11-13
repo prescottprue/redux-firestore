@@ -1,5 +1,6 @@
-import listenersReducer from 'reducers/listenersReducer';
-import { actionTypes } from 'constants';
+import { expect } from 'chai';
+import listenersReducer from '../../../src/reducers/listenersReducer';
+import { actionTypes } from '../../../src/constants';
 
 let state;
 let action;

@@ -1,3 +1,5 @@
+import sinon from 'sinon';
+import { expect } from 'chai';
 import {
   attachListener,
   detachListener,
@@ -6,8 +8,8 @@ import {
   firestoreRef,
   orderedFromSnap,
   dataByIdSnapshot,
-} from 'utils/query';
-import { actionTypes } from 'constants';
+} from '../../../src/utils/query';
+import { actionTypes } from '../../../src/constants';
 
 let dispatch = sinon.spy();
 let meta;

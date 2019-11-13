@@ -1,4 +1,6 @@
-import { wrapInDispatch } from 'utils/actions';
+import { expect } from 'chai';
+import sinon from 'sinon';
+import { wrapInDispatch } from '../../../src/utils/actions';
 
 let dispatchSpy;
 describe('actions utils', () => {
