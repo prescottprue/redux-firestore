@@ -32,7 +32,7 @@ interface WrapInDispatchOptions {
   types: (ActionTypeObject|string)[]
   ref: any
   meta?: any
-  args?: string[]
+  args?: any[]
 }
 
 /**

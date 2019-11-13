@@ -1,5 +1,4 @@
 /* eslint-disable guard-for-in, no-restricted-syntax, no-param-reassign */
-
 import produce from 'immer';
 import { values, groupBy, merge, set, get, keys } from 'lodash';
 import { actionTypes } from '../constants';

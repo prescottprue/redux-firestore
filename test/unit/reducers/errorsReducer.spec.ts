@@ -13,7 +13,8 @@ describe('errorsReducer', () => {
     expect(errorsReducer).to.be.a('function');
   });
   it('returns state for undefined actionType', () => {
-    expect(errorsReducer({}, {})).to.exist;
+    const originalState = {}
+    expect((errorsReducer as any)(originalState, {})).to.equal(originalState);
   });
 
   describe('allIds sub-reducer', () => {
@@ -36,7 +37,7 @@ describe('errorsReducer', () => {
           };
           state = { allIds: [], byId: {} };
           expect(errorsReducer(state, action).allIds).to.have.property(
-            0,
+            '0',
             'test',
           );
         });

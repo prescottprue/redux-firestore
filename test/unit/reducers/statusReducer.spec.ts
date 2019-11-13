@@ -33,7 +33,7 @@ describe('statusReducer', () => {
   });
 
   it('returns state slices (requesting, requested, timestampes)', () => {
-    expect(statusReducer({}, {})).to.have.keys([
+    expect((statusReducer as any)({}, {})).to.have.keys([
       'requesting',
       'requested',
       'timestamps',
@@ -43,36 +43,38 @@ describe('statusReducer', () => {
   describe('actionTypes', () => {
     describe('LISTENER_RESPONSE', () => {
       it('returns state if payload is not defined', () => {
-        action = { meta: { collection }, type: actionTypes.LISTENER_RESPONSE };
-        result = statusReducer(state, action);
+        const state = {};
+        const action = { meta: { collection }, type: actionTypes.LISTENER_RESPONSE };
+        const result = (statusReducer as any)(state, action);
         expect(result.requesting).to.have.property(collection, false);
       });
 
       it('returns state if payload does not contain data', () => {
-        action = {
+        const action = {
           meta: { collection },
           payload: {},
           type: actionTypes.LISTENER_RESPONSE,
         };
-        result = statusReducer(state, action);
+        const result = (statusReducer as any)(state, action);
         expect(result.requesting).to.have.property(collection, false);
       });
     });
 
     describe('SET_LISTENER', () => {
       it('returns state if payload does not contain data', () => {
-        meta = { collection };
-        payload = {};
-        action = { meta, payload, type: actionTypes.SET_LISTENER };
-        expect(statusReducer(state, action).requesting).to.have.property(
+        const meta = { collection };
+        const payload = {};
+        const action = { meta, payload, type: actionTypes.SET_LISTENER };
+        const result = (statusReducer as any)(state, action);
+        expect(result.requesting).to.have.property(
           collection,
           true,
         );
-        expect(statusReducer(state, action).requested).to.have.property(
+        expect(result.requested).to.have.property(
           collection,
           false,
         );
-        expect(statusReducer(state, action).timestamps).to.have.property(
+        expect(result.timestamps).to.have.property(
           collection,
         );
       });

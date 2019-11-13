@@ -16,11 +16,12 @@ describe('orderedReducer', () => {
   });
 
   it('returns state for undefined action type', () => {
-    expect(orderedReducer({}, {})).to.exist;
+    const originalState = {}
+    expect((orderedReducer as any)(originalState, {})).to.equal(originalState);
   });
 
   it('returns state for actionType not matching reducer', () => {
-    state = {};
+    const state = {};
     expect(
       orderedReducer(state, { type: 'testing', meta: { collection: 'test' } }),
     ).to.equal(state);

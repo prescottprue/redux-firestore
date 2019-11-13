@@ -63,7 +63,7 @@ export default function dataReducer(state: DataState = {}, action: ReduxFirestor
       return setWith(
         Object,
         getQueryName(action.meta, { onlySubcollections: true }),
-        action.payload.data,
+        action.payload && action.payload.data,
         state,
       );
     case DOCUMENT_REMOVED:
@@ -72,7 +72,8 @@ export default function dataReducer(state: DataState = {}, action: ReduxFirestor
         onlySubcollections: true,
       });
       const id = last(pathToArr(getQueryName(action.meta)));
-      const cleanedState = setWith(Object, `${removePath}.${id}`, null, state);
+      // Typecasted to any to fix "Type 'LodashSetWith1x11<DataState>' is not assignable to type 'DataState'" error
+      const cleanedState = (setWith as any)(Object, `${removePath}.${id}`, null, state);
       if (action.preserve && action.preserve.data) {
         return preserveValuesFromState(
           state,
@@ -89,7 +90,8 @@ export default function dataReducer(state: DataState = {}, action: ReduxFirestor
       return {};
     case LISTENER_ERROR:
       // Set data to state immutabily (lodash/fp's setWith creates copy)
-      const nextState = setWith(
+      // Typecasted to any to fix "Type 'LodashSetWith1x11<DataState>' is not assignable to type 'DataState'" error
+      const nextState = (setWith as any)(
         Object,
         getQueryName(action.meta, { onlySubcollections: true }),
         null,

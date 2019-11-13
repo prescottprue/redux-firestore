@@ -14,7 +14,7 @@
     "importHelpers": true,
     "downlevelIteration": true,
     "allowSyntheticDefaultImports": true,
-    "strict": true,
+    // "strict": true,
     "esModuleInterop": true
   },
   "typeRoots": [

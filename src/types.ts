@@ -1,16 +1,4 @@
-import { Dispatch, AnyAction } from 'redux'
-import {
-  add,
-  set,
-  get,
-  update,
-  deleteRef,
-  setListener,
-  setListeners,
-  runTransaction,
-  unsetListener,
-  unsetListeners
-} from './actions/firestore'
+import { AnyAction, Dispatch } from 'redux'
 
 export interface PreserveSettingObject {
   data?: PreserveSetting
@@ -73,7 +61,7 @@ export type ActionMeta = QueryConfigObject & {
 export interface ReduxFirestoreAction extends AnyAction {
   type: string
   meta: ActionMeta
-  payload: ActionPayload
+  payload?: ActionPayload
   timestamp?: number
   preserve?: PreserveSettingObject
   path?: string
@@ -143,15 +131,15 @@ export interface ReduxFirestoreConfig {
 }
 
 export interface ExtendedFirestoreInstance {
-  add: typeof add
-  set: typeof set
-  get: typeof get
-  update: typeof update
-  deleteRef: typeof deleteRef
-  delete: typeof deleteRef
-  setListener: typeof setListener
-  setListeners: typeof setListeners
-  unsetListener: typeof unsetListener
-  unsetListeners: typeof unsetListeners
-  runTransaction: typeof runTransaction
+  add: (queryConfig: QueryConfig, data: firebase.firestore.DocumentData) => Promise<firebase.firestore.DocumentReference>
+  set: (queryConfig: QueryConfig, data: firebase.firestore.DocumentData, options?: firebase.firestore.SetOptions) => Promise<void>
+  get: (queryConfig: QueryConfig, options?: firebase.firestore.GetOptions) => Promise<firebase.firestore.DocumentSnapshot | firebase.firestore.QuerySnapshot>
+  update: (queryConfig: QueryConfig, data: firebase.firestore.DocumentData) => Promise<void>
+  deleteRef: (queryConfig: QueryConfig) => Promise<void>
+  delete:  (queryConfig: QueryConfig) => Promise<void>
+  setListener: (queryConfig: QueryConfig, successCb?: any, errorCb?: ((error: Error) => void) | undefined) => void
+  setListeners: (queryConfigs: QueryConfig[]) => void
+  unsetListener: (queryConfig: QueryConfig) => void
+  unsetListeners: (queryConfigs: QueryConfig[]) => void
+  runTransaction: (updateFunction: (transaction: firebase.firestore.Transaction) => Promise<any>) => Promise<void>
 }

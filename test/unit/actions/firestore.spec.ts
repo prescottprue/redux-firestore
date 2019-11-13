@@ -73,11 +73,13 @@ describe('firestoreActions', () => {
   describe('actions', () => {
     describe('add', () => {
       it('throws if Firestore is not initialized', () => {
+        const dispatchSpy = sinon.spy()
         const instance = createFirestoreInstance(
           {},
           { helpersNamespace: 'test' },
+          dispatchSpy
         );
-        expect(() => instance.test.add({ collection: 'test' })).to.throw(
+        expect(() => instance.add({ collection: 'test' }, {})).to.throw(
           'Firestore must be required and initalized.',
         );
       });
@@ -88,7 +90,7 @@ describe('firestoreActions', () => {
           { helpersNamespace: 'test' },
           dispatchSpy,
         );
-        await instance.test.add({ collection: 'test' }, { some: 'thing' });
+        await instance.add({ collection: 'test' }, { some: 'thing' });
         expect(dispatchSpy).to.have.nested.property(
           'firstCall.args.0.type',
           actionTypes.ADD_REQUEST,
@@ -103,22 +105,25 @@ describe('firestoreActions', () => {
 
     describe('set', () => {
       it('throws if Firestore is not initialized', () => {
+        const dispatchSpy = sinon.spy()
         const instance = createFirestoreInstance(
           {},
           { helpersNamespace: 'test' },
+          dispatchSpy
         );
-        expect(() => instance.test.set({ collection: 'test' })).to.throw(
+        expect(() => instance.set({ collection: 'test' }, {})).to.throw(
           'Firestore must be required and initalized.',
         );
       });
 
       it('calls dispatch with correct action types', async () => {
+        const dispatchSpy = sinon.spy()
         const instance = createFirestoreInstance(
           fakeFirebase,
           { helpersNamespace: 'test' },
           dispatchSpy,
         );
-        await instance.test.set({ collection: 'test' }, { some: 'thing' });
+        await instance.set({ collection: 'test' }, { some: 'thing' });
         expect(dispatchSpy).to.have.nested.property(
           'firstCall.args.0.type',
           actionTypes.SET_REQUEST,
@@ -133,22 +138,25 @@ describe('firestoreActions', () => {
 
     describe('update', () => {
       it('throws if Firestore is not initialized', () => {
+        const dispatchSpy = sinon.spy()
         const instance = createFirestoreInstance(
           {},
           { helpersNamespace: 'test' },
+          dispatchSpy,
         );
-        expect(() => instance.test.update({ collection: 'test' })).to.throw(
+        expect(() => instance.update({ collection: 'test' }, {})).to.throw(
           'Firestore must be required and initalized.',
         );
       });
 
       it('calls dispatch with correct action types', async () => {
+        const dispatchSpy = sinon.spy()
         const instance = createFirestoreInstance(
           fakeFirebase,
           { helpersNamespace: 'test' },
           dispatchSpy,
         );
-        await instance.test.update({ collection: 'test' }, { some: 'thing' });
+        await instance.update({ collection: 'test' }, { some: 'thing' });
         expect(dispatchSpy).to.have.nested.property(
           'firstCall.args.0.type',
           actionTypes.UPDATE_REQUEST,
@@ -163,12 +171,13 @@ describe('firestoreActions', () => {
 
     describe('deleteRef', () => {
       it('calls delete with dispatches before and after', async () => {
+        const dispatchSpy = sinon.spy()
         const instance = createFirestoreInstance(
           fakeFirebase,
           { helpersNamespace: 'test' },
           dispatchSpy,
         );
-        const res = await instance.test.deleteRef({
+        const res = await instance.deleteRef({
           collection: 'test',
           doc: 'test',
         });
@@ -177,24 +186,28 @@ describe('firestoreActions', () => {
       });
 
       it('throws if attempting to delete a collection', async () => {
+        const dispatchSpy = sinon.spy()
         const instance = createFirestoreInstance(
           {},
           { helpersNamespace: 'test' },
+          dispatchSpy
         );
         try {
-          await instance.test.deleteRef({ collection: 'test' });
+          await instance.deleteRef({ collection: 'test' });
         } catch (err) {
           expect(err.message).to.equal('Only documents can be deleted.');
         }
       });
 
       it('calls onAttemptCollectionDelete if provided', async () => {
+        const dispatchSpy = sinon.spy()
         const funcSpy = sinon.spy(() => Promise.resolve('test'));
         const instance = createFirestoreInstance(
           {},
           { helpersNamespace: 'test', onAttemptCollectionDelete: funcSpy },
+          dispatchSpy
         );
-        const res = await instance.test.deleteRef({ collection: 'test' });
+        const res = await instance.deleteRef({ collection: 'test' });
         expect(funcSpy).to.have.been.calledOnce;
         expect(res).to.equal('test');
       });
@@ -202,39 +215,45 @@ describe('firestoreActions', () => {
 
     describe('get', () => {
       it('throws if attempting to delete a collection', () => {
+        const dispatchSpy = sinon.spy()
         const instance = createFirestoreInstance(
           {},
           { helpersNamespace: 'test' },
+          dispatchSpy
         );
-        expect(() => instance.test.get({ collection: 'test' })).to.throw(
+        expect(() => instance.get({ collection: 'test' }, {})).to.throw(
           'Firestore must be required and initalized.',
         );
       });
 
       it('throws if attempting to delete a sub-collection', () => {
+        const dispatchSpy = sinon.spy()
         const instance = createFirestoreInstance(
           {},
           { helpersNamespace: 'test' },
+          dispatchSpy
         );
         expect(() =>
-          instance.test.get({
+          instance.get({
             collection: 'test',
             doc: 'testing',
-            subcollection: [{ collection: 'test' }],
+            subcollections: [{ collection: 'test' }],
           }),
         ).to.throw('Firestore must be required and initalized.');
       });
 
       it('throws if attempting to delete a nested sub-collection', () => {
+        const dispatchSpy = sinon.spy()
         const instance = createFirestoreInstance(
           {},
           { helpersNamespace: 'test' },
+          dispatchSpy
         );
         expect(() =>
-          instance.test.get({
+          instance.get({
             collection: 'test',
             doc: 'testing',
-            subcollection: [
+            subcollections: [
               { collection: 'test', doc: 'asdf' },
               { collection: 'test2' },
             ],
@@ -243,12 +262,13 @@ describe('firestoreActions', () => {
       });
 
       it('calls dispatch twice', async () => {
+        const dispatchSpy = sinon.spy()
         const instance = createFirestoreInstance(
           fakeFirebase,
           { helpersNamespace: 'test' },
           dispatchSpy,
         );
-        const res = await instance.test.get({ collection: 'test' });
+        const res = await instance.get({ collection: 'test' });
         expect(res).to.equal(successRes);
         expect(dispatchSpy).to.have.been.calledTwice;
       });
@@ -266,8 +286,9 @@ describe('firestoreActions', () => {
           });
         });
 
-        it('calls success callback if provided', async () => {
-          listenerConfig = {
+        it('calls success callback if provided', () => {
+          const dispatchSpy = sinon.spy()
+          const listenerConfig = {
             collection: 'test',
             doc: '1',
             subcollections: [{ collection: 'test2', doc: 'test3' }],
@@ -278,11 +299,12 @@ describe('firestoreActions', () => {
             dispatchSpy,
           );
           const successSpy = sinon.spy();
-          await instance.test.setListener(listenerConfig, successSpy);
+          instance.setListener(listenerConfig, successSpy);
           expect(successSpy).to.have.been.calledOnce;
         });
 
-        it('calls error callback if provided', async () => {
+        it('calls error callback if provided', () => {
+          const dispatchSpy = sinon.spy()
           callErrorCallback = true;
           listenerConfig = {
             collection: 'test',
@@ -296,14 +318,15 @@ describe('firestoreActions', () => {
           );
           const successSpy = sinon.spy();
           const errorSpy = sinon.spy();
-          await instance.test.setListener(listenerConfig, successSpy, errorSpy);
+          instance.setListener(listenerConfig, successSpy, errorSpy);
           expect(successSpy).to.have.callCount(0);
           expect(errorSpy).to.have.been.calledOnce;
           callErrorCallback = false;
         });
 
         describe('as a parameter', () => {
-          it('updates single doc in state when docChanges includes single doc change with type: "modified"', async () => {
+          it('updates single doc in state when docChanges includes single doc change with type: "modified"', () => {
+            const dispatchSpy = sinon.spy()
             onSnapshotSpy = sinon.spy(func => {
               func({
                 docChanges: [
@@ -334,7 +357,7 @@ describe('firestoreActions', () => {
               fakeConfig,
               dispatchSpy,
             );
-            await instance.test.setListener(listenerConfig);
+            instance.setListener(listenerConfig);
             expect(onSnapshotSpy).to.be.calledOnce;
             // SET_LISTENER, DOCUMENT_MODIFIED
             expect(dispatchSpy).to.be.calledTwice;
@@ -389,7 +412,7 @@ describe('firestoreActions', () => {
               fakeConfig,
               dispatchSpy,
             );
-            await instance.test.setListener(listenerConfig);
+            await instance.setListener(listenerConfig);
             expect(onSnapshotSpy).to.be.calledOnce;
             // SET_LISTENER, DOCUMENT_MODIFIED, DOCUMENT_MODIFIED
             expect(dispatchSpy).to.have.callCount(3);
@@ -441,7 +464,7 @@ describe('firestoreActions', () => {
               merge: { collections: true, docs: true },
               type: actionTypes.LISTENER_RESPONSE,
             };
-            await instance.test.setListener(listenerConfig);
+            await instance.setListener(listenerConfig);
             expect(dispatchSpy).to.be.calledWith(expectedAction);
             expect(dispatchSpy).to.be.calledWith(expectedAction2);
             expect(onSnapshotSpy).to.be.calledOnce;
@@ -493,7 +516,7 @@ describe('firestoreActions', () => {
               payload: { name: `test/1/test2` },
               type: actionTypes.SET_LISTENER,
             };
-            await instance.test.setListener(listenerConfig);
+            await instance.setListener(listenerConfig);
             expect(onSnapshotSpy).to.be.calledOnce;
             // SET_LISTENER, LISTENER_RESPONSE
             expect(dispatchSpy).to.be.calledTwice;
@@ -540,7 +563,7 @@ describe('firestoreActions', () => {
               fakeConfig,
               dispatchSpy,
             );
-            await instance.test.setListener(listenerConfig);
+            await instance.setListener(listenerConfig);
             expect(onSnapshotSpy).to.be.calledOnce;
             // SET_LISTENER, DOCUMENT_MODIFIED, DOCUMENT_MODIFIED
             expect(dispatchSpy).to.be.calledThrice;
@@ -592,7 +615,7 @@ describe('firestoreActions', () => {
               merge: { collections: true, docs: true },
               type: actionTypes.LISTENER_RESPONSE,
             };
-            await instance.test.setListener(listenerConfig);
+            await instance.setListener(listenerConfig);
             expect(dispatchSpy).to.be.calledWith(expectedAction);
             expect(dispatchSpy).to.be.calledWith(expectedAction2);
             expect(onSnapshotSpy).to.be.calledOnce;
@@ -609,27 +632,28 @@ describe('firestoreActions', () => {
 
     describe('setListeners', () => {
       it('throws if listeners config is not an array', () => {
+        const dipsatchSpy = sinon.spy()
         const instance = createFirestoreInstance(
           {},
           { helpersNamespace: 'test' },
+          dispatchSpy
         );
         expect(() =>
-          instance.test.setListeners({ collection: 'test' }),
+          (instance.setListeners as any)({ collection: 'test' }),
         ).to.throw(
           'Listeners must be an Array of listener configs (Strings/Objects).',
         );
       });
 
       it('calls dispatch if listeners provided', () => {
+        const dipsatchSpy = sinon.spy()
         const instance = createFirestoreInstance(
           {},
           { helpersNamespace: 'test' },
+          dispatchSpy
         );
-        expect(() =>
-          instance.test.setListeners({ collection: 'test' }),
-        ).to.throw(
-          'Listeners must be an Array of listener configs (Strings/Objects).',
-        );
+        instance.setListeners([{ collection: 'test' }]),
+        expect(dispatchSpy).to.have.been.calledOnce
       });
 
       it('maps listeners array', () => {
@@ -641,23 +665,23 @@ describe('firestoreActions', () => {
       });
 
       it('supports subcollections', () => {
+        const dipsatchSpy = sinon.spy()
         const instance = createFirestoreInstance(
           {},
           { helpersNamespace: 'test' },
+          dispatchSpy
         );
-        expect(() =>
-          instance.test.setListeners({
-            collection: 'test',
-            doc: '1',
-            subcollections: [{ collection: 'test2' }],
-          }),
-        ).to.throw(
-          'Listeners must be an Array of listener configs (Strings/Objects).',
-        );
+        instance.setListeners([{
+          collection: 'test',
+          doc: '1',
+          subcollections: [{ collection: 'test2' }],
+        }])
+        expect(dispatchSpy).to.have.been.calledOnce
       });
 
       describe('allowMultipleListeners', () => {
         it('works with one listener', async () => {
+          const dispatchSpy = sinon.spy()
           const fakeFirebaseWithOneListener = {
             _: {
               listeners: {},
@@ -680,13 +704,14 @@ describe('firestoreActions', () => {
             },
           ];
           const forEachMock = sinon.spy(listeners, 'forEach');
-          await instance.test.setListeners(listeners);
+          instance.setListeners(listeners);
           expect(forEachMock).to.be.calledOnce;
           // SET_LISTENER, LISTENER_RESPONSE
           expect(dispatchSpy).to.be.calledTwice;
         });
 
-        it('works with two listeners of the same path (only attaches once)', async () => {
+        it('works with two listeners of the same path (only attaches once)', () => {
+          const dispatchSpy = sinon.spy()
           const fakeFirebaseWithOneListener = {
             _: {
               listeners: {},
@@ -714,7 +739,7 @@ describe('firestoreActions', () => {
             },
           ];
           const forEachMock = sinon.spy(listeners, 'forEach');
-          await instance.test.setListeners(listeners);
+          instance.setListeners(listeners);
           expect(forEachMock).to.be.calledOnce;
           // SET_LISTENER, LISTENER_RESPONSE
           expect(dispatchSpy).to.be.calledTwice;
@@ -724,46 +749,52 @@ describe('firestoreActions', () => {
 
     describe('unsetListener', () => {
       it('throws if invalid path config is provided', () => {
-        const instance = createFirestoreInstance(
+          const dispatchSpy = sinon.spy()
+          const instance = createFirestoreInstance(
           {},
           { helpersNamespace: 'test' },
+          dispatchSpy
         );
-        expect(() => instance.test.unsetListener()).to.throw(
+        expect(() => (instance.unsetListener as any)()).to.throw(
           'Invalid Path Definition: Only Strings and Objects are accepted.',
         );
       });
 
       it('throws if dispatch is not a function', () => {
-        const instance = createFirestoreInstance(
+          const dispatchSpy = sinon.spy()
+          const instance = (createFirestoreInstance as any)(
           {},
           { helpersNamespace: 'test' },
         );
         expect(() =>
-          instance.test.unsetListener({ collection: 'test' }),
+          instance.unsetListener({ collection: 'test' }),
         ).to.throw('dispatch is not a function');
       });
     });
 
     describe('unsetListeners', () => {
       it('throws if listeners config is not an array', () => {
-        const instance = createFirestoreInstance(
+          const dispatchSpy = sinon.spy()
+          const instance = createFirestoreInstance(
           {},
           { helpersNamespace: 'test' },
+          dispatchSpy
         );
         expect(() =>
-          instance.test.unsetListeners({ collection: 'test' }),
+          (instance.unsetListeners as any)({ collection: 'test' }),
         ).to.throw(
           'Listeners must be an Array of listener configs (Strings/Objects)',
         );
       });
 
       it('dispatches UNSET_LISTENER action', () => {
-        const instance = createFirestoreInstance(
+          const dispatchSpy = sinon.spy()
+          const instance = createFirestoreInstance(
           {},
-          { helpersNamespace: 'test' },
+          {},
           dispatchSpy,
         );
-        instance.test.unsetListeners([{ collection: 'test' }]);
+        instance.unsetListeners([{ collection: 'test' }]);
         expect(dispatchSpy).to.have.been.calledWith({
           meta: { collection: 'test' },
           payload: { name: 'test' },
@@ -772,7 +803,8 @@ describe('firestoreActions', () => {
       });
 
       describe('allowMultipleListeners option enabled', () => {
-        it('dispatches UNSET_LISTENER action', async () => {
+        it('dispatches UNSET_LISTENER action', () => {
+          const dispatchSpy = sinon.spy()
           const fakeFirebaseWithOneListener = {
             _: {
               listeners: {},
@@ -784,14 +816,15 @@ describe('firestoreActions', () => {
           };
           const instance = createFirestoreInstance(
             fakeFirebaseWithOneListener,
-            { helpersNamespace: 'test' },
+            {},
             dispatchSpy,
           );
-          await instance.test.unsetListeners([{ collection: 'test' }]);
+          instance.unsetListeners([{ collection: 'test' }]);
           expect(dispatchSpy).to.have.callCount(0);
         });
 
-        it('dispatches UNSET_LISTENER action if there is more than one listener', async () => {
+        it('dispatches UNSET_LISTENER action if there is more than one listener', () => {
+          const dispatchSpy = sinon.spy()
           const fakeFirebaseWithOneListener = {
             _: {
               listeners: {},
@@ -806,11 +839,11 @@ describe('firestoreActions', () => {
             { helpersNamespace: 'test' },
             dispatchSpy,
           );
-          await instance.test.setListeners([
+          instance.setListeners([
             { collection: 'test' },
             { collection: 'test' },
           ]);
-          await instance.test.unsetListeners([{ collection: 'test' }]);
+          instance.unsetListeners([{ collection: 'test' }]);
           // UNSET_LISTENER, LISTENER_RESPONSE
           expect(dispatchSpy).to.be.calledTwice;
         });
@@ -819,10 +852,9 @@ describe('firestoreActions', () => {
 
     describe('runTransaction', () => {
       it('throws if invalid path config is provided', () => {
-        const instance = createFirestoreInstance(fakeFirebase, {
-          helpersNamespace: 'test',
-        });
-        expect(() => instance.test.runTransaction()).to.throw(
+        const dispatchSpy = sinon.spy()
+        const instance = createFirestoreInstance(fakeFirebase, {}, dispatchSpy);
+        expect(() => (instance.runTransaction as any)()).to.throw(
           'dispatch is not a function',
         );
       });

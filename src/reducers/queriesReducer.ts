@@ -31,7 +31,7 @@ export default function queriesReducer(state = {}, action: ReduxFirestoreAction)
     switch (action.type) {
       case actionTypes.GET_SUCCESS:
       case actionTypes.LISTENER_RESPONSE:
-        draft[key] = { data: action.payload.data, ...action.meta };
+        draft[key] = { data: action.payload && action.payload.data, ...action.meta };
         return draft;
       case actionTypes.UNSET_LISTENER:
         // Deleting this key complicates recomposing the result -
@@ -44,7 +44,7 @@ export default function queriesReducer(state = {}, action: ReduxFirestoreAction)
         return draft;
       case actionTypes.DOCUMENT_ADDED:
       case actionTypes.DOCUMENT_MODIFIED:
-        set(draft, ([key, 'data', action.meta.doc]) as any, action.payload.data);
+        set(draft, ([key, 'data', action.meta.doc]) as any, action.payload && action.payload.data);
         return draft;
       case actionTypes.DOCUMENT_REMOVED:
       case actionTypes.DELETE_SUCCESS:

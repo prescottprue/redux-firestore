@@ -1,0 +1,9 @@
+{
+  // This is used by `ts language service` and testing.
+  // Includes source and test files.
+  "extends": "./../tsconfig.json",
+  "compilerOptions": {
+    "noImplicitAny": false,
+    "strict": false
+  }
+}

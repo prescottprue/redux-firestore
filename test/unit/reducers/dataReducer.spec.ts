@@ -43,26 +43,27 @@ describe('dataReducer', () => {
     describe('LISTENER_RESPONSE', () => {
       it('returns state if payload is not defined', () => {
         const action = { meta: 'test', type: actionTypes.LISTENER_RESPONSE };
-        expect(dataReducer(state, action)).to.equal(state);
+        expect((dataReducer as any)(state, action)).to.equal(state);
       });
 
       it('returns state if payload does not contain data', () => {
-        payload = {};
-        const action = { meta: {}, payload, type: actionTypes.LISTENER_RESPONSE };
-        expect(dataReducer(state, action)).to.equal(state);
+        const action = { meta: {}, payload: {}, type: actionTypes.LISTENER_RESPONSE };
+        expect((dataReducer as any)(state, action)).to.equal(state);
       });
 
       it('updates collection', () => {
-        payload = { data: { abc: { field: 'test' } } };
+        const payload = { data: { abc: { field: 'test' } } };
         meta = { collection };
         const action = { meta, payload, type: actionTypes.LISTENER_RESPONSE };
-        expect(dataReducer(state, action).test.abc.field).to.equal('test');
+        expect(dataReducer(state, action).test.abc.field).to.equal(payload.data.abc.field);
       });
 
       it('throws for no collection', () => {
-        payload = { data: { abc: {} } };
-        meta = {};
-        const action = { meta, payload, type: actionTypes.LISTENER_RESPONSE };
+        const action = {
+          meta: {},
+          payload: { data: { abc: {} } },
+          type: actionTypes.LISTENER_RESPONSE
+        };
         expect(() => dataReducer(state, action)).to.throw(
           'Collection is required to build query name',
         );
@@ -70,7 +71,6 @@ describe('dataReducer', () => {
 
       it('replaces existing state with new state', () => {
         const data = { [doc]: { newData: { field: 'test' } } };
-        payload = { data };
         meta = {
           collection,
           doc,
@@ -80,7 +80,7 @@ describe('dataReducer', () => {
         };
         const action = {
           meta,
-          payload,
+          payload: { data },
           type: actionTypes.LISTENER_RESPONSE,
         };
         result = dataReducer(existingState, action);
@@ -101,15 +101,17 @@ describe('dataReducer', () => {
       describe('with subcollections parameter', () => {
         it('updates empty state', () => {
           const data = { abc: { field: 'test' } };
-          payload = { data };
           const subcollection = { collection: 'another' };
-          meta = {
-            collection,
-            doc: 'someDoc',
-            subcollections: [subcollection],
+          const action = {
+            meta: {
+              collection,
+              doc: 'someDoc',
+              subcollections: [subcollection],
+            },
+            payload: { data },
+            type: actionTypes.LISTENER_RESPONSE
           };
-          const action = { meta, payload, type: actionTypes.LISTENER_RESPONSE };
-          result = dataReducer(state, action);
+          const result = dataReducer(state, action);
           expect(
             result[`test/someDoc/${subcollection.collection}`],
           ).to.have.property('abc', data.abc);
@@ -117,9 +119,8 @@ describe('dataReducer', () => {
 
         it('updates state when data already exists', () => {
           const data = { testing: { field: 'test' } };
-          payload = { data };
           const subcollection = { collection: 'another', doc: 'testing' };
-          meta = {
+          const meta = {
             collection,
             doc: 'someDoc',
             subcollections: [subcollection],
@@ -130,7 +131,7 @@ describe('dataReducer', () => {
           const existingState = {
             [subcollectionPath]: { original: 'data' },
           };
-          const action = { meta, payload, type: actionTypes.LISTENER_RESPONSE };
+          const action = { meta, payload: { data }, type: actionTypes.LISTENER_RESPONSE };
           result = dataReducer(existingState, action);
           expect(result[subcollectionPath]).to.have.nested.property(
             `${subcollection.doc}.field`,
@@ -144,8 +145,7 @@ describe('dataReducer', () => {
           const data = {
             [subcollection2.doc]: { field: 'test' },
           };
-          payload = { data };
-          meta = {
+          const meta = {
             collection,
             doc,
             subcollections: [subcollection1, subcollection2],
@@ -158,7 +158,7 @@ describe('dataReducer', () => {
               [subcollection2.doc]: { original: 'data' },
             },
           };
-          const action = { meta, payload, type: actionTypes.LISTENER_RESPONSE };
+          const action = { meta, payload: { data }, type: actionTypes.LISTENER_RESPONSE };
           result = dataReducer(existingState, action);
           expect(result[subPath]).to.have.nested.property(
             `${subcollection2.doc}.field`,
@@ -171,26 +171,27 @@ describe('dataReducer', () => {
     describe('GET_SUCCESS', () => {
       it('returns state if payload is not defined', () => {
         const action = { meta: 'test', type: actionTypes.GET_SUCCESS };
-        expect(dataReducer(state, action)).to.equal(state);
+        expect((dataReducer as any)(state, action)).to.equal(state);
       });
 
       it('returns state if payload does not contain data', () => {
-        payload = {};
-        const action = { meta: {}, payload, type: actionTypes.GET_SUCCESS };
-        expect(dataReducer(state, action)).to.equal(state);
+        const action = { meta: {}, payload: {}, type: actionTypes.GET_SUCCESS };
+        expect((dataReducer as any)(state, action)).to.equal(state);
       });
 
       it('updates collection', () => {
-        payload = { data: { abc: { field: 'test' } } };
-        meta = { collection };
-        const action = { meta, payload, type: actionTypes.GET_SUCCESS };
-        expect(dataReducer(state, action).test.abc.field).to.equal('test');
+        const data = { abc: { field: 'test' } }
+        const meta = { collection };
+        const action = { meta, payload: { data }, type: actionTypes.GET_SUCCESS };
+        expect(dataReducer(state, action).test.abc.field).to.equal(data.abc.field);
       });
 
       it('throws for no collection', () => {
-        payload = { data: { abc: {} } };
-        meta = {};
-        const action = { meta, payload, type: actionTypes.GET_SUCCESS };
+        const action = {
+          meta: {},
+          payload: { data: { abc: {} } },
+          type: actionTypes.GET_SUCCESS
+        };
         expect(() => dataReducer(state, action)).to.throw(
           'Collection is required to build query name',
         );
@@ -199,10 +200,9 @@ describe('dataReducer', () => {
       // TODO: Make this test complete
       it.skip('merges with existing data', () => {
         const data = { test: { field: 'test', another: 'test' } };
-        payload = { data };
         meta = { collection, doc: 'someDoc' };
         const existingState = { test: { someDoc: { another: 'test' } } };
-        const action = { meta, payload, type: actionTypes.GET_SUCCESS };
+        const action = { meta, payload: { data }, type: actionTypes.GET_SUCCESS };
         expect(dataReducer(existingState, action)).to.have.nested.property(
           'test',
           {},
@@ -212,13 +212,12 @@ describe('dataReducer', () => {
       describe('with subcollections parameter', () => {
         it('updates empty state', () => {
           const data = { abc: { field: 'test' } };
-          payload = { data };
-          meta = {
+          const meta = {
             collection,
             doc: 'someDoc',
             subcollections: [{ collection: 'another' }],
           };
-          const action = { meta, payload, type: actionTypes.GET_SUCCESS };
+          const action = { meta, payload: { data }, type: actionTypes.GET_SUCCESS };
           expect(dataReducer(state, action)).to.have.nested.property(
             'test/someDoc/another',
             data,
@@ -227,9 +226,8 @@ describe('dataReducer', () => {
 
         it('updates state when data already exists', () => {
           const data = { testing: { field: 'test' } };
-          payload = { data };
           const subcollection = { collection: 'another', doc: 'testing' };
-          meta = {
+          const meta = {
             collection,
             doc: 'someDoc',
             subcollections: [subcollection],
@@ -237,8 +235,8 @@ describe('dataReducer', () => {
           const existingState = {
             test: { someDoc: { another: { testing: {} } } },
           };
-          const action = { meta, payload, type: actionTypes.GET_SUCCESS };
-          result = dataReducer(existingState, action);
+          const action = { meta, payload: { data }, type: actionTypes.GET_SUCCESS };
+          const result = dataReducer(existingState, action);
           expect(
             result[`test/someDoc/${subcollection.collection}`],
           ).to.have.nested.property(
@@ -251,28 +249,26 @@ describe('dataReducer', () => {
 
     describe('CLEAR_DATA', () => {
       it('clears data from state', () => {
-        meta = {};
         const action = { meta, type: actionTypes.CLEAR_DATA };
         expect(dataReducer({ data: { some: {} } }, action)).to.be.empty;
       });
 
       it('preserves keys provided in preserve parameter', () => {
-        meta = {};
-        const data = { some: 'test' };
+        const originalState = { data: { some: 'test' } };
         const action = {
-          meta,
+          meta: {},
           type: actionTypes.CLEAR_DATA,
           preserve: { data: ['some'] },
         };
-        expect(dataReducer(data, action)).to.have.property('some', data.some);
+        expect(dataReducer(originalState, action)).to.have.nested.property('data.some', originalState.data.some);
       });
     });
 
     describe('DELETE_SUCCESS', () => {
       it('clears data from state', () => {
-        meta = { collection, doc };
+        const meta = { collection, doc };
         const action = { meta, type: actionTypes.DELETE_SUCCESS };
-        result = dataReducer(
+        const result = dataReducer(
           { [collection]: { [doc]: { thing: 'asdf' } } },
           action,
         );
@@ -280,8 +276,8 @@ describe('dataReducer', () => {
       });
 
       it('preserves keys provided in preserve parameter', () => {
-        meta = { collection };
-        const data = { [collection]: 'asdf' };
+        const meta = { collection };
+        const data = { [collection]: { some: 'asdf' } };
         const action = {
           meta,
           type: actionTypes.DELETE_SUCCESS,
@@ -294,7 +290,7 @@ describe('dataReducer', () => {
       });
 
       it('sets doc to null', () => {
-        meta = { collection, doc };
+        const meta = { collection, doc };
         const data = { [collection]: { [doc]: { other: 'asdf' } } };
         const action = {
           meta,

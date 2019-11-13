@@ -1,7 +1,5 @@
 import {
-  isFunction,
   isBoolean,
-  isArray,
   pick,
   replace,
   trimStart,
@@ -107,16 +105,16 @@ export function preserveValuesFromState(state: any, preserveSetting: PreserveSet
   }
 
   // Return result of function if preserve is a function
-  if (isFunction(preserveSetting)) {
+  if (typeof preserveSetting === 'function') {
     return preserveSetting(state, nextState);
   }
 
   // Return keys listed within array
-  if (isArray(preserveSetting)) {
+  if (Array.isArray(preserveSetting)) {
     return pick(state, preserveSetting); // pick returns a new object
   }
 
   throw new Error(
-    'Invalid preserve parameter. It must be an Object or an Array.',
+    'Invalid preserve parameter. It must be a Boolean, an Object or an Array.',
   );
 }

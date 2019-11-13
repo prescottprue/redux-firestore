@@ -13,13 +13,17 @@ describe('listenersReducer', () => {
     expect(listenersReducer).to.be.a('function');
   });
   it('returns state for undefined actionType', () => {
-    expect(listenersReducer({}, {})).to.exist;
+    const originalState = {}
+    expect((listenersReducer as any)(originalState, {})).to.equal(originalState);
   });
+
   it('exports both byId and allIds state', () => {
-    const result = listenersReducer({}, {});
+    const originalState = {}
+    const result = (listenersReducer as any)(originalState, {});
     expect(result).to.have.property('byId');
     expect(result).to.have.property('allIds');
   });
+
   describe('allIds sub-reducer', () => {
     describe('actionTypes', () => {
       describe('SET_LISTENER', () => {
