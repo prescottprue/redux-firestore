@@ -3,19 +3,9 @@ import statusReducer from '../../../src/reducers/statusReducer';
 import { actionTypes } from '../../../src/constants';
 
 const state = {};
-let collection = 'test'; // eslint-disable-line prefer-const
-let action = {};
-let payload = {};
-let meta = {};
-let result = {};
+const collection = 'test';
 
 describe('statusReducer', () => {
-  beforeEach(() => {
-    result = {};
-    meta = {};
-    action = {};
-  });
-
   it('is exported', () => {
     expect(statusReducer).to.exist;
   });
@@ -25,7 +15,7 @@ describe('statusReducer', () => {
   });
 
   it('returns state for undefined actionType', () => {
-    expect(statusReducer({}, {})).to.have.keys([
+    expect((statusReducer as any)({}, {})).to.have.keys([
       'requesting',
       'requested',
       'timestamps',
@@ -82,17 +72,17 @@ describe('statusReducer', () => {
 
     describe('LISTENER_ERROR', () => {
       it('returns state if payload is not defined', () => {
-        meta = { collection };
-        action = { meta, type: actionTypes.LISTENER_ERROR };
-        result = statusReducer(state, action);
+        const meta = { collection };
+        const action = { meta, type: actionTypes.LISTENER_ERROR };
+        const result = (statusReducer as any)(state, action);
         expect(result.requesting).to.have.property(collection, false);
       });
     });
 
     describe('UNSET_LISTENER', () => {
       it('sets requesting status to false when unsetting listener', () => {
-        action = { meta: 'test', type: actionTypes.UNSET_LISTENER };
-        expect(statusReducer(state, action).requesting).to.deep.equal({
+        const action = { meta: 'test', type: actionTypes.UNSET_LISTENER };
+        expect((statusReducer as any)(state, action).requesting).to.deep.equal({
           test: false,
         });
       });

@@ -98,7 +98,7 @@ export function createReducer(initialState: any, handlers: any): (state: any, ac
  * @return Slice of state with values preserved
  * @private
  */
-export function preserveValuesFromState(state: any, preserveSetting: PreserveSetting, nextState: any): any {
+export function preserveValuesFromState(state: any, preserveSetting: PreserveSetting, nextState?: any): any {
   // Return original state if preserve is true
   if (isBoolean(preserveSetting)) {
     return nextState ? { ...state, ...nextState } : state;

@@ -145,7 +145,7 @@ describe('query utils', () => {
     });
 
     it('throws if meta is not included', () => {
-      expect(() => attachListener({}, dispatch)).to.Throw(
+      expect(() => (attachListener as any)({}, dispatch)).to.Throw(
         'Meta data is required to attach listener.',
       );
     });
@@ -200,12 +200,6 @@ describe('query utils', () => {
       });
     });
 
-    it('throws if meta is not included', () => {
-      expect(() => attachListener({}, dispatch)).to.Throw(
-        'Meta data is required to attach listener.',
-      );
-    });
-
     it('throws if _ variable is not defined on Firebase', () => {
       expect(() =>
         attachListener({}, dispatch, { collection: 'test' }),
@@ -255,7 +249,7 @@ describe('query utils', () => {
     });
 
     it('it throws for invalid input', () => {
-      expect(() => getQueryConfigs(1)).to.Throw(
+      expect(() => (getQueryConfigs as any)(1)).to.Throw(
         'Querie(s) must be an Array or a string',
       );
     });
@@ -560,26 +554,6 @@ describe('query utils', () => {
         });
       });
 
-      describe('startAt', () => {
-        it('calls startAt if valid', () => {
-          const { theFirebase, theSpy, theMeta } = fakeFirebaseWith('startAt');
-          result = firestoreRef(theFirebase, theMeta);
-          expect(result).to.be.an('object');
-          expect(theSpy).to.be.calledWith(theMeta.subcollections[0].startAt);
-        });
-      });
-
-      describe('startAfter', () => {
-        it('calls startAfter if valid', () => {
-          const { theFirebase, theSpy, theMeta } = fakeFirebaseWith(
-            'startAfter',
-          );
-          result = firestoreRef(theFirebase, theMeta);
-          expect(result).to.be.an('object');
-          expect(theSpy).to.be.calledWith(theMeta.subcollections[0].startAfter);
-        });
-      });
-
       describe('endAt', () => {
         it('calls endAt if valid', () => {
           meta = {
@@ -692,7 +666,7 @@ describe('query utils', () => {
         fakeFirebase = {
           firestore: () => ({ collection: () => ({ limit: limitSpy }) }),
         };
-        result = firestoreRef(fakeFirebase, meta);
+        const result = firestoreRef(fakeFirebase, meta);
         expect(result).to.be.an('object');
         expect(limitSpy).to.be.calledWith(meta.limit);
       });
@@ -700,7 +674,7 @@ describe('query utils', () => {
 
     describe('startAt', () => {
       it('calls startAt if valid', () => {
-        meta = { collection: 'test', startAt: 'other' };
+        const meta = { collection: 'test', startAt: 'other' };
         const startAtSpy = sinon.spy(() => ({}));
         fakeFirebase = {
           firestore: () => ({ collection: () => ({ startAt: startAtSpy }) }),
@@ -713,7 +687,7 @@ describe('query utils', () => {
 
     describe('startAfter', () => {
       it('calls startAfter if valid', () => {
-        meta = { collection: 'test', startAfter: 'other' };
+        const meta = { collection: 'test', startAfter: 'other' };
         const startAfterSpy = sinon.spy(() => ({}));
         fakeFirebase = {
           firestore: () => ({
@@ -757,7 +731,7 @@ describe('query utils', () => {
 
   describe('orderedFromSnap', () => {
     it('returns empty array if data does not exist', () => {
-      result = orderedFromSnap({});
+      const result = (orderedFromSnap as any)({});
       expect(result).to.be.an('array');
       expect(result).to.be.empty;
     });
@@ -765,7 +739,8 @@ describe('query utils', () => {
     it('returns an array containing data if it exists', () => {
       const id = 'someId';
       const fakeData = { some: 'thing' };
-      result = orderedFromSnap({ id, data: () => fakeData, exists: true });
+      const fakeSnapshot: any = { id, data: () => fakeData, exists: true }
+      const result = orderedFromSnap(fakeSnapshot);
       expect(result).to.be.an('array');
       expect(result[0]).to.have.property('id', id);
       expect(result[0]).to.have.property('some');
@@ -774,7 +749,8 @@ describe('query utils', () => {
     it('returns an array non object data within an object containing id and data parameters', () => {
       const id = 'someId';
       const fakeData = 'some';
-      result = orderedFromSnap({ id, data: () => fakeData, exists: true });
+      const fakeSnapshot: any = { id, data: () => fakeData, exists: true }
+      const result = orderedFromSnap(fakeSnapshot);
       expect(result).to.be.an('array');
       expect(result[0]).to.have.property('id', id);
       expect(result[0]).to.have.property('data', fakeData);
@@ -783,9 +759,10 @@ describe('query utils', () => {
     it('returns an array containing children if they exist', () => {
       const id = 'someId';
       const fakeData = 'some';
-      result = orderedFromSnap({
+      const fakeSnapshot: any = {
         forEach: func => func({ data: () => fakeData, id }),
-      });
+      }
+      const result = orderedFromSnap(fakeSnapshot);
       expect(result).to.be.an('array');
       expect(result[0]).to.have.property('id', id);
     });
@@ -795,23 +772,28 @@ describe('query utils', () => {
     it('sets data by id if valid', () => {
       const id = 'someId';
       const fakeData = 'some';
-      result = dataByIdSnapshot({ id, data: () => fakeData, exists: true });
+      const fakeSnapshot: any = { id, data: () => fakeData, exists: true }
+      const result = dataByIdSnapshot(fakeSnapshot);
       expect(result).to.have.property(id, fakeData);
     });
 
     it('supports collection data', () => {
       const id = 'someId';
       const fakeData = 'some';
-      result = dataByIdSnapshot({
+      const fakeSnapshot: any = {
         forEach: func => func({ data: () => fakeData, id }),
-      });
+      }
+      const result = dataByIdSnapshot(fakeSnapshot);
       expect(result).to.have.property(id, fakeData);
     });
 
     it('returns null if no data returned for collection', () => {
       const forEach = () => ({});
       const empty = true;
-      result = dataByIdSnapshot({ forEach, empty });
+      const fakeSnapshot: any = {
+        forEach, empty
+      }
+      const result = dataByIdSnapshot(fakeSnapshot);
       expect(result).to.be.null;
     });
 
@@ -819,7 +801,8 @@ describe('query utils', () => {
       const id = 'someId';
       const data = () => ({});
       const exists = false;
-      result = dataByIdSnapshot({ id, exists, data });
+      const fakeSnapshot: any = { id, exists, data }
+      const result = dataByIdSnapshot(fakeSnapshot);
       expect(result).to.be.an('object');
       expect(result).to.have.property(id, null);
     });

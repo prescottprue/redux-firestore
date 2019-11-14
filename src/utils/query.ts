@@ -1,7 +1,5 @@
 import {
   isString,
-  isArray,
-  isFunction,
   isEmpty,
   isObject,
   isNumber,
@@ -15,6 +13,8 @@ import {
   set,
   some,
 } from 'lodash';
+import * as firebase from 'firebase/app'
+import { Dispatch } from 'redux';
 import { to } from '../utils/async';
 import { actionTypes } from '../constants';
 import {
@@ -27,8 +27,6 @@ import {
   WhereConfig,
   OrderByConfig
 } from '../types';
-import * as firebase from 'firebase/app'
-import { Dispatch } from 'redux';
 
 /**
  * Add where claues to Cloud Firestore Reference handling invalid formats
@@ -118,13 +116,13 @@ function handleSubcollections(
 
 /**
  * Create a Cloud Firestore reference for a collection or document
- * @param {Object} firebase - Internal firebase object
- * @param {Object} meta - Metadata
- * @param {String} meta.collection - Collection name
- * @param {String} meta.collectionGroup - Collection Group name
- * @param {String} meta.doc - Document name
- * @param {Array} meta.where - List of argument arrays
- * @return {firebase.firestore.Reference} Resolves with results of add call
+ * @param firebase - Internal firebase object
+ * @param meta - Metadata
+ * @param meta.collection - Collection name
+ * @param meta.collectionGroup - Collection Group name
+ * @param meta.doc - Document name
+ * @param meta.where - List of argument arrays
+ * @returns Resolves with results of add call
  */
 export function firestoreRef(firebase: any, meta: QueryConfigObject): firebase.firestore.Query {
   if (!firebase.firestore) {
@@ -168,9 +166,9 @@ export function firestoreRef(firebase: any, meta: QueryConfigObject): firebase.f
 
 /**
  * Convert where parameter into a string notation for use in query name
- * @param  {String} key - Key to use
- * @param  {Array} value - Where config array
- * @return {String} String representing where settings for use in query name
+ * @param key - Key to use
+ * @param value - Where config array
+ * @returns String representing where settings for use in query name
  */
 function arrayToStr(key: string, value: string | number | string[]): string {
   if (typeof value === 'string' || isNumber(value)) return `${key}=${value}`;
@@ -222,10 +220,10 @@ function serialize(queryParams: QueryConfigObject): string {
  * @returns String representing query settings
  */
 export function getQueryName(meta: QueryConfig, options?: QueryNameOptions): string {
-  if (isString(meta)) {
+  if (typeof meta === 'string') {
     return meta;
   }
-  const { collection, doc, subcollections, where, limit, storeAs } = meta;
+  const { collection, doc, subcollections, where, storeAs } = meta;
   if (storeAs) {
     return storeAs;
   }
@@ -258,7 +256,7 @@ export function getQueryName(meta: QueryConfig, options?: QueryNameOptions): str
   }
 
   if (where) {
-    if (!isArray(where)) {
+    if (!Array.isArray(where)) {
       throw new Error('where parameter must be an array.');
     }
     basePath = basePath.concat('?', serialize(meta));
@@ -275,8 +273,8 @@ export function getQueryName(meta: QueryConfig, options?: QueryNameOptions): str
  * @param meta.subcollections - Subcollections of query
  * @returns String representing query settings
  */
-export function getBaseQueryName(meta: any): string {
-  if (isString(meta)) {
+export function getBaseQueryName(meta: QueryConfig): string {
+  if (typeof meta === 'string') {
     return meta;
   }
   const { collection, subcollections, ...remainingMeta } = meta;
@@ -295,7 +293,7 @@ export function getBaseQueryName(meta: any): string {
   const queryParams = pickQueryParams(remainingMeta);
 
   if (!isEmpty(queryParams)) {
-    if (queryParams.where && !isArray(queryParams.where)) {
+    if (queryParams.where && !Array.isArray(queryParams.where)) {
       throw new Error('where parameter must be an array.');
     }
     basePath = basePath.concat('?', serialize(queryParams));
@@ -342,7 +340,7 @@ export function listenerExists(firebase: any, meta: any): boolean {
  * @param doc - Document name
  * @returns Object containing all listeners
  */
-export function attachListener(firebase: any, dispatch: Dispatch, meta: any, unsubscribe: () => void): any {
+export function attachListener(firebase: any, dispatch: Dispatch, meta: any, unsubscribe?: () => void): any {
   confirmMetaAndConfig(firebase, meta);
 
   const name = getQueryName(meta);
@@ -424,8 +422,8 @@ export function getQueryConfig(query: QueryConfig): QueryConfigObject {
 
 /**
  * Convert array of querys into an array of queryConfig objects
- * @param {Array} queries - Array of query strings/objects
- * @returns {Array} watchEvents - Array of watch events
+ * @param queries - Array of query strings/objects
+ * @returns watchEvents - Array of watch events
  */
 export function getQueryConfigs(queries: string | any[] | QueryConfigObject): QueryConfigObject[] {
   if (Array.isArray(queries)) {
@@ -494,7 +492,7 @@ export function dataByIdSnapshot(snap: firebase.firestore.DocumentSnapshot | fir
 
 /**
  * @private
- * @description Create an array of promises for population of an object or list
+ * Create an array of promises for population of an object or list
  * @param firebase - Internal firebase object
  * @param populate - Object containing root to be populate
  * @param populate.root - Firebase root path from which to load populate item
@@ -509,12 +507,12 @@ export function getPopulateChild(firebase: any, populate: PopulateConfig, id: st
 
 /**
  * @private
- * @description Populate list of data
- * @param {Object} firebase - Internal firebase object
- * @param {Object} originalObj - Object to have parameter populated
- * @param {Object} populate - Object containing populate information
- * @param {Object} results - Object containing results of population from other populates
- * @returns {Promise}
+ * Populate list of data
+ * @param firebase - Internal firebase object
+ * @param originalObj - Object to have parameter populated
+ * @param populate - Object containing populate information
+ * @param results - Object containing results of population from other populates
+ * @returns Array of populated items
  */
 export function populateList(firebase: any, originalObj: any, p: PopulateConfig, results: any): Promise<any[]> {
   // Handle root not being defined
@@ -538,9 +536,9 @@ export function populateList(firebase: any, originalObj: any, p: PopulateConfig,
 
 /**
  * @private
- * @description Create standardized populate object from strings or objects
- * @param {String|Object} str - String or Object to standardize into populate object
- * @returns {Object}
+ * Create standardized populate object from strings or objects
+ * @param str - String or Object to standardize into populate object
+ * @returns Populate config
  */
 function getPopulateObj(str: any): PopulateConfig {
   if (!isString(str)) {
@@ -553,12 +551,12 @@ function getPopulateObj(str: any): PopulateConfig {
 
 /**
  * @private
- * @description Create standardized populate object from strings or objects
- * @param {Array} arr - Array of items to get populate objects for
- * @returns {Array}
+ * Create standardized populate object from strings or objects
+ * @param arr - Array of items to get populate objects for
+ * @returns List of populate objects
  */
 function getPopulateObjs(arr: (string | PopulateConfig | any)[]): PopulateConfig[] {
-  if (!isArray(arr)) {
+  if (!Array.isArray(arr)) {
     return arr;
   }
   return arr.map(o => (isObject(o) ? (o as PopulateConfig) : getPopulateObj(o)));
@@ -566,12 +564,12 @@ function getPopulateObjs(arr: (string | PopulateConfig | any)[]): PopulateConfig
 
 /**
  * @private
- * @description Create an array of promises for population of an object or list
- * @param {Object} firebase - Internal firebase object
- * @param {Object} dataKey - Object to have parameter populated
- * @param {Object} originalData - String containg population data
- * @param {Object} populatesIn
- * @returns {Promise}
+ * Create an array of promises for population of an object or list
+ * @param firebase - Internal firebase object
+ * @param dataKey - Object to have parameter populated
+ * @param originalData - String containg population data
+ * @param populatesIn
+ * @returns Promises for populating
  */
 export function promisesForPopulate(
   firebase: any,
@@ -585,7 +583,7 @@ export function promisesForPopulate(
 
   // test if data is a single object, try generating populates and looking for the child
   const populatesForData = getPopulateObjs(
-    isFunction(populatesIn) ? populatesIn(dataKey, originalData) : populatesIn,
+    typeof populatesIn === 'function' ? populatesIn(dataKey, originalData) : populatesIn,
   );
 
   const dataHasPopulateChilds = some(populatesForData, populate =>
@@ -616,7 +614,7 @@ export function promisesForPopulate(
     forEach(originalData, (d, key) => {
       // generate populates for this data item if a fn was passed
       const populatesForDataItem = getPopulateObjs(
-        isFunction(populatesIn) ? populatesIn(key, d) : populatesIn,
+        typeof populatesIn === 'function' ? populatesIn(key, d) : populatesIn,
       );
 
       // resolve each populate for this data item
@@ -645,7 +643,7 @@ export function promisesForPopulate(
         }
 
         // Parameter of each list item is a list of ids
-        if (isArray(idOrList) || isObject(idOrList)) {
+        if (Array.isArray(idOrList) || isObject(idOrList)) {
           // Create single promise that includes a promise for each child
           return promisesArray.push(
             // eslint-disable-line
@@ -669,9 +667,9 @@ const changeTypeToEventType = {
 /**
  * Action creator for document change event. Used to create action objects
  * to be passed to dispatch.
- * @param  {Object} change - Document change object from Firebase callback
- * @param  {Object} [originalMeta={}] - Original meta data of action
- * @returns {Object}
+ * @param change - Document change object from Firebase callback
+ * @param [originalMeta={}] - Original meta data of action
+ * @returns Event for doc change event
  */
 function docChangeEvent(change: firebase.firestore.DocumentChange, originalMeta?: any): ReduxFirestoreAction {
   const meta = { ...cloneDeep(originalMeta), path: change.doc.ref.path };
@@ -700,11 +698,11 @@ interface DispatchListenerResponseOptions {
 /**
  * Dispatch action(s) response from listener response.
  * @private
- * @param {Object} opts
- * @param {Function} opts.dispatch - Redux action dispatch function
- * @param {Object} opts.firebase - Firebase instance
- * @param {Object} opts.docData - Data object from document
- * @param {Object} opts.meta - Meta data
+ * @param opts
+ * @param opts.dispatch - Redux action dispatch function
+ * @param opts.firebase - Firebase instance
+ * @param opts.docData - Data object from document
+ * @param opts.meta - Meta data
  */
 export function dispatchListenerResponse(opts: DispatchListenerResponseOptions) {
   const {
@@ -746,7 +744,6 @@ export function dispatchListenerResponse(opts: DispatchListenerResponseOptions) 
   }
 }
 
-
 interface GetPopulateActionOptions {
   docData?: any
   meta: any
@@ -756,11 +753,11 @@ interface GetPopulateActionOptions {
 /**
  * Get list of actions for population queries
  * @private
- * @param {Object} opts
- * @param {Object} opts.firebase - Firebase instance
- * @param {Object} opts.docData - Data object from document
- * @param {Object} opts.meta - Meta data
- * @returns {Promise}
+ * @param opts
+ * @param opts.firebase - Firebase instance
+ * @param opts.docData - Data object from document
+ * @param opts.meta - Meta data
+ * @returns Actions for populating
  */
 export async function getPopulateActions(opts: GetPopulateActionOptions): Promise<(Partial<ReduxFirestoreAction>)[]> {
   const { firebase, docData, meta } = opts

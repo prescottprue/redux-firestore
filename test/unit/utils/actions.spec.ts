@@ -52,7 +52,7 @@ describe('actions utils', () => {
         ],
         method: 'test',
       };
-      await wrapInDispatch(dispatchSpy, opts);
+      await wrapInDispatch(dispatchSpy, (opts as any));
       expect(dispatchSpy).to.have.nested.property(
         'firstCall.args.0.type',
         'test',

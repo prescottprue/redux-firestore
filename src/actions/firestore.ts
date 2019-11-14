@@ -27,7 +27,12 @@ const pathListenerCounts: any = {};
  * @param doc - Document name
  * @returns Resolves with results of add call
  */
-export function add(firebase: any, dispatch: Dispatch, queryConfig: QueryConfig, data: firebase.firestore.DocumentData): Promise<firebase.firestore.DocumentReference> {
+export function add(
+  firebase: any,
+  dispatch: Dispatch,
+  queryConfig: QueryConfig,
+  data: firebase.firestore.DocumentData
+): Promise<firebase.firestore.DocumentReference> {
   const meta = getQueryConfig(queryConfig);
   return wrapInDispatch(dispatch, {
     ref: firestoreRef(firebase, meta),
