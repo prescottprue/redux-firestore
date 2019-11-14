@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "baseUrl": "./src",
+    "lib": [
+      "es6",
+      "dom"
+    ],
+    "target": "es5",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "declaration": true,
+    "outDir": "lib",
+    "rootDir": "./src",
+    "importHelpers": true,
+    "downlevelIteration": true,
+    "allowSyntheticDefaultImports": true,
+    // "strict": true,
+    "esModuleInterop": true
+  },
+  "typeRoots": [
+    "./types",
+    "./src",
+    "./node_modules/@types"
+  ],
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
