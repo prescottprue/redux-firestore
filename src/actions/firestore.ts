@@ -1,3 +1,5 @@
+import * as firebase from 'firebase/app'; // eslint-disable-line import/no-extraneous-dependencies
+import 'firebase/firestore';
 import { Dispatch } from 'redux'
 import { every } from 'lodash';
 import { wrapInDispatch } from '../utils/actions';

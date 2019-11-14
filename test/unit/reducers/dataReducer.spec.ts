@@ -35,7 +35,7 @@ describe('dataReducer', () => {
           type: actionTypes.DOCUMENT_ADDED
         };
         expect(() => dataReducer({}, action)).to.throw(
-          'Collection is required to build query name',
+          'Collection or Collection Group is required to build query name',
         );
       });
     });
@@ -65,7 +65,7 @@ describe('dataReducer', () => {
           type: actionTypes.LISTENER_RESPONSE
         };
         expect(() => dataReducer(state, action)).to.throw(
-          'Collection is required to build query name',
+          'Collection or Collection Group is required to build query name',
         );
       });
 
@@ -193,7 +193,7 @@ describe('dataReducer', () => {
           type: actionTypes.GET_SUCCESS
         };
         expect(() => dataReducer(state, action)).to.throw(
-          'Collection is required to build query name',
+          'Collection or Collection Group is required to build query name',
         );
       });
 
@@ -331,7 +331,7 @@ describe('dataReducer', () => {
       it('throws if meta does not contain collection', () => {
         const action = { meta: {}, payload: { data: {} }, type: actionTypes.LISTENER_ERROR };
         expect(() => dataReducer(state, action)).to.throw(
-          'Collection is required to build query name',
+          'Collection or Collection Group is required to build query name',
         );
       });
 

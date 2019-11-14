@@ -23,7 +23,7 @@
     "watch": "npm run build:es -- --watch",
     "watch:lib": "npm run build:lib -- --watch",
     "watch:commonjs": "npm run build:commonjs -- --watch",
-    "test": "mocha -r ts-node/register --require ./test/setup.ts -p ./test/tsconfig.json ./test/unit/**/*.spec.ts",
+    "test": "mocha ./test/unit/**/*.spec.ts",
     "test:cov": "nyc yarn test && nyc report --reporter=lcov",
     "codecov": "cat coverage/lcov.info | codecov",
     "lint": "eslint src/**.ts --ext .ts",
@@ -60,6 +60,7 @@
     "eslint-config-prettier": "^4.1.0",
     "eslint-plugin-babel": "^5.3.0",
     "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-jsdoc": "^18.0.1",
     "eslint-plugin-jsx-a11y": "^6.2.1",
     "eslint-plugin-prettier": "^3.0.1",
     "eslint-plugin-react": "^7.12.4",
@@ -100,5 +101,27 @@
         "*.js"
       ]
     }
-  ]
+  ],
+  "nyc": {
+    "include": [
+      "src/**/*.ts"
+    ],
+    "extension": [
+      ".ts",
+      ".tsx"
+    ],
+    "require": [
+      "ts-node/register"
+    ],
+    "exclude": [
+      "**/*.d.ts"
+    ],
+    "reporter": [
+      "text-summary",
+      "html"
+    ],
+    "sourceMap": true,
+    "instrument": true,
+    "all": true
+  }
 }

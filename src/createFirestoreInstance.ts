@@ -1,32 +1,32 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import { reduce } from 'lodash';
 import { merge } from 'lodash/fp';
-import { Dispatch } from 'redux'
+import { Dispatch } from 'redux';
 import { firestoreActions } from './actions';
 import { mapWithFirebaseAndDispatch } from './utils/actions';
 import { defaultConfig, methodsToAddFromFirestore } from './constants';
-import { ReduxFirestoreConfig, ExtendedFirestoreInstance } from './types'
+import { ReduxFirestoreConfig, ExtendedFirestoreInstance } from './types';
 
-let firestoreInstance: any
+let firestoreInstance: any;
 
 /**
  * Create a firebase instance that has helpers attached for dispatching actions
  * @param firebase - Firebase instance which to extend
  * @param configs - Configuration object
  * @param dispatch - Action dispatch function
- * @return Extended Firebase instance
+ * @returns Extended Firebase instance
  */
 export default function createFirestoreInstance(
   firebase: any,
   configs: ReduxFirestoreConfig,
-  dispatch: Dispatch
+  dispatch: Dispatch,
 ): ExtendedFirestoreInstance {
   // Setup internal variables
   const defaultInternals = {
     // Setup empty listeners object (later used to track listeners)
     listeners: {},
     // Extend default config with provided config
-    config: { ...defaultConfig, ...configs }
+    config: { ...defaultConfig, ...configs },
   };
 
   // extend existing firebase internals (using redux-firestore along with redux-firebase)
@@ -35,7 +35,7 @@ export default function createFirestoreInstance(
   // Aliases for methods
   const aliases = [
     { action: firestoreActions.deleteRef, name: 'delete' },
-    { action: firestoreActions.setListener, name: 'onSnapshot' }
+    { action: firestoreActions.setListener, name: 'onSnapshot' },
   ];
 
   // Create methods with internal firebase object and dispatch passed
@@ -57,7 +57,7 @@ export default function createFirestoreInstance(
             ...acc,
             [methodName]: firebase
               .firestore()
-              [methodName].bind(firebase.firestore())
+              [methodName].bind(firebase.firestore()),
           }
         : acc,
     {},
@@ -73,7 +73,6 @@ export default function createFirestoreInstance(
       : methods,
   );
 }
-
 
 /**
  * Expose Firestore instance created internally. Useful for
@@ -101,16 +100,14 @@ export default function createFirestoreInstance(
  * // then later
  * export function addTodo(newTodo) {
  *   return (dispatch, getState, getFirestore) => {
-  *    const firebase = getFirestore()
-  *    firebase
-  *      .add('todos', newTodo)
-  *      .then(() => {
-  *        dispatch({ type: 'SOME_ACTION' })
-  *      })
+ *    const firebase = getFirestore()
+ *    firebase
+ *      .add('todos', newTodo)
+ *      .then(() => {
+ *        dispatch({ type: 'SOME_ACTION' })
+ *      })
  *   }
- *  
  * };
- *
  */
 export function getFirestore(): any {
   // TODO: Handle recieveing config and creating firebase instance if it doesn't exist
@@ -122,4 +119,4 @@ export function getFirestore(): any {
   }
   // TODO: Create new firebase here with config passed in
   return firestoreInstance;
-};
+}

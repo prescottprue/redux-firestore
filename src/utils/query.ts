@@ -14,6 +14,7 @@ import {
   some,
 } from 'lodash';
 import * as firebase from 'firebase/app'
+import 'firebase/firestore'
 import { Dispatch } from 'redux';
 import { to } from '../utils/async';
 import { actionTypes } from '../constants';
@@ -223,12 +224,12 @@ export function getQueryName(meta: QueryConfig, options?: QueryNameOptions): str
   if (typeof meta === 'string') {
     return meta;
   }
-  const { collection, doc, subcollections, where, storeAs } = meta;
+  const { collection, collectionGroup, doc, subcollections, where, storeAs } = meta;
   if (storeAs) {
     return storeAs;
   }
-  if (!collection) {
-    throw new Error('Collection is required to build query name');
+  if (!collection && !collectionGroup) {
+    throw new Error('Collection or Collection Group is required to build query name');
   }
 
   if (storeAs) {
@@ -277,9 +278,9 @@ export function getBaseQueryName(meta: QueryConfig): string {
   if (typeof meta === 'string') {
     return meta;
   }
-  const { collection, subcollections, ...remainingMeta } = meta;
-  if (!collection) {
-    throw new Error('Collection is required to build query name');
+  const { collection, collectionGroup, subcollections, ...remainingMeta } = meta;
+  if (!collection && !collectionGroup) {
+    throw new Error('Collection or Collection Group is required to build query name');
   }
   let basePath = collection;
 

@@ -25,7 +25,7 @@ export interface ListenersState {
  */
 function listenersById(state = {}, action: ReduxFirestoreAction): ListenersByIdState {
   const { type, path, payload } = action
-  if (!payload.name) {
+  if (!payload || !payload.name) {
     return state
   }
   switch (type) {
@@ -54,6 +54,9 @@ function listenersById(state = {}, action: ReduxFirestoreAction): ListenersByIdS
  */
 function allListeners(state: any, action: ReduxFirestoreAction): AllListenerIdsState {
   const { type, payload } = action
+  if (!payload || !payload.name) {
+    return state
+  }
   switch (type) {
     case actionTypes.SET_LISTENER:
       return [...state, payload.name];
