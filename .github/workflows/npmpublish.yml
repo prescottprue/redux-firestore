@@ -1,4 +1,4 @@
-name: Node.js Package
+name: NPM Package Publish
 
 on:
   push:
@@ -8,6 +8,7 @@ on:
 
 jobs:
   build:
+    name: Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
@@ -23,15 +24,21 @@ jobs:
   publish-npm:
     needs: build
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v1
+      - name: Check package version
+        uses: technote-space/package-version-check-action@v1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Setup Node
         uses: actions/setup-node@v1
         with:
           node-version: 12
           registry-url: https://registry.npmjs.org/
-      - run: npm ci
-      - run: npm publish --tag next
+      - name: Install Dependencies
+        run: npm ci
+      - run: npm publish $(if [ ${{github.ref}} == 'refs/heads/master' ]; then echo '--tag next';fi;)
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}
 
@@ -39,13 +46,37 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - name: Checkout code
+        uses: actions/checkout@v1
       - uses: actions/setup-node@v1
         with:
           node-version: 12
           registry-url: https://npm.pkg.github.com/
           scope: 'prescottprue'
-      - run: npm ci
-      - run: npm publish --tag next
+      - name: Install Dependencies
+        run: npm ci
+      - run: npm publish $(if [ ${{github.ref}} == 'refs/heads/master' ]; then echo '--tag next';fi;)
         env:
           NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v1
+      - name: Setup Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        with:
+          tag_name: $(node -pe "require('./package.json').version")
+          release_name: v$(node -pe "require('./package.json').version")
+          draft: false
+          prerelease: false
