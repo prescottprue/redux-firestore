@@ -571,9 +571,8 @@ export function promisesForPopulate(
       : populatesIn,
   );
 
-  const dataHasPopulateChilds = populatesForData.some(
-    populatesForData,
-    populate => has(originalData, populate.child),
+  const dataHasPopulateChilds = populatesForData.some(populate =>
+    has(originalData, populate.child),
   );
   if (dataHasPopulateChilds) {
     // Data is a single object, resolve populates directly
