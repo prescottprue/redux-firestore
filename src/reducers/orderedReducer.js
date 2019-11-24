@@ -66,12 +66,9 @@ function modifyDoc(collectionState, action) {
   }
 
   if (!action.meta.subcollections || action.meta.storeAs) {
-    return updateItemInArray(
-      collectionState,
-      action.meta.doc,
-      item =>
-        // Merge is no longer used to prevent removal of subcollections since this will change in v1
-        action.payload.data,
+    return updateItemInArray(collectionState, action.meta.doc, item =>
+      // Merge is no longer used to prevent removal of subcollections since this will change in v1
+      ({ id: action.meta.doc, ...action.payload.data }),
     );
   }
 
