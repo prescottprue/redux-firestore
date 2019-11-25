@@ -603,6 +603,22 @@ describe('firestoreActions', () => {
           });
         });
       });
+      describe('populates', () => {
+        it('calls success callback if provided', async () => {
+          listenerConfig = {
+            collection: 'test',
+            doc: '1',
+            populates: [{ root: 'users', child: 'asdf' }],
+          };
+          const instance = createFirestoreInstance(
+            fakeFirebase,
+            fakeConfig,
+            dispatchSpy,
+          );
+          await instance.test.setListener(listenerConfig);
+          expect(dispatchSpy).to.have.been.calledOnce;
+        });
+      });
     });
 
     describe('setListeners', () => {

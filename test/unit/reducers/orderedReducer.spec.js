@@ -83,10 +83,27 @@ describe('orderedReducer', () => {
     });
 
     describe('DOCUMENT_MODIFIED', () => {
+      it('preserves id on existing document - #252', () => {
+        const collection = 'test1';
+        const doc = 'test2';
+        const someDoc = { some: 'value' };
+        const payload = {
+          data: someDoc,
+        };
+        const meta = { collection, doc };
+        action = { meta, payload, type: actionTypes.DOCUMENT_MODIFIED };
+        const fakeState = {
+          [collection]: [{ id: doc, ...someDoc }, { id: 'id1' }, { id: 'id2' }],
+        };
+        const result = orderedReducer(fakeState, action);
+        // ID
+        expect(result).to.have.nested.property(`${collection}.0.id`, doc);
+      });
+
       it('moves document within collection - #230', () => {
         const collection = 'test1';
         const doc = 'test2';
-        const someDoc = { id: doc, some: 'value' };
+        const someDoc = { some: 'value' };
         const otherDoc = { id: 'id1' };
         const newIndex = 2;
         const oldIndex = 0;
