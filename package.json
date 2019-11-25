@@ -25,7 +25,7 @@
     "watch:lib": "npm run build:lib -- --watch",
     "watch:commonjs": "npm run build:commonjs -- --watch",
     "test": "mocha -R spec ./test/unit/**",
-    "test:cov": "nyc mocha -R spec ./test/unit/** && nyc report --reporter=lcov",
+    "test:cov": "nyc --reporter=lcov --reporter=html npm run test",
     "codecov": "cat coverage/lcov.info | codecov",
     "lint": "eslint src test",
     "lint:fix": "npm run lint -- --fix",
