@@ -12,6 +12,23 @@ import {
 } from 'lodash';
 import { actionTypes } from '../constants';
 
+export const snapshotCache = new WeakMap();
+/**
+ * Get DocumentSnapshot and QuerySnapshot with object from either data or
+ * ordered firestore state. If provided with doc data, it will return
+ * DocumentSnapshot, providing with a collection from data or an array from
+ * ordered state will return QuerySnapshot, except ordered state that generated
+ * as DocumentRef will return DocumentSnapshot
+ * Note: the cache is local and, not persistance. Passing an object from initial
+ * state or from SSR state will yield undefined.
+ * @param {object|Array} obj - The object from data or ordered state
+ * @returns {firebase.firestore.DocumentSnapshot|firebase.firestore.QuerySnapshot}
+ * DocumentSnapshot or QuerySnapshot depend on type of object provided
+ */
+export function getSnapshotByObject(obj) {
+  return snapshotCache.get(obj);
+}
+
 /**
  * Add where claues to Cloud Firestore Reference handling invalid formats
  * and multiple where statements (array of arrays)
@@ -443,15 +460,18 @@ export function orderedFromSnap(snap) {
     const obj = isObject(snap.data())
       ? { id: snap.id, ...(snap.data() || snap.data) }
       : { id: snap.id, data: snap.data() };
+    snapshotCache.set(obj, snap);
     ordered.push(obj);
   } else if (snap.forEach) {
     snap.forEach(doc => {
       const obj = isObject(doc.data())
         ? { id: doc.id, ...(doc.data() || doc.data) }
         : { id: doc.id, data: doc.data() };
+      snapshotCache.set(obj, snap);
       ordered.push(obj);
     });
   }
+  snapshotCache.set(ordered, snap);
   return ordered;
 }
 
@@ -464,13 +484,23 @@ export function orderedFromSnap(snap) {
 export function dataByIdSnapshot(snap) {
   const data = {};
   if (snap.data) {
-    data[snap.id] = snap.exists ? snap.data() : null;
+    const snapData = snap.exists ? snap.data() : null;
+    if (snapData) {
+      snapshotCache.set(snapData, snap);
+    }
+    data[snap.id] = snapData;
   } else if (snap.forEach) {
     snap.forEach(doc => {
-      data[doc.id] = doc.data() || doc;
+      const snapData = doc.data() || doc;
+      snapshotCache.set(snapData, snap);
+      data[doc.id] = snapData;
     });
   }
-  return !!data && Object.keys(data).length ? data : null;
+  if (!!data && Object.keys(data).length) {
+    snapshotCache.set(data, snap);
+    return data;
+  }
+  return null;
 }
 
 /**

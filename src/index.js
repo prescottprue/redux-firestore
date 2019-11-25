@@ -4,6 +4,7 @@ import { firestoreActions } from './actions';
 import createFirestoreInstance from './createFirestoreInstance';
 import constants, { actionTypes } from './constants';
 import middleware, { CALL_FIRESTORE } from './middleware';
+import { getSnapshotByObject } from './utils/query';
 
 // converted with transform-inline-environment-variables
 export const version = process.env.npm_package_version;
@@ -16,6 +17,7 @@ export {
   createFirestoreInstance,
   firestoreActions as actions,
   getFirestore,
+  getSnapshotByObject,
   constants,
   actionTypes,
   middleware,
@@ -31,6 +33,7 @@ export default {
   createFirestoreInstance,
   actions: firestoreActions,
   getFirestore,
+  getSnapshotByObject,
   constants,
   actionTypes,
   middleware,
