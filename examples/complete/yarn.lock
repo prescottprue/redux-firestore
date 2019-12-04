@@ -10103,7 +10103,7 @@ prompts@^2.0.1:
     kleur "^3.0.3"
     sisteransi "^1.0.3"
 
-prop-types@^15.5.0, prop-types@^15.5.8, prop-types@^15.6.1, prop-types@^15.6.2, prop-types@^15.7.2:
+prop-types@^15.5.0, prop-types@^15.6.1, prop-types@^15.6.2, prop-types@^15.7.2:
   version "15.7.2"
   resolved "https://registry.yarnpkg.com/prop-types/-/prop-types-15.7.2.tgz#52c41e75b8c87e72b9d9360e0206b99dcbffa6c5"
   integrity sha512-8QQikdH7//R2vurIJSutZ1smHYTcLpRWEOlHnzcWHmBYrOGUysKwSsrC89BCiFj3CbrfJ/nXFdJepOVrY1GCHQ==
@@ -10373,12 +10373,12 @@ react-error-overlay@^6.0.3:
   resolved "https://registry.yarnpkg.com/react-error-overlay/-/react-error-overlay-6.0.3.tgz#c378c4b0a21e88b2e159a3e62b2f531fd63bf60d"
   integrity sha512-bOUvMWFQVk5oz8Ded9Xb7WVdEi3QGLC8tH7HmYP0Fdp4Bn3qw0tRFmr5TW6mvahzvmrK4a6bqWGfCevBflP+Xw==
 
-react-google-button@^0.5.3:
-  version "0.5.3"
-  resolved "https://registry.yarnpkg.com/react-google-button/-/react-google-button-0.5.3.tgz#d8c76328e51b55f2835a4ebe23817906dac6a4f8"
-  integrity sha512-2xiECMLZ2qUbMtYq7fjwi/8WEVpLI5UuZLPGJzVkpcGOq/hdY5tqx8AXWUqI7QOgb9mG48/UG67kOzTgab+NUw==
+react-google-button@^0.6.0:
+  version "0.6.0"
+  resolved "https://registry.yarnpkg.com/react-google-button/-/react-google-button-0.6.0.tgz#5dd66251f92fb274b8eff6b0970e611ecf884894"
+  integrity sha512-uSGBp4Are6xVEEqE+gSSOGGYTj5bi2+fYa07PqOG5svl3Xi7S2YIu4uT/xFtmVnOwjo8mgErFEAqTDB+j8fqgw==
   dependencies:
-    prop-types "^15.5.8"
+    prop-types "^15.7.2"
 
 react-is@^16.6.0, react-is@^16.7.0, react-is@^16.8.1, react-is@^16.8.4, react-is@^16.8.6, react-is@^16.9.0:
   version "16.10.2"
@@ -10397,10 +10397,10 @@ react-loadable@^5.5.0:
   dependencies:
     prop-types "^15.5.0"
 
-react-redux-firebase@^3.0.2:
-  version "3.0.2"
-  resolved "https://registry.yarnpkg.com/react-redux-firebase/-/react-redux-firebase-3.0.2.tgz#4d5b6edb5b4f86167e2eb8062f02d0bd1914f489"
-  integrity sha512-1EFko9TiZkoHxRA76t9M9eX99/Q8zW4v6pI/DvY7M6nbPvRWebL967Ft/6vIUYeUqqBzOriOqYO91lFRJBtC6A==
+react-redux-firebase@^3.0.5:
+  version "3.0.5"
+  resolved "https://registry.yarnpkg.com/react-redux-firebase/-/react-redux-firebase-3.0.5.tgz#94db123b80e0a4de1854f87e75bf15f36d516214"
+  integrity sha512-QEmzPTPFtxHoAvy8UJ1o76OrUv/a2hD04iVslnpecZSYcasjWjxpS2gu9HpbHGs/qjB92gF3BvrrDc8aDRkGeQ==
   dependencies:
     hoist-non-react-statics "^3.3.0"
     lodash "^4.17.15"
