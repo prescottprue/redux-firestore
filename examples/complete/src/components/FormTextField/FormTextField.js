@@ -21,7 +21,13 @@ function FormTextField({
 }
 
 FormTextField.propTypes = {
-  formTextField: PropTypes.object
+  label: PropTypes.string,
+  input: PropTypes.object,
+  meta: PropTypes.shape({
+    touched: PropTypes.bool,
+    invalid: PropTypes.bool,
+    error: PropTypes.string
+  })
 }
 
 export default FormTextField

@@ -1,4 +1,3 @@
-import React from 'react'
 import { get } from 'lodash'
 import { isLoaded, isEmpty } from 'react-redux-firebase/lib/helpers'
 import LoadableComponent from 'react-loadable'
@@ -103,32 +102,4 @@ export function Loadable(opts) {
     loading: LoadingSpinner,
     ...opts
   })
-}
-
-export class ErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props)
-    this.state = { hasError: false }
-  }
-
-  static getDerivedStateFromError(error) {
-    // Update state so the next render will show the fallback UI.
-    return { hasError: true }
-  }
-
-  componentDidCatch(error, errorInfo) {
-    // You can also log the error to an error reporting service
-    // logErrorToMyService(error, errorInfo);
-    // TODO: Report error to sentry
-    console.log('error:', error, errorInfo) // eslint-disable-line no-console
-  }
-
-  render() {
-    if (this.state.hasError) {
-      // You can render any custom fallback UI
-      return <h1>Something went wrong.</h1>
-    }
-
-    return this.props.children
-  }
 }
