@@ -10,8 +10,8 @@ import AccountCircle from '@material-ui/icons/AccountCircle'
 function ProviderData({ providerData }) {
   return (
     <List subheader={<ListSubheader>Accounts</ListSubheader>}>
-      {providerData.map((providerAccount, i) => (
-        <ListItem key={i}>
+      {providerData.map(providerAccount => (
+        <ListItem key={`Provider-${providerAccount.providerId}`}>
           <ListItemIcon>
             <AccountCircle />
           </ListItemIcon>

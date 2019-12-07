@@ -4,7 +4,7 @@ import { firestoreActions } from './actions';
 import createFirestoreInstance from './createFirestoreInstance';
 import constants, { actionTypes } from './constants';
 import middleware, { CALL_FIRESTORE } from './middleware';
-import { getQueryName } from './utils/query';
+import { getQueryName, getSnapshotByObject } from './utils/query';
 import { firestoreOrderedSelector, firestoreDataSelector } from './selectors';
 
 // converted with transform-inline-environment-variables
@@ -21,6 +21,7 @@ export {
   firestoreOrderedSelector,
   firestoreDataSelector,
   getFirestore,
+  getSnapshotByObject,
   constants,
   actionTypes,
   middleware,
@@ -36,6 +37,7 @@ export default {
   createFirestoreInstance,
   actions: firestoreActions,
   getFirestore,
+  getSnapshotByObject,
   constants,
   actionTypes,
   middleware,

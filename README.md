@@ -285,9 +285,20 @@ store.firestore.unsetListeners([query1Options, query2Options]),
 ##### Sub Collections
 
 ```js
-{ collection: 'cities', doc: 'SF', subcollections: [{ collection: 'zipcodes' }] },
-// or string equivalent
-// props.store.firestore.get('cities/SF'/zipcodes),
+{
+  collection: 'cities',
+  doc: 'SF',
+  subcollections: [{ collection: 'zipcodes' }],
+  storeAs: 'SF-zipcodes' // make sure to include this
+},
+```
+
+**NOTE**: `storeAs` is now required for subcollections. This is to more closley match the logic of [the upcoming major release (v1)](https://github.com/prescottprue/redux-firestore/wiki/v1.0.0-Roadmap) which stores all collections, even subcollections, at the top level of `data` and `ordered` state slices.
+
+##### Collection Group
+```js
+{ collectionGroup: 'landmarks' },
+// does not support string equivalent
 ```
 
 **Note:** When nesting sub-collections, [`storeAs`](#storeas) should be used for more optimal state updates.

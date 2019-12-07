@@ -80,6 +80,96 @@ describe('orderedReducer', () => {
       });
     });
 
+    describe('DOCUMENT_MODIFIED', () => {
+      it('preserves id on existing document - #252', () => {
+        const collection = 'test1';
+        const doc = 'test2';
+        const someDoc = { some: 'value' };
+        const payload = {
+          data: someDoc,
+        };
+        const meta = { collection, doc };
+        action = { meta, payload, type: actionTypes.DOCUMENT_MODIFIED };
+        const fakeState = {
+          [collection]: [{ id: doc, ...someDoc }, { id: 'id1' }, { id: 'id2' }],
+        };
+        const result = orderedReducer(fakeState, action);
+        // ID
+        expect(result).to.have.nested.property(`${collection}.0.id`, doc);
+      });
+
+      it('moves document within collection - #230', () => {
+        const collection = 'test1';
+        const doc = 'test2';
+        const someDoc = { some: 'value' };
+        const otherDoc = { id: 'id1' };
+        const newIndex = 2;
+        const oldIndex = 0;
+        const payload = {
+          ordered: { newIndex, oldIndex },
+          data: someDoc,
+        };
+        const meta = { collection, doc };
+        action = { meta, payload, type: actionTypes.DOCUMENT_MODIFIED };
+        const fakeState = {
+          [collection]: [someDoc, otherDoc, { id: 'id2' }],
+        };
+        const result = orderedReducer(fakeState, action);
+        // ID on first item no longer matches
+        expect(result).to.not.have.nested.property(
+          `${collection}.${oldIndex}.id`,
+          doc,
+        );
+        // Old item is moved into removed index
+        expect(result).to.have.nested.property(
+          `${collection}.${oldIndex}.id`,
+          otherDoc.id,
+        );
+        // Value is set to new item index
+        expect(result).to.have.nested.property(
+          `${collection}.${newIndex}.some`,
+          someDoc.some,
+        );
+      });
+
+      it('removes deleted value from existing document (including in an array) - #243', () => {
+        const collection = 'test1';
+        const doc = 'test2';
+        const originalDoc = {
+          id: doc,
+          some: 'value',
+          another: ['item1', 'item2'],
+        };
+        const newDoc = { id: doc, some: 'value', another: ['item1'] };
+        const newIndex = 0;
+        const oldIndex = -1;
+        const payload = {
+          ordered: { newIndex, oldIndex },
+          data: newDoc,
+        };
+        const meta = { collection, doc };
+        action = { meta, payload, type: actionTypes.DOCUMENT_MODIFIED };
+        const fakeState = {
+          [collection]: [originalDoc, { id: 'id2' }],
+        };
+        const result = orderedReducer(fakeState, action);
+        // Confirm that original parameter is removed
+        expect(result).to.not.have.nested.property(
+          `${collection}.${newIndex}.another.1`,
+        );
+        // Confirm that other item in array remains
+        expect(result).to.have.nested.property(
+          `${collection}.${newIndex}.another.0`,
+          originalDoc.another[0],
+        );
+        // Confirm that unchanged value is preserved
+        expect(result).to.have.nested.property(
+          `${collection}.${newIndex}.some`,
+          originalDoc.some,
+        );
+      });
+    });
+
     describe('DOCUMENT_REMOVED', () => {
       it('removes document from collection', () => {
         const collection = 'test1';

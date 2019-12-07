@@ -29,12 +29,37 @@ const {
 } = actionTypes;
 
 /**
+ * Create a new copy of an array with the provided item in a new array index
+ * @param {Array} [collectionState=[]] - Redux state of current collection
+ * @param {object} meta - New array metadata
+ * @param {object} meta.oldIndex - New array index for the item
+ * @param {object} meta.newIndex -
+ * @param {object} newValue - New value of the item
+ * @returns {Array} Array with item moved
+ */
+function newArrayWithItemMoved(collectionState, meta, newValue) {
+  const { oldIndex, newIndex } = meta || {};
+  // remove oldIndex from array while creating a copy
+  const arrayWithoutItem = [
+    ...collectionState.slice(0, oldIndex),
+    ...collectionState.slice(oldIndex + 1),
+  ];
+  // Insert item in new array while preserving order of other items
+  return [
+    ...arrayWithoutItem.slice(0, newIndex),
+    // set new item (falling back to using a copy of the removed item)
+    newValue || { ...collectionState[oldIndex] },
+    ...arrayWithoutItem.slice(newIndex),
+  ];
+}
+
+/**
  * Case reducer for modifying a document within a collection or
  * subcollection. When storeAs is being used, subcollections are
  * moved to the level of the storeAs (instead of on their parent doc).
- * @param  {Array} [collectionState=[]] - Redux state of current collection
- * @param  {Object} action - The action that was dispatched
- * @return {Array} State with document modified
+ * @param {Array} [collectionState=[]] - Redux state of current collection
+ * @param {object} action - The action that was dispatched
+ * @returns {Array} State with document modified
  */
 function modifyDoc(collectionState, action) {
   return updateItemInArray(collectionState, action.meta.doc, item =>
@@ -49,8 +74,8 @@ function lastDocKey(meta) {
 /**
  * Case reducer for adding a document to a collection or subcollection.
  * @param {Array} [array=[]] - Redux state of current collection
- * @param {Object} action - The action that was dispatched
- * @return {Array} State with document modified
+ * @param {object} action - The action that was dispatched
+ * @returns {Array} State with document modified
  */
 function addDoc(array = [], action) {
   const { meta, payload } = action;
@@ -64,8 +89,8 @@ function addDoc(array = [], action) {
 /**
  * Case reducer for adding a document to a collection.
  * @param {Array} array - Redux state of current collection
- * @param {Object} action - The action that was dispatched
- * @return {Array} State with document modified
+ * @param {object} action - The action that was dispatched
+ * @returns {Array} State with document modified
  */
 function removeDoc(array, action) {
   // Remove doc from collection array
@@ -74,9 +99,9 @@ function removeDoc(array, action) {
 
 /**
  * Case reducer for writing/updating a whole collection.
- * @param  {Array} collectionState - Redux state of current collection
- * @param  {Object} action - The action that was dispatched
- * @return {Array} State with document modified
+ * @param {Array} collectionState - Redux state of current collection
+ * @param {object} action - The action that was dispatched
+ * @returns {Array} State with document modified
  */
 function writeCollection(collectionState, action) {
   const { meta, merge = { doc: true, collections: true } } = action;
@@ -188,23 +213,23 @@ function getStoreUnderKey(action) {
 
 /**
  * Reducer for ordered state.
- * @param  {Object} [state={}] - Current ordered redux state
- * @param  {Object} action - The action that was dispatched
- * @param  {String} action.type - Type of action that was dispatched
- * @param  {String} action.meta.collection - Name of Collection which the action
+ * @param {object} [state={}] - Current ordered redux state
+ * @param {object} action - The action that was dispatched
+ * @param {string} action.type - Type of action that was dispatched
+ * @param {string} action.meta.collection - Name of Collection which the action
  * associates with
- * @param  {String} action.meta.doc - Name of Document which the action
+ * @param {string} action.meta.doc - Name of Document which the action
  * associates with
- * @param  {Array} action.meta.subcollections - Subcollections which the action
+ * @param {Array} action.meta.subcollections - Subcollections which the action
  * associates with
- * @param  {String} action.meta.storeAs - Another key within redux store that the
+ * @param {string} action.meta.storeAs - Another key within redux store that the
  * action associates with (used for storing data under a path different
  * from its collection/document)
- * @param  {Object} action.payload - Object containing data associated with
+ * @param {object} action.payload - Object containing data associated with
  * action
- * @param  {Array} action.payload.ordered - Ordered Array Data associated with
+ * @param {Array} action.payload.ordered - Ordered Array Data associated with
  * action
- * @return {Object} Ordered state after reduction
+ * @returns {object} Ordered state after reduction
  */
 export default function orderedReducer(state = {}, action) {
   // Return state if action is malformed (i.e. no type)

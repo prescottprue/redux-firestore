@@ -2,12 +2,12 @@ import React from 'react'
 import { Route } from 'react-router-dom'
 import { connectedRouterRedirect } from 'redux-auth-wrapper/history4/redirect'
 import locationHelperBuilder from 'redux-auth-wrapper/history4/locationHelper'
-import createHistory from 'history/createBrowserHistory'
+import { createBrowserHistory } from 'history'
 import LoadingSpinner from 'components/LoadingSpinner'
 import { LIST_PATH } from 'constants/paths'
 
 const locationHelper = locationHelperBuilder({})
-const history = createHistory()
+const history = createBrowserHistory()
 
 const AUTHED_REDIRECT = 'AUTHED_REDIRECT'
 const UNAUTHED_REDIRECT = 'UNAUTHED_REDIRECT'
@@ -15,8 +15,8 @@ const UNAUTHED_REDIRECT = 'UNAUTHED_REDIRECT'
 /**
  * Higher Order Component that redirects to `/login` instead
  * rendering if user is not authenticated (default of redux-auth-wrapper).
- * @param {Component} componentToWrap - Component to wrap
- * @return {Component} wrappedComponent
+ * @param {React.Component} componentToWrap - Component to wrap
+ * @returns {React.Component} wrappedComponent
  */
 export const UserIsAuthenticated = connectedRouterRedirect({
   redirectPath: '/login',
@@ -42,8 +42,8 @@ export const UserIsAuthenticated = connectedRouterRedirect({
  * recent route instead rendering if user is not authenticated. This is useful
  * routes that should not be displayed if a user is logged in, such as the
  * login route.
- * @param {Component} componentToWrap - Component to wrap
- * @return {Component} wrappedComponent
+ * @param {React.Component} componentToWrap - Component to wrap
+ * @returns {React.Component} wrappedComponent
  */
 export const UserIsNotAuthenticated = connectedRouterRedirect({
   AuthenticatingComponent: LoadingSpinner,
@@ -70,6 +70,7 @@ export const UserIsNotAuthenticated = connectedRouterRedirect({
  * @param {Array} routes - Routes settings array
  * @param {Object} match - Routes settings array
  * @param {Object} parentProps - Props to pass to children from parent
+ * @returns {Array} List of routes
  */
 export function renderChildren(routes, match, parentProps) {
   return routes.map(route => (

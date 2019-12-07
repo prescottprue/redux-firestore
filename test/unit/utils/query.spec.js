@@ -6,6 +6,7 @@ import {
   firestoreRef,
   orderedFromSnap,
   dataByIdSnapshot,
+  getSnapshotByObject,
 } from 'utils/query';
 import { actionTypes } from 'constants';
 
@@ -54,7 +55,7 @@ describe('query utils', () => {
   describe('getQueryName', () => {
     it('throws for no collection name', () => {
       expect(() => getQueryName({})).to.throw(
-        'Collection is required to build query name',
+        'Collection or Collection Group is required to build query name',
       );
     });
 
@@ -95,9 +96,7 @@ describe('query utils', () => {
         };
         result = getQueryName(meta);
         expect(result).to.equal(
-          `${meta.collection}/${
-            meta.doc
-          }?where=${where1}:${whereOperator}:${where2}`,
+          `${meta.collection}/${meta.doc}?where=${where1}:${whereOperator}:${where2}`,
         );
       });
     });
@@ -193,9 +192,7 @@ describe('query utils', () => {
         expect(dispatch).to.be.calledWith({
           meta,
           payload: {
-            name: `${meta.collection}/${meta.doc}/${
-              meta.subcollections[0].collection
-            }`,
+            name: `${meta.collection}/${meta.doc}/${meta.subcollections[0].collection}`,
           },
           type: '@@reduxFirestore/SET_LISTENER',
         });
@@ -289,7 +286,7 @@ describe('query utils', () => {
       it('throws invalid object', () => {
         meta = [{ test: 'test' }];
         expect(() => getQueryConfigs(meta)).to.Throw(
-          'Collection and/or Doc are required parameters within query definition object',
+          'Collection, Collection Group and/or Doc are required parameters within query definition object',
         );
       });
     });
@@ -390,6 +387,25 @@ describe('query utils', () => {
         result = firestoreRef(fakeFirebase, meta);
         expect(result).to.be.an('object');
         expect(docSpy).to.be.calledWith(meta.doc);
+      });
+    });
+
+    describe('collectionGroup', () => {
+      it('throws if collection and collectionGroup are both provided', () => {
+        const queryMeta = { collectionGroup: 'test', collection: 'other' };
+        expect(() => firestoreRef(fakeFirebase, queryMeta)).to.Throw(
+          'Reference cannot contain both Collection and CollectionGroup.',
+        );
+      });
+
+      it('calls collectionGroup', () => {
+        const queryMeta = { collectionGroup: 'test' };
+        const collectionGroupSpy = sinon.spy();
+        fakeFirebase = {
+          firestore: () => ({ collectionGroup: collectionGroupSpy }),
+        };
+        firestoreRef(fakeFirebase, queryMeta);
+        expect(collectionGroupSpy).to.be.calledWith(queryMeta.collectionGroup);
       });
     });
 
@@ -628,31 +644,24 @@ describe('query utils', () => {
       });
 
       it('handles array of arrays', () => {
-        meta = { collection: 'test', where: [['other', '===', 'test']] };
-        const whereSpy = sinon.spy(() => ({}));
+        const where1 = ['other', '===', 'test'];
+        const where2 = ['second', '===', 'value'];
+        meta = { collection: 'test', where: [where1, where2] };
+        const where2Spy = sinon.spy(() => ({}));
+        const whereSpy = sinon.spy(() => ({ where: where2Spy }));
         fakeFirebase = {
           firestore: () => ({ collection: () => ({ where: whereSpy }) }),
         };
         result = firestoreRef(fakeFirebase, meta);
         expect(result).to.be.an('object');
-        expect(whereSpy).to.be.calledOnce;
+        expect(whereSpy).to.be.calledWith(...where1);
+        expect(where2Spy).to.be.calledWith(...where2);
       });
 
       it('throws for invalid where parameter', () => {
         meta = { collection: 'test', where: 'other' };
         fakeFirebase = {
           firestore: () => ({ collection: () => ({ where: () => ({}) }) }),
-        };
-        expect(() => firestoreRef(fakeFirebase, meta)).to.throw(
-          'where parameter must be an array.',
-        );
-      });
-
-      it('throws for invalid where parameter within array', () => {
-        meta = { collection: 'test', where: [false] };
-        const whereSpy = sinon.spy(() => ({}));
-        fakeFirebase = {
-          firestore: () => ({ collection: () => ({ where: whereSpy }) }),
         };
         expect(() => firestoreRef(fakeFirebase, meta)).to.throw(
           'where parameter must be an array.',
@@ -803,14 +812,14 @@ describe('query utils', () => {
   describe('dataByIdSnapshot', () => {
     it('sets data by id if valid', () => {
       const id = 'someId';
-      const fakeData = 'some';
+      const fakeData = { some: 'thing' };
       result = dataByIdSnapshot({ id, data: () => fakeData, exists: true });
       expect(result).to.have.property(id, fakeData);
     });
 
     it('supports collection data', () => {
       const id = 'someId';
-      const fakeData = 'some';
+      const fakeData = { some: 'thing' };
       result = dataByIdSnapshot({
         forEach: func => func({ data: () => fakeData, id }),
       });
@@ -831,6 +840,44 @@ describe('query utils', () => {
       result = dataByIdSnapshot({ id, exists, data });
       expect(result).to.be.an('object');
       expect(result).to.have.property(id, null);
+    });
+  });
+
+  describe('dataByIdSnapshot', () => {
+    it('retrieve snapshot with data from data state ', () => {
+      const id = 'someId';
+      const fakeData = { some: 'thing' };
+      const fakeSnap = { id, data: () => fakeData, exists: true };
+      result = dataByIdSnapshot(fakeSnap);
+      expect(getSnapshotByObject(result)).to.equal(fakeSnap);
+    });
+
+    it('retrieve snapshot with data from data collection state ', () => {
+      const id = 'someId';
+      const fakeData = { some: 'thing' };
+      const fakeDocSnap = { id, data: () => fakeData, exists: true };
+      const docArray = [fakeDocSnap];
+      const fakeSnap = { forEach: docArray.forEach.bind(docArray) };
+      result = dataByIdSnapshot(fakeSnap);
+      expect(getSnapshotByObject(result)).to.equal(fakeSnap);
+    });
+
+    it('retrieve snapshot with data from ordered state', () => {
+      const id = 'someId';
+      const fakeData = { some: 'thing' };
+      const fakeSnap = { id, data: () => fakeData, exists: true };
+      result = orderedFromSnap(fakeSnap);
+      expect(getSnapshotByObject(result)).to.equal(fakeSnap);
+    });
+
+    it('retrieve snapshot with data from ordered collection state ', () => {
+      const id = 'someId';
+      const fakeData = { some: 'thing' };
+      const fakeDocSnap = { id, data: () => fakeData, exists: true };
+      const docArray = [fakeDocSnap];
+      const fakeSnap = { forEach: docArray.forEach.bind(docArray) };
+      result = orderedFromSnap(fakeSnap);
+      expect(getSnapshotByObject(result)).to.equal(fakeSnap);
     });
   });
 });
