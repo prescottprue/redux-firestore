@@ -467,7 +467,7 @@ export function orderedFromSnap(snap) {
       const obj = isObject(doc.data())
         ? { id: doc.id, ...(doc.data() || doc.data) }
         : { id: doc.id, data: doc.data() };
-      snapshotCache.set(obj, snap);
+      snapshotCache.set(obj, doc);
       ordered.push(obj);
     });
   }
@@ -492,7 +492,7 @@ export function dataByIdSnapshot(snap) {
   } else if (snap.forEach) {
     snap.forEach(doc => {
       const snapData = doc.data() || doc;
-      snapshotCache.set(snapData, snap);
+      snapshotCache.set(snapData, doc);
       data[doc.id] = snapData;
     });
   }
