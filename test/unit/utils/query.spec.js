@@ -843,7 +843,7 @@ describe('query utils', () => {
     });
   });
 
-  describe.only('snapshotCache', () => {
+  describe('snapshotCache', () => {
     it('retrieve snapshot with data from data state ', () => {
       const id = 'someId';
       const fakeData = { some: 'thing' };
