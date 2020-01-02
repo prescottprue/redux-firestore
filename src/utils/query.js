@@ -613,7 +613,11 @@ export function promisesForPopulate(
           getPopulateChild(firebase, p, childDataVal).then(v => {
             // write child to result object under root name if it is found
             if (v) {
-              set(results, `${p.root}.${childDataVal}`, v);
+              set(
+                results,
+                `${p.storeAs ? p.storeAs : p.root}.${childDataVal}`,
+                v,
+              );
             }
           }),
         );
@@ -651,7 +655,11 @@ export function promisesForPopulate(
             getPopulateChild(firebase, p, idOrList).then(v => {
               // write child to result object under root name if it is found
               if (v) {
-                set(results, `${p.root}.${idOrList}`, v);
+                set(
+                  results,
+                  `${p.storeAs ? p.storeAs : p.root}.${idOrList}`,
+                  v,
+                );
               }
               return results;
             }),
