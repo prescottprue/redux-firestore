@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { get } from 'lodash';
-import { withFirestore } from './utils';
+import { useFirestore } from 'react-redux-firebase'
 
 const styles = {
   container: {
@@ -10,8 +10,9 @@ const styles = {
   }
 };
 
-function NewTodo({ firestore }) {
+function NewTodo() {
   const [inputValue, onInputChange] = useState(null)
+  const firestore = useFirestore()
 
   function onNewClick() {
     return firestore.add('todos', {
@@ -30,4 +31,4 @@ function NewTodo({ firestore }) {
   )
 }
 
-export default withFirestore(NewTodo)
+export default NewTodo
