@@ -1,25 +1,25 @@
-import { isObject, isFunction, mapValues } from 'lodash';
+import { isObject, mapValues } from 'lodash';
 
 /**
  * Build payload by invoking payload function if it a function, otherwise
  * returning the payload.
- * @param  {Function|Object|Boolean} payload - Payload value (invoked if it
+ * @param {Function|object|boolean} payload - Payload value (invoked if it
  * is a function)
- * @param  {Any} valToPass - Value to pass to custom payload function
- * @return {Any} Result of building payload
+ * @param {any} valToPass - Value to pass to custom payload function
+ * @returns {any} Result of building payload
  */
 function makePayload({ payload }, valToPass) {
-  return isFunction(payload) ? payload(valToPass) : payload;
+  return typeof payload === 'function' ? payload(valToPass) : payload;
 }
 
 /**
- * @description Wrap method call in dispatched actions
+ * Wrap method call in dispatched actions
  * @param {Function} dispatch - Action dispatch function
- * @param {Object} opts - Options object
+ * @param {object} opts - Options object
  * @param {Function} opts.method - Method to call
  * @param {Array} opts.args - Arguments to call method with
  * @param {Array} opts.types - Action types array ([BEFORE, SUCCESS, FAILURE])
- * @return {Promise}
+ * @returns {Promise} Results of method call
  * @private
  */
 export function wrapInDispatch(
@@ -68,9 +68,9 @@ export function wrapInDispatch(
 /**
  * Function that builds a factory that passes firebase and dispatch as
  * first two arguments.
- * @param  {Object} firebase - Internal firebase instance
- * @param  {Function} dispatch - Redux's dispatch function
- * @return {Function} A wrapper that accepts a function to wrap with firebase
+ * @param {object} firebase - Internal firebase instance
+ * @param {Function} dispatch - Redux's dispatch function
+ * @returns {Function} A wrapper that accepts a function to wrap with firebase
  * and dispatch.
  */
 function createWithFirebaseAndDispatch(firebase, dispatch) {
@@ -80,11 +80,11 @@ function createWithFirebaseAndDispatch(firebase, dispatch) {
 
 /**
  * Map each action with Firebase and Dispatch. Includes aliasing of actions.
- * @param  {Object} firebase - Internal firebase instance
- * @param  {Function} dispatch - Redux's dispatch function
- * @param  {Object} actions - Action functions to map with firebase and dispatch
- * @param  {Object} aliases - List of name aliases for wrapped functions
- * @return {Object} Actions mapped with firebase and dispatch
+ * @param {object} firebase - Internal firebase instance
+ * @param {Function} dispatch - Redux's dispatch function
+ * @param {object} actions - Action functions to map with firebase and dispatch
+ * @param {object} aliases - List of name aliases for wrapped functions
+ * @returns {object} Actions mapped with firebase and dispatch
  */
 export function mapWithFirebaseAndDispatch(
   firebase,

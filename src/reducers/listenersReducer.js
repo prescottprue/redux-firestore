@@ -5,10 +5,10 @@ import { combineReducers } from '../utils/reducers';
 /**
  * Reducer for listeners ids. Changed by `SET_LISTENER` and `UNSET_LISTENER`
  * actions.
- * @param  {Object} [state={}] - Current listenersById redux state
- * @param  {Object} action - Object containing the action that was dispatched
- * @param  {String} action.type - Type of action that was dispatched
- * @return {Object} listenersById state after reduction (used in listeners)
+ * @param {object} [state={}] - Current listenersById redux state
+ * @param {object} action - Object containing the action that was dispatched
+ * @param {string} action.type - Type of action that was dispatched
+ * @returns {object} listenersById state after reduction (used in listeners)
  * @private
  */
 function listenersById(state = {}, { type, path, payload }) {
@@ -30,10 +30,10 @@ function listenersById(state = {}, { type, path, payload }) {
 
 /**
  * Reducer for listeners state. Changed by `ERROR` and `LOGOUT` actions.
- * @param  {Object} [state=[]] - Current authError redux state
- * @param  {Object} action - Object containing the action that was dispatched
- * @param  {String} action.type - Type of action that was dispatched
- * @return {Object} allListeners state after reduction (used in listeners)
+ * @param {object} [state=[]] - Current authError redux state
+ * @param {object} action - Object containing the action that was dispatched
+ * @param {string} action.type - Type of action that was dispatched
+ * @returns {object} allListeners state after reduction (used in listeners)
  * @private
  */
 function allListeners(state = [], { type, payload }) {
@@ -50,10 +50,10 @@ function allListeners(state = [], { type, payload }) {
 /**
  * Reducer for `listeners` state. Made from combination of listenersById and
  * allListeners reducers using combineReducers
- * @param  {Object} [state={}] - Current listeners state
- * @param  {Object} action - Object containing the action that was dispatched
- * @param  {String} action.type - Type of action that was dispatched
- * @return {Object} Profile state after reduction
+ * @param {object} [state={}] - Current listeners state
+ * @param {object} action - Object containing the action that was dispatched
+ * @param {string} action.type - Type of action that was dispatched
+ * @returns {object} Profile state after reduction
  */
 const listenersReducer = combineReducers({
   byId: listenersById,

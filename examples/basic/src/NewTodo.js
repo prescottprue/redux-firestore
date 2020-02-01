@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { get } from 'lodash';
-import { withHandlers, withStateHandlers, compose } from 'recompose'
+import { useFirestore } from 'react-redux-firebase'
 
 const styles = {
   container: {
@@ -10,34 +10,25 @@ const styles = {
   }
 };
 
-const NewTodo = ({ onInputChange, onNewClick }) => (
-  <div style={styles.container}>
-    <input onChange={onInputChange} type="text" />
-    <button onClick={onNewClick}>Submit</button>
-  </div>
-)
+function NewTodo() {
+  const [inputValue, onInputChange] = useState(null)
+  const firestore = useFirestore()
 
-const enhance = compose(
-  withStateHandlers(({
-    initialInputValue = null
-  }) => ({
-    inputValue: initialInputValue
-  }), {
-    onInputChange: (state) => (e) => ({
-      inputValue: get(e, 'target.value', null)
+  function onNewClick() {
+    return firestore.add('todos', {
+      text: inputValue,
+      done: false,
+      owner: 'Anonymous',
+      createdAt: firestore.FieldValue.serverTimestamp()
     })
-  }),
-  withHandlers({
-    onNewClick: props => () => {
-      // Submit new todo
-      props.onNewSubmit({
-        text: props.inputValue,
-        done: false
-      })
-      // Reset input
-      props.onInputChange()
-    }
-  })
-)
+  }
 
-export default enhance(NewTodo)
+  return (
+    <div style={styles.container}>
+      <input onChange={(e) => onInputChange(get(e, 'target.value', null))} type="text" />
+      <button onClick={onNewClick}>Submit</button>
+    </div>
+  )
+}
+
+export default NewTodo

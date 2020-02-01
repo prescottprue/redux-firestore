@@ -1,60 +1,50 @@
 import React from 'react'
-import PropTypes from 'prop-types'
-import { size } from 'lodash'
-import { connect } from 'react-redux'
-import { compose, renderNothing, branch } from 'recompose'
+import { useSelector } from 'react-redux'
 import Snackbar from '@material-ui/core/Snackbar'
 import IconButton from '@material-ui/core/IconButton'
 import CloseIcon from '@material-ui/icons/Close'
-import { withStyles } from '@material-ui/core/styles'
-import * as actions from '../actions'
+import { makeStyles } from '@material-ui/core/styles'
+import useNotifications from '../useNotifications'
 
-const styles = {
+const useStyles = makeStyles(() => ({
   buttonRoot: {
     color: 'white'
   }
-}
+}))
 
-function Notifications({
-  allIds,
-  byId,
-  dismissNotification,
-  classes
-}) {
+function Notifications() {
+  const classes = useStyles()
+  const { allIds, byId } = useSelector(({ notifications }) => notifications)
+  const { dismissNotification } = useNotifications()
+
+  // Only render if notifications exist
+  if (!allIds || !Object.keys(allIds).length) {
+    return null
+  }
+
   return (
     <div>
-      {allIds.map(id => (
-        <Snackbar
-          key={id}
-          open
-          action={
-            <IconButton
-              onClick={() => dismissNotification(id)}
-              classes={{ root: classes.buttonRoot }}>
-              <CloseIcon />
-            </IconButton>
-          }
-          message={byId[id].message}
-        />
-      ))}
+      {allIds.map(id => {
+        function dismissCurrentNotification() {
+          dismissNotification(id)
+        }
+        return (
+          <Snackbar
+            key={id}
+            open
+            action={
+              <IconButton
+                onClick={dismissCurrentNotification}
+                classes={{ root: classes.buttonRoot }}>
+                <CloseIcon />
+              </IconButton>
+            }
+            message={byId[id].message}
+          />
+        )
+      })}
     </div>
   )
 }
 
-Notifications.propTypes = {
-  allIds: PropTypes.array.isRequired,
-  byId: PropTypes.object.isRequired,
-  classes: PropTypes.object.isRequired,
-  dismissNotification: PropTypes.func.isRequired
-}
-
-const enhance = compose(
-  connect(
-    ({ notifications: { allIds, byId } }) => ({ allIds, byId }),
-    actions
-  ),
-  branch(props => !size(props.allIds), renderNothing), // only render if notifications exist
-  withStyles(styles)
-)
-
-export default enhance(Notifications)
+export default Notifications

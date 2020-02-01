@@ -1,5 +1,5 @@
 import { get } from 'lodash';
-import { setWith, assign } from 'lodash/fp';
+import { setWith } from 'lodash/fp';
 import { actionTypes } from '../constants';
 import { pathFromMeta, preserveValuesFromState } from '../utils/reducers';
 
@@ -16,16 +16,16 @@ const {
 
 /**
  * Reducer for data state.
- * @param  {Object} [state={}] - Current data redux state
- * @param  {Object} action - Object containing the action that was dispatched
- * @param  {String} action.type - Type of action that was dispatched
- * @param  {Object} action.meta - Meta data of action
- * @param  {String} action.meta.collection - Name of the collection for the
+ * @param {object} [state={}] - Current data redux state
+ * @param {object} action - Object containing the action that was dispatched
+ * @param {string} action.type - Type of action that was dispatched
+ * @param {object} action.meta - Meta data of action
+ * @param {string} action.meta.collection - Name of the collection for the
  * data being passed to the reducer.
- * @param  {Array} action.meta.where - Where query parameters array
- * @param  {Array} action.meta.storeAs - Another parameter in redux under
+ * @param {Array} action.meta.where - Where query parameters array
+ * @param {Array} action.meta.storeAs - Another parameter in redux under
  * which to store values.
- * @return {Object} Data state after reduction
+ * @returns {object} Data state after reduction
  */
 export default function dataReducer(state = {}, action) {
   switch (action.type) {
@@ -59,13 +59,11 @@ export default function dataReducer(state = {}, action) {
           state,
         );
       }
-      // Otherwise merge with existing data
-      const mergedData = assign(previousData, data);
       // Set data to state (with merge) immutabily (lodash/fp's setWith creates copy)
       return setWith(
         Object,
         meta.storeAs ? [meta.storeAs] : pathFromMeta(meta),
-        mergedData,
+        data,
         state,
       );
     case DOCUMENT_MODIFIED:
