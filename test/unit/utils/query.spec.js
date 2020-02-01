@@ -71,6 +71,12 @@ describe('query utils', () => {
       expect(result).to.equal(meta.collection);
     });
 
+    it('returns collectionGroup name', () => {
+      meta = { collectionGroup: 'test' };
+      result = getQueryName(meta);
+      expect(result).to.equal(meta.collectionGroup);
+    });
+
     it('returns collection/doc', () => {
       meta = { collection: 'test', doc: 'doc' };
       result = getQueryName(meta);

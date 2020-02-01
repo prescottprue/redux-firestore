@@ -64,7 +64,7 @@ describe('dataReducer', () => {
         meta = {};
         action = { meta, payload, type: actionTypes.LISTENER_RESPONSE };
         expect(() => dataReducer(state, action)).to.throw(
-          'Collection is required to construct reducer path.',
+          'Collection or Collection Group is required to construct reducer path.',
         );
       });
 
@@ -181,7 +181,7 @@ describe('dataReducer', () => {
         meta = {};
         action = { meta, payload, type: actionTypes.GET_SUCCESS };
         expect(() => dataReducer(state, action)).to.throw(
-          'Collection is required to construct reducer path.',
+          'Collection or Collection Group is required to construct reducer path.',
         );
       });
 
@@ -319,7 +319,7 @@ describe('dataReducer', () => {
         payload = {};
         action = { meta: {}, payload, type: actionTypes.LISTENER_ERROR };
         expect(() => dataReducer(state, action)).to.throw(
-          'Collection is required to construct reducer path.',
+          'Collection or Collection Group is required to construct reducer path.',
         );
       });
 

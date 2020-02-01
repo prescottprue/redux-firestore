@@ -56,6 +56,8 @@ export function combineReducers(reducers) {
  * @param {object} meta - Action meta data object
  * @param {string} meta.collection - Name of Collection for which the action
  * is to be handled.
+ * @param {string} meta.collectionGroup - Name of Collection Group for which
+ * the action is to be handled.
  * @param {string} meta.doc - Name of Document for which the action is to be
  * handled.
  * @param {Array} meta.subcollections - Subcollections of data
@@ -69,7 +71,7 @@ export function pathFromMeta(meta) {
   if (!meta) {
     throw new Error('Action meta is required to build path for reducers.');
   }
-  const { collection, doc, subcollections, storeAs } = meta;
+  const { collection, collectionGroup, doc, subcollections, storeAs } = meta;
   if (storeAs) {
     // Use array here - if we don't we end up in trouble with docs that contain a dot
     return doc ? [storeAs, doc] : [storeAs];
@@ -78,11 +80,13 @@ export function pathFromMeta(meta) {
     return meta.path.split('/');
   }
 
-  if (!collection) {
-    throw new Error('Collection is required to construct reducer path.');
+  if (!collection && !collectionGroup) {
+    throw new Error(
+      'Collection or Collection Group is required to construct reducer path.',
+    );
   }
 
-  let basePath = [collection];
+  let basePath = [collection || collectionGroup];
 
   if (doc) {
     basePath = [...basePath, doc];
