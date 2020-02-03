@@ -24,11 +24,6 @@ jobs:
           node-version: 12
           registry-url: https://registry.npmjs.org/
 
-      - name: Download Build Artifact
-        uses: actions/download-artifact@master
-        with:
-          name: build
-
       - name: Get yarn cache
         id: yarn-cache
         run: echo "::set-output name=dir::$(yarn cache dir)"
@@ -60,7 +55,7 @@ jobs:
 
       - name: Publish
         env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish $(if [ ${{github.ref}} == 'refs/heads/next' ]; then echo '--tag next';fi;)
 
       - name: Archive Build Artifact
