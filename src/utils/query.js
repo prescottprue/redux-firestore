@@ -280,6 +280,7 @@ export function getQueryName(meta) {
  * in listener management and reducers).
  * @param {object} meta - Metadata object containing query settings
  * @param {string} meta.collection - Collection name of query
+ * @param {string} meta.collectionGroup - Collection Group name of query
  * @param {string} meta.doc - Document id of query
  * @param {Array} meta.subcollections - Subcollections of query
  * @returns {string} String representing query settings
@@ -288,11 +289,18 @@ export function getBaseQueryName(meta) {
   if (typeof meta === 'string' || meta instanceof String) {
     return meta;
   }
-  const { collection, subcollections, ...remainingMeta } = meta;
-  if (!collection) {
-    throw new Error('Collection is required to build query name');
+  const {
+    collection,
+    collectionGroup,
+    subcollections,
+    ...remainingMeta
+  } = meta;
+  if (!collection && !collectionGroup) {
+    throw new Error(
+      'Collection or Collection Group is required to build query name',
+    );
   }
-  let basePath = collection;
+  let basePath = collection || collectionGroup;
 
   if (collection && subcollections) {
     const mappedCollections = subcollections.map(subcollection =>
@@ -467,7 +475,7 @@ export function orderedFromSnap(snap) {
       const obj = isObject(doc.data())
         ? { id: doc.id, ...(doc.data() || doc.data) }
         : { id: doc.id, data: doc.data() };
-      snapshotCache.set(obj, snap);
+      snapshotCache.set(obj, doc);
       ordered.push(obj);
     });
   }
@@ -492,7 +500,7 @@ export function dataByIdSnapshot(snap) {
   } else if (snap.forEach) {
     snap.forEach(doc => {
       const snapData = doc.data() || doc;
-      snapshotCache.set(snapData, snap);
+      snapshotCache.set(snapData, doc);
       data[doc.id] = snapData;
     });
   }
@@ -613,7 +621,11 @@ export function promisesForPopulate(
           getPopulateChild(firebase, p, childDataVal).then(v => {
             // write child to result object under root name if it is found
             if (v) {
-              set(results, `${p.root}.${childDataVal}`, v);
+              set(
+                results,
+                `${p.storeAs ? p.storeAs : p.root}.${childDataVal}`,
+                v,
+              );
             }
           }),
         );
@@ -651,7 +663,11 @@ export function promisesForPopulate(
             getPopulateChild(firebase, p, idOrList).then(v => {
               // write child to result object under root name if it is found
               if (v) {
-                set(results, `${p.root}.${idOrList}`, v);
+                set(
+                  results,
+                  `${p.storeAs ? p.storeAs : p.root}.${idOrList}`,
+                  v,
+                );
               }
               return results;
             }),

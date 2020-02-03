@@ -1,7 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { useHistory } from 'react-router-dom'
-import { useFirebase } from 'react-redux-firebase'
+import { useFirestore } from 'react-redux-firebase'
 import Paper from '@material-ui/core/Paper'
 import IconButton from '@material-ui/core/IconButton'
 import Tooltip from '@material-ui/core/Tooltip'
@@ -16,7 +16,7 @@ const useStyles = makeStyles(styles)
 function ProjectTile({ name, projectId, showDelete }) {
   const classes = useStyles()
   const history = useHistory()
-  const firebase = useFirebase()
+  const firestore = useFirestore()
   const { showError, showSuccess } = useNotifications()
 
   function goToProject() {
@@ -24,8 +24,8 @@ function ProjectTile({ name, projectId, showDelete }) {
   }
 
   function deleteProject() {
-    return firebase
-      .remove(`projects/${projectId}`)
+    return firestore
+      .delete(`projects/${projectId}`)
       .then(() => showSuccess('Project deleted successfully'))
       .catch(err => {
         console.error('Error:', err) // eslint-disable-line no-console
@@ -53,6 +53,8 @@ function ProjectTile({ name, projectId, showDelete }) {
 }
 
 ProjectTile.propTypes = {
+  projectId: PropTypes.string.isRequired,
+  showDelete: PropTypes.bool,
   name: PropTypes.string
 }
 

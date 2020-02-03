@@ -1,11 +1,11 @@
 module.exports = {
-  'extends': ['react-app', 'prettier', 'prettier/react'],
+  'extends': ['standard', 'standard-react', 'prettier', 'prettier/react'],
   root: true,
   parser: 'babel-eslint',
-  plugins: ['import', 'babel', 'react', 'react-hooks', 'prettier'],
+  plugins: ['import', 'react', 'react-hooks', 'prettier'],
   settings: {
     react: {
-      version: '16.9'
+      version: '16.12'
     },
     'import/resolver': {
       node: {

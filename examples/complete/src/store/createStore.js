@@ -30,10 +30,7 @@ export default function createReduxStore(initialState = {}) {
   const store = createStore(
     makeRootReducer(),
     initialState,
-    compose(
-      applyMiddleware(...middleware),
-      ...enhancers
-    )
+    compose(applyMiddleware(...middleware), ...enhancers)
   )
 
   store.asyncReducers = {}

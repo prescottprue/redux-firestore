@@ -54,12 +54,19 @@ describe('reducer utils', () => {
 
     it('returns undefined if provided nothing', () => {
       expect(() => pathFromMeta({})).to.throw(
-        'Collection is required to construct reducer path.',
+        'Collection or Collection Group is required to construct reducer path.',
       );
     });
 
     it('returns collection if provided', () => {
       expect(pathFromMeta({ collection: 'test' })).to.have.property(0, 'test');
+    });
+
+    it('returns collection group if provided', () => {
+      expect(pathFromMeta({ collectionGroup: 'test' })).to.have.property(
+        0,
+        'test',
+      );
     });
 
     it('returns collection doc combined into dot path if both provided', () => {

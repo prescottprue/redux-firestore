@@ -22,7 +22,7 @@ function NavbarWithoutAuth({ children, brandPath }) {
           to={brandPath || '/'}
           className={classes.brand}
           data-test="brand">
-          material example
+          Complete
         </Typography>
         <div className={classes.flex} />
         {children}
@@ -32,7 +32,8 @@ function NavbarWithoutAuth({ children, brandPath }) {
 }
 
 NavbarWithoutAuth.propTypes = {
-  children: PropTypes.element
+  children: PropTypes.element,
+  brandPath: PropTypes.string
 }
 
 export default NavbarWithoutAuth

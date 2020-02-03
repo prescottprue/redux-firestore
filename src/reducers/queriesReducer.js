@@ -1,12 +1,16 @@
-/* eslint-disable no-param-reassign */
-
 import produce from 'immer';
 import { set, get, unset } from 'lodash';
 import { actionTypes } from '../constants';
 import { getBaseQueryName } from '../utils/query';
 
-export const isComposable = action =>
-  get(action, 'meta.where') && get(action, 'meta.collection');
+/**
+ * Checks whether or not an action is composable
+ * @param {object} action - Object containing the action that was dispatched
+ * @returns {boolean} Whether or not the action is composable
+ */
+export function isComposable(action) {
+  return !!get(action, 'meta.where') && !!get(action, 'meta.collection');
+}
 
 /**
  * Reducer for queries state
@@ -26,14 +30,14 @@ export default function queriesReducer(state = {}, action) {
     switch (action.type) {
       case actionTypes.GET_SUCCESS:
       case actionTypes.LISTENER_RESPONSE:
-        draft[key] = { data: action.payload.data, ...action.meta };
+        draft[key] = { data: action.payload.data, ...action.meta }; // eslint-disable-line no-param-reassign
         return draft;
       case actionTypes.UNSET_LISTENER:
         // Deleting this key complicates recomposing the result -
         // since it is no longer defined, it will not be overwritten.
         // Emptying out the data is a pragmatic compromise.
         if (draft[key]) {
-          draft[key].data = undefined;
+          draft[key].data = undefined; // eslint-disable-line no-param-reassign
         }
 
         return draft;
