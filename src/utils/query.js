@@ -280,6 +280,7 @@ export function getQueryName(meta) {
  * in listener management and reducers).
  * @param {object} meta - Metadata object containing query settings
  * @param {string} meta.collection - Collection name of query
+ * @param {string} meta.collectionGroup - Collection Group name of query
  * @param {string} meta.doc - Document id of query
  * @param {Array} meta.subcollections - Subcollections of query
  * @returns {string} String representing query settings
@@ -288,11 +289,18 @@ export function getBaseQueryName(meta) {
   if (typeof meta === 'string' || meta instanceof String) {
     return meta;
   }
-  const { collection, subcollections, ...remainingMeta } = meta;
-  if (!collection) {
-    throw new Error('Collection is required to build query name');
+  const {
+    collection,
+    collectionGroup,
+    subcollections,
+    ...remainingMeta
+  } = meta;
+  if (!collection && !collectionGroup) {
+    throw new Error(
+      'Collection or Collection Group is required to build query name',
+    );
   }
-  let basePath = collection;
+  let basePath = collection || collectionGroup;
 
   if (collection && subcollections) {
     const mappedCollections = subcollections.map(subcollection =>

@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types'
-import { withFirestore } from './utils';
+import { useSelector } from 'react-redux';
+import { useFirestore } from 'react-redux-firebase'
 
 const styles = {
   container: {
@@ -18,10 +19,16 @@ const styles = {
   }
 }
 
-function Todo({ todo, firestore }) {
+function Todo({ id }) {
+  const todo = useSelector(state => state.firestore.data.todos[id])
+  const firestore = useFirestore()
+
   function onDoneClick() {
-    return firestore.update(`todos/${todo.id}`, { done: !todo.done })
+    return firestore.firestore()
+      .doc(`todos/${todo.id}`)
+      .update({ done: !todo.done })
   }
+
   return (
     <div style={styles.container}>
       <input
@@ -50,4 +57,4 @@ Todo.propTypes = {
   })
 }
 
-export default withFirestore(Todo)
+export default Todo

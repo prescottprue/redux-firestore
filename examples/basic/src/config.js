@@ -6,3 +6,9 @@ export const fbConfig = {
   messagingSenderId: '823357791673',
   projectId: 'redux-firebasev3',
 }
+
+export const rfConfig = {
+  userProfile: 'users', // root that user profiles are written to
+  useFirestoreForProfile: true, // Save profile to Firestore instead of Real Time Database
+  useFirestoreForStorageMeta: true // Metadata associated with storage file uploads goes to Firestore
+}
