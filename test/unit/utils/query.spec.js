@@ -849,7 +849,7 @@ describe('query utils', () => {
     });
   });
 
-  describe('dataByIdSnapshot', () => {
+  describe('snapshotCache', () => {
     it('retrieve snapshot with data from data state ', () => {
       const id = 'someId';
       const fakeData = { some: 'thing' };
@@ -884,6 +884,7 @@ describe('query utils', () => {
       const fakeSnap = { forEach: docArray.forEach.bind(docArray) };
       result = orderedFromSnap(fakeSnap);
       expect(getSnapshotByObject(result)).to.equal(fakeSnap);
+      expect(getSnapshotByObject(result[0])).to.equal(fakeDocSnap);
     });
   });
 });
