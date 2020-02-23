@@ -75,6 +75,16 @@ function addOrderByToRef(ref, orderBy) {
 }
 
 /**
+ * Convert cursor into a string array for spreading into cursor functions
+ * @see https://firebase.google.com/docs/firestore/query-data/query-cursors#set_cursor_based_on_multiple_fields
+ * @param {Array|string} cursor - The cursor
+ * @returns {Array} String array
+ */
+function arrayify(cursor) {
+  return [].concat(cursor);
+}
+
+/**
  * Call methods on ref object for provided subcollection list (from queryConfig
  * object)
  * @param {firebase.firestore.CollectionReference} ref - reference on which
@@ -102,13 +112,18 @@ function handleSubcollections(ref, subcollectionList) {
         ref = addOrderByToRef(ref, subcollection.orderBy);
       }
       if (subcollection.limit) ref = ref.limit(subcollection.limit);
-      if (subcollection.startAt) ref = ref.startAt(subcollection.startAt);
-      if (subcollection.startAfter) {
-        ref = ref.startAfter(subcollection.startAfter);
+      if (subcollection.startAt) {
+        ref = ref.startAt(...arrayify(subcollection.startAt));
       }
-      if (subcollection.endAt) ref = ref.endAt(subcollection.endAt);
-      if (subcollection.endBefore) ref = ref.endBefore(subcollection.endBefore);
-
+      if (subcollection.startAfter) {
+        ref = ref.startAfter(...arrayify(subcollection.startAfter));
+      }
+      if (subcollection.endAt) {
+        ref = ref.endAt(...arrayify(subcollection.endAt));
+      }
+      if (subcollection.endBefore) {
+        ref = ref.endBefore(...arrayify(subcollection.endBefore));
+      }
       ref = handleSubcollections(ref, subcollection.subcollections);
       /* eslint-enable */
     });
@@ -159,10 +174,10 @@ export function firestoreRef(firebase, meta) {
   if (where) ref = addWhereToRef(ref, where);
   if (orderBy) ref = addOrderByToRef(ref, orderBy);
   if (limit) ref = ref.limit(limit);
-  if (startAt) ref = ref.startAt(startAt);
-  if (startAfter) ref = ref.startAfter(startAfter);
-  if (endAt) ref = ref.endAt(endAt);
-  if (endBefore) ref = ref.endBefore(endBefore);
+  if (startAt) ref = ref.startAt(...arrayify(startAt));
+  if (startAfter) ref = ref.startAfter(...arrayify(startAfter));
+  if (endAt) ref = ref.endAt(...arrayify(endAt));
+  if (endBefore) ref = ref.endBefore(...arrayify(endBefore));
   return ref;
 }
 
