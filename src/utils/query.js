@@ -77,8 +77,8 @@ function addOrderByToRef(ref, orderBy) {
 /**
  * Convert cursor into a string array for spreading into cursor functions
  * @see https://firebase.google.com/docs/firestore/query-data/query-cursors#set_cursor_based_on_multiple_fields
- * @param {Array|string} cursor - The cursor
- * @returns {Array} String array
+ * @param {Array|string} cursor - The cursor as a string or string array
+ * @returns {Array} String Array - The cursor as a string array
  */
 function arrayify(cursor) {
   return [].concat(cursor);
