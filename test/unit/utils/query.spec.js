@@ -83,7 +83,7 @@ describe('query utils', () => {
       expect(result).to.equal(`${meta.collection}/${meta.doc}`);
     });
 
-    describe('where paremeter', () => {
+    describe('where parameter', () => {
       it('is appended if valid', () => {
         meta = { collection: 'test', doc: 'doc', where: 'some' };
         expect(() => getQueryName(meta)).to.throw(
@@ -107,7 +107,7 @@ describe('query utils', () => {
       });
     });
 
-    describe('limit paremeter', () => {
+    describe('limit parameter', () => {
       it('is appended if valid', () => {
         meta = {
           collection: 'test',
@@ -115,24 +115,39 @@ describe('query utils', () => {
           limit: 10,
         };
         result = getQueryName(meta);
+        expect(result).to.equal('test/doc?limit=10');
       });
     });
 
-    describe('startAt paremeter', () => {
-      it('is appended if valid', () => {
+    describe('startAt parameter', () => {
+      it('is appended if valid string', () => {
         meta = {
           collection: 'test',
           startAt: 'asdf',
         };
         result = getQueryName(meta);
+        expect(result).to.equal('test?startAt=asdf');
       });
 
-      it('appends passed date objects (#186)', () => {
+      it('is appended if valid array', () => {
         meta = {
           collection: 'test',
-          startAt: new Date(),
+          startAt: ['asdf', 1234, 'qwerty'],
         };
         result = getQueryName(meta);
+        expect(result).to.equal('test?startAt=asdf:1234:qwerty');
+      });
+
+      it('appends passed date objects', () => {
+        meta = {
+          collection: 'test',
+          startAt: new Date(2020, 2, 2, 2, 2, 2),
+        };
+        result = getQueryName(meta).substr(0, 37);
+        // Using .substr() to drop the GMT timezone
+        // since stringifying a Date object uses .toGMTString()
+        // and the local timezone instead of .toUTCString()
+        expect(result).to.equal('test?startAt=Mon Mar 02 2020 02:02:02');
       });
     });
   });
@@ -733,6 +748,19 @@ describe('query utils', () => {
         expect(result).to.be.an('object');
         expect(startAtSpy).to.be.calledWith(meta.startAt);
       });
+
+      it('calls startAt if valid array', () => {
+        meta = { collection: 'test', startAt: ['other', 'another'] };
+        const startAtSpy = sinon.spy(() => ({}));
+        fakeFirebase = {
+          firestore: () => ({
+            collection: () => ({ startAt: startAtSpy }),
+          }),
+        };
+        result = firestoreRef(fakeFirebase, meta);
+        expect(result).to.be.an('object');
+        expect(startAtSpy).to.be.calledWith(...meta.startAt);
+      });
     });
 
     describe('startAfter', () => {
@@ -748,6 +776,19 @@ describe('query utils', () => {
         expect(result).to.be.an('object');
         expect(startAfterSpy).to.be.calledWith(meta.startAfter);
       });
+
+      it('calls startAfter if valid array', () => {
+        meta = { collection: 'test', startAfter: ['other', 'another'] };
+        const startAfterSpy = sinon.spy(() => ({}));
+        fakeFirebase = {
+          firestore: () => ({
+            collection: () => ({ startAfter: startAfterSpy }),
+          }),
+        };
+        result = firestoreRef(fakeFirebase, meta);
+        expect(result).to.be.an('object');
+        expect(startAfterSpy).to.be.calledWith(...meta.startAfter);
+      });
     });
 
     describe('endAt', () => {
@@ -760,6 +801,17 @@ describe('query utils', () => {
         result = firestoreRef(fakeFirebase, meta);
         expect(result).to.be.an('object');
         expect(endAtSpy).to.be.calledWith(meta.endAt);
+      });
+
+      it('calls endAt if valid array', () => {
+        meta = { collection: 'test', endAt: ['other', 'another'] };
+        const endAtSpy = sinon.spy(() => ({}));
+        fakeFirebase = {
+          firestore: () => ({ collection: () => ({ endAt: endAtSpy }) }),
+        };
+        result = firestoreRef(fakeFirebase, meta);
+        expect(result).to.be.an('object');
+        expect(endAtSpy).to.be.calledWith(...meta.endAt);
       });
     });
 
@@ -775,6 +827,19 @@ describe('query utils', () => {
         result = firestoreRef(fakeFirebase, meta);
         expect(result).to.be.an('object');
         expect(endBeforeSpy).to.be.calledWith(meta.endBefore);
+      });
+
+      it('calls endBefore if valid array', () => {
+        meta = { collection: 'test', endBefore: ['other', 'another'] };
+        const endBeforeSpy = sinon.spy(() => ({}));
+        fakeFirebase = {
+          firestore: () => ({
+            collection: () => ({ endBefore: endBeforeSpy }),
+          }),
+        };
+        result = firestoreRef(fakeFirebase, meta);
+        expect(result).to.be.an('object');
+        expect(endBeforeSpy).to.be.calledWith(...meta.endBefore);
       });
     });
   });
