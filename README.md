@@ -9,6 +9,7 @@
 [![Code Coverage][coverage-image]][coverage-url]
 
 [![Gitter][gitter-image]][gitter-url]
+
 <!-- [![Quality][quality-image]][quality-url] -->
 
 > Redux bindings for Firestore. Provides low-level API used in other libraries such as [react-redux-firebase](https://github.com/prescottprue/react-redux-firebase)
@@ -36,34 +37,34 @@ npm install --save react-redux-firebase
 ## Use
 
 ```javascript
-import { createStore, combineReducers, compose } from 'redux'
-import { reduxFirestore, firestoreReducer } from 'redux-firestore'
-import firebase from 'firebase/app'
-import 'firebase/auth'
-import 'firebase/database'
-import 'firebase/firestore'
+import { createStore, combineReducers, compose } from 'redux';
+import { reduxFirestore, firestoreReducer } from 'redux-firestore';
+import firebase from 'firebase/app';
+import 'firebase/auth';
+import 'firebase/database';
+import 'firebase/firestore';
 
-const firebaseConfig = {} // from Firebase Console
-const rfConfig = {} // optional redux-firestore Config Options
+const firebaseConfig = {}; // from Firebase Console
+const rfConfig = {}; // optional redux-firestore Config Options
 
 // Initialize firebase instance
-firebase.initializeApp(firebaseConfig)
+firebase.initializeApp(firebaseConfig);
 // Initialize Cloud Firestore through Firebase
 firebase.firestore();
 
 // Add reduxFirestore store enhancer to store creator
 const createStoreWithFirebase = compose(
   reduxFirestore(firebase, rfConfig), // firebase instance as first argument, rfConfig as optional second
-)(createStore)
+)(createStore);
 
 // Add Firebase to reducers
 const rootReducer = combineReducers({
-  firestore: firestoreReducer
-})
+  firestore: firestoreReducer,
+});
 
 // Create store with reducers and initial state
-const initialState = {}
-const store = createStoreWithFirebase(rootReducer, initialState)
+const initialState = {};
+const store = createStoreWithFirebase(rootReducer, initialState);
 ```
 
 Then pass store to your component's context using [react-redux's `Provider`](https://github.com/reactjs/react-redux/blob/master/docs/api.md#provider-store):
@@ -77,8 +78,8 @@ render(
   <Provider store={store}>
     <MyRootComponent />
   </Provider>,
-  rootEl
-)
+  rootEl,
+);
 ```
 
 ### Call Firestore
@@ -90,19 +91,19 @@ render(
 It is common to make react components "functional" meaning that the component is just a function instead of being a `class` which `extends React.Component`. This can be useful, but can limit usage of lifecycle hooks and other features of Component Classes. [`recompose` helps solve this](https://github.com/acdlite/recompose/blob/master/docs/API.md) by providing Higher Order Component functions such as `withContext`, `lifecycle`, and `withHandlers`.
 
 ```js
-import { connect } from 'react-redux'
+import { connect } from 'react-redux';
 import {
   compose,
   withHandlers,
   lifecycle,
   withContext,
-  getContext
-} from 'recompose'
+  getContext,
+} from 'recompose';
 
 const withStore = compose(
   withContext({ store: PropTypes.object }, () => {}),
   getContext({ store: PropTypes.object }),
-)
+);
 
 const enhance = compose(
   withStore,
@@ -115,15 +116,16 @@ const enhance = compose(
   }),
   lifecycle({
     componentDidMount(props) {
-      props.loadData()
-    }
+      props.loadData();
+    },
   }),
-  connect(({ firebase }) => ({ // state.firebase
+  connect(({ firebase }) => ({
+    // state.firebase
     todos: firebase.ordered.todos,
-  }))
-)
+  })),
+);
 
-export default enhance(SomeComponent)
+export default enhance(SomeComponent);
 ```
 
 For more information [on using recompose visit the docs](https://github.com/acdlite/recompose/blob/master/docs/API.md)
@@ -131,63 +133,65 @@ For more information [on using recompose visit the docs](https://github.com/acdl
 ##### Component Class
 
 ```js
-import React, { Component } from 'react'
-import PropTypes from 'prop-types'
-import { connect } from 'react-redux'
-import { watchEvents, unWatchEvents } from './actions/query'
-import { getEventsFromInput, createCallable } from './utils'
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
+import { watchEvents, unWatchEvents } from './actions/query';
+import { getEventsFromInput, createCallable } from './utils';
 
 class Todos extends Component {
   static contextTypes = {
-    store: PropTypes.object.isRequired
+    store: PropTypes.object.isRequired,
+  };
+
+  componentDidMount() {
+    const { firestore } = this.context.store;
+    firestore.get('todos');
   }
 
-  componentDidMount () {
-    const { firestore } = this.context.store
-    firestore.get('todos')
-  }
-
-  render () {
+  render() {
     return (
       <div>
-        {
-          todos.map(todo => (
-            <div key={todo.id}>
-              {JSON.stringify(todo)}
-            </div>
-          ))
-        }
+        {todos.map(todo => (
+          <div key={todo.id}>{JSON.stringify(todo)}</div>
+        ))}
       </div>
-    )
+    );
   }
 }
 
-export default connect((state) => ({
-  todos: state.firestore.ordered.todos
-}))(Todos)
+export default connect(state => ({
+  todos: state.firestore.ordered.todos,
+}))(Todos);
 ```
+
 ### API
+
 The `store.firestore` instance created by the `reduxFirestore` enhancer extends [Firebase's JS API for Firestore](https://firebase.google.com/docs/reference/js/firebase.firestore). This means all of the methods regularly available through `firebase.firestore()` and the statics available from `firebase.firestore` are available. Certain methods (such as `get`, `set`, and `onSnapshot`) have a different API since they have been extended with action dispatching. The methods which have dispatch actions are listed below:
 
 #### Actions
 
 ##### get
+
 ```js
 store.firestore.get({ collection: 'cities' }),
 // store.firestore.get({ collection: 'cities', doc: 'SF' }), // doc
 ```
 
 ##### set
+
 ```js
 store.firestore.set({ collection: 'cities', doc: 'SF' }, { name: 'San Francisco' }),
 ```
 
 ##### add
+
 ```js
 store.firestore.add({ collection: 'cities' }, { name: 'Some Place' }),
 ```
 
 ##### update
+
 ```js
 const itemUpdates =  {
   some: 'value',
@@ -198,32 +202,38 @@ store.firestore.update({ collection: 'cities', doc: 'SF' }, itemUpdates),
 ```
 
 ##### delete
+
 ```js
 store.firestore.delete({ collection: 'cities', doc: 'SF' }),
 ```
 
 ##### runTransaction
+
 ```js
-store.firestore.runTransaction(t => {
-  return t.get(cityRef)
-      .then(doc => {
-        // Add one person to the city population
-        const newPopulation = doc.data().population + 1;
-        t.update(cityRef, { population: newPopulation });
-      });
-})
-.then(result => {
-  // TRANSACTION_SUCCESS action dispatched
-  console.log('Transaction success!');
-}).catch(err => {
-  // TRANSACTION_FAILURE action dispatched
-  console.log('Transaction failure:', err);
-});
+store.firestore
+  .runTransaction(t => {
+    return t.get(cityRef).then(doc => {
+      // Add one person to the city population
+      const newPopulation = doc.data().population + 1;
+      t.update(cityRef, { population: newPopulation });
+    });
+  })
+  .then(result => {
+    // TRANSACTION_SUCCESS action dispatched
+    console.log('Transaction success!');
+  })
+  .catch(err => {
+    // TRANSACTION_FAILURE action dispatched
+    console.log('Transaction failure:', err);
+  });
 ```
 
 #### Types of Queries
+
 Each of these functions take a queryOptions object with options as described in the [Query Options section of this README](#query-options). Some simple query options examples are used here for better comprehension.
+
 ##### get
+
 ```js
 props.store.firestore.get({ collection: 'cities' }),
 // store.firestore.get({ collection: 'cities', doc: 'SF' }), // doc
@@ -247,7 +257,9 @@ store.firestore.setListeners([
 ```
 
 ##### unsetListener / unsetListeners
+
 After setting a listener/multiple listeners, you can unset them with the following two functions. In order to unset a specific listener, you must pass the same queryOptions object given to onSnapshot/setListener(s).
+
 ```js
 store.firestore.unsetListener({ collection: 'cities' }),
 // of for any number of listeners at once :
@@ -258,6 +270,7 @@ store.firestore.unsetListeners([query1Options, query2Options]),
 #### Query Options
 
 ##### Collection
+
 ```js
 { collection: 'cities' },
 // or string equivalent
@@ -286,6 +299,7 @@ store.firestore.unsetListeners([query1Options, query2Options]),
 **NOTE**: `storeAs` is now required for subcollections. This is to more closley match the logic of [the upcoming major release (v1)](https://github.com/prescottprue/redux-firestore/wiki/v1.0.0-Roadmap) which stores all collections, even subcollections, at the top level of `data` and `ordered` state slices.
 
 ##### Collection Group
+
 ```js
 { collectionGroup: 'landmarks' },
 // does not support string equivalent
@@ -316,9 +330,9 @@ Multiple `where` queries are as simple as passing multiple argument arrays (each
 },
 ```
 
-Firestore doesn't alow you to create `or` style queries.  Instead, you should pass in multiple queries and compose your data.
+Firestore doesn't alow you to create `or` style queries. Instead, you should pass in multiple queries and compose your data.
 
-``` javascript
+```javascript
 ['sally', 'john', 'peter'].map(friendId => ({
   collection: 'users',
   where: [
@@ -329,9 +343,9 @@ Firestore doesn't alow you to create `or` style queries.  Instead, you should pa
 }));
 ```
 
-Since the results must be composed, a query like this is unable to be properly ordered.  The results should be pulled from `data`. 
+Since the results must be composed, a query like this is unable to be properly ordered. The results should be pulled from `data`.
 
-*Can only be used with collections*
+_Can only be used with collections_
 
 ##### orderBy
 
@@ -357,7 +371,7 @@ Multiple `orderBy`s are as simple as passing multiple argument arrays (each one 
 },
 ```
 
-*Can only be used with collections*
+_Can only be used with collections_
 
 ##### limit
 
@@ -370,7 +384,7 @@ Limit the query to a certain number of results
 },
 ```
 
-*Can only be used with collections*
+_Can only be used with collections_
 
 ##### startAt
 
@@ -386,7 +400,7 @@ Limit the query to a certain number of results
 },
 ```
 
-*Can only be used with collections. Types can be a string, number, or Date object, but not a Firestore Document Snapshot*
+_Can only be used with collections. Types can be a string, number, Date object, or an array of these types, but not a Firestore Document Snapshot_
 
 ##### startAfter
 
@@ -402,14 +416,13 @@ Limit the query to a certain number of results
 },
 ```
 
-*Can only be used with collections. Types can be a string, number, or Date object, but not a Firestore Document Snapshot*
+_Can only be used with collections. Types can be a string, number, Date object, or an array of these types, but not a Firestore Document Snapshot_
 
 ##### endAt
 
 > Creates a new query where the results end at the provided document (inclusive)...
 
 [From Firebase's `endAt` docs](https://firebase.google.com/docs/reference/js/firebase.firestore.CollectionReference#endAt)
-
 
 ```js
 {
@@ -419,14 +432,13 @@ Limit the query to a certain number of results
 },
 ```
 
-*Can only be used with collections. Types can be a string, number, or Date object, but not a Firestore Document Snapshot*
+_Can only be used with collections. Types can be a string, number, Date object, or an array of these types, but not a Firestore Document Snapshot_
 
 ##### endBefore
 
 > Creates a new query where the results end before the provided document (exclusive) ...
 
 [From Firebase's `endBefore` docs](https://firebase.google.com/docs/reference/js/firebase.firestore.CollectionReference#endBefore)
-
 
 ```js
 {
@@ -436,7 +448,7 @@ Limit the query to a certain number of results
 },
 ```
 
-*Can only be used with collections. Types can be a string, number, or Date object, but not a Firestore Document Snapshot*
+_Can only be used with collections. Types can be a string, number, Date object, or an array of these types, but not a Firestore Document Snapshot_
 
 ##### storeAs
 
@@ -451,7 +463,6 @@ Storing data under a different path within redux is as easy as passing the `stor
 ```
 
 **NOTE:** Usage of `"/"` and `"."` within `storeAs` can cause unexpected behavior when attempting to retrieve from redux state
-
 
 #### Other Firebase Statics
 
@@ -489,110 +500,122 @@ export default enhance(SomeComponent)
 ```
 
 ### Population
+
 Population, made popular in [react-redux-firebase](http://react-redux-firebase.com/docs/recipes/populate.html), also works with firestore.
 
-
 #### Automatic Listeners
+
 ```js
-import { connect } from 'react-redux'
-import { firestoreConnect, populate } from 'react-redux-firebase'
+import { connect } from 'react-redux';
+import { firestoreConnect, populate } from 'react-redux-firebase';
 import {
   compose,
   withHandlers,
   lifecycle,
   withContext,
-  getContext
-} from 'recompose'
+  getContext,
+} from 'recompose';
 
-const populates = [{ child: 'createdBy', root: 'users' }]
-const collection = 'projects'
+const populates = [{ child: 'createdBy', root: 'users' }];
+const collection = 'projects';
 
 const withPopulatedProjects = compose(
-  firestoreConnect((props) => [
+  firestoreConnect(props => [
     {
       collection,
-      populates
-    }
+      populates,
+    },
   ]),
   connect((state, props) => ({
-    projects: populate(state.firestore, collection, populates)
-  }))
-)
+    projects: populate(state.firestore, collection, populates),
+  })),
+);
 ```
 
 #### Manually using setListeners
-```js
-import { withFirestore, populate } from 'react-redux-firebase'
-import { connect } from 'react-redux'
-import { compose, lifecycle } from 'recompose'
 
-const collection = 'projects'
-const populates = [{ child: 'createdBy', root: 'users' }]
+```js
+import { withFirestore, populate } from 'react-redux-firebase';
+import { connect } from 'react-redux';
+import { compose, lifecycle } from 'recompose';
+
+const collection = 'projects';
+const populates = [{ child: 'createdBy', root: 'users' }];
 
 const enhance = compose(
   withFirestore,
   lifecycle({
     componentDidMount() {
-      this.props.firestore.setListener({ collection, populates })
-    }
+      this.props.firestore.setListener({ collection, populates });
+    },
   }),
-  connect(({ firestore }) => ({ // state.firestore
+  connect(({ firestore }) => ({
+    // state.firestore
     todos: firestore.ordered.todos,
-  }))
-)
+  })),
+);
 ```
 
 #### Manually using get
-```js
-import { withFirestore, populate } from 'react-redux-firebase'
-import { connect } from 'react-redux'
-import { compose, lifecycle } from 'recompose'
 
-const collection = 'projects'
-const populates = [{ child: 'createdBy', root: 'users' }]
+```js
+import { withFirestore, populate } from 'react-redux-firebase';
+import { connect } from 'react-redux';
+import { compose, lifecycle } from 'recompose';
+
+const collection = 'projects';
+const populates = [{ child: 'createdBy', root: 'users' }];
 
 const enhance = compose(
   withFirestore,
   lifecycle({
     componentDidMount() {
-      this.props.store.firestore.get({ collection, populates })
-    }
+      this.props.store.firestore.get({ collection, populates });
+    },
   }),
-  connect(({ firestore }) => ({ // state.firestore
+  connect(({ firestore }) => ({
+    // state.firestore
     todos: firestore.ordered.todos,
-  }))
-)
+  })),
+);
 ```
 
 ## Config Options
+
 Optional configuration options for redux-firestore, provided to reduxFirestore enhancer as optional second argument. Combine any of them together in an object.
 
 #### logListenerError
+
 Default: `true`
 
 Whether or not to use `console.error` to log listener error objects. Errors from listeners are helpful to developers on multiple occasions including when index needs to be added.
 
 #### enhancerNamespace
+
 Default: `'firestore'`
 
 Namespace under which enhancer places internal instance on redux store (i.e. `store.firestore`).
 
 #### allowMultipleListeners
+
 Default: `false`
 
 Whether or not to allow multiple listeners to be attached for the same query. If a function is passed the arguments it receives are `listenerToAttach`, `currentListeners`, and the function should return a boolean.
 
 #### preserveOnDelete
+
 Default: `null`
 
 Values to preserve from state when DELETE_SUCCESS action is dispatched. Note that this will not prevent the LISTENER_RESPONSE action from removing items from state.ordered if you have a listener attached.
 
 #### preserveOnListenerError
+
 Default: `null`
 
 Values to preserve from state when LISTENER_ERROR action is dispatched.
 
 #### onAttemptCollectionDelete
+
 Default: `null`
 
 Arguments:`(queryOption, dispatch, firebase)`
@@ -600,17 +623,19 @@ Arguments:`(queryOption, dispatch, firebase)`
 Function run when attempting to delete a collection. If not provided (default) delete promise will be rejected with "Only documents can be deleted" unless. This is due to the fact that Collections can not be deleted from a client, it should instead be handled within a cloud function (which can be called by providing a promise to `onAttemptCollectionDelete` that calls the cloud function).
 
 #### mergeOrdered
+
 Default: `true`
 
 Whether or not to merge data within `orderedReducer`.
 
 #### mergeOrderedDocUpdate
+
 Default: `true`
 
 Whether or not to merge data from document listener updates within `orderedReducer`.
 
-
 #### mergeOrderedCollectionUpdates
+
 Default: `true`
 
 Whether or not to merge data from collection listener updates within `orderedReducer`.
@@ -654,42 +679,46 @@ It can be imported like so:
 ```html
 <script src="../node_modules/redux-firestore/dist/redux-firestore.min.js"></script>
 <!-- or through cdn: <script src="https://unpkg.com/redux-firestore@latest/dist/redux-firestore.min.js"></script> -->
-<script>console.log('redux firestore:', window.ReduxFirestore)</script>
+<script>
+  console.log('redux firestore:', window.ReduxFirestore);
+</script>
 ```
 
 Note: In an effort to keep things simple, the wording from this explanation was modeled after [the installation section of the Redux Docs](https://redux.js.org/#installation).
 
 ## Applications Using This
-* [fireadmin.io](http://fireadmin.io) - Firebase Instance Management Tool (source [available here](https://github.com/prescottprue/fireadmin))
+
+- [fireadmin.io](http://fireadmin.io) - Firebase Instance Management Tool (source [available here](https://github.com/prescottprue/fireadmin))
 
 ## FAQ
+
 1. How do I update a document within a subcollection?
 
-    Provide `subcollections` config the same way you do while querying:
+   Provide `subcollections` config the same way you do while querying:
 
-    ```js
-    props.firestore.update(
-      {
-        collection: 'cities',
-        doc: 'SF',
-        subcollections: [{ collection: 'counties', doc: 'San Mateo' }],
-      },
-      { some: 'changes' }
-    );
-    ```
+   ```js
+   props.firestore.update(
+     {
+       collection: 'cities',
+       doc: 'SF',
+       subcollections: [{ collection: 'counties', doc: 'San Mateo' }],
+     },
+     { some: 'changes' },
+   );
+   ```
 
 1. How do I get auth state in redux?
 
-    You will most likely want to use [`react-redux-firebase`](https://github.com/prescottprue/react-redux-firebase) or another redux/firebase connector. For more information please visit the [complementary package section](#complementary-package).
+   You will most likely want to use [`react-redux-firebase`](https://github.com/prescottprue/react-redux-firebase) or another redux/firebase connector. For more information please visit the [complementary package section](#complementary-package).
 
 1. Are there Higher Order Components for use with React?
 
-    [`react-redux-firebase`](https://github.com/prescottprue/react-redux-firebase) contains `firebaseConnect`, `firestoreConnect`, `withFirebase` and `withFirestore` HOCs. For more information please visit the [complementary package section](#complementary-package).
+   [`react-redux-firebase`](https://github.com/prescottprue/react-redux-firebase) contains `firebaseConnect`, `firestoreConnect`, `withFirebase` and `withFirestore` HOCs. For more information please visit the [complementary package section](#complementary-package).
 
 ## Roadmap
 
-* Automatic support for documents that have a parameter and a subcollection with the same name (currently requires `storeAs`)
-* Support for Passing a Ref to `setListener` in place of `queryConfig` object or string
+- Automatic support for documents that have a parameter and a subcollection with the same name (currently requires `storeAs`)
+- Support for Passing a Ref to `setListener` in place of `queryConfig` object or string
 
 Post an issue with a feature suggestion if you have any ideas!
 
