@@ -26,8 +26,6 @@ function PopulatedDetails() {
     }) => projects && projects[projectId]
   )
 
-  console.log('PROJECT ', project)
-
   const creator = useSelector(
     ({
       firestore: {
@@ -35,8 +33,6 @@ function PopulatedDetails() {
       }
     }) => users && users[project.createdBy]
   )
-
-  console.log("CREATOR ", creator)
 
   // Show loading spinner while project is loading
   if (!isLoaded(project)) {

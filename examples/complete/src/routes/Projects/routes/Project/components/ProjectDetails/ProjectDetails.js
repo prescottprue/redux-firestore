@@ -14,8 +14,6 @@ function ProjectDetails() {
   const { projectId } = useParams()
   const classes = useStyles()
 
-  console.log("projectId is", projectId)
-  
   // Create listener for projects
   useFirestoreConnect([{ collection: 'projects', doc: projectId }])
 
