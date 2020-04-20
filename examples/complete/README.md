@@ -22,7 +22,7 @@
 
 ## Getting Started
 
-1. Install app and functions dependencies: `npm i && npm i --prefix functions` or `yarn install && yarn install --cwd functions`
+1. Install app and functions dependencies: `npm i` or `yarn install`
 1. Create `src/config.js` file that looks like so if it does not already exist:
     ```js
     const firebase = {
