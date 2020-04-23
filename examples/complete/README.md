@@ -5,15 +5,14 @@
 
 ## Table of Contents
 
-1. [Features](#features)
 1. [Requirements](#requirements)
 1. [Getting Started](#getting-started)
+1. [Understanding the Code](#understanding-the-code)
+1. [Beyond Getting Started](#beyond-getting-started)
+1. [Config Files](#config-files)
 1. [Application Structure](#application-structure)
-1. [Development](#development)
-    1. [Routing](#routing)
-1. [Configuration](#configuration)
-1. [Production](#production)
-1. [Deployment](#deployment)
+1. [Routing](#routing)
+1. [Frequently Asked Questions (FAQ)](#faq)
 
 ## Requirements
 
@@ -22,23 +21,71 @@
 
 ## Getting Started
 
-1. Install app and functions dependencies: `npm i && npm i --prefix functions` or `yarn install && yarn install --cwd functions`
-1. Create `src/config.js` file that looks like so if it does not already exist:
-    ```js
-    const firebase = {
-      // Config from Firebase console
-    }
+The following will take 10-20 minutes to complete.
 
-    // Overrides for for react-redux-firebase/redux-firestore config
-    export const reduxFirebase = {}
+1. Clone the repository: ```git clone https://github.com/prescottprue/redux-firestore```
+1. Go into the working directory for this example: ```cd redux-firestore/example/complete```
+1. Fetch the required npm modules (identified in _package.json_): ```npm install```
+1. In Firebase console, create new project -- for example: _redux-firestore-complete_
+   1. choose default values, nothing special
+   1. add a _web_ app -- for example: _rfc-web_
+   1. copy Firebase SDK's _firebaseConfig_ settings to your clipboard
+1. Edit **config.js**
+   1. Paste (overwrite) the values inside the braces of ```export const firebase { ... }``` with the values from your web app's Firestore SDK settings (previous step).
+   1. Save the file.
+1. In Firebase console for your project, go to Authentication (left sidebar)
+   1. Click the _Sign-in method_ tab
+   1. Enable "Email/Password" (you can keep _Email link_ disabled if you want)
+   1. Click the _Users_ tab
+   1. Click the  **Add user** button
+   1. Enter values that you'll use to authenticate.  The email address does not need to be a real one, though it should be realistic.  I used:
+      * email: **bob@test.com**
+      * password: **pwd123**
+    1. Click **Add user** to save your new user
+1. In Firebase console for your project, go to Database (left sidebar)
+   1. For Cloud Firestore, click **Create database**
+      * _Note_: the UI for Firebase console continues to evolve.  You want to create a _Firestore_ database here, and not a realtime-database.
+   1. Select _Start in test mode_ and click **Next**
+   1. Chooose a location (I went with the default for me -- _nam5 (us-central)_), and click **Next**
+1. In the Firebase console, you should now be back at the Database page and see an empty database with _+ Start collection_ as an option
+1. In your development environment (your computer), start the app with: ```npm start```
+   * I typically do this from the terminal within my VS Code editor.  To start the terminal, I use ```ctrl+` ```
+1. In a browser window (usually one is auto-launched with _npm start_), go to your app.
+   * The default URL is http://localhost:3000/.
+   1. **Login and update your account**
+      1. You should see a page with the title "Home Route".
+      1. Click _Sign In_ (top-right corner of the page)
+      1. Log in with the email & password for the user created above
+      1. You should see an "Account" page.  Feel free to update your account information.  I used:
+         * Display Name: **Bobby McBobface**
+         * Email: **bob@test.com**
+         * Avatar Url: **https://randomuser.me/api/portraits/men/42.jpg**
+      1. Click **Save**
+   1. **Add a new Project**
+      1. Click the _Complete_ title in the top-left corner of the page.  This takes you to the _/projects_ page.
+      1. Click the **+** card in the middle of the page.
+      1. In the _New Project_ dialog, enter a name and click    **CREATE**
+1. In the Firebase console, in the Database page you should now see data in your database -- if not, refresh the page by clicking to another page (e.g. click _Authentication_) and then return to _Database_ ... or simply refresh your browser.
+   * You should now see two collections listed: _projects_ and _users_.
 
-    export default {
-      env,
-      firebase,
-      reduxFirebase
-    }
-    ```
-1. Start Development server: `npm start`
+## Understanding the code
+
+This example project gives an understanding of many aspects of redux-firestore.  Using your favorite editor (e.g. VS Code) browse the codebase looking at how it leverages redux-firestore.
+
+One clear example is in the code for ```ProjectPage``` and its components ```ProjectDetails``` and ```PopulateDetails```.
+
+### ProjectDetails
+
+This component shows how to use ```useFirestoreConnect()```, ```isLoaded()``` and ```useSelector()``` to set a Redux listener to a specific query and display the results.
+
+The query in particular is:
+```[{ collection: 'projects', doc: projectId }]```, meaning we are pulling the document from the _projects_ collection whose ID is the value ```projectId```.  The value of ```projectId``` is passed down to the component from its parent, ```ProjectPage.js``` who in turn gets the value from its associated route defined in ```examples/complete/src/routes/Projects/routes/Project/index.js```
+
+### PopulatedDetails
+
+This component shows how to use ```firestoreConnect()``` and the ```populate()``` method.  The same _projects_ document is retrieved as in the ProjectDetails case (above); additionally the _users_ record is fetched for the associated user who created the given project.
+
+## Beyond Getting Started
 
 While developing, you will probably rely mostly on `npm start`; however, there are additional scripts at your disposal:
 
@@ -155,7 +202,6 @@ export default {
 With this setting, the name of the file (called a "chunk") is defined as part of the code as well as a loading spinner showing while the bundle file is loading.
 
 More about how routing works is available in [the react-router-dom docs](https://reacttraining.com/react-router/web/guides/quick-start).
-
 
 ## FAQ
 
