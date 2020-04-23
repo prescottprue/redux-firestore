@@ -50,7 +50,7 @@ function Home() {
           <h4>Logged Out</h4>
           <span>
             User is redirected to <pre>/login</pre> if not authenticated and
-            trying to vist:
+            trying to visit:
           </span>
           <ul>
             <li>
@@ -65,7 +65,7 @@ function Home() {
           <h4>Logged In</h4>
           <span>
             User is redirected to <pre>/projects</pre> if authenticated and
-            trying to vist:
+            trying to visit:
           </span>
           <ul>
             <li>
