@@ -77,8 +77,7 @@ import { Provider } from 'react-redux';
 render(
   <Provider store={store}>
     <MyRootComponent />
-  </Provider>,
-  rootEl,
+  </Provider>
 );
 ```
 
