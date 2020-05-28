@@ -296,7 +296,7 @@ store.firestore.unsetListeners([query1Options, query2Options]),
 },
 ```
 
-**NOTE**: `storeAs` is now required for subcollections. This is to more closley match the logic of [the upcoming major release (v1)](https://github.com/prescottprue/redux-firestore/wiki/v1.0.0-Roadmap) which stores all collections, even subcollections, at the top level of `data` and `ordered` state slices.
+**NOTE**: `storeAs` is now required for subcollections. This is to more closely match the logic of [the upcoming major release (v1)](https://github.com/prescottprue/redux-firestore/wiki/v1.0.0-Roadmap) which stores all collections, even subcollections, at the top level of `data` and `ordered` state slices.
 
 ##### Collection Group
 
