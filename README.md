@@ -411,10 +411,12 @@ _Can only be used with collections. Types can be a string, number, Date object, 
 ```js
 {
   collection: 'cities',
-  orderBy: 'population',
-  startAfter: 1000000
+  orderBy: [['state', 'asc'],['population','desc']]
+  startAfter: ["CA", 1000000]
 },
 ```
+
+**Note:**  for the above to return valid results, there must be at least one document with `state = "CA"` _and_ `population = 1000000` (i.e. the values idenify "the provided document").
 
 _Can only be used with collections. Types can be a string, number, Date object, or an array of these types, but not a Firestore Document Snapshot_
 
@@ -462,7 +464,7 @@ Storing data under a different path within redux is as easy as passing the `stor
 },
 ```
 
-**NOTE:** Usage of `"/"` and `"."` within `storeAs` can cause unexpected behavior when attempting to retrieve from redux state
+**Note:** Usage of `"/"` and `"."` within `storeAs` can cause unexpected behavior when attempting to retrieve from redux state
 
 #### Other Firebase Statics
 
@@ -684,7 +686,7 @@ It can be imported like so:
 </script>
 ```
 
-Note: In an effort to keep things simple, the wording from this explanation was modeled after [the installation section of the Redux Docs](https://redux.js.org/#installation).
+**Note:** In an effort to keep things simple, the wording from this explanation was modeled after [the installation section of the Redux Docs](https://redux.js.org/#installation).
 
 ## Applications Using This
 
