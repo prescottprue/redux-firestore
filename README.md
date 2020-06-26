@@ -330,7 +330,7 @@ Multiple `where` queries are as simple as passing multiple argument arrays (each
 },
 ```
 
-Firestore doesn't alow you to create `or` style queries. Instead, you should pass in multiple queries and compose your data.
+Firestore doesn't allow you to create `or` style queries. Instead, you should pass in multiple queries and compose your data.
 
 ```javascript
 ['sally', 'john', 'peter'].map(friendId => ({
