@@ -98,7 +98,9 @@ export interface Config {
   preserveOnListenerError: null | object;
 
   // https://github.com/prescottprue/redux-firestore#onattemptcollectiondelete
-  onAttemptCollectionDelete: null | ((queryOption: string, dispatch: Dispatch, firebase: Object) => void);
+  onAttemptCollectionDelete:
+    | null
+    | ((queryOption: string, dispatch: Dispatch, firebase: Object) => void);
 
   // https://github.com/prescottprue/redux-firestore#mergeordered
   mergeOrdered: boolean;
@@ -127,10 +129,36 @@ export function getFirestore(
   otherConfig?: Partial<Config>,
 ): any;
 
+export namespace FirestoreReducer {
+  export interface Reducer<Schema extends Record<string, any> = {}> {
+    composite?: Data<any | Dictionary<any>>;
+    data: { [T in keyof Schema]: Record<string, Schema[T]> };
+    errors: {
+      allIds: string[];
+      byQuery: any[];
+    };
+    listeners: Listeners;
+    ordered: {
+      [T in keyof Schema]: Array<Schema[T]>;
+    };
+    queries: Data<ReduxFirestoreQuerySetting & (Dictionary<any> | any)>;
+    status: {
+      requested: Dictionary<boolean>;
+      requesting: Dictionary<boolean>;
+      timestamps: Dictionary<number>;
+    };
+  }
+
+  const prototype: {};
+}
+
 /**
  * A redux store reducer for Firestore state
  */
-export function firestoreReducer(state: object, action: object): any;
+export function firestoreReducer<Schema extends Record<string, any> = {}>(
+  state: any,
+  action: any,
+): FirestoreReducer.Reducer;
 
 /**
  * Create a firestore instance that has helpers attached for dispatching actions
