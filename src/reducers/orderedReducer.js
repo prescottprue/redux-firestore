@@ -20,15 +20,18 @@ const {
 
 /**
  * Create a new copy of an array with the provided item in a new array index
+ *
  * @param {Array} [collectionState=[]] - Redux state of current collection
- * @param {object} meta - New array metadata
- * @param {object} meta.oldIndex - New array index for the item
- * @param {object} meta.newIndex -
+ * @param {object} meta - Redux Action meta data contains the doc id
+ * @param {object} ordered - New array metadata
+ * @param {object} ordered.oldIndex - New array index for the item
+ * @param {object} ordered.newIndex -
  * @param {object} newValue - New value of the item
  * @returns {Array} Array with item moved
  */
-function newArrayWithItemMoved(collectionState, meta, newValue) {
-  const { oldIndex, newIndex } = meta || {};
+function newArrayWithItemMoved(collectionState, meta, ordered, newValue) {
+  const { doc } = meta;
+  const { oldIndex, newIndex } = ordered || {};
   // remove oldIndex from array while creating a copy
   const arrayWithoutItem = [
     ...collectionState.slice(0, oldIndex),
@@ -38,7 +41,7 @@ function newArrayWithItemMoved(collectionState, meta, newValue) {
   return [
     ...arrayWithoutItem.slice(0, newIndex),
     // set new item (falling back to using a copy of the removed item)
-    newValue || { ...collectionState[oldIndex] },
+    { id: doc, ...newValue } || { ...collectionState[oldIndex] },
     ...arrayWithoutItem.slice(newIndex),
   ];
 }
@@ -59,6 +62,7 @@ function modifyDoc(collectionState, action) {
     if (!!newIndex && oldIndex > -1 && newIndex !== oldIndex) {
       return newArrayWithItemMoved(
         collectionState,
+        action.meta,
         action.payload.ordered,
         action.payload.data,
       );
