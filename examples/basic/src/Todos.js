@@ -32,7 +32,7 @@ function Todos() {
             todoIds.map((todoId, i) => (
               <Todo
                 key={`${todoId}-${i}`}
-                id={todoId}
+                id={todoId.id}
               />
             ))
       }

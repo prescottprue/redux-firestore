@@ -24,9 +24,10 @@ function Todo({ id }) {
   const firestore = useFirestore()
 
   function onDoneClick() {
-    return firestore.firestore()
-      .doc(`todos/${todo.id}`)
-      .update({ done: !todo.done })
+    const itemUpdates =  {
+      done: !todo.done,
+    }
+    firestore.update({ collection: 'todos', doc: id } , itemUpdates)
   }
 
   return (
