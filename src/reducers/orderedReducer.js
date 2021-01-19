@@ -10,6 +10,7 @@ import {
 
 const {
   DOCUMENT_ADDED,
+  MULTIPLE_DOCUMENTS_ADDED,
   GET_SUCCESS,
   LISTENER_RESPONSE,
   CLEAR_DATA,
@@ -109,6 +110,18 @@ function addDoc(array = [], action) {
 
   // Add doc to subcollection by modifying the existing doc at this level
   return modifyDoc(array, action);
+}
+
+/**
+ * Case reducer for adding multiple documents to a collection or subcollection.
+ * @param {Array} [array=[]] - Redux state of current collection
+ * @param {object} action - The action that was dispatched
+ * @returns {Array} State with document modified
+ */
+function addMultipleDocs(array=[], action) {
+  const { payload } = action;
+
+  return payload.reduce((futureState, changeAction) => addDoc(futureState, changeAction), array)
 }
 
 /**
@@ -240,6 +253,7 @@ const actionHandlers = {
   [DOCUMENT_ADDED]: addDoc,
   [DOCUMENT_MODIFIED]: modifyDoc,
   [DOCUMENT_REMOVED]: removeDoc,
+  [MULTIPLE_DOCUMENTS_ADDED]: addMultipleDocs,
   [DELETE_SUCCESS]: removeDoc,
   [LISTENER_RESPONSE]: writeCollection,
   [GET_SUCCESS]: writeCollection,
