@@ -3,7 +3,7 @@ import { firestoreActions } from './actions';
 import { mapWithFirebaseAndDispatch } from './utils/actions';
 import { defaultConfig, methodsToAddFromFirestore } from './constants';
 
-let firestoreInstance
+let firestoreInstance;
 
 /**
  * Create a firebase instance that has helpers attached for dispatching actions
@@ -67,7 +67,6 @@ export default function createFirestoreInstance(firebase, configs, dispatch) {
   return firestoreInstance;
 }
 
-
 /**
  * Expose Firestore instance created internally. Useful for
  * integrations into external libraries such as redux-thunk and redux-observable.
@@ -106,10 +105,7 @@ export default function createFirestoreInstance(firebase, configs, dispatch) {
 export function getFirestore() {
   /* istanbul ignore next: Firestore instance always exists during tests */
   if (!firestoreInstance) {
-    throw new Error(
-      'Firestore instance does not yet exist. Check your setup.'
-    ) // eslint-disable-line no-console
+    throw new Error('Firestore instance does not yet exist. Check your setup.');
   }
   return firestoreInstance;
 }
-

@@ -98,7 +98,7 @@ export default function reduxFirestore(firebaseInstance, otherConfig) {
  *
  */
 export function getFirestore() {
-  // TODO: Handle recieveing config and creating firebase instance if it doesn't exist
+  // TODO: Handle receiveing config and creating firebase instance if it doesn't exist
   /* istanbul ignore next: Firebase instance always exists during tests */
   if (!firestoreInstance) {
     throw new Error(

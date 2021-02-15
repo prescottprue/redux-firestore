@@ -8,11 +8,13 @@ export const env = 'dev'
 
 // Config for firebase
 export const firebase = {
-  apiKey: 'AIzaSyBTvAcJwsN8iygsnwAZyzIuy1uleYEpWIo',
-  authDomain: 'redux-firestore.firebaseapp.com',
-  databaseURL: 'https://redux-firestore.firebaseio.com',
-  projectId: 'redux-firestore',
-  storageBucket: 'redux-firestore.appspot.com'
+  apiKey: "AIzaSyCVKQUFemqhQdkIy-i83mPcSSD5dUqqQBk",
+  authDomain: "redux-firestore-3996a.firebaseapp.com",
+  databaseURL: "https://redux-firestore-3996a-default-rtdb.firebaseio.com",
+  projectId: "redux-firestore-3996a",
+  storageBucket: "redux-firestore-3996a.appspot.com",
+  messagingSenderId: "69609080163",
+  appId: "1:69609080163:web:a20aac99c66a2749243f56"
 }
 
 // Config to override default reduxFirebase config in store/createStore

@@ -1,10 +1,9 @@
 import { LIST_PATH as path } from 'constants/paths'
-import { Loadable } from 'utils/components'
+import { loadable } from 'utils/router'
 
 export default {
   path,
-  component: Loadable({
-    loader: () =>
-      import(/* webpackChunkName: 'Projects' */ './components/ProjectsPage')
-  })
+  component: loadable(() =>
+    import(/* webpackChunkName: 'Projects' */ './components/ProjectsPage')
+  )
 }

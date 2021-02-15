@@ -1,31 +1,7 @@
 {
   "projects": {
-    "default": "redux-firebasev3",
-    "master": "redux-firebasev3",
-    "prod": "redux-firebasev3"
-  },
-  "ci": {
-    "createConfig": {
-      "master": {
-        "env": "staging",
-        "firebase": {
-          "apiKey": "AIzaSyBTvAcJwsN8iygsnwAZyzIuy1uleYEpWIo",
-          "authDomain": "redux-firebasev3.firebaseapp.com",
-          "databaseURL": "https://redux-firebasev3.firebaseio.com",
-          "projectId": "redux-firebasev3",
-          "storageBucket": "redux-firebasev3.appspot.com"
-        }
-      },
-      "prod": {
-        "env": "production",
-        "firebase": {
-          "apiKey": "AIzaSyBTvAcJwsN8iygsnwAZyzIuy1uleYEpWIo",
-          "authDomain": "redux-firebasev3.firebaseapp.com",
-          "databaseURL": "https://redux-firebasev3.firebaseio.com",
-          "projectId": "redux-firebasev3",
-          "storageBucket": "redux-firebasev3.appspot.com"
-        }
-      }
-    }
+    "default": "redux-firestore-3996a",
+    "master": "redux-firestore-3996a",
+    "prod": "redux-firestore-3996a"
   }
 }

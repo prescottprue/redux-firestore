@@ -1,5 +1,5 @@
 module.exports = {
-  'extends': ['standard', 'standard-react', 'prettier', 'prettier/react'],
+  extends: ['standard', 'standard-react', 'prettier', 'prettier/react'],
   root: true,
   parser: 'babel-eslint',
   plugins: ['import', 'react', 'react-hooks', 'prettier'],
@@ -14,10 +14,8 @@ module.exports = {
     }
   },
   rules: {
-    semi: [
-      2, 'never'
-    ],
-    'no-console': 'error',
+    semi: [2, 'never'],
+    'no-console': 0,
     'react/forbid-prop-types': 0,
     'react/require-default-props': 0,
     'react/jsx-filename-extension': 0,
@@ -38,5 +36,22 @@ module.exports = {
         useTabs: false
       }
     ]
-  }
+  },
+  overrides: [
+    {
+      files: ['./public/firebase-messaging-sw.js'],
+      env: {
+        browser: true
+      },
+      globals: {
+        self: true,
+        firebase: true,
+        importScripts: true
+      },
+      rules: {
+        'no-restricted-globals': 0,
+        'no-console': 0
+      }
+    }
+  ]
 }

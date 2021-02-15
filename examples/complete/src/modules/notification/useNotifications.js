@@ -1,16 +1,22 @@
-import { useMemo } from 'react'
-import { bindActionCreators } from 'redux'
-import { useDispatch } from 'react-redux'
-import * as actions from './actions'
+import { useContext } from 'react'
+import { NotificationsContext } from './NotificationsProvider'
 
 /**
- * React hook for access to notifications. Returns
- * showSuccess, showError and showMessage
- * @returns {object} Notification actions
+ * Hook for loading notifications context
+ * @returns {Object} Notifications context
+ * @example
+ * import React from 'react'
+ * import { useNotifications } from 'modules/notification'
+ *
+ * function SomeComponent() {
+ *   const { showError } = useNotifications()
+ *   return (
+ *     <button onClick={() => showError('Test Error')}>
+ *       Test Error Notification
+ *     </button>
+ *   )
+ * }
  */
 export default function useNotifications() {
-  const dispatch = useDispatch()
-  return useMemo(() => {
-    return bindActionCreators(actions, dispatch)
-  }, [dispatch])
+  return useContext(NotificationsContext)
 }

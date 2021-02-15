@@ -1,10 +1,9 @@
-import { Loadable } from 'utils/components'
+import { loadable } from 'utils/router'
 import { ACCOUNT_PATH as path } from 'constants/paths'
 
 export default {
   path,
-  component: Loadable({
-    loader: () =>
-      import(/* webpackChunkName: 'Account' */ './components/AccountPage')
-  })
+  component: loadable(() =>
+    import(/* webpackChunkName: 'Account' */ './components/AccountPage')
+  )
 }

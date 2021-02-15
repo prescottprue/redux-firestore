@@ -5,6 +5,20 @@
   "storage": {
     "rules": "storage.rules"
   },
+  "emulators": {
+    "firestore": {
+      "port": 8080
+    },
+    "database": {
+      "port": 9000
+    },
+    "hosting": {
+      "port": 3000
+    },
+    "pubsub": {
+      "port": 8085
+    }
+  },
   "firestore": {
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
