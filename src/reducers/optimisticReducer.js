@@ -18,16 +18,18 @@ const PROCESSES = {
   "not-in": (a, b) => !a.includes(b),
 }
 
-function buildTransducer(overrides, {collection, where, orderBy:order, limit, ordered}) {
+function buildTransducer(overrides, {collection, where, orderBy:order, limit, ordered, fields}) {
   const identity = d => d
   const useFirestoreSort = !overrides;
   const getCollection = partialRight(map, state => state.database[collection]);
+  const xfFields = !fields ? identity : partialRight(map, docs => docs.map(doc => pick(doc, fields)));
   
   if (useFirestoreSort) {
     const ids = ordered.map(([__, id]) => id)
     return flow(
       getCollection,
       partialRight(map, docs => ids.map(id => docs[id])),
+      xfFields,
     );
   }
   
@@ -56,6 +58,7 @@ function buildTransducer(overrides, {collection, where, orderBy:order, limit, or
     ...xfFilter,
     xfOrder,
     xfLimit,
+    xfFields,
   ]);
 }
 
