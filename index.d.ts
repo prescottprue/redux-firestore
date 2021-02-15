@@ -107,9 +107,19 @@ export function getFirestore(
 ): any;
 
 /**
- * A redux store reducer for Firestore state
+ * Reducer for Firestore state
+ * @param state - Current Firebase Redux State (state.firestore)
+ * @param action - Action which will modify state
+ * @param action.type - Type of Action being called
+ * @param action.path - Path of action that was dispatched
+ * @param action.data - Data associated with action
+ * @see https://react-redux-firebase.com/docs/api/reducer.html
  */
-export function firestoreReducer(state: object, action: object): any;
+export function firestoreReducer<Schema extends Record<string, any> = {}
+>(
+  state: any,
+  action: any
+): Reducer<FirestoreReducer.State<Schema>>
 
 /**
  * Create a firestore instance that has helpers attached for dispatching actions
@@ -132,4 +142,43 @@ export namespace firestoreReducer {
  */
 export namespace reduxFirestore {
   const prototype: {};
+}
+
+export namespace FirestoreReducer {
+  declare const entitySymbol: unique symbol
+
+  export type Entity<T> = T & {
+    [entitySymbol]: never
+  }
+  export type EntityWithId<T> = T & { id: string }
+  export type FirestoreData<Schema extends Record<string, any>> = {
+    [T in keyof Schema]: Record<
+      string,
+      Schema[T] extends Entity<infer V> ? V : FirestoreData<Schema[T]>
+    >
+  }
+
+  export type OrderedData<Schema extends Record<string, any>> = {
+    [T in keyof Schema]: Schema[T] extends Entity<infer V>
+      ? EntityWithId<V>[]
+      : OrderedData<EntityWithId<Schema[T]>>[]
+  }
+
+  export interface Reducer<Schema extends Record<string, any> = {}> {
+    errors: {
+      allIds: string[]
+      byQuery: any[]
+    }
+    listeners: Listeners
+    data: FirestoreData<Schema>
+    ordered: OrderedData<Schema>
+    queries: Data<ReduxFirestoreQuerySetting & (Dictionary<any> | any)>
+    status: {
+      requested: Dictionary<boolean>
+      requesting: Dictionary<boolean>
+      timestamps: Dictionary<number>
+    }
+  }
+
+  const prototype: {}
 }
