@@ -302,7 +302,7 @@ describe('firestoreActions', () => {
 
         describe('as a parameter', () => {
           it('updates single doc in state when docChanges includes single doc change with type: "modified"', async () => {
-            onSnapshotSpy = sinon.spy(func => {
+            onSnapshotSpy = sinon.spy((func) => {
               func({
                 docChanges: [
                   {
@@ -311,6 +311,9 @@ describe('firestoreActions', () => {
                       data: () => ({ some: 'value' }),
                       ref: {
                         path: 'test/1/test2/test3',
+                        parent: {
+                          path: 'test/1/test2',
+                        },
                       },
                     },
                     type: 'modified',
@@ -319,6 +322,9 @@ describe('firestoreActions', () => {
                 size: 2,
                 doc: {
                   id: '123ABC',
+                  parent: {
+                    path: 'test/1/test2',
+                  },
                 },
               });
             });
@@ -354,6 +360,9 @@ describe('firestoreActions', () => {
                   data: () => ({ some: 'value' }),
                   ref: {
                     path: 'test/1/test2/123ABC',
+                    parent: {
+                      path: 'test/1/test2',
+                    },
                   },
                 },
                 type: 'modified',
@@ -364,12 +373,15 @@ describe('firestoreActions', () => {
                   data: () => ({ some: 'value' }),
                   ref: {
                     path: 'test/1/test2/234ABC',
+                    parent: {
+                      path: 'test/1/test2',
+                    },
                   },
                 },
                 type: 'modified',
               },
             ];
-            onSnapshotSpy = sinon.spy(func => {
+            onSnapshotSpy = sinon.spy((func) => {
               func({
                 docChanges,
                 size: 3,
@@ -402,15 +414,31 @@ describe('firestoreActions', () => {
           });
 
           it('still dispatches LISTENER_RESPONSE action type if whole collection is being updated (i.e. docChanges.length === size)', async () => {
-            onSnapshotSpy = sinon.spy(success => {
+            onSnapshotSpy = sinon.spy((success) => {
               success({
                 docChanges: [
                   {
-                    doc: { id: '123ABC', data: () => ({ some: 'value' }) },
+                    doc: {
+                      id: '123ABC',
+                      data: () => ({ some: 'value' }),
+                      ref: {
+                        parent: {
+                          path: 'test/1/test2',
+                        },
+                      },
+                    },
                     type: 'modified',
                   },
                   {
-                    doc: { id: '123ABC', data: () => ({ some: 'value' }) },
+                    doc: {
+                      id: '123ABC',
+                      data: () => ({ some: 'value' }),
+                      ref: {
+                        parent: {
+                          path: 'test/1/test2',
+                        },
+                      },
+                    },
                     type: 'modified',
                   },
                 ],
@@ -461,17 +489,25 @@ describe('firestoreActions', () => {
                   data: () => ({ some: 'value' }),
                   ref: {
                     path: 'test/1/test2/123ABC',
+                    parent: {
+                      path: 'test/1/test2',
+                    },
                   },
                 },
                 type: 'modified',
               },
             ];
-            onSnapshotSpy = sinon.spy(func => {
+            onSnapshotSpy = sinon.spy((func) => {
               func({
                 docChanges: () => docChanges,
                 size: 2,
                 doc: {
                   id: '123ABC',
+                  ref: {
+                    parent: {
+                      path: 'test/1/test2',
+                    },
+                  },
                 },
               });
             });
@@ -506,6 +542,9 @@ describe('firestoreActions', () => {
                   data: () => ({ some: 'value' }),
                   ref: {
                     path: 'test/1/test2/123ABC',
+                    parent: {
+                      path: 'test/1/test2',
+                    },
                   },
                 },
                 type: 'modified',
@@ -516,12 +555,15 @@ describe('firestoreActions', () => {
                   data: () => ({ some: 'value' }),
                   ref: {
                     path: 'test/1/test2/234ABC',
+                    parent: {
+                      path: 'test/1/test2',
+                    },
                   },
                 },
                 type: 'modified',
               },
             ];
-            onSnapshotSpy = sinon.spy(func => {
+            onSnapshotSpy = sinon.spy((func) => {
               func({
                 docChanges: () => docChanges,
                 size: 3,
@@ -553,15 +595,31 @@ describe('firestoreActions', () => {
           });
 
           it('still dispatches LISTENER_RESPONSE action type if whole collection is being updated (i.e. docChanges.length === size)', async () => {
-            onSnapshotSpy = sinon.spy(success => {
+            onSnapshotSpy = sinon.spy((success) => {
               success({
                 docChanges: () => [
                   {
-                    doc: { id: '123ABC', data: () => ({ some: 'value' }) },
+                    doc: {
+                      id: '123ABC',
+                      data: () => ({ some: 'value' }),
+                      ref: {
+                        parent: {
+                          path: 'test/1/test2',
+                        },
+                      },
+                    },
                     type: 'modified',
                   },
                   {
-                    doc: { id: '123ABC', data: () => ({ some: 'value' }) },
+                    doc: {
+                      id: '123ABC',
+                      data: () => ({ some: 'value' }),
+                      ref: {
+                        parent: {
+                          path: 'test/1/test2',
+                        },
+                      },
+                    },
                     type: 'modified',
                   },
                 ],
