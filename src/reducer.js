@@ -2,7 +2,7 @@ import reduceReducers from 'reduce-reducers';
 import { combineReducers } from './utils/reducers';
 import {
   statusReducer,
-  dataReducer,
+  collectionReducer,
   orderedReducer,
   listenersReducer,
   errorsReducer,
@@ -24,7 +24,7 @@ import {
  */
 const combinedReducers = combineReducers({
   status: statusReducer,
-  data: dataReducer,
+  data: collectionReducer,
   ordered: orderedReducer,
   listeners: listenersReducer,
   errors: errorsReducer,

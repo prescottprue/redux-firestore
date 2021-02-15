@@ -1,4 +1,4 @@
-import dataReducer from 'reducers/dataReducer';
+import dataReducer from 'reducers/collectionReducer';
 import { actionTypes } from 'constants';
 
 const state = {};
@@ -9,7 +9,7 @@ let payload = {};
 let meta = {};
 let result;
 
-describe('dataReducer', () => {
+describe('collectionReducer', () => {
   beforeEach(() => {
     result = undefined;
   });

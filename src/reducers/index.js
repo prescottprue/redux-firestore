@@ -1,4 +1,4 @@
-import dataReducer from './dataReducer';
+import collectionReducer from './collectionReducer';
 import errorsReducer from './errorsReducer';
 import listenersReducer from './listenersReducer';
 import orderedReducer from './orderedReducer';
@@ -7,7 +7,7 @@ import queriesReducer from './queriesReducer';
 import crossSliceReducer from './crossSliceReducer';
 
 export {
-  dataReducer,
+  collectionReducer,
   errorsReducer,
   listenersReducer,
   orderedReducer,
@@ -17,7 +17,7 @@ export {
 };
 
 export default {
-  dataReducer,
+  collectionReducer,
   errorsReducer,
   listenersReducer,
   orderedReducer,
