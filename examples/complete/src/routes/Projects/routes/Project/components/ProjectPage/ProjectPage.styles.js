@@ -1,10 +1,8 @@
-export default theme => ({
+export default (theme) => ({
   root: {
     padding: theme.spacing(2)
   },
-  progress: {
-    ...theme.flexRowCenter,
-    alignItems: 'center',
-    paddingTop: theme.spacing(8)
+  card: {
+    marginBottom: theme.spacing(2)
   }
 })

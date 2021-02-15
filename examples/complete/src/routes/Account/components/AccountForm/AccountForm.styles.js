@@ -1,4 +1,4 @@
-export default theme => ({
+export default (theme) => ({
   root: {
     ...theme.flexColumnCenter,
     justifyContent: 'flex-start',

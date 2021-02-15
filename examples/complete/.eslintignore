@@ -3,5 +3,4 @@
 dist/**
 build/**
 src/index.html
-blueprints/**
 src/config.js

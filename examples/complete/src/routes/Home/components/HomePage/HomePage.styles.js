@@ -1,8 +1,11 @@
-export default theme => ({
+export default (theme) => ({
   root: {
-    ...theme.flexColumnCenter
+    ...theme.flexColumnCenter,
+    paddingTop: theme.spacing(2)
   },
   section: {
-    ...theme.flexColumnCenter
+    ...theme.flexColumnCenter,
+    padding: theme.spacing(2),
+    textAlign: 'center'
   }
 })

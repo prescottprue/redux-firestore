@@ -2,12 +2,14 @@
   "generator-react-firebase": {
     "promptValues": {
       "githubUser": "prescottprue",
-      "firebaseName": "redux-firebasev3",
-      "firebaseKey": "AIzaSyBTvAcJwsN8iygsnwAZyzIuy1uleYEpWIo",
+      "firebaseName": "redux-firestore-3996a",
+      "firebaseKey": "AIzaSyCVKQUFemqhQdkIy-i83mPcSSD5dUqqQBk",
       "includeRedux": true,
       "includeFirestore": true,
       "otherFeatures": [],
-      "deployTo": "firebase"
+      "deployTo": "firebase",
+      "firebaseProjectId": "redux-firestore-3996a",
+      "appId": "1:69609080163:web:a20aac99c66a2749243f56"
     }
   }
 }
