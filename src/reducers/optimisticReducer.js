@@ -1,6 +1,5 @@
 import produce from 'immer';
-import { set, get, unset, filter, flow, orderBy, take, map, merge, partialRight } from 'lodash';
-import { compose } from 'lodash/fp';
+import { set, get, unset, filter, flow, orderBy, take, map, merge, partialRight, pick } from 'lodash';
 import { actionTypes } from '../constants';
 import { getBaseQueryName } from '../utils/query';
 
@@ -20,6 +19,7 @@ const PROCESSES = {
 }
 
 function buildTransducer(overrides, {collection, where, orderBy:order, limit, ordered}) {
+  const identity = d => d
   const useFirestoreSort = !overrides;
   const getCollection = partialRight(map, state => state.database[collection]);
   
@@ -27,7 +27,7 @@ function buildTransducer(overrides, {collection, where, orderBy:order, limit, or
     const ids = ordered.map(([__, id]) => id)
     return flow(
       getCollection,
-      partialRight(map, docs => ids.map(id => docs[id]))
+      partialRight(map, docs => ids.map(id => docs[id])),
     );
   }
   
@@ -35,7 +35,9 @@ function buildTransducer(overrides, {collection, where, orderBy:order, limit, or
   const applyOverrides = Object.keys(docs).map(docId => 
     partialRight(map, 
       collection => 
-      merge(collection, {[docId]: docs[docId]}))
+        !docs[docId] 
+        ? unset(collection, docId)
+        : merge(collection, {[docId]: docs[docId]}))
   );
   const xfFilter = where.map(([field, op, val]) => (
     partialRight(map, collection => 
@@ -44,15 +46,16 @@ function buildTransducer(overrides, {collection, where, orderBy:order, limit, or
       )
     )
   ));
-  const xfOrder = !order ? d => d : partialRight(orderBy, order[0], order[1] || 'asc');
-  const xfLimit = limit ? d => d : partialRight(take, limit)
+  const xfOrder = !order ? identity : partialRight(orderBy, order[0], order[1] || 'asc');
+  const xfLimit = limit ? identity : partialRight(take, limit)
 
   return flow([
     getCollection,
     ...applyOverrides,
+    // partialRight(map, (data) => {console.log(">>", data); return data;}),
     ...xfFilter,
     xfOrder,
-    xfLimit
+    xfLimit,
   ]);
 }
 
@@ -88,7 +91,7 @@ export default function optimisticReducer(state = {}, action) {
           ordered: action.payload.ordered.map(({id, path}) => [path, id]),
           ...action.meta };
           draft[key].results = selectDocuments(draft, draft[key])
-          // console.log("__>>",draft[key].results)
+          
         return draft;
       case actionTypes.UNSET_LISTENER:
         if (draft[key]) {
@@ -111,9 +114,11 @@ export default function optimisticReducer(state = {}, action) {
         set(draft, [key, 'results'], selectDocuments(draft, draft[key]));
         // TODO: remove from ordered array
         return draft;
+
+      case actionTypes.OPTIMISTIC_ADDED:
       case actionTypes.OPTIMISTIC_MODIFIED:
         set(draft, ['overrides', path], action.payload.data);
-
+        
         // synchronusly filter/sort all queries on this collection type
         Object.keys(draft).forEach(key => {
           const {collection} = draft[key]
@@ -123,8 +128,13 @@ export default function optimisticReducer(state = {}, action) {
         });
         return draft;
       case actionTypes.OPTIMISTIC_REMOVED:
-        unset(draft, ['overrides', path, action.meta.doc], action.payload.data);
-        set(draft, [key, 'results'], selectDocuments(draft, draft[key]));
+        set(draft, ['overrides', path, action.meta.doc], null);
+        Object.keys(draft).forEach(key => {
+          const {collection} = draft[key]
+          if (!collection || collection !== path) return;
+
+          set(draft, [key, 'results'], selectDocuments(draft, draft[key]));
+        });
         return draft;
 
       default:

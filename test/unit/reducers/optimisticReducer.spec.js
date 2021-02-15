@@ -42,62 +42,64 @@ describe('optimisticReducer', () => {
     });
 
     it('override a document add synchronously', () => {
-      // const doc1 = { key1: 'value1', id: 'testDocId1', path }; 
-      // const doc2 = { key2: 'value1', id: 'testDocId2', path }; 
+      const doc1 = { key1: 'value1', id: 'testDocId1', path }; 
+      const doc2 = { key1: 'value1', id: 'testDocId2', path }; 
 
-      // // Initial seed
-      // const action1 = {
-      //   meta: {
-      //     collection,
-      //     storeAs: 'testStoreAs',
-      //     where: [['key1', '==', 'value1']],
-      //   },
-      //   payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
-      //   type: actionTypes.LISTENER_RESPONSE,
-      // };
-      // const action2 = {
-      //   type: actionTypes.OPTIMISTIC_ADDED,
-      //   meta: {
-      //     collection,
-      //     doc: doc2.id,
-      //   },
-      //   payload: { data: { [doc2.id]: doc2 } },
-      // };
+      // Initial seed
+      const action1 = {
+        meta: {
+          collection,
+          storeAs: 'testStoreAs',
+          where: [['key1', '==', 'value1']],
+        },
+        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+      const action2 = {
+        type: actionTypes.OPTIMISTIC_ADDED,
+        meta: {
+          collection,
+          doc: doc2.id,
+        },
+        payload: { data: { [doc2.id]: doc2 } },
+      };
 
-      // const pass1 = reducer(initialState, action1);
-      // const pass2 = reducer(pass1, action2);
+      const pass1 = reducer(initialState, action1);
+      const pass2 = reducer(pass1, action2);
       
-      // expect(pass1.optimistic.testStoreAs.results[0]).to.eql(doc1);
-      // expect(pass2.optimistic.testStoreAs.results[0]).to.eql({...doc1, ...doc2});
+      expect(pass1.optimistic.testStoreAs.results[0]).to.eql(doc1);
+      expect(pass1.optimistic.testStoreAs.results[1]).to.eql(undefined);
+      expect(pass2.optimistic.testStoreAs.results[0]).to.eql(doc1);
+      expect(pass2.optimistic.testStoreAs.results[1]).to.eql(doc2);
     });
 
     it('override a document removal synchronously', () => {
-      // const doc1 = { key1: 'value1', id: 'testDocId1', path }; 
+      const doc1 = { key1: 'value1', id: 'testDocId1', path }; 
 
-      // // Initial seed
-      // const action1 = {
-      //   meta: {
-      //     collection,
-      //     storeAs: 'testStoreAs',
-      //     where: [['key1', '==', 'value1']],
-      //   },
-      //   payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
-      //   type: actionTypes.LISTENER_RESPONSE,
-      // };
-      // const action2 = {
-      //   type: actionTypes.OPTIMISTIC_REMOVED,
-      //   meta: {
-      //     collection,
-      //     doc: doc1.id,
-      //   },
-      //   payload: { },
-      // };
+      // Initial seed
+      const action1 = {
+        meta: {
+          collection,
+          storeAs: 'testStoreAs',
+          where: [['key1', '==', 'value1']],
+        },
+        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+      const action2 = {
+        type: actionTypes.OPTIMISTIC_REMOVED,
+        meta: {
+          collection,
+          doc: doc1.id,
+        },
+        payload: { },
+      };
 
-      // const pass1 = reducer(initialState, action1);
-      // const pass2 = reducer(pass1, action2);
+      const pass1 = reducer(initialState, action1);
+      const pass2 = reducer(pass1, action2);
       
-      // // expect(pass1.optimistic.testStoreAs.results[0]).to.eql(doc1);
-      // // expect(pass2.optimistic.testStoreAs.results[0]).to.eql({...doc1, ...doc2});
+      expect(pass1.optimistic.testStoreAs.results[0]).to.eql(doc1);
+      expect(pass2.optimistic.testStoreAs.results[0]).to.eql(undefined);
     });
 
 
