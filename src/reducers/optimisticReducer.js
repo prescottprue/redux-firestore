@@ -98,6 +98,8 @@ export default function optimisticReducer(state = {}, action) {
         return draft;
       case actionTypes.UNSET_LISTENER:
         if (draft[key]) {
+          Object.keys(draft[key].data).map(id => 
+            unset(draft, ['database', path, id]))
           draft[key].data = undefined; // eslint-disable-line no-param-reassign
           draft[key].results = undefined; // eslint-disable-line no-param-reassign
           draft[key].ordered = undefined; // eslint-disable-line no-param-reassign

@@ -9,7 +9,7 @@ const initialState = {
 };
 
 describe('optimisticReducer', () => {
-  
+
   describe('query fields', () => {
     it('query fields return partial document', () => {
       const doc1 = { key1: 'value1', other: 'test', id: 'testDocId1', path };
@@ -146,7 +146,47 @@ describe('optimisticReducer', () => {
       expect(pass2.optimistic.testStoreAs.results[0]).to.eql(undefined);
     });
 
+    it('overrides synchronously moves to new query', () => {
+      const first = { key1: 'value1', id: 'testDocId1', path }; 
+      const second = { key1: 'value2', id: 'testDocId1', path }; 
 
+      // Initial seed
+      const action1 = {
+        meta: {
+          collection,
+          storeAs: 'testOne',
+          where: [['key1', '==', 'value1']],
+        },
+        payload: { data: { [first.id]: first }, ordered: [first] },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+      const action2 = {
+        meta: {
+          collection,
+          storeAs: 'testTwo',
+          where: [['key1', '==', 'value2']],
+        },
+        payload: { data: { }, ordered: [] },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+      const action3 = {
+        type: actionTypes.OPTIMISTIC_ADDED,
+        meta: {
+          collection,
+          doc: second.id,
+        },
+        payload: { data: { [second.id]: second } },
+      };
+
+      const pass2 = reducer(reducer(initialState, action1), action2);
+      const pass3 = reducer(pass2, action3);
+      
+      expect(pass2.optimistic.testOne.results[0]).to.eql(first);
+      expect(pass2.optimistic.testTwo.results[0]).to.eql(undefined);
+
+      expect(pass3.optimistic.testOne.results[0]).to.eql(undefined);
+      expect(pass3.optimistic.testTwo.results[0]).to.eql(second);
+    });
   });
 
   describe('OPTIMISTIC_ADDED', () => {
