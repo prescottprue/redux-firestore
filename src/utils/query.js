@@ -480,16 +480,18 @@ export function getQueryConfigs(queries) {
 export function orderedFromSnap(snap) {
   const ordered = [];
   if (snap.data && snap.exists) {
+    const {id, ref: { collection: { path } } } = snap;
     const obj = isObject(snap.data())
-      ? { id: snap.id, ...(snap.data() || snap.data) }
-      : { id: snap.id, data: snap.data() };
+      ? { id, path, ...(snap.data() || snap.data) }
+      : { id, path, data: snap.data() };
     snapshotCache.set(obj, snap);
     ordered.push(obj);
   } else if (snap.forEach) {
     snap.forEach(doc => {
+      const {id, ref: { collection: { path } } } = doc;
       const obj = isObject(doc.data())
-        ? { id: doc.id, ...(doc.data() || doc.data) }
-        : { id: doc.id, data: doc.data() };
+        ? { id, path, ...(doc.data() || doc.data) }
+        : { id, path, data: doc.data() };
       snapshotCache.set(obj, doc);
       ordered.push(obj);
     });
@@ -510,13 +512,23 @@ export function dataByIdSnapshot(snap) {
     const snapData = snap.exists ? snap.data() : null;
     if (snapData) {
       snapshotCache.set(snapData, snap);
+      data[snap.id] = {
+        id: snap.id, 
+        path: snap.ref.collection.path, 
+        ...snapData
+      };
+    } else {
+      data[snap.id] = null;
     }
-    data[snap.id] = snapData;
   } else if (snap.forEach) {
     snap.forEach(doc => {
       const snapData = doc.data() || doc;
       snapshotCache.set(snapData, doc);
-      data[doc.id] = snapData;
+      data[doc.id] = {
+        id: doc.id, 
+        path: doc.ref.collection.path, 
+        ...snapData
+      };
     });
   }
   if (!!data && Object.keys(data).length) {
