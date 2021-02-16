@@ -9,8 +9,9 @@ const initialState = {
 };
 
 describe('optimisticReducer', () => {
-  describe('LISTENER_RESPONSE', () => {
-    it('only returns selected fields', () => {
+  
+  describe('query fields', () => {
+    it('query fields return partial document', () => {
       const doc1 = { key1: 'value1', other: 'test', id: 'testDocId1', path };
       
       // Initial seed
@@ -31,6 +32,28 @@ describe('optimisticReducer', () => {
       expect(pass1.optimistic.testStoreAs.results[0]).to.eql({ other: 'test', id: 'testDocId1' });
     });
 
+    it('empty fields return entire document', () => {
+      const doc1 = { key1: 'value1', other: 'test', id: 'testDocId1', path };
+      
+      // Initial seed
+      const action1 = {
+        meta: {
+          collection,
+          storeAs: 'testStoreAs',
+          where: [['key1', '==', 'value1']],
+          orderBy: ['value1'],
+        },
+        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+      
+      const pass1 = reducer(initialState, action1);
+      
+      expect(pass1.optimistic.testStoreAs.results[0]).to.eql(doc1);
+    });
+  });
+
+  describe('LISTENER_RESPONSE', () => {
     it('override a document modification synchronously', () => {
       const doc1 = { key1: 'value1', id: 'testDocId1', path }; // initial doc
       const doc2 = { key2: 'value2', id: 'testDocId1', path }; // added doc
