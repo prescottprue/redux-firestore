@@ -1,5 +1,5 @@
 import produce from 'immer';
-import { set, unset, filter, flow, orderBy, take, map, merge, partialRight, pick } from 'lodash';
+import { set, unset, filter, flow, orderBy, take, map, merge, partialRight, pick, reject } from 'lodash';
 import { actionTypes } from '../constants';
 import { getBaseQueryName } from '../utils/query';
 
@@ -144,8 +144,14 @@ export default function optimisticReducer(state = {}, action) {
           unset(draft, ['overrides', path, action.meta.doc]);
         }
 
-        // TODO: insert into order array
-
+        const { oldIndex=0, newIndex=0 } = action.payload.ordered || {};
+        if (oldIndex > -1 && newIndex !== oldIndex) {
+          const tuple = payload.data && [payload.data.path, payload.data.id] || 
+            draft[key].ordered[oldIndex]
+          draft[key].ordered.splice(oldIndex, 0)
+          draft[key].ordered.splice(newIndex, 0, tuple)
+        }
+        
         updateCollectionQueries(draft, path);
         return draft;
 
@@ -156,15 +162,17 @@ export default function optimisticReducer(state = {}, action) {
           unset(draft, ['overrides', path, action.meta.doc]);
         }
         
-        // TODO: remove from ordered array
-
+        if (draft[key] && draft[key].ordered) {
+          draft[key].ordered = reject(draft[key].ordered, [1, action.meta.doc])
+        }
+        
         updateCollectionQueries(draft, path);
         return draft;
 
       case actionTypes.OPTIMISTIC_ADDED:
       case actionTypes.OPTIMISTIC_MODIFIED:
         set(draft, ['overrides', path], action.payload.data);
-        
+
         updateCollectionQueries(draft, path);
         return draft;
 
