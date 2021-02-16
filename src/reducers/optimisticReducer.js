@@ -1,5 +1,5 @@
 import produce from 'immer';
-import { set, get, unset, filter, flow, orderBy, take, map, merge, partialRight, pick } from 'lodash';
+import { set, unset, filter, flow, orderBy, take, map, merge, partialRight, pick } from 'lodash';
 import { actionTypes } from '../constants';
 import { getBaseQueryName } from '../utils/query';
 
@@ -18,15 +18,33 @@ const PROCESSES = {
   "not-in": (a, b) => !a.includes(b),
 }
 
-function buildTransducer(overrides, {collection, where, orderBy:order, limit, ordered, fields}) {
+function buildTransducer(overrides, query) {
+  const {collection, where, orderBy:order, limit, ordered, fields, populate} = query;
+
   const identity = d => d
   const useFirestoreSort = !overrides;
   const getCollection = partialRight(map, state => state.database[collection]);
+  const xfPopulate = !populate ? identity : partialRight(map, state => {
+    // NOTE: this is costly for the entire collection, done at the end is better
+    const parent = JSON.parse(JSON.stringify(state.database[collection]))
+    populate.forEach(([id, siblingCollection, field]) => {
+      const sibling = state.database[siblingCollection]
+      Object.values(parent).forEach(doc => {
+        const siblingId = doc[id];
+        const siblingDoc = sibling && sibling[siblingId];
+        if (siblingDoc) {
+          doc[field] = JSON.parse(JSON.stringify(siblingDoc));
+        }
+      });
+    });
+    return { database: {[collection]: parent}};
+  })
   const xfFields = !fields ? identity : partialRight(map, docs => docs.map(doc => pick(doc, fields)));
   
   if (useFirestoreSort) {
     const ids = ordered.map(([__, id]) => id)
     return flow(
+      xfPopulate,
       getCollection,
       partialRight(map, docs => ids.map(id => docs[id])),
       xfFields,
@@ -52,6 +70,7 @@ function buildTransducer(overrides, {collection, where, orderBy:order, limit, or
   const xfLimit = limit ? identity : partialRight(take, limit)
 
   return flow([
+    xfPopulate,
     getCollection,
     ...applyOverrides,
     // partialRight(map, (data) => {console.log(">>", data); return data;}),
@@ -63,9 +82,17 @@ function buildTransducer(overrides, {collection, where, orderBy:order, limit, or
 }
 
 function selectDocuments(state, meta) {
-  // console.log(meta.collection, meta.where)
   const transduce = buildTransducer(state.overrides, meta);
   return transduce([state])[0]
+}
+
+function updateCollectionQueries(draft, path){
+  Object.keys(draft).forEach(key => {
+    const {collection, populate} = draft[key]
+    if (!collection || collection !== path && !(populate && populate[1] !== path)) return;
+
+    set(draft, [key, 'results'], selectDocuments(draft, draft[key]));
+  });
 }
 
 /**
@@ -84,62 +111,67 @@ export default function optimisticReducer(state = {}, action) {
     switch (action.type) {
       case actionTypes.GET_SUCCESS:
       case actionTypes.LISTENER_RESPONSE:
-        // eslint-disable-line no-param-reassign
         if (!draft.database) {
           draft.database = {}
         }
+        
+        // eslint-disable-line no-param-reassign
         draft.database[path] = merge(draft.database[path] || {}, action.payload.data)
         
         draft[key] = { 
           ordered: action.payload.ordered.map(({id, path}) => [path, id]),
-          ...action.meta };
-          draft[key].results = selectDocuments(draft, draft[key])
+          ...action.meta 
+        };
+
+        updateCollectionQueries(draft, path);
           
         return draft;
       case actionTypes.UNSET_LISTENER:
         if (draft[key]) {
-          Object.keys(draft[key].data).map(id => 
-            unset(draft, ['database', path, id]))
-          draft[key].data = undefined; // eslint-disable-line no-param-reassign
-          draft[key].results = undefined; // eslint-disable-line no-param-reassign
-          draft[key].ordered = undefined; // eslint-disable-line no-param-reassign
+          // remove only keys from the query
+          draft[key].ordered.map(([__, id]) => unset(draft, ['database', path, id]))
+          unset(draft, [key]);
+          updateCollectionQueries(draft, path);
         }
         return draft;
+
       case actionTypes.DOCUMENT_ADDED:
       case actionTypes.DOCUMENT_MODIFIED:
         set(draft, ['database', path, action.meta.doc], action.payload.data);
-        set(draft, [key, 'results'], selectDocuments(draft, draft[key]));
+
+        const removeOverride = draft.overrides[path] && draft.overrides[path][action.meta.doc];
+        if (removeOverride) {
+          unset(draft, ['overrides', path, action.meta.doc]);
+        }
+
         // TODO: insert into order array
 
-        // TODO: check if matches override, then remove
+        updateCollectionQueries(draft, path);
         return draft;
+
       case actionTypes.DOCUMENT_REMOVED:
       case actionTypes.DELETE_SUCCESS:
         unset(draft, ['database', path, action.meta.doc]);
-        set(draft, [key, 'results'], selectDocuments(draft, draft[key]));
+        if(draft.overrides[path]) {
+          unset(draft, ['overrides', path, action.meta.doc]);
+        }
+        
         // TODO: remove from ordered array
+
+        updateCollectionQueries(draft, path);
         return draft;
 
       case actionTypes.OPTIMISTIC_ADDED:
       case actionTypes.OPTIMISTIC_MODIFIED:
         set(draft, ['overrides', path], action.payload.data);
         
-        // synchronusly filter/sort all queries on this collection type
-        Object.keys(draft).forEach(key => {
-          const {collection} = draft[key]
-          if (!collection || collection !== path) return;
-
-          set(draft, [key, 'results'], selectDocuments(draft, draft[key]));
-        });
+        updateCollectionQueries(draft, path);
         return draft;
+
       case actionTypes.OPTIMISTIC_REMOVED:
         set(draft, ['overrides', path, action.meta.doc], null);
-        Object.keys(draft).forEach(key => {
-          const {collection} = draft[key]
-          if (!collection || collection !== path) return;
-
-          set(draft, [key, 'results'], selectDocuments(draft, draft[key]));
-        });
+        
+        updateCollectionQueries(draft, path);
         return draft;
 
       default:
