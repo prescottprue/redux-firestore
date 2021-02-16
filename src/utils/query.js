@@ -479,20 +479,18 @@ export function getQueryConfigs(queries) {
  */
 export function orderedFromSnap(snap) {
   const ordered = [];
-  if (snap.data && snap.exists) {
+  const toData = snap => {
+    const { id, ref: {collection: path} } = snap
     const obj = isObject(snap.data())
-      ? { id: snap.id, ...(snap.data() || snap.data) }
-      : { id: snap.id, data: snap.data() };
+      ? { id, path, ...(snap.data() || snap.data) }
+      : { id, path, data: snap.data() };
     snapshotCache.set(obj, snap);
     ordered.push(obj);
+  }
+  if (snap.data && snap.exists) {
+    toData(snap);
   } else if (snap.forEach) {
-    snap.forEach(doc => {
-      const obj = isObject(doc.data())
-        ? { id: doc.id, ...(doc.data() || doc.data) }
-        : { id: doc.id, data: doc.data() };
-      snapshotCache.set(obj, doc);
-      ordered.push(obj);
-    });
+    snap.forEach(doc => toData(doc));
   }
   snapshotCache.set(ordered, snap);
   return ordered;
@@ -506,18 +504,21 @@ export function orderedFromSnap(snap) {
  */
 export function dataByIdSnapshot(snap) {
   const data = {};
-  if (snap.data) {
+  const toData = snap => {
     const snapData = snap.exists ? snap.data() : null;
     if (snapData) {
       snapshotCache.set(snapData, snap);
     }
-    data[snap.id] = snapData;
+    data[snap.id] = { 
+      id: snap.id, 
+      path: snap.ref.collection.path,
+      ...snapData 
+    };
+  }
+  if (snap.data) {
+    toData(snap)
   } else if (snap.forEach) {
-    snap.forEach(doc => {
-      const snapData = doc.data() || doc;
-      snapshotCache.set(snapData, doc);
-      data[doc.id] = snapData;
-    });
+    snap.forEach(toData);
   }
   if (!!data && Object.keys(data).length) {
     snapshotCache.set(data, snap);
@@ -525,7 +526,6 @@ export function dataByIdSnapshot(snap) {
   }
   return null;
 }
-
 /**
  * @private
  * Create an array of promises for population of an object or list
