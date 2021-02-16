@@ -105,8 +105,8 @@ function updateCollectionQueries(draft, path){
 export default function optimisticReducer(state = {}, action) {
   return produce(state, draft => {
     
-    const key = action.meta.storeAs || getBaseQueryName(action.meta);
-    const path = action.meta.collection
+    const key = !action.meta ? null : action.meta.storeAs || getBaseQueryName(action.meta);
+    const path = !action.meta ? null : action.meta.collection
 
     switch (action.type) {
       case actionTypes.GET_SUCCESS:
@@ -139,7 +139,9 @@ export default function optimisticReducer(state = {}, action) {
       case actionTypes.DOCUMENT_MODIFIED:
         set(draft, ['database', path, action.meta.doc], action.payload.data);
 
-        const removeOverride = draft.overrides[path] && draft.overrides[path][action.meta.doc];
+        const removeOverride = draft.overrides && 
+          draft.overrides[path] && 
+          draft.overrides[path][action.meta.doc];
         if (removeOverride) {
           unset(draft, ['overrides', path, action.meta.doc]);
         }
@@ -158,7 +160,7 @@ export default function optimisticReducer(state = {}, action) {
       case actionTypes.DOCUMENT_REMOVED:
       case actionTypes.DELETE_SUCCESS:
         unset(draft, ['database', path, action.meta.doc]);
-        if(draft.overrides[path]) {
+        if(draft.overrides && draft.overrides[path]) {
           unset(draft, ['overrides', path, action.meta.doc]);
         }
         
