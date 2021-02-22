@@ -31,7 +31,7 @@ describe('optimisticReducer', () => {
       
       const pass1 = reducer(initialState, action1);
       
-      expect(pass1.optimistic.testStoreAs.results[0]).to.eql({ other: 'test', id: 'testDocId1' });
+      expect(pass1.cache.testStoreAs.docs[0]).to.eql({ other: 'test', id: 'testDocId1' });
     });
 
     it('empty fields return entire document', () => {
@@ -51,7 +51,7 @@ describe('optimisticReducer', () => {
       
       const pass1 = reducer(initialState, action1);
       
-      expect(pass1.optimistic.testStoreAs.results[0]).to.eql(doc1);
+      expect(pass1.cache.testStoreAs.docs[0]).to.eql(doc1);
     });
   });
 
@@ -68,7 +68,7 @@ describe('optimisticReducer', () => {
           where: [['key1', '==', 'value1']],
           orderBy: ['value1'],
           fields: ['id', 'key1', 'anotherDocument'],
-          populate: [['anotherId', anotherPath, 'anotherDocument']]
+          populates: [['anotherId', anotherPath, 'anotherDocument']]
         },
         payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
         type: actionTypes.LISTENER_RESPONSE,
@@ -86,8 +86,8 @@ describe('optimisticReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass1.optimistic.testStoreAs.results[0]).to.eql({  id: 'testDocId1', key1: 'value1' });
-      expect(pass2.optimistic.testStoreAs.results[0]).to.eql({ anotherDocument:doc2, key1: 'value1', id: 'testDocId1' });
+      expect(pass1.cache.testStoreAs.docs[0]).to.eql({  id: 'testDocId1', key1: 'value1' });
+      expect(pass2.cache.testStoreAs.docs[0]).to.eql({ anotherDocument:doc2, key1: 'value1', id: 'testDocId1' });
     });
 
   });
@@ -120,8 +120,8 @@ describe('optimisticReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
       
-      expect(pass1.optimistic.testStoreAs.results[0]).to.eql(doc1);
-      expect(pass2.optimistic.testStoreAs.results[0]).to.eql({...doc1, ...doc2});
+      expect(pass1.cache.testStoreAs.docs[0]).to.eql(doc1);
+      expect(pass2.cache.testStoreAs.docs[0]).to.eql({...doc1, ...doc2});
     });
 
     it('override a document add synchronously', () => {
@@ -150,10 +150,10 @@ describe('optimisticReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
       
-      expect(pass1.optimistic.testStoreAs.results[0]).to.eql(doc1);
-      expect(pass1.optimistic.testStoreAs.results[1]).to.eql(undefined);
-      expect(pass2.optimistic.testStoreAs.results[0]).to.eql(doc1);
-      expect(pass2.optimistic.testStoreAs.results[1]).to.eql(doc2);
+      expect(pass1.cache.testStoreAs.docs[0]).to.eql(doc1);
+      expect(pass1.cache.testStoreAs.docs[1]).to.eql(undefined);
+      expect(pass2.cache.testStoreAs.docs[0]).to.eql(doc1);
+      expect(pass2.cache.testStoreAs.docs[1]).to.eql(doc2);
     });
 
     it('override a document removal synchronously', () => {
@@ -181,8 +181,8 @@ describe('optimisticReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
       
-      expect(pass1.optimistic.testStoreAs.results[0]).to.eql(doc1);
-      expect(pass2.optimistic.testStoreAs.results[0]).to.eql(undefined);
+      expect(pass1.cache.testStoreAs.docs[0]).to.eql(doc1);
+      expect(pass2.cache.testStoreAs.docs[0]).to.eql(undefined);
     });
 
     it('overrides synchronously moves to new query', () => {
@@ -220,11 +220,11 @@ describe('optimisticReducer', () => {
       const pass2 = reducer(reducer(initialState, action1), action2);
       const pass3 = reducer(pass2, action3);
       
-      expect(pass2.optimistic.testOne.results[0]).to.eql(first);
-      expect(pass2.optimistic.testTwo.results[0]).to.eql(undefined);
+      expect(pass2.cache.testOne.docs[0]).to.eql(first);
+      expect(pass2.cache.testTwo.docs[0]).to.eql(undefined);
 
-      expect(pass3.optimistic.testOne.results[0]).to.eql(undefined);
-      expect(pass3.optimistic.testTwo.results[0]).to.eql(second);
+      expect(pass3.cache.testOne.docs[0]).to.eql(undefined);
+      expect(pass3.cache.testTwo.docs[0]).to.eql(second);
     });
 
   });
@@ -268,13 +268,13 @@ describe('optimisticReducer', () => {
       const pass2 = reducer(pass1, action2);
       const pass3 = reducer(pass2, action3);
 
-      expect(pass1.optimistic.testStoreAs.results[0]).to.eql(doc1);
-      expect(pass2.optimistic.testStoreAs.results[0]).to.eql({...doc1, ...doc2});
-      expect(pass3.optimistic.testStoreAs.results[0]).to.eql({...doc1, ...doc2});
+      expect(pass1.cache.testStoreAs.docs[0]).to.eql(doc1);
+      expect(pass2.cache.testStoreAs.docs[0]).to.eql({...doc1, ...doc2});
+      expect(pass3.cache.testStoreAs.docs[0]).to.eql({...doc1, ...doc2});
 
-      expect(pass1.optimistic.overrides).to.eql(undefined);
-      expect(pass2.optimistic.overrides[collection]).to.eql({[doc2.id]:doc2});
-      expect(pass3.optimistic.overrides[collection]).to.eql({});
+      expect(pass1.cache.overrides).to.eql(undefined);
+      expect(pass2.cache.overrides[collection]).to.eql({[doc2.id]:doc2});
+      expect(pass3.cache.overrides[collection]).to.eql({});
     });
   });
 
@@ -317,13 +317,13 @@ describe('optimisticReducer', () => {
       const pass2 = reducer(pass1, action2);
       const pass3 = reducer(pass2, action3);      
 
-      expect(pass1.optimistic.testStoreAs.results[0]).to.eql(doc1);
-      expect(pass2.optimistic.testStoreAs.results[0]).to.eql(undefined);
-      expect(pass3.optimistic.testStoreAs.results[0]).to.eql(undefined);
+      expect(pass1.cache.testStoreAs.docs[0]).to.eql(doc1);
+      expect(pass2.cache.testStoreAs.docs[0]).to.eql(undefined);
+      expect(pass3.cache.testStoreAs.docs[0]).to.eql(undefined);
 
-      expect(pass1.optimistic.overrides).to.eql(undefined);
-      expect(pass2.optimistic.overrides[collection]).to.eql({[doc2.id]:null});
-      expect(pass3.optimistic.overrides[collection]).to.eql({});
+      expect(pass1.cache.overrides).to.eql(undefined);
+      expect(pass2.cache.overrides[collection]).to.eql({[doc2.id]:null});
+      expect(pass3.cache.overrides[collection]).to.eql({});
     });
   })
 
@@ -355,12 +355,12 @@ describe('optimisticReducer', () => {
       };
 
       const pass1 = reducer(initialState, action1);
-      expect(pass1.optimistic.testStoreAs.results[0]).to.eql(doc1);
-      expect(pass1.optimistic.database[collection]).to.eql({[doc1.id]:doc1});
+      expect(pass1.cache.testStoreAs.docs[0]).to.eql(doc1);
+      expect(pass1.cache.database[collection]).to.eql({[doc1.id]:doc1});
 
       const pass2 = reducer(pass1, action2);
-      expect(pass2.optimistic.testStoreAs).to.eql(undefined);
-      expect(pass2.optimistic.database[collection]).to.eql({});
+      expect(pass2.cache.testStoreAs).to.eql(undefined);
+      expect(pass2.cache.database[collection]).to.eql({});
     });
 
     it('handles a null payload.data', () => {
@@ -374,7 +374,7 @@ describe('optimisticReducer', () => {
         type: actionTypes.LISTENER_RESPONSE,
       };
       const pass1 = reducer(initialState, action1);
-      expect(pass1.optimistic.testStoreAs.results).to.eql([]); 
+      expect(pass1.cache.testStoreAs.docs).to.eql([]); 
     });
   });
 });

@@ -858,7 +858,7 @@ describe('query utils', () => {
       result = orderedFromSnap({ id, ref, data: () => fakeData, exists: true });
       expect(result).to.be.an('array');
       expect(result[0]).to.have.property('id', id);
-      expect(result[0]).to.have.property('path', ref.collection.path);
+      expect(result[0]).to.have.property('path', ref.parent.path);
       expect(result[0]).to.have.property('some');
     });
 
@@ -869,7 +869,7 @@ describe('query utils', () => {
       result = orderedFromSnap({ id, ref, data: () => fakeData, exists: true });
       expect(result).to.be.an('array');
       expect(result[0]).to.have.property('id', id);
-      expect(result[0]).to.have.property('path', ref.collection.path);
+      expect(result[0]).to.have.property('path', ref.parent.path);
       expect(result[0]).to.have.property('data', fakeData);
     });
 
@@ -882,7 +882,7 @@ describe('query utils', () => {
       });
       expect(result).to.be.an('array');
       expect(result[0]).to.have.property('id', id);
-      expect(result[0]).to.have.property('path', ref.collection.path);
+      expect(result[0]).to.have.property('path', ref.parent.path);
     });
   });
 

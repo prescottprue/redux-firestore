@@ -514,7 +514,7 @@ export function dataByIdSnapshot(snap) {
       snapshotCache.set(snapData, snap);
       data[snap.id] = {
         id: snap.id, 
-        path: snap.ref.collection.path, 
+        path: snap.ref.parent.path, 
         ...snapData
       };
     } else {
@@ -526,7 +526,7 @@ export function dataByIdSnapshot(snap) {
       snapshotCache.set(snapData, doc);
       data[doc.id] = {
         id: doc.id, 
-        path: doc.ref.collection.path, 
+        path: doc.ref.parent.path, 
         ...snapData
       };
     });
