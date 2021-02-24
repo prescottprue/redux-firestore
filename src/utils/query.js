@@ -737,11 +737,16 @@ function docChangeEvent(change, originalMeta = {}) {
   } else {
     meta.doc = change.doc.id;
   }
+  const data = {
+    id: change.doc.id,
+    path: change.parent.path,
+    ...change.doc.data(),
+  };
   return {
     type: changeTypeToEventType[change.type] || actionTypes.DOCUMENT_MODIFIED,
     meta,
     payload: {
-      data: change.doc.data(),
+      data,
       ordered: { oldIndex: change.oldIndex, newIndex: change.newIndex },
     },
   };
