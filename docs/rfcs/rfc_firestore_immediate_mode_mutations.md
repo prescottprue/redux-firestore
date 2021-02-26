@@ -1,17 +1,15 @@
-# RFC - Firestore Immediate Mode Mutatations
+# RFC - RRF Firestore Immediate Mode Mutations
 
-## Problem: We have 3 ways to save a Firestore doc, solo, batching & transactions.
+## Problem: We have 3 ways to save a Firestore doc: solo, batching & transactions.
 
 ## Solution: Seperate decoding, mutations and persistence method
 
-Isolating mutations into stages allows the mutations to be compositional
-and to serialize mutations mid-state to be picked up by other functions.
+Isolating mutations into stages makes the mutations be compositional and serialable.
 Doing so fixed multiple design flaws with redux:
 
-1. Actions are synchronous and fully serialzable and can be replayed
+1. Actions finally return to the original deisgn; fully synchronous and serialzable so that they can be replayed if needed.
 2. Async work happens as a side effect _after_ the reducer, not before.
-3. Async work that fails will automatically roll back the scynchronous,
-   in-memory store.
+3. Async firestore mutations that fail will automatically roll back the synchronous, in-memory data store.
 
 ### Process steps
 
@@ -99,7 +97,7 @@ firestore.mutation(
     { collection: `orgs/${orgId}/task`, doc: taskId, status: 0 },
     { collection: `orgs/${orgId}/task`, doc: task2Id, status: 0 },
   ],
-  'batch',
+  'batch'
 );
 ```
 
@@ -128,7 +126,7 @@ firestore.mutation(
         })),
     ],
   },
-  'transaction',
+  'transaction'
 );
 ```
 
