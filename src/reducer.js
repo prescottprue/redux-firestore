@@ -29,7 +29,7 @@ const combinedReducers = combineReducers({
   listeners: listenersReducer,
   errors: errorsReducer,
   queries: queriesReducer,
-  composite: state => state, // mock reducer to retain info created by cross slice reducer
+  composite: (state) => state, // mock reducer to retain info created by cross slice reducer
 });
 
 export default reduceReducers(combinedReducers, crossSliceReducer);

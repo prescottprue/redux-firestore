@@ -19,6 +19,8 @@ function makePayload({ payload }, valToPass) {
  * @param {Function} opts.method - Method to call
  * @param {Array} opts.args - Arguments to call method with
  * @param {Array} opts.types - Action types array ([BEFORE, SUCCESS, FAILURE])
+ * @param opts.ref
+ * @param opts.meta
  * @returns {Promise} Results of method call
  * @private
  */

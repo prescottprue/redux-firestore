@@ -16,7 +16,7 @@ let result;
 let docSpy;
 let fakeFirebase;
 const collection = 'test';
-const fakeFirebaseWith = spyedName => {
+const fakeFirebaseWith = (spyedName) => {
   const theSpy = sinon.spy(() => ({}));
   const theFirebase = {
     firestore: () => ({
@@ -853,48 +853,69 @@ describe('query utils', () => {
 
     it('returns an array containing data if it exists', () => {
       const id = 'someId';
+      const ref = { parent: { path: 'collection' } };
       const fakeData = { some: 'thing' };
-      result = orderedFromSnap({ id, data: () => fakeData, exists: true });
+      result = orderedFromSnap({ id, ref, data: () => fakeData, exists: true });
       expect(result).to.be.an('array');
       expect(result[0]).to.have.property('id', id);
+      expect(result[0]).to.have.property('path', ref.parent.path);
       expect(result[0]).to.have.property('some');
     });
 
     it('returns an array non object data within an object containing id and data parameters', () => {
       const id = 'someId';
+      const ref = { parent: { path: 'collection' } };
       const fakeData = 'some';
-      result = orderedFromSnap({ id, data: () => fakeData, exists: true });
+      result = orderedFromSnap({ id, ref, data: () => fakeData, exists: true });
       expect(result).to.be.an('array');
       expect(result[0]).to.have.property('id', id);
+      expect(result[0]).to.have.property('path', ref.parent.path);
       expect(result[0]).to.have.property('data', fakeData);
     });
 
     it('returns an array containing children if they exist', () => {
       const id = 'someId';
+      const ref = { parent: { path: 'collection' } };
       const fakeData = 'some';
       result = orderedFromSnap({
-        forEach: func => func({ data: () => fakeData, id }),
+        forEach: (func) => func({ data: () => fakeData, ref, id }),
       });
       expect(result).to.be.an('array');
       expect(result[0]).to.have.property('id', id);
+      expect(result[0]).to.have.property('path', ref.parent.path);
     });
   });
 
   describe('dataByIdSnapshot', () => {
     it('sets data by id if valid', () => {
       const id = 'someId';
+      const ref = { parent: { path: 'collection' } };
       const fakeData = { some: 'thing' };
-      result = dataByIdSnapshot({ id, data: () => fakeData, exists: true });
-      expect(result).to.have.property(id, fakeData);
+      result = dataByIdSnapshot({
+        id,
+        ref,
+        data: () => fakeData,
+        exists: true,
+      });
+
+      expect(result[id]).to.have.property('id', id);
+      expect(result[id]).to.have.property('path', 'collection');
+      expect(result[id]).to.have.property('some', 'thing');
     });
 
     it('supports collection data', () => {
       const id = 'someId';
+      const ref = { parent: { path: 'collection' } };
+      const empty = false;
       const fakeData = { some: 'thing' };
       result = dataByIdSnapshot({
-        forEach: func => func({ data: () => fakeData, id }),
+        empty,
+        forEach: (func) => func({ data: () => fakeData, ref, id }),
       });
-      expect(result).to.have.property(id, fakeData);
+
+      expect(result[id]).to.have.property('id', id);
+      expect(result[id]).to.have.property('path', 'collection');
+      expect(result[id]).to.have.property('some', 'thing');
     });
 
     it('returns null if no data returned for collection', () => {
@@ -906,9 +927,11 @@ describe('query utils', () => {
 
     it('returns object with null id if no data returned for a doc', () => {
       const id = 'someId';
+      const ref = { parent: { path: 'collection' } };
       const data = () => ({});
       const exists = false;
-      result = dataByIdSnapshot({ id, exists, data });
+      result = dataByIdSnapshot({ id, ref, exists, data });
+
       expect(result).to.be.an('object');
       expect(result).to.have.property(id, null);
     });
@@ -917,16 +940,18 @@ describe('query utils', () => {
   describe('snapshotCache', () => {
     it('retrieve snapshot with data from data state ', () => {
       const id = 'someId';
+      const ref = { parent: { path: 'collection' } };
       const fakeData = { some: 'thing' };
-      const fakeSnap = { id, data: () => fakeData, exists: true };
+      const fakeSnap = { id, ref, data: () => fakeData, exists: true };
       result = dataByIdSnapshot(fakeSnap);
       expect(getSnapshotByObject(result)).to.equal(fakeSnap);
     });
 
     it('retrieve snapshot with data from data collection state ', () => {
       const id = 'someId';
+      const ref = { parent: { path: 'collection' } };
       const fakeData = { some: 'thing' };
-      const fakeDocSnap = { id, data: () => fakeData, exists: true };
+      const fakeDocSnap = { id, ref, data: () => fakeData, exists: true };
       const docArray = [fakeDocSnap];
       const fakeSnap = { forEach: docArray.forEach.bind(docArray) };
       result = dataByIdSnapshot(fakeSnap);
@@ -935,16 +960,18 @@ describe('query utils', () => {
 
     it('retrieve snapshot with data from ordered state', () => {
       const id = 'someId';
+      const ref = { parent: { path: 'collection' } };
       const fakeData = { some: 'thing' };
-      const fakeSnap = { id, data: () => fakeData, exists: true };
+      const fakeSnap = { id, ref, data: () => fakeData, exists: true };
       result = orderedFromSnap(fakeSnap);
       expect(getSnapshotByObject(result)).to.equal(fakeSnap);
     });
 
     it('retrieve snapshot with data from ordered collection state ', () => {
       const id = 'someId';
+      const ref = { parent: { path: 'collection' } };
       const fakeData = { some: 'thing' };
-      const fakeDocSnap = { id, data: () => fakeData, exists: true };
+      const fakeDocSnap = { id, ref, data: () => fakeData, exists: true };
       const docArray = [fakeDocSnap];
       const fakeSnap = { forEach: docArray.forEach.bind(docArray) };
       result = orderedFromSnap(fakeSnap);
