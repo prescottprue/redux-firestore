@@ -26,16 +26,19 @@ function createConvertorFactory() {
     toFirestore({ id, path, ...data }) {
       const collection = path.split('/').pop();
       const decode = getDecoder(types[collection]);
+      delete data.id;
+      delete data.path;
       return decode(data);
     },
     fromFirestore(snapshot, options) {
       const collection = snapshot.ref.parent.id;
       const decode = getDecoder(types[collection]);
-      return decode({
-        ...snapshot.data(options),
+      const valid = decode(snapshot.data(options));
+      return {
+        ...valid,
         id: snapshot.id,
         path: snapshot.ref.parent.path,
-      });
+      };
     },
   };
 }
@@ -68,13 +71,19 @@ All the write functions are idempotent so even though they aren't serializable
 they can be re-run reliability.
 
 ```
-interface Read extends FirestoreQuery
-interface MutationPath {
+interface Read extends RRF_FirestoreQuery
+
+interface Write {
   collection: string;
   doc: string;
+  data: object; // JSON of the Firestore Document
 }
-type Mutation = <TaraType extends MutationPath> |
-    (reads):<TaraType extends MutationPath>;
+
+type MutateFnc = (
+  reads: Record<string, Read>;
+  writes: [(args:object):Write];
+  options?: { method: null | 'transaction' | 'batch' };
+):Promise<Result>
 ```
 
 Step 3. single persistence method
@@ -82,80 +91,90 @@ Step 3. single persistence method
 **basic use case**
 
 ```ts
-firestore.mutation({
+firestore.mutate({
   collection: `orgs/${orgId}/task`,
   doc: taskId,
-  status: 0,
+  data: { status: 0 },
 });
 ```
 
 **batch use case**
 
 ```ts
-firestore.mutation(
+firestore.mutate(
   [
-    { collection: `orgs/${orgId}/task`, doc: taskId, status: 0 },
-    { collection: `orgs/${orgId}/task`, doc: task2Id, status: 0 },
+    { collection: `orgs/${orgId}/task`, doc: taskId, data: { status: 0 } },
+    { collection: `orgs/${orgId}/task`, doc: task2Id, data: { status: 0 } },
   ],
-  'batch'
+  { method: 'batch' }
 );
+// NOTE: Firestore batch limit is 500. Arrays > 500 would just _.take(500) to make a batch of batches with a Promise.all.
 ```
 
 **transaction use case**
 
 ```ts
-firestore.mutation(
+firestore.mutate(
   {
-    read: [
-      {
-        collection: `orgs/${orgId}/task`,
+    read: {
+      myTaskQuery: {
+        collection: `orgs/${orgId}/tasks`,
         doc: taskId,
         where: [
           ['sprint', '==', 'aaa'],
           ['status', '!=', 2],
         ],
-        storeAs: 'myTaskQuery',
       },
-    ],
+    },
     write: [
       ({ myTaskQuery }) =>
         myTaskQuery.map(({ id }) => ({
           collection: `orgs/${orgId}/task`,
           doc: id,
-          status: 2,
+          data: {
+            status: 2,
+          }
         })),
     ],
   },
-  'transaction'
+  { method: 'transaction' }
 );
 ```
 
 **Complex example: Tara complete Sprint and move unfinished tasks**
 
 ```js
-// global settup of convertors
+// global setup of convertors
+// --- Type Guard Decoders w/ AJV Validation
 firestore.defaultConvertor(createConvertorFactory(schemas));
 
-// isolated functions to generate static queries or configure a mutation
-const provide = () => ({orgId, teamId})
-const queryUncompletedTasks = ({orgId, sprintId}) =>
-  ([{collection: `orgs/${orgId}/tasks`,
+// static queries will be dependency injected into write functions based of the read[key] below.
+const queryUncompletedTasks = {
+     collection: `orgs/${orgId}/tasks`,
      where: [['sprint', '==' sprintId]}], ['status', '!=', 2]]
-     storeAs: 'uncompleted']);
-const queryCompletedTasks = ({orgId, sprintId}) =>
-  ([{collection: `orgs/${orgId}/tasks`,
+};
+
+const queryCompletedTasks = {
+     collection: `orgs/${orgId}/tasks`,
      where: [['sprint', '==' sprintId]}], ['status', '==', 2]]
-     storeAs: 'completed']);
-const queryTeam = ({orgId, teamId}) =>
-  ([{collection: `orgs/${orgId}/teams`,
-     doc:teamId,
-     storeAs: 'team'}]);
-const queryNextSprint = ({orgId, sprintId}) =>
-  ([{collection: `orgs/${orgId}/sprints`,
+};
+
+const queryTeam = {
+     collection: `orgs/${orgId}/teams`,
+     doc:teamId
+};
+
+const queryNextSprint = {
+     collection: `orgs/${orgId}/sprints`,
      orderBy: ['initialEndDate'],
      startAt: sprintId,
-     limit: 2,
-     storeAs: 'sprints'}])
+     limit: 2
+};
+
+// --- Writes ---
+
+// Writes are just idempotent functions that return a serializable JSON 
+// of the data to save. The arguments are DI from the read calls.
 
 const writeUncompleteToNextSprint = ({uncompleted, team, sprints, now, orgId, teamId}) => {
   const write = [];
@@ -164,23 +183,28 @@ const writeUncompleteToNextSprint = ({uncompleted, team, sprints, now, orgId, te
   if (nextSprintId && !sprints?[1]) {
     write.push({collection: `orgs/${orgId}/sprints`, doc: nextSprintId })
   }
-
-  uncompleted.reduce((writes, task) =>
+  
+  uncompleted.forEach((task) =>
+    writes.concat([{
+      collection: `orgs/${orgId}/sprints`,
+      doc: task.sprintId,
+      data: { orderedTaskIds: arrayRemove(task.id) } }]));
+      
+  uncompleted.forEach((task) =>
     writes.concat([{
       collection: task.path,
       doc:task.id,
-      sprint: nextSprintId}]),
-    write);
+      data: { sprint: nextSprintId } }]));
 
   writes.push({
     collection: `orgs/${orgId}/sprints`,
     doc: nextSprintId,
-    orderedTaskIds: uncompleted.map(({id}) => arrayUnion(id))})
+    data: { orderedTaskIds: uncompleted.map(({id}) => arrayUnion(id))} })
 
   write.push({
     collection: `orgs/${orgId}/team`,
     doc: team.id,
-    currentSprint: sprintId
+    data: { currentSprint: sprintId }
   });
 
   return write;
@@ -193,7 +217,10 @@ const writeSprintCalculations = ({completed, uncompleted, sprints}) => {
     totalEffortEstimated: tasks.reduce((sum, {effort}) => sum += effort, 0),
     totalEffortCompleted: completed.reduce((sum, {effort}) => sum += effort, 0)
   }
-  return {collection: sprint.path, doc:sprint.id, computedOnCompletion };
+  return {
+    collection: sprint.path, 
+    doc:sprint.id, 
+    data: { computedOnCompletion } };
 }
 
 const writeSprintComplete = ({uncompleted, sprints, now}) => {
@@ -201,22 +228,50 @@ const writeSprintComplete = ({uncompleted, sprints, now}) => {
   return {
     collection: current.path,
     doc: current.id,
-    orderedTaskIds: uncompleted.map(({id} => arrayRemove(id))),
-    completed: true, updatedAt:now
+    data: {
+      orderedTaskIds: uncompleted.map(({id} => arrayRemove(id))),
+      completed: true, 
+      updatedAt:now
+    }
   };
 }
 
-// NOTE: in clojurescript the writes should be qouted to be fully serializable
+// Without Redux it's just a simple call to the new mutate function.
+
+const read = {
+  orgId,
+  teamId,
+  now: new Date(),
+  uncompleted: queryUncompletedTasks,
+  completed: queryCompletedTasks,
+  team: queryTeam,
+  sprints: queryNextSprint,
+};
+
+const = write: [
+  writeUncompleteToNextSprint,
+  writeSprintCalculations,
+  writeCompleteSprint
+];
+
+firestore.mutate({ read, write }, { method: 'transaction' });
+
+// -----
+
+// The Write functions here don't really belong in an action message (but neither do thunks).
+// This is much cleaner via Clojurescript where idempotent functions can just be qouted
+// Other ideas are to put it in a middleware (w/ a string to reference the function)
 dispatch({
   type: 'COMPLETE_SPRINT',
   payload: {
-    read: [
-      provide(),
-      queryUncompletedTasks({orgId, sprintId}),
-      queryCompletedTasks({orgId, sprintId}),
-      queryTeam({orgId, sprintId}),
-      queryNextSprint({orgId, sprintId}),
-      ],
+    read: {
+      orgId,
+      teamId,
+      uncompleted: queryUncompletedTasks,
+      completed: queryCompletedTasks,
+      team: queryTeam,
+      sprints: queryNextSprint,
+    },
     write: [
       writeUncompleteToNextSprint,
       writeSprintCalculations,
@@ -225,17 +280,12 @@ dispatch({
     method: 'transaction'
   }});
 
-// -------
-
-// After the reducer updates the in-memory cache of the fragment database
-// firebase just needs to be triggered with payload contents.
-firestore.mutate({read, write}, method);
 ```
 
 # Thoughts on the internals of the mutate function
 
 ```ts
-export function mutate(operations, persistenceType = null) {
+export function mutate(operations, { method = null } = {}) {
   // if there's a default convertor than add to each firestore call
   let read,
     write = operations;
@@ -247,15 +297,17 @@ export function mutate(operations, persistenceType = null) {
   // first run all optimistic updates synchronously
 
   // next run the firestore operations:
-  // if transaction
-  //    then create one
-  //         await Promise.all to get all read queries
-  //         transalate each query to a map
-  //         call each write with the results of the read
-  // if batch then create one
-  //    then translate each write to a the batch
-  //       if item > 500 then create a batch of batches
-  // else translate each write to a firestore call
+  if (method === 'transaction) {
+    //    then create a transaction
+    //         await Promise.all to get all read queries
+    //         transalate each query to a map
+    //         call each write with the results of the read
+  } else if (method === 'batch') {
+    //    then translate each write to a the batch
+    //       if item > 500 then create a batch of batches
+  } else /* solo writes */ {
+    // else translate each write to a firestore call
+  }
 
   // when an firestore operation succeeds or fails the optimistic
   //  update will be removed from RRF's cache reducer
