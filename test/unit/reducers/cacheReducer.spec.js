@@ -412,7 +412,7 @@ describe('cacheReducer', () => {
         id: 'testDocId1',
         vanilla: 'some-data',
         date: new Date('2021-01-01'),
-        serverTimestamp: ['::serverTimestamp'],
+        // serverTimestamp: ['::serverTimestamp'],
         array: ['::arrayUnion', 5],
         'obj.a': 0,
         'obj.b': { y: 9 },
@@ -435,15 +435,24 @@ describe('cacheReducer', () => {
           collection,
           doc: updates.id,
         },
-        payload: { data: updates },
+        payload: { data: { collection: path, ...updates } },
       };
 
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
+      expect(pass2.cache.testStoreAs.docs[0]).to.eql({
+        ...doc1,
+        key1: 'value1',
+        array: [1, 2, 3, 4, 5],
+        obj: { a: 0, b: { y: 9 }, c: { z: 10 } },
+        vanilla: 'some-data',
+        date: new Date('2021-01-01'),
+        // "serverTimestamp": new Date()}
+      });
+
       // console.warn('pass1', JSON.stringify(pass1.cache.testStoreAs, null, 2));
       console.warn('pass2', JSON.stringify(pass2.cache.testStoreAs, null, 2));
-      expect(true).to.eql(false);
     });
 
     it('Firestore batch update adds override', () => {});

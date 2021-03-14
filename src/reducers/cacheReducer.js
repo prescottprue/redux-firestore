@@ -271,6 +271,129 @@ function updateCollectionQueries(draft, path) {
   });
 }
 
+// --- Mutate support ---
+/**
+ * Not a Mutate, just an array
+ * @param {*} arr
+ * @returns Null | Array
+ */
+const primaryValue = (arr) =>
+  typeof arr[0] === 'string' && arr[0].indexOf('::') === 0 ? null : arr;
+
+/**
+ * Mutate Nested Object
+ * @param {*} key
+ * @param {*} val
+ * @returns
+ */
+const nestedMap = (obj, key, val) => {
+  if (!key.includes('.')) return null;
+  // eslint-disable-next-line no-param-reassign
+  delete obj[key];
+  const fields = key.split('.');
+  fields.reduce((deep, field, idx) => {
+    // eslint-disable-next-line no-param-reassign
+    if (deep[field] === undefined) deep[field] = {};
+    // eslint-disable-next-line no-param-reassign
+    if (idx === fields.length - 1) deep[field] = val;
+    return deep[field];
+  }, obj);
+  return obj;
+};
+
+/**
+ * Mutate ArrayUnion
+ * @param {*} key
+ * @param {*} val
+ * @returns
+ */
+function arrayUnion(key, val, cached) {
+  if (key !== '::arrayUnion') return null;
+  return (cached() || []).concat([val]);
+}
+
+/**
+ * Mutate arrayDelete
+ * @param {*} key
+ * @param {*} val
+ * @returns
+ */
+function arrayDelete(key, val, cached) {
+  return (
+    key === '::arrayDelete' && (cached() || []).filter((item) => item !== val)
+  );
+}
+
+/**
+ * Mutate increment
+ * @param {*} key
+ * @param {*} val
+ * @returns
+ */
+const increment = (key, val, cached) =>
+  key === '::increment' && typeof val === 'number' && (cached() || 0) + val;
+
+/**
+ * Mutate timestamp
+ * @param {*} key
+ * @param {*} val
+ * @returns
+ */
+const serverTimestamp = (key) => key === '::serverTimestamp' && new Date();
+
+/**
+ * Process Mutation to a vanilla JSON
+ * @param {*} data
+ * @returns
+ */
+function atomize(data, cached) {
+  return Object.keys(data).reduce((obj, key) => {
+    const val = obj[key];
+    if (key.includes('.')) {
+      nestedMap(obj, key, val);
+    } else if (Array.isArray(val) && val.length > 0) {
+      // eslint-disable-next-line no-param-reassign
+      obj[key] =
+        primaryValue(val) ||
+        serverTimestamp(val[0]) ||
+        arrayUnion(val[0], val[1], () => cached(key)) ||
+        arrayDelete(val[0], val[1], () => cached(key)) ||
+        increment(val[0], val[1], () => cached(key));
+    }
+    return obj;
+  }, JSON.parse(JSON.stringify(data)));
+}
+/**
+ * Translate mutation to a set of database overrides
+ * @param {*} action
+ * @returns
+ */
+function translateMutation({ payload, meta }, db) {
+  console.log(meta);
+  console.log(payload.data);
+  // turn everything to a write
+  let { read, write } = payload.data || {};
+  const isCommon = !write;
+  const isTransactions = Array.isArray(write);
+  if (!isTransactions) write = [write];
+
+  if (isCommon) {
+    write = Array.isArray(payload.data) ? payload.data : [payload.data];
+  }
+
+  // TODO: if writes are functions then get reads first
+
+  return write.map(({ collection, path, doc, id, ...data }) => ({
+    collection: path || collection,
+    doc: id || doc,
+    data: atomize(data, (key) => {
+      const overrides = Object.keys(db).length > 0 ? db : {};
+      const coll = overrides[path || collection] || {};
+      return (coll[id || doc] || {})[key];
+    }),
+  }));
+}
+
 /**
  * @name cacheReducer
  * Reducer for in-memory database
@@ -384,6 +507,18 @@ export default function cacheReducer(state = {}, action) {
 
       case actionTypes.OPTIMISTIC_REMOVED:
         set(draft, ['databaseOverrides', path, action.meta.doc], null);
+
+        updateCollectionQueries(draft, path);
+        return draft;
+
+      case actionTypes.MUTATE_START:
+        const optimisiticUpdates =
+          translateMutation(action, draft.database) || [];
+
+        optimisiticUpdates.forEach(({ collection, doc, data }) => {
+          console.log('updating', doc, data);
+          setWith(draft, ['databaseOverrides', collection, doc], data, Object);
+        });
 
         updateCollectionQueries(draft, path);
         return draft;
