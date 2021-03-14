@@ -108,10 +108,10 @@ const withStore = compose(
 const enhance = compose(
   withStore,
   withHandlers({
-    loadData: props => () => props.store.firestore.get('todos'),
-    onDoneClick: props => (key, done = false) =>
+    loadData: (props) => () => props.store.firestore.get('todos'),
+    onDoneClick: (props) => (key, done = false) =>
       props.store.firestore.update(`todos/${key}`, { done }),
-    onNewSubmit: props => newTodo =>
+    onNewSubmit: (props) => (newTodo) =>
       props.store.firestore.add('todos', { ...newTodo, owner: 'Anonymous' }),
   }),
   lifecycle({
@@ -152,7 +152,7 @@ class Todos extends Component {
   render() {
     return (
       <div>
-        {todos.map(todo => (
+        {todos.map((todo) => (
           <div key={todo.id}>{JSON.stringify(todo)}</div>
         ))}
       </div>
@@ -160,14 +160,25 @@ class Todos extends Component {
   }
 }
 
-export default connect(state => ({
-  todos: state.firestore.ordered.todos,
+export default connect((state) => ({
+  todos: state.firestore.cache.todos.docs,
 }))(Todos);
 ```
 
 ### API
 
-The `store.firestore` instance created by the `reduxFirestore` enhancer extends [Firebase's JS API for Firestore](https://firebase.google.com/docs/reference/js/firebase.firestore). This means all of the methods regularly available through `firebase.firestore()` and the statics available from `firebase.firestore` are available. Certain methods (such as `get`, `set`, and `onSnapshot`) have a different API since they have been extended with action dispatching. The methods which have dispatch actions are listed below:
+The `store.firestore` instance created by the `reduxFirestore` enhancer extends [Firebase's JS API for Firestore](https://firebase.google.com/docs/reference/js/firebase.firestore). This means all of the methods regularly available through `firebase.firestore()` and the statics available from `firebase.firestore` are available. Certain methods (such as `get`, `set`, and `onSnapshot`) have a different API since they have been extended with action dispatching.
+
+Additionally a single 'mutate' function is added to firestore.
+It provides fully synchronous changes to Redux data. This is
+critical when using a drag and drop interface or if you want
+immediate response for the user. It accepts all standard changes and most Firestore.FieldValue changes.
+
+Firestore's update, set, delete, batch and runTransaction all work
+but will use Firestore's asynchronous API which will be a slower
+interface for the user.
+
+The methods which have dispatch actions are listed below:
 
 #### Actions
 
@@ -190,42 +201,198 @@ store.firestore.set({ collection: 'cities', doc: 'SF' }, { name: 'San Francisco'
 store.firestore.add({ collection: 'cities' }, { name: 'Some Place' }),
 ```
 
+##### mutate update
+
+```js
+const itemUpdates = {
+  collection: 'cities',
+  doc: 'SF',
+  some: 'value',
+  updatedAt: ['::serverTimestamp'],
+};
+
+// fast immediate updates
+store.firestore.mutate(itemUpdates);
+```
+
 ##### update
 
 ```js
-const itemUpdates =  {
+const itemUpdates = {
   some: 'value',
-  updatedAt: store.firestore.FieldValue.serverTimestamp()
-}
+  updatedAt: store.firestore.FieldValue.serverTimestamp(),
+};
 
-store.firestore.update({ collection: 'cities', doc: 'SF' }, itemUpdates),
+// slow async updates
+store.firestore.update({ collection: 'cities', doc: 'SF' }, itemUpdates);
+```
+
+##### batch
+
+```js
+// fast immediate updates
+store.firestore.mutate([
+  {
+    collection: 'cities',
+    doc: 'Miami',
+    some: 'newValue',
+    updatedAt: ['::serverTimestamp'],
+  },
+  {
+    collection: 'cities',
+    doc: 'SF',
+    some: 'value',
+    updatedAt: ['::serverTimestamp'],
+  },
+]);
+```
+
+##### mutate delete
+
+```js
+// fast immediate deletion
+store.firestore.mutate({ collection: 'cities', doc: 'SF', action:['::delete'] }),
 ```
 
 ##### delete
 
 ```js
-store.firestore.delete({ collection: 'cities', doc: 'SF' }),
+// slow async deletion
+store.firestore.delete({ collection: 'cities', doc: 'SF' });
+```
+
+##### mutate transaction
+
+```js
+// fast immediate transaction
+store.firestore
+  .mutate({
+    read: {
+      sanFrancisco: { collection: 'cities', doc: 'SF' },
+    },
+    write: [
+      ({ sanFrancisco }) => ({
+        collection: 'cities',
+        doc: 'SF',
+        population: sanFrancisco.population + 1,
+      }),
+    ],
+  })
+  .then((result) => {
+    // TRANSACTION_SUCCESS action dispatched
+    console.log('Transaction success!');
+  })
+  .catch((err) => {
+    // TRANSACTION_FAILURE action dispatched
+    console.log('Transaction failure:', err);
+  });
 ```
 
 ##### runTransaction
 
 ```js
+// slow async transaction; requires round trip to server
 store.firestore
   .runTransaction(t => {
     return t.get(cityRef).then(doc => {
       // Add one person to the city population
       const newPopulation = doc.data().population + 1;
       t.update(cityRef, { population: newPopulation });
-    });
-  })
-  .then(result => {
+    })
+  .then((result) => {
     // TRANSACTION_SUCCESS action dispatched
     console.log('Transaction success!');
   })
-  .catch(err => {
+  .catch((err) => {
     // TRANSACTION_FAILURE action dispatched
     console.log('Transaction failure:', err);
   });
+```
+
+#### Mutations
+
+Mutation operations are immediately reflected in Redux via
+the cache reducer (firestore.cache['some-query'].docs). All
+queries using the collection type will also be reprocessed
+synchronously to opimisticly reflect the update.
+
+Once Firestore has reconciled an operation all opimistic data
+will be removed from the synchronous, in-memory store.
+
+Be advised that in order for transactions to operate
+synchronously the write functions will be processed twice.
+First synchronously using only the in-memory cache and
+then later using Firestore's lazy loading for more accurate data.
+
+```js
+// @required
+const requiredFields = {
+  collection: 'full/path/to/the/collection',
+  doc: 'firestore-document-id',
+};
+
+// @optional
+const optionalFields = {
+  /* @default '::update' */
+  action: '::update' | '::delete' |  '::set',
+};
+
+// changes requested to your data
+const firestoreDocument = {
+  someString: 'string',
+  someNumber: 1,
+  otherNumber: ['::increment', 5],
+  someDate: new Date(),
+  otherDate: firestore.FieldValue.Timestamp(),
+  anotherDate: ['::serverTimestamp'],
+  someArray: [1, 2, 3, 4],
+  otherArray: ['::arrayUnion', 5],
+  anotherArray: ['::arrayRemove', 1],
+  someObject: { a: 1, b: 2 },
+  'someObject.a': 3,
+}
+
+const someChange = {
+  ...requiredFields,
+  ...optionalFields,
+  ...firestoreDocument
+};
+
+// Send the mutation as a solo operation
+firestore.mutate(someChange);
+
+// or send as a batch
+firestore.mutate([someChange, otherChange]);
+
+// or send as a transaction (with document locked globally)
+firestore.mutate({
+  read: {
+    myLockedDocument: requiredFields
+  },
+  write: [({ myLockedDocument }) => {
+    return {
+      ...someChange, { someString: ...myLockedDocument.someString }
+    };
+  }]
+});
+
+// or send as a multi-document mutation
+firestore.mutate({
+  read: {
+    myLockedDocument: requiredFields,
+    otherDocument: otherQuery,
+  },
+  write: [({ myLockedDocument, otherDocument }) => {
+    return {
+      ...someChange, { someString: ...myLockedDocument.someString }
+    };
+  },
+  ({ otherDocument }) => {
+    return {
+      ...otherChange, { otherString: ...otherDocument.otherString }
+    };
+  }]
+});
 ```
 
 #### Types of Queries
@@ -416,7 +583,7 @@ _Can only be used with collections. Types can be a string, number, Date object, 
 },
 ```
 
-**Note:**  for the above to return valid results, there must be at least one document with `state = "CA"` _and_ `population = 1000000` (i.e. the values idenify "the provided document").
+**Note:** for the above to return valid results, there must be at least one document with `state = "CA"` _and_ `population = 1000000` (i.e. the values idenify "the provided document").
 
 _Can only be used with collections. Types can be a string, number, Date object, or an array of these types, but not a Firestore Document Snapshot_
 
@@ -522,7 +689,7 @@ const populates = [{ child: 'createdBy', root: 'users' }];
 const collection = 'projects';
 
 const withPopulatedProjects = compose(
-  firestoreConnect(props => [
+  firestoreConnect((props) => [
     {
       collection,
       populates,
