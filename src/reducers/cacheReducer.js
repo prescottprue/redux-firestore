@@ -70,6 +70,7 @@ const PROCESSES = {
   in: (a, b) => a.includes(b),
   'array-contains-any': (a, b) => a.includes(b),
   'not-in': (a, b) => !a.includes(b),
+  '*': () => true,
 };
 
 /**
@@ -221,7 +222,8 @@ function buildTransducer(overrides, query) {
   const xfApplyOverrides = !useOverrides
     ? null
     : overridesTransducers(overrides, collection);
-  const xfFilter = !useOverrides || !where ? [null] : filterTransducers(where);
+  const xfFilter =
+    !useOverrides || filterTransducers(!where ? ['', '*', ''] : where);
   const xfOrder = !useOverrides || !order ? null : orderTransducer(order);
   const xfLimit = !useOverrides || limit ? null : limitTransducer(limit);
 
@@ -234,7 +236,6 @@ function buildTransducer(overrides, query) {
       xfPopulate,
       xfGetCollection,
       ...xfApplyOverrides,
-      xfGetDoc,
       // xfSpy,
       ...xfFilter,
       xfOrder,
@@ -279,7 +280,7 @@ function updateCollectionQueries(draft, path) {
 
 /**
  * Not a Mutate, just an array
- * @param {*} arr
+ * @param {Array} arr
  * @returns Null | Array
  */
 const primaryValue = (arr) =>
@@ -287,9 +288,10 @@ const primaryValue = (arr) =>
 
 /**
  * Mutate Nested Object
- * @param {*} key
- * @param {*} val
- * @returns
+ * @param {*} obj - data
+ * @param {*} key - nested key path
+ * @param {*} val - value to be set
+ * @returns Null | object
  */
 const nestedMap = (obj, key, val) => {
   if (!key.includes('.')) return null;
@@ -308,9 +310,10 @@ const nestedMap = (obj, key, val) => {
 
 /**
  * Mutate ArrayUnion
- * @param {*} key
- * @param {*} val
- * @returns
+ * @param {string} key - mutate tuple key
+ * @param {*} val - mutate tuple value
+ * @param {Function} cached - function that returns in-memory cached instance
+ * @returns Null | Array<*>
  */
 function arrayUnion(key, val, cached) {
   if (key !== '::arrayUnion') return null;
@@ -319,9 +322,10 @@ function arrayUnion(key, val, cached) {
 
 /**
  * Mutate arrayRemove
- * @param {*} key
- * @param {*} val
- * @returns
+ * @param {string} key - mutate tuple key
+ * @param {*} val - mutate tuple value
+ * @param {Function} cached - function that returns in-memory cached instance
+ * @returns Null | Array<*>
  */
 function arrayRemove(key, val, cached) {
   return (
@@ -331,9 +335,10 @@ function arrayRemove(key, val, cached) {
 
 /**
  * Mutate increment
- * @param {*} key
- * @param {*} val
- * @returns
+ * @param {string} key - mutate tuple key
+ * @param {*} val - mutate tuple value
+ * @param {Function} cached - function that returns in-memory cached instance
+ * @returns Null | number
  */
 const increment = (key, val, cached) =>
   key === '::increment' && typeof val === 'number' && (cached() || 0) + val;
@@ -341,64 +346,64 @@ const increment = (key, val, cached) =>
 /**
  * Mutate timestamp
  * @param {*} key
- * @param {*} val
  * @returns
  */
 const serverTimestamp = (key) => key === '::serverTimestamp' && new Date();
 
 /**
  * Process Mutation to a vanilla JSON
- * @param {*} data
+ * @param {*} mutation - payload mutation
+ * @param {Function} cached - function that returns in-memory cached instance
  * @returns
  */
-function atomize(data, cached) {
-  return Object.keys(data).reduce((obj, key) => {
-    const val = obj[key];
+function atomize(mutation, cached) {
+  return Object.keys(mutation).reduce((data, key) => {
+    const val = data[key];
     if (key.includes('.')) {
-      nestedMap(obj, key, val);
+      nestedMap(data, key, val);
     } else if (Array.isArray(val) && val.length > 0) {
       // eslint-disable-next-line no-param-reassign
-      obj[key] =
+      data[key] =
         primaryValue(val) ||
         serverTimestamp(val[0]) ||
         arrayUnion(val[0], val[1], () => cached(key)) ||
         arrayRemove(val[0], val[1], () => cached(key)) ||
         increment(val[0], val[1], () => cached(key));
     }
-    return obj;
-  }, JSON.parse(JSON.stringify(data)));
+    return data;
+  }, JSON.parse(JSON.stringify(mutation)));
 }
 /**
  * Translate mutation to a set of database overrides
- * @param {*} action
- * @returns
+ * @param {*} action - Standard Redux action
+ * @param {object.<FirestorePath, object<FirestoreDocumentId, Doc>>} db - in-memory database
+ * @returns Array<object<FirestoreDocumentId, Doc>>
  */
 function translateMutation({ payload, meta }, db) {
-  console.log(meta);
-  console.log(payload.data);
   // turn everything to a write
   let { read, write } = payload.data || {};
   const isCommon = !write;
   const isTransactions = Array.isArray(write);
   if (!isTransactions) write = [write];
-
   if (isCommon) {
     write = Array.isArray(payload.data) ? payload.data : [payload.data];
   }
 
+  // grab reads sync from in-memory database
   let reads = {};
   if (read) {
     reads = Object.keys(read).reduce((result, key) => {
-      const query = result[key];
-      const coll = db[query.collection] || {};
+      const { collection, doc } = result[key];
+      if (!doc) {
+        throw new Error("Cache Reducer currently doesn't support queries.");
+      }
+      const coll = db[collection] || {};
       return {
         ...result,
-        [key]: coll[query.doc],
+        [key]: coll[doc],
       };
     }, read);
   }
-
-  // TODO: if writes are functions then get reads first
 
   return write
     .map((writer) => (isFunction(writer) ? writer(reads) : writer))
@@ -531,15 +536,22 @@ export default function cacheReducer(state = {}, action) {
         return draft;
 
       case actionTypes.MUTATE_START:
-        const optimisiticUpdates =
-          translateMutation(action, draft.database) || [];
+        if (action.payload && action.payload.data) {
+          const optimisiticUpdates =
+            translateMutation(action, draft.database) || [];
 
-        optimisiticUpdates.forEach(({ collection, doc, data }) => {
-          console.log('updating: ', doc, data);
-          setWith(draft, ['databaseOverrides', collection, doc], data, Object);
-        });
-        console.log('path: ', path);
-        updateCollectionQueries(draft, path);
+          optimisiticUpdates.forEach(({ collection, doc, data }) => {
+            setWith(
+              draft,
+              ['databaseOverrides', collection, doc],
+              data,
+              Object,
+            );
+          });
+
+          updateCollectionQueries(draft, path);
+        }
+
         return draft;
 
       default:

@@ -238,6 +238,7 @@ describe('cacheReducer', () => {
       expect(pass2.cache.testOne.docs[0]).to.eql(first);
       expect(pass2.cache.testTwo.docs[0]).to.eql(undefined);
 
+      // doc moved from testOne to testTwo query
       expect(pass3.cache.testOne.docs[0]).to.eql(undefined);
       expect(pass3.cache.testTwo.docs[0]).to.eql(second);
     });
@@ -419,10 +420,23 @@ describe('cacheReducer', () => {
         'obj.c.z': 10,
       };
 
+      const expected = JSON.parse(
+        JSON.stringify({
+          ...doc1,
+          key1: 'value1',
+          array: [1, 2, 3, 4, 5],
+          obj: { a: 0, b: { y: 9 }, c: { z: 10 } },
+          vanilla: 'some-data',
+          date: new Date('2021-01-01'),
+          // "serverTimestamp": new Date()}
+        }),
+      );
+
       // Initial seed
       const action1 = {
         meta: {
           collection,
+          where: ['key1', '==', 'value1'],
           storeAs: 'testStoreAs',
         },
         payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
@@ -443,20 +457,9 @@ describe('cacheReducer', () => {
 
       const pass2Doc = pass2.cache.testStoreAs.docs[0];
 
+      console.log('----', pass2.cache.testStoreAs.docs);
       const result = JSON.parse(JSON.stringify(pass2Doc));
-      expect(result).to.eql(
-        JSON.parse(
-          JSON.stringify({
-            ...doc1,
-            key1: 'value1',
-            array: [1, 2, 3, 4, 5],
-            obj: { a: 0, b: { y: 9 }, c: { z: 10 } },
-            vanilla: 'some-data',
-            date: new Date('2021-01-01'),
-            // "serverTimestamp": new Date()}
-          }),
-        ),
-      );
+      expect(result).to.eql(expected);
     });
 
     it('Firestore batch update adds override', () => {
@@ -485,6 +488,7 @@ describe('cacheReducer', () => {
       const action1 = {
         meta: {
           collection,
+          where: ['key1', '==', 'value1'],
           storeAs: 'testStoreAs',
         },
         payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
@@ -583,7 +587,7 @@ describe('cacheReducer', () => {
       const pass2 = reducer(pass1, action2);
 
       const pass2Doc = pass2.cache.testStoreAs.docs[0];
-
+      console.log('--', pass2.cache.testStoreAs.docs);
       const result = JSON.parse(JSON.stringify(pass2Doc));
       expect(result).to.eql(
         JSON.parse(
