@@ -379,7 +379,7 @@ function atomize(mutation, cached) {
  * @param {object.<FirestorePath, object<FirestoreDocumentId, Doc>>} db - in-memory database
  * @returns Array<object<FirestoreDocumentId, Doc>>
  */
-function translateMutation({ payload, meta }, db) {
+function translateMutation({ payload }, db) {
   // turn everything to a write
   let { read, write } = payload.data || {};
   const isCommon = !write;
