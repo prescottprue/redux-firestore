@@ -124,6 +124,7 @@ export const defaultConfig = {
   mergeOrdered: true,
   mergeOrderedDocUpdates: true,
   mergeOrderedCollectionUpdates: true,
+  globalDataConverter: null,
 };
 
 export const methodsToAddFromFirestore = [

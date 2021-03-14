@@ -166,6 +166,7 @@ export function firestoreRef(firebase, meta) {
       'Reference cannot contain both Collection and CollectionGroup.',
     );
   }
+  const { globalDataConvertor } = firebase._.config || {};
 
   if (collection) ref = ref.collection(collection);
   if (collectionGroup) ref = ref.collectionGroup(collectionGroup);
@@ -178,6 +179,7 @@ export function firestoreRef(firebase, meta) {
   if (startAfter) ref = ref.startAfter(...arrayify(startAfter));
   if (endAt) ref = ref.endAt(...arrayify(endAt));
   if (endBefore) ref = ref.endBefore(...arrayify(endBefore));
+  if (globalDataConvertor) ref = ref.withConverter(globalDataConvertor);
   return ref;
 }
 
