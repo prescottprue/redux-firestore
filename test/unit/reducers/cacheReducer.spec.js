@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import reducer from 'reducer';
 import { actionTypes } from 'constants';
 
@@ -394,5 +395,59 @@ describe('cacheReducer', () => {
 
       expect(pass1.cache.testStoreAs.docs).to.eql([]);
     });
+  });
+
+  describe('MUTATE_START', () => {
+    it('Firestore solo update adds override', () => {
+      const doc1 = {
+        path,
+        id: 'testDocId1',
+        key1: 'value1',
+        array: [1, 2, 3, 4],
+        obj: { a: 1, b: { x: 0 }, c: { z: 9 } },
+      }; // initial doc
+
+      const updates = {
+        path,
+        id: 'testDocId1',
+        vanilla: 'some-data',
+        date: new Date('2021-01-01'),
+        serverTimestamp: ['::serverTimestamp'],
+        array: ['::arrayUnion', 5],
+        'obj.a': 0,
+        'obj.b': { y: 9 },
+        'obj.c.z': 10,
+      };
+
+      // Initial seed
+      const action1 = {
+        meta: {
+          collection,
+          storeAs: 'testStoreAs',
+        },
+        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+      // mutate
+      const action2 = {
+        type: actionTypes.MUTATE_START,
+        meta: {
+          collection,
+          doc: updates.id,
+        },
+        payload: { data: updates },
+      };
+
+      const pass1 = reducer(initialState, action1);
+      const pass2 = reducer(pass1, action2);
+
+      // console.warn('pass1', JSON.stringify(pass1.cache.testStoreAs, null, 2));
+      console.warn('pass2', JSON.stringify(pass2.cache.testStoreAs, null, 2));
+      expect(true).to.eql(false);
+    });
+
+    it('Firestore batch update adds override', () => {});
+
+    it('Firestore transaction update adds override', () => {});
   });
 });
