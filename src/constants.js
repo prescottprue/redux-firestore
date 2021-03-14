@@ -142,6 +142,7 @@ export const methodsToAddFromFirestore = [
   'ensureClientConfigured',
   'setLogLevel',
   'settings',
+  'mutate',
 ];
 
 export default {

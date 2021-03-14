@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import produce from 'immer';
 import {
   set,
@@ -185,7 +186,7 @@ const overridesTransducers = (overrides, collection) => {
 // eslint-disable-next-line no-unused-vars
 const xfSpy = partialRight(map, (data) => {
   // eslint-disable-next-line no-console
-  console.log(data);
+  console.log('xf-spy: ', JSON.parse(JSON.stringify(data)));
   return data;
 });
 
@@ -232,6 +233,8 @@ function buildTransducer(overrides, query) {
       xfPopulate,
       xfGetCollection,
       ...xfApplyOverrides,
+      xfGetDoc,
+      // xfSpy,
       ...xfFilter,
       xfOrder,
       xfLimit,
@@ -244,11 +247,11 @@ function buildTransducer(overrides, query) {
  * @name selectDocuments
  * Merge overrides with database cache and resort/filter when needed
  * @param {object} reducerState - optimitic redux state
- * @param {RRFQuery} meta - query from the meta field of the action
+ * @param {RRFQuery} query - query from the meta field of the action
  * @returns {object} updated reducerState
  */
-function selectDocuments(reducerState, meta) {
-  const transduce = buildTransducer(reducerState.databaseOverrides, meta);
+function selectDocuments(reducerState, query) {
+  const transduce = buildTransducer(reducerState.databaseOverrides, query);
   return transduce([reducerState])[0];
 }
 
@@ -272,6 +275,7 @@ function updateCollectionQueries(draft, path) {
 }
 
 // --- Mutate support ---
+
 /**
  * Not a Mutate, just an array
  * @param {*} arr
@@ -313,14 +317,14 @@ function arrayUnion(key, val, cached) {
 }
 
 /**
- * Mutate arrayDelete
+ * Mutate arrayRemove
  * @param {*} key
  * @param {*} val
  * @returns
  */
-function arrayDelete(key, val, cached) {
+function arrayRemove(key, val, cached) {
   return (
-    key === '::arrayDelete' && (cached() || []).filter((item) => item !== val)
+    key === '::arrayRemove' && (cached() || []).filter((item) => item !== val)
   );
 }
 
@@ -357,7 +361,7 @@ function atomize(data, cached) {
         primaryValue(val) ||
         serverTimestamp(val[0]) ||
         arrayUnion(val[0], val[1], () => cached(key)) ||
-        arrayDelete(val[0], val[1], () => cached(key)) ||
+        arrayRemove(val[0], val[1], () => cached(key)) ||
         increment(val[0], val[1], () => cached(key));
     }
     return obj;
@@ -516,10 +520,10 @@ export default function cacheReducer(state = {}, action) {
           translateMutation(action, draft.database) || [];
 
         optimisiticUpdates.forEach(({ collection, doc, data }) => {
-          console.log('updating', doc, data);
+          console.log('updating: ', doc, data);
           setWith(draft, ['databaseOverrides', collection, doc], data, Object);
         });
-
+        console.log('path: ', path);
         updateCollectionQueries(draft, path);
         return draft;
 

@@ -441,21 +441,85 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass2.cache.testStoreAs.docs[0]).to.eql({
-        ...doc1,
-        key1: 'value1',
-        array: [1, 2, 3, 4, 5],
-        obj: { a: 0, b: { y: 9 }, c: { z: 10 } },
-        vanilla: 'some-data',
-        date: new Date('2021-01-01'),
-        // "serverTimestamp": new Date()}
-      });
+      const pass2Doc = pass2.cache.testStoreAs.docs[0];
 
-      // console.warn('pass1', JSON.stringify(pass1.cache.testStoreAs, null, 2));
-      console.warn('pass2', JSON.stringify(pass2.cache.testStoreAs, null, 2));
+      const result = JSON.parse(JSON.stringify(pass2Doc));
+      expect(result).to.eql(
+        JSON.parse(
+          JSON.stringify({
+            ...doc1,
+            key1: 'value1',
+            array: [1, 2, 3, 4, 5],
+            obj: { a: 0, b: { y: 9 }, c: { z: 10 } },
+            vanilla: 'some-data',
+            date: new Date('2021-01-01'),
+            // "serverTimestamp": new Date()}
+          }),
+        ),
+      );
     });
 
-    it('Firestore batch update adds override', () => {});
+    it('Firestore batch update adds override', () => {
+      const doc1 = {
+        path,
+        id: 'testDocId1',
+        key1: 'value1',
+        number: 11,
+        array: [1, 2, 3, 4],
+        obj: { a: 1, b: { x: 0 }, c: { z: 9 } },
+      }; // initial doc
+
+      const updates = {
+        path,
+        id: 'testDocId1',
+        number: ['::increment', 4],
+        date: new Date('2021-01-01'),
+        // serverTimestamp: ['::serverTimestamp'],
+        array: ['::arrayRemove', 2],
+        'obj.a': 0,
+        'obj.b': { y: 9 },
+        'obj.c.z': 10,
+      };
+
+      // Initial seed
+      const action1 = {
+        meta: {
+          collection,
+          storeAs: 'testStoreAs',
+        },
+        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+      // mutate
+      const action2 = {
+        type: actionTypes.MUTATE_START,
+        meta: {
+          collection,
+          doc: updates.id,
+        },
+        payload: { data: [{ collection: path, ...updates }] },
+      };
+
+      const pass1 = reducer(initialState, action1);
+      const pass2 = reducer(pass1, action2);
+
+      const pass2Doc = pass2.cache.testStoreAs.docs[0];
+
+      const result = JSON.parse(JSON.stringify(pass2Doc));
+      expect(result).to.eql(
+        JSON.parse(
+          JSON.stringify({
+            ...doc1,
+            key1: 'value1',
+            number: 15,
+            array: [1, 3, 4],
+            obj: { a: 0, b: { y: 9 }, c: { z: 10 } },
+            date: new Date('2021-01-01'),
+            // "serverTimestamp": new Date()}
+          }),
+        ),
+      );
+    });
 
     it('Firestore transaction update adds override', () => {});
   });
