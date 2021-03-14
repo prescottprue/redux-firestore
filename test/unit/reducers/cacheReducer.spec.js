@@ -521,6 +521,84 @@ describe('cacheReducer', () => {
       );
     });
 
-    it('Firestore transaction update adds override', () => {});
+    it('Firestore transaction update adds override', () => {
+      const doc1 = {
+        path,
+        id: 'testDocId1',
+        key1: 'value1',
+        number: 11,
+        multipled: 3,
+        array: [1, 2, 3, 4],
+        obj: { a: 1, b: { x: 0 }, c: { z: 9 } },
+      }; // initial doc
+
+      const updates = {
+        path,
+        id: 'testDocId1',
+        number: ['::increment', 4],
+        date: new Date('2021-01-01'),
+        // serverTimestamp: ['::serverTimestamp'],
+        array: ['::arrayRemove', 2],
+        'obj.a': 0,
+        'obj.b': { y: 9 },
+        'obj.c.z': 10,
+      };
+
+      // Initial seed
+      const action1 = {
+        meta: {
+          collection,
+          storeAs: 'testStoreAs',
+        },
+        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+      // mutate
+      const action2 = {
+        type: actionTypes.MUTATE_START,
+        meta: {
+          collection,
+          doc: updates.id,
+        },
+        payload: {
+          data: {
+            read: {
+              fromReducerCache: {
+                collection: path,
+                doc: doc1.id,
+              },
+            },
+            write: [
+              ({ fromReducerCache }) => ({
+                collection: path,
+                multipled: fromReducerCache.multipled * 4,
+                ...updates,
+              }),
+            ],
+          },
+        },
+      };
+
+      const pass1 = reducer(initialState, action1);
+      const pass2 = reducer(pass1, action2);
+
+      const pass2Doc = pass2.cache.testStoreAs.docs[0];
+
+      const result = JSON.parse(JSON.stringify(pass2Doc));
+      expect(result).to.eql(
+        JSON.parse(
+          JSON.stringify({
+            ...doc1,
+            key1: 'value1',
+            number: 15,
+            multipled: 12,
+            array: [1, 3, 4],
+            obj: { a: 0, b: { y: 9 }, c: { z: 10 } },
+            date: new Date('2021-01-01'),
+            // "serverTimestamp": new Date()}
+          }),
+        ),
+      );
+    });
   });
 });

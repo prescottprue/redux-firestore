@@ -15,6 +15,7 @@ import {
   zip,
   setWith,
   extend,
+  isFunction,
 } from 'lodash';
 import { actionTypes } from '../constants';
 import { getBaseQueryName } from '../utils/query';
@@ -385,17 +386,31 @@ function translateMutation({ payload, meta }, db) {
     write = Array.isArray(payload.data) ? payload.data : [payload.data];
   }
 
+  let reads = {};
+  if (read) {
+    reads = Object.keys(read).reduce((result, key) => {
+      const query = result[key];
+      const coll = db[query.collection] || {};
+      return {
+        ...result,
+        [key]: coll[query.doc],
+      };
+    }, read);
+  }
+
   // TODO: if writes are functions then get reads first
 
-  return write.map(({ collection, path, doc, id, ...data }) => ({
-    collection: path || collection,
-    doc: id || doc,
-    data: atomize(data, (key) => {
-      const overrides = Object.keys(db).length > 0 ? db : {};
-      const coll = overrides[path || collection] || {};
-      return (coll[id || doc] || {})[key];
-    }),
-  }));
+  return write
+    .map((writer) => (isFunction(writer) ? writer(reads) : writer))
+    .map(({ collection, path, doc, id, ...data }) => ({
+      collection: path || collection,
+      doc: id || doc,
+      data: atomize(data, (key) => {
+        const overrides = Object.keys(db).length > 0 ? db : {};
+        const coll = overrides[path || collection] || {};
+        return (coll[id || doc] || {})[key];
+      }),
+    }));
 }
 
 /**
