@@ -457,7 +457,6 @@ describe('cacheReducer', () => {
 
       const pass2Doc = pass2.cache.testStoreAs.docs[0];
 
-      console.log('----', pass2.cache.testStoreAs.docs);
       const result = JSON.parse(JSON.stringify(pass2Doc));
       expect(result).to.eql(expected);
     });
@@ -587,7 +586,7 @@ describe('cacheReducer', () => {
       const pass2 = reducer(pass1, action2);
 
       const pass2Doc = pass2.cache.testStoreAs.docs[0];
-      console.log('--', pass2.cache.testStoreAs.docs);
+
       const result = JSON.parse(JSON.stringify(pass2Doc));
       expect(result).to.eql(
         JSON.parse(
