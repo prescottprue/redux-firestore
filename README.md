@@ -207,8 +207,10 @@ store.firestore.add({ collection: 'cities' }, { name: 'Some Place' }),
 const itemUpdates = {
   collection: 'cities',
   doc: 'SF',
-  some: 'value',
-  updatedAt: ['::serverTimestamp'],
+  data: {
+    some: 'value',
+    updatedAt: ['::serverTimestamp'],
+  },
 };
 
 // fast immediate updates
@@ -235,14 +237,18 @@ store.firestore.mutate([
   {
     collection: 'cities',
     doc: 'Miami',
-    some: 'newValue',
-    updatedAt: ['::serverTimestamp'],
+    data: {
+      some: 'newValue',
+      updatedAt: ['::serverTimestamp'],
+    },
   },
   {
     collection: 'cities',
     doc: 'SF',
-    some: 'value',
-    updatedAt: ['::serverTimestamp'],
+    data: {
+      some: 'value',
+      updatedAt: ['::serverTimestamp'],
+    },
   },
 ]);
 ```
@@ -274,7 +280,9 @@ store.firestore
       ({ sanFrancisco }) => ({
         collection: 'cities',
         doc: 'SF',
-        population: sanFrancisco.population + 1,
+        data: {
+          population: sanFrancisco.population + 1,
+        },
       }),
     ],
   })
