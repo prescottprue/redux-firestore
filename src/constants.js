@@ -127,6 +127,7 @@ export const defaultConfig = {
   mergeOrdered: true,
   mergeOrderedDocUpdates: true,
   mergeOrderedCollectionUpdates: true,
+  globalDataConverter: null,
 };
 
 export const methodsToAddFromFirestore = [
@@ -141,6 +142,7 @@ export const methodsToAddFromFirestore = [
   'ensureClientConfigured',
   'setLogLevel',
   'settings',
+  'mutate',
 ];
 
 export default {
