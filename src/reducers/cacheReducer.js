@@ -59,6 +59,38 @@ import { getBaseQueryName } from '../utils/query';
  * comes from running the filter & orderBy xForms.
  */
 
+/**
+ * @typedef {Object} Mutation_v1
+ * @property {string} collection - firestore path into the parent collection
+ * @property {string} doc - firestore document id
+ * @property {Object} data - document to be saved
+ */
+
+/**
+ * @typedef {Object} Mutation_v2
+ * The full document to be saved in firestore with 2 additional properties
+ * @property {string} path - firestore path into the parent collection
+ * @property {string} id - firestore document id
+ * ...rest - the rest of the data will be saved to as the firestore doc
+ */
+
+/**
+ * @typedef {Mutation_v1 | Mutation_v2} Write
+ * @typedef {Array<Mutation_v1 | Mutation_v2>} Batch
+ */
+
+/**
+ * @typedef {object} Transaction
+ * @property {object.<ReadKey, RRFQuery>} read - Object of read keys and queries
+ * @property {Function[]} write - Array of function that take rekyKey results and return writes
+ */
+
+/**
+ * @typedef MutateAction_v1
+ * @property {Write | Batch | Transaction} payload - mutation payload
+ * @property {object} meta
+ */
+
 const PROCESSES = {
   '<': (a, b) => a < b,
   '<=': (a, b) => a <= b,
@@ -375,11 +407,11 @@ function atomize(mutation, cached) {
 }
 /**
  * Translate mutation to a set of database overrides
- * @param {*} action - Standard Redux action
+ * @param {MutateAction} action - Standard Redux action
  * @param {object.<FirestorePath, object<FirestoreDocumentId, Doc>>} db - in-memory database
  * @returns Array<object<FirestoreDocumentId, Doc>>
  */
-function translateMutation({ payload }, db) {
+function translateMutationToOverrides({ payload }, db) {
   // turn everything to a write
   let { read, write } = payload.data || {};
   const isCommon = !write;
@@ -407,10 +439,10 @@ function translateMutation({ payload }, db) {
 
   return write
     .map((writer) => (isFunction(writer) ? writer(reads) : writer))
-    .map(({ collection, path, doc, id, ...data }) => ({
+    .map(({ collection, path, doc, id, data, ...rest }) => ({
       collection: path || collection,
       doc: id || doc,
-      data: atomize(data, (key) => {
+      data: atomize(data || rest, (key) => {
         const overrides = Object.keys(db).length > 0 ? db : {};
         const coll = overrides[path || collection] || {};
         return (coll[id || doc] || {})[key];
@@ -538,7 +570,7 @@ export default function cacheReducer(state = {}, action) {
       case actionTypes.MUTATE_START:
         if (action.payload && action.payload.data) {
           const optimisiticUpdates =
-            translateMutation(action, draft.database) || [];
+            translateMutationToOverrides(action, draft.database) || [];
 
           optimisiticUpdates.forEach(({ collection, doc, data }) => {
             setWith(

@@ -449,7 +449,9 @@ describe('cacheReducer', () => {
           collection,
           doc: updates.id,
         },
-        payload: { data: { collection: path, ...updates } },
+        payload: {
+          data: { collection: path, doc: updates.id, data: { ...updates } },
+        },
       };
 
       const pass1 = reducer(initialState, action1);
@@ -500,7 +502,9 @@ describe('cacheReducer', () => {
           collection,
           doc: updates.id,
         },
-        payload: { data: [{ collection: path, ...updates }] },
+        payload: {
+          data: [{ collection: path, doc: updates.id, data: { ...updates } }],
+        },
       };
 
       const pass1 = reducer(initialState, action1);
@@ -574,8 +578,11 @@ describe('cacheReducer', () => {
             write: [
               ({ fromReducerCache }) => ({
                 collection: path,
-                multipled: fromReducerCache.multipled * 4,
-                ...updates,
+                doc: updates.id,
+                data: {
+                  multipled: fromReducerCache.multipled * 4,
+                  ...updates,
+                },
               }),
             ],
           },
@@ -593,8 +600,8 @@ describe('cacheReducer', () => {
           JSON.stringify({
             ...doc1,
             key1: 'value1',
-            number: 15,
             multipled: 12,
+            number: 15,
             array: [1, 3, 4],
             obj: { a: 0, b: { y: 9 }, c: { z: 10 } },
             date: new Date('2021-01-01'),

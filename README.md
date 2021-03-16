@@ -355,7 +355,7 @@ const firestoreDocument = {
 const someChange = {
   ...requiredFields,
   ...optionalFields,
-  ...firestoreDocument
+  data: firestoreDocument
 };
 
 // Send the mutation as a solo operation
@@ -371,7 +371,12 @@ firestore.mutate({
   },
   write: [({ myLockedDocument }) => {
     return {
-      ...someChange, { someString: ...myLockedDocument.someString }
+      ...someChange,
+      data: {
+        ...someChange.data,
+        someString: ...myLockedDocument.someString
+        }
+      }
     };
   }]
 });
@@ -384,12 +389,22 @@ firestore.mutate({
   },
   write: [({ myLockedDocument, otherDocument }) => {
     return {
-      ...someChange, { someString: ...myLockedDocument.someString }
+      ...someChange,
+      data: {
+        ...someChange.data,
+        someString: ...myLockedDocument.someString
+        }
+      }
     };
   },
   ({ otherDocument }) => {
     return {
-      ...otherChange, { otherString: ...otherDocument.otherString }
+      ...otherChange,
+      data: {
+        ...otherChange.data,
+        otherString: ...otherDocument.someString
+        }
+      }
     };
   }]
 });
