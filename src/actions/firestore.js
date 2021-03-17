@@ -35,7 +35,7 @@ export function add(firebase, dispatch, queryOption, ...args) {
       actionTypes.ADD_REQUEST,
       {
         type: actionTypes.ADD_SUCCESS,
-        payload: snap => {
+        payload: (snap) => {
           const obj = { id: snap.id, data: args[0] };
           snapshotCache.set(obj, snap);
           return obj;
@@ -93,7 +93,7 @@ export function get(firebase, dispatch, queryOption) {
       actionTypes.GET_REQUEST,
       {
         type: actionTypes.GET_SUCCESS,
-        payload: snap => ({
+        payload: (snap) => ({
           data: dataByIdSnapshot(snap),
           ordered: orderedFromSnap(snap),
         }),
@@ -189,7 +189,7 @@ export function setListener(firebase, dispatch, queryOpts, successCb, errorCb) {
 
   // Create listener
   const unsubscribe = firestoreRef(firebase, meta).onSnapshot(
-    docData => {
+    (docData) => {
       // Dispatch directly if no populates
       if (!meta.populates) {
         dispatchListenerResponse({ dispatch, docData, meta, firebase });
@@ -199,9 +199,9 @@ export function setListener(firebase, dispatch, queryOpts, successCb, errorCb) {
       }
 
       getPopulateActions({ firebase, docData, meta })
-        .then(populateActions => {
+        .then((populateActions) => {
           // Dispatch each populate action
-          populateActions.forEach(populateAction => {
+          populateActions.forEach((populateAction) => {
             dispatch({
               ...populateAction,
               type: actionTypes.LISTENER_RESPONSE,
@@ -211,7 +211,7 @@ export function setListener(firebase, dispatch, queryOpts, successCb, errorCb) {
           // Dispatch original action
           dispatchListenerResponse({ dispatch, docData, meta, firebase });
         })
-        .catch(populateErr => {
+        .catch((populateErr) => {
           const { logListenerError } = firebase._.config || {};
           // Handle errors in population
           if (logListenerError !== false) {
@@ -227,7 +227,7 @@ export function setListener(firebase, dispatch, queryOpts, successCb, errorCb) {
           if (typeof errorCb === 'function') errorCb(populateErr);
         });
     },
-    err => {
+    (err) => {
       const {
         mergeOrdered,
         mergeOrderedDocUpdates,
@@ -283,7 +283,7 @@ export function setListeners(firebase, dispatch, listeners) {
 
   // Only attach one listener (count of matching listener path calls is tracked)
   if (config.oneListenerPerPath) {
-    listeners.forEach(listener => {
+    listeners.forEach((listener) => {
       const path = getQueryName(listener);
       const oldListenerCount = pathListenerCounts[path] || 0;
       pathListenerCounts[path] = oldListenerCount + 1;
@@ -298,7 +298,7 @@ export function setListeners(firebase, dispatch, listeners) {
   } else {
     const { allowMultipleListeners } = config;
 
-    listeners.forEach(listener => {
+    listeners.forEach((listener) => {
       const path = getQueryName(listener);
       const oldListenerCount = pathListenerCounts[path] || 0;
       const multipleListenersEnabled =
@@ -347,7 +347,7 @@ export function unsetListeners(firebase, dispatch, listeners) {
   const { allowMultipleListeners } = config;
 
   // Keep one listener path even when detaching
-  listeners.forEach(listener => {
+  listeners.forEach((listener) => {
     const path = getQueryName(listener);
     const listenerExists = pathListenerCounts[path] >= 1;
     const multipleListenersEnabled =
@@ -386,6 +386,26 @@ export function runTransaction(firebase, dispatch, transactionPromise) {
   });
 }
 
+/**
+ * Unified solo, batch & transactions operations.
+ * @param {object} firebase - Internal firebase object
+ * @param {Function} dispatch - Redux's dispatch function
+ * @param {string} queryOption - Options for query
+ * @returns {Promise} Resolves with results of update call
+ */
+export function mutate(firebase, dispatch, writes) {
+  return wrapInDispatch(dispatch, {
+    ref: firebase.firestore(),
+    method: 'mutate',
+    args: [writes],
+    types: [
+      actionTypes.MUTATE_START,
+      actionTypes.MUTATE_SUCCESS,
+      actionTypes.MUTATE_FAILURE,
+    ],
+  });
+}
+
 export default {
   get,
   firestoreRef,
@@ -396,4 +416,5 @@ export default {
   unsetListener,
   unsetListeners,
   runTransaction,
+  mutate,
 };
