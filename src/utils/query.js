@@ -106,6 +106,7 @@ function handleSubcollections(ref, subcollectionList) {
         }
         ref = ref.collection(subcollection.collection);
       }
+      if (subcollection.id) ref = ref.doc(subcollection.id);
       if (subcollection.doc) ref = ref.doc(subcollection.doc);
       if (subcollection.where) ref = addWhereToRef(ref, subcollection.where);
       if (subcollection.orderBy) {
@@ -146,8 +147,10 @@ export function firestoreRef(firebase, meta) {
     throw new Error('Firestore must be required and initalized.');
   }
   const {
+    path,
     collection,
     collectionGroup,
+    id,
     doc,
     subcollections,
     where,
@@ -169,8 +172,10 @@ export function firestoreRef(firebase, meta) {
   const { globalDataConvertor } =
     (firebase && firebase._ && firebase._.config) || {};
 
+  if (path) ref = ref.collection(path);
   if (collection) ref = ref.collection(collection);
   if (collectionGroup) ref = ref.collectionGroup(collectionGroup);
+  if (id) ref = ref.doc(id);
   if (doc) ref = ref.doc(doc);
   ref = handleSubcollections(ref, subcollections);
   if (where) ref = addWhereToRef(ref, where);
@@ -249,14 +254,16 @@ export function getQueryName(meta) {
     return meta;
   }
   const {
+    path,
     collection,
     collectionGroup,
+    id,
     doc,
     subcollections,
     storeAs,
     ...remainingMeta
   } = meta;
-  if (!collection && !collectionGroup) {
+  if (!path && !collection && !collectionGroup) {
     throw new Error(
       'Collection or Collection Group is required to build query name',
     );
@@ -266,11 +273,11 @@ export function getQueryName(meta) {
     return storeAs;
   }
 
-  let basePath = collection || collectionGroup;
-  if (doc) {
-    basePath = basePath.concat(`/${doc}`);
+  let basePath = path || collection || collectionGroup;
+  if (id || doc) {
+    basePath = basePath.concat(`/${id || doc}`);
   }
-  if (collection && subcollections) {
+  if ((path || collection) && subcollections) {
     /* eslint-disable no-console */
     console.error(
       'Queries with subcollections must use "storeAs" to prevent invalid store updates. This closley matches the upcoming major release (v1), which stores subcollections at the top level by default.',
@@ -308,19 +315,20 @@ export function getBaseQueryName(meta) {
     return meta;
   }
   const {
+    path,
     collection,
     collectionGroup,
     subcollections,
     ...remainingMeta
   } = meta;
-  if (!collection && !collectionGroup) {
+  if (!path && !collection && !collectionGroup) {
     throw new Error(
       'Collection or Collection Group is required to build query name',
     );
   }
-  let basePath = collection || collectionGroup;
+  let basePath = path || collection || collectionGroup;
 
-  if (collection && subcollections) {
+  if ((path || collection) && subcollections) {
     const mappedCollections = subcollections.map((subcollection) =>
       getQueryName(subcollection),
     );

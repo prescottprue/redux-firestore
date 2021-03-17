@@ -1,4 +1,5 @@
 import { isObject, mapValues } from 'lodash';
+import mutate from './mutate';
 
 /**
  * Build payload by invoking payload function if it a function, otherwise
@@ -34,37 +35,46 @@ export function wrapInDispatch(
     meta,
     payload: isObject(requestingType) ? requestingType.payload : { args },
   });
-  return ref[method](...args)
-    .then(result => {
-      const successIsObject = isObject(successType);
-      // Built action object handling function for custom payload
-      const actionObj = {
-        type: successIsObject ? successType.type : successType,
-        meta,
-        payload:
-          successIsObject && successType.payload
-            ? makePayload(successType, result)
-            : { args },
-      };
-      // Attach preserve to action if it is passed
-      if (successIsObject && successType.preserve) {
-        actionObj.preserve = successType.preserve;
-      }
-      // Attach merge to action if it is passed
-      if (successIsObject && successType.merge) {
-        actionObj.merge = successType.merge;
-      }
-      dispatch(actionObj);
-      return result;
-    })
-    .catch(err => {
-      dispatch({
-        type: errorType,
-        meta,
-        payload: err,
-      });
-      return Promise.reject(err);
+  const success = (result) => {
+    const successIsObject = isObject(successType);
+    // Built action object handling function for custom payload
+    const actionObj = {
+      type: successIsObject ? successType.type : successType,
+      meta,
+      payload:
+        successIsObject && successType.payload
+          ? makePayload(successType, result)
+          : { args },
+    };
+    // Attach preserve to action if it is passed
+    if (successIsObject && successType.preserve) {
+      actionObj.preserve = successType.preserve;
+    }
+    // Attach merge to action if it is passed
+    if (successIsObject && successType.merge) {
+      actionObj.merge = successType.merge;
+    }
+    dispatch(actionObj);
+    return result;
+  };
+  const failure = (err) => {
+    dispatch({
+      type: errorType,
+      meta,
+      payload: err,
     });
+    return Promise.reject(err);
+  };
+
+  if (method === 'mutate') {
+    return mutate(ref, ...args)
+      .then(success)
+      .catch(failure);
+  }
+
+  return ref[method](...args)
+    .then(success)
+    .catch(failure);
 }
 
 /**
@@ -76,7 +86,7 @@ export function wrapInDispatch(
  * and dispatch.
  */
 function createWithFirebaseAndDispatch(firebase, dispatch) {
-  return func => (...args) =>
+  return (func) => (...args) =>
     func.apply(firebase, [firebase, dispatch, ...args]);
 }
 

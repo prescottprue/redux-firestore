@@ -106,7 +106,7 @@ firestore.mutate(
     { collection: `orgs/${orgId}/task`, doc: taskId, data: { status: 0 } },
     { collection: `orgs/${orgId}/task`, doc: task2Id, data: { status: 0 } },
   ],
-  { method: 'batch' }
+  { method: 'batch' },
 );
 // NOTE: Firestore batch limit is 500. Arrays > 500 would just _.take(500) to make a batch of batches with a Promise.all.
 ```
@@ -114,9 +114,10 @@ firestore.mutate(
 **transaction use case**
 
 ```ts
+// NOTE: Firestore's web client doesn't support queries in transactions
 firestore.mutate(
   {
-    read: {
+    reads: {
       myTaskQuery: {
         collection: `orgs/${orgId}/tasks`,
         doc: taskId,
@@ -126,18 +127,18 @@ firestore.mutate(
         ],
       },
     },
-    write: [
+    writes: [
       ({ myTaskQuery }) =>
         myTaskQuery.map(({ id }) => ({
           collection: `orgs/${orgId}/task`,
           doc: id,
           data: {
             status: 2,
-          }
+          },
         })),
     ],
   },
-  { method: 'transaction' }
+  { method: 'transaction' },
 );
 ```
 
@@ -173,23 +174,23 @@ const queryNextSprint = {
 
 // --- Writes ---
 
-// Writes are just idempotent functions that return a serializable JSON 
+// Writes are just idempotent functions that return a serializable JSON
 // of the data to save. The arguments are DI from the read calls.
 
 const writeUncompleteToNextSprint = ({uncompleted, team, sprints, now, orgId, teamId}) => {
-  const write = [];
+  const writes = [];
   const shouldSendToBacklog = team.strategy === 'backlog'
   const nextSprintId = shouldSendToBacklog ? null : sprints?[1].id ?? uuid()
   if (nextSprintId && !sprints?[1]) {
-    write.push({collection: `orgs/${orgId}/sprints`, doc: nextSprintId })
+    writes.push({collection: `orgs/${orgId}/sprints`, doc: nextSprintId })
   }
-  
+
   uncompleted.forEach((task) =>
     writes.concat([{
       collection: `orgs/${orgId}/sprints`,
       doc: task.sprintId,
       data: { orderedTaskIds: arrayRemove(task.id) } }]));
-      
+
   uncompleted.forEach((task) =>
     writes.concat([{
       collection: task.path,
@@ -201,13 +202,13 @@ const writeUncompleteToNextSprint = ({uncompleted, team, sprints, now, orgId, te
     doc: nextSprintId,
     data: { orderedTaskIds: uncompleted.map(({id}) => arrayUnion(id))} })
 
-  write.push({
+  writes.push({
     collection: `orgs/${orgId}/team`,
     doc: team.id,
     data: { currentSprint: sprintId }
   });
 
-  return write;
+  return writes;
 }
 
 const writeSprintCalculations = ({completed, uncompleted, sprints}) => {
@@ -218,8 +219,8 @@ const writeSprintCalculations = ({completed, uncompleted, sprints}) => {
     totalEffortCompleted: completed.reduce((sum, {effort}) => sum += effort, 0)
   }
   return {
-    collection: sprint.path, 
-    doc:sprint.id, 
+    collection: sprint.path,
+    doc:sprint.id,
     data: { computedOnCompletion } };
 }
 
@@ -230,7 +231,7 @@ const writeSprintComplete = ({uncompleted, sprints, now}) => {
     doc: current.id,
     data: {
       orderedTaskIds: uncompleted.map(({id} => arrayRemove(id))),
-      completed: true, 
+      completed: true,
       updatedAt:now
     }
   };
@@ -238,7 +239,7 @@ const writeSprintComplete = ({uncompleted, sprints, now}) => {
 
 // Without Redux it's just a simple call to the new mutate function.
 
-const read = {
+const reads = {
   orgId,
   teamId,
   now: new Date(),
@@ -248,13 +249,13 @@ const read = {
   sprints: queryNextSprint,
 };
 
-const = write: [
+const = writes: [
   writeUncompleteToNextSprint,
   writeSprintCalculations,
   writeCompleteSprint
 ];
 
-firestore.mutate({ read, write }, { method: 'transaction' });
+firestore.mutate({ reads, writes }, { method: 'transaction' });
 
 // -----
 
@@ -264,7 +265,7 @@ firestore.mutate({ read, write }, { method: 'transaction' });
 dispatch({
   type: 'COMPLETE_SPRINT',
   payload: {
-    read: {
+    reads: {
       orgId,
       teamId,
       uncompleted: queryUncompletedTasks,
@@ -272,7 +273,7 @@ dispatch({
       team: queryTeam,
       sprints: queryNextSprint,
     },
-    write: [
+    writes: [
       writeUncompleteToNextSprint,
       writeSprintCalculations,
       writeCompleteSprint
@@ -287,11 +288,11 @@ dispatch({
 ```ts
 export function mutate(operations, { method = null } = {}) {
   // if there's a default convertor than add to each firestore call
-  let read,
-    write = operations;
-  if (operations.read) {
-    read = operations.read;
-    write = operations.write;
+  let reads,
+    writes = operations;
+  if (operations.reads) {
+    reads = operations.reads;
+    writes = operations.writes;
   }
 
   // first run all optimistic updates synchronously

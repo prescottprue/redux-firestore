@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import produce from 'immer';
 import {
   set,
@@ -16,6 +15,7 @@ import {
   setWith,
   extend,
   isFunction,
+  findIndex,
 } from 'lodash';
 import { actionTypes } from '../constants';
 import { getBaseQueryName } from '../utils/query';
@@ -81,8 +81,8 @@ import { getBaseQueryName } from '../utils/query';
 
 /**
  * @typedef {object} Transaction
- * @property {object.<ReadKey, RRFQuery>} read - Object of read keys and queries
- * @property {Function[]} write - Array of function that take rekyKey results and return writes
+ * @property {object.<ReadKey, RRFQuery>} reads - Object of read keys and queries
+ * @property {Function[]} writes - Array of function that take rekyKey results and return writes
  */
 
 /**
@@ -184,7 +184,7 @@ const filterTransducers = (where) => {
  */
 const populateTransducer = (collection, populates) =>
   partialRight(map, (state) => {
-    const parent = JSON.parse(JSON.stringify(state.database[collection]));
+    const parent = JSON.parse(JSON.stringify(state.database[collection] || {}));
     populates.forEach(([id, siblingCollection, field]) => {
       const sibling = state.database[siblingCollection];
       Object.values(parent).forEach((doc) => {
@@ -413,18 +413,17 @@ function atomize(mutation, cached) {
  */
 function translateMutationToOverrides({ payload }, db) {
   // turn everything to a write
-  let { read, write } = payload.data || {};
-  const isCommon = !write;
-  const isTransactions = Array.isArray(write);
-  if (!isTransactions) write = [write];
-  if (isCommon) {
-    write = Array.isArray(payload.data) ? payload.data : [payload.data];
+  let { reads, writes } = payload.data || {};
+  if (!writes) {
+    writes = Array.isArray(payload.data) ? payload.data : [payload.data];
+  } else if (!Array.isArray(writes)) {
+    writes = [writes];
   }
 
   // grab reads sync from in-memory database
-  let reads = {};
-  if (read) {
-    reads = Object.keys(read).reduce((result, key) => {
+  let reader = {};
+  if (reads) {
+    reader = Object.keys(reads).reduce((result, key) => {
       const { collection, doc } = result[key];
       if (!doc) {
         throw new Error("Cache Reducer currently doesn't support queries.");
@@ -434,11 +433,11 @@ function translateMutationToOverrides({ payload }, db) {
         ...result,
         [key]: coll[doc],
       };
-    }, read);
+    }, reads);
   }
 
-  return write
-    .map((writer) => (isFunction(writer) ? writer(reads) : writer))
+  return writes
+    .map((writer) => (isFunction(writer) ? writer(reader) : writer))
     .map(({ collection, path, doc, id, data, ...rest }) => ({
       collection: path || collection,
       doc: id || doc,
@@ -497,11 +496,28 @@ export default function cacheReducer(state = {}, action) {
         return draft;
       case actionTypes.UNSET_LISTENER:
         if (draft[key]) {
-          // remove only keys from the query
-          draft[key].ordered.map(([__, id]) =>
-            unset(draft, ['database', path, id]),
-          );
+          // all ids for the collection type, except query to be unset
+          const activeIds = Object.keys(draft).reduce((inUse, dbKey) => {
+            const { collection, ordered } = draft[dbKey];
+            if (dbKey !== key && collection === path) {
+              console.log('remove', dbKey, key);
+              return [...inUse, ...ordered.map(([___, id]) => id)];
+            }
+
+            return inUse;
+          }, []);
+
+          // remove docs from database if unsed by other queries
+          draft[key].ordered.forEach(([__, id]) => {
+            console.log('activeIds', activeIds, id);
+            if (!activeIds.includes(id)) {
+              unset(draft, ['database', path, id]);
+            }
+          });
+
+          // remove query
           unset(draft, [key]);
+
           updateCollectionQueries(draft, path);
         }
         return draft;
@@ -523,13 +539,20 @@ export default function cacheReducer(state = {}, action) {
           unset(draft, ['databaseOverrides', path, action.meta.doc]);
         }
 
-        const { oldIndex = 0, newIndex = 0 } = action.payload.ordered || {};
-        if (oldIndex > -1 && newIndex !== oldIndex) {
+        const { payload } = action;
+        const { oldIndex = 0, newIndex = 0 } = payload.ordered || {};
+        if (newIndex !== oldIndex) {
           const tuple =
             (payload.data && [payload.data.path, payload.data.id]) ||
             draft[key].ordered[oldIndex];
-          draft[key].ordered.splice(oldIndex, 0);
-          draft[key].ordered.splice(newIndex, 0, tuple);
+
+          const { ordered } = draft[key] || { ordered: [] };
+          if (oldIndex !== -1) {
+            ordered.splice(oldIndex, 0);
+          }
+          ordered.splice(newIndex, 0, tuple);
+
+          set(draft, [key, 'ordered'], ordered);
         }
 
         updateCollectionQueries(draft, path);
@@ -537,15 +560,17 @@ export default function cacheReducer(state = {}, action) {
 
       case actionTypes.DOCUMENT_REMOVED:
       case actionTypes.DELETE_SUCCESS:
-        unset(draft, ['database', path, action.meta.doc]);
         if (draft.databaseOverrides && draft.databaseOverrides[path]) {
           unset(draft, ['databaseOverrides', path, action.meta.doc]);
         }
 
+        // remove document id from ordered index
         if (draft[key] && draft[key].ordered) {
-          draft[key].ordered = reject(draft[key].ordered, [1, action.meta.doc]);
+          const idx = findIndex(draft[key].ordered, [1, action.meta.doc]);
+          unset(draft, [key, 'ordered', idx]);
         }
 
+        // reprocess
         updateCollectionQueries(draft, path);
         return draft;
 
@@ -581,7 +606,12 @@ export default function cacheReducer(state = {}, action) {
             );
           });
 
-          updateCollectionQueries(draft, path);
+          const updatePaths = [
+            ...new Set(optimisiticUpdates.map(({ collection }) => collection)),
+          ];
+          updatePaths.forEach((path) => {
+            updateCollectionQueries(draft, path);
+          });
         }
 
         return draft;

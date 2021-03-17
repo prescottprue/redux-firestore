@@ -569,13 +569,13 @@ describe('cacheReducer', () => {
         },
         payload: {
           data: {
-            read: {
+            reads: {
               fromReducerCache: {
                 collection: path,
                 doc: doc1.id,
               },
             },
-            write: [
+            writes: [
               ({ fromReducerCache }) => ({
                 collection: path,
                 doc: updates.id,

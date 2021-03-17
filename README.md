@@ -273,10 +273,10 @@ store.firestore.delete({ collection: 'cities', doc: 'SF' });
 // fast immediate transaction
 store.firestore
   .mutate({
-    read: {
+    reads: {
       sanFrancisco: { collection: 'cities', doc: 'SF' },
     },
-    write: [
+    writes: [
       ({ sanFrancisco }) => ({
         collection: 'cities',
         doc: 'SF',
@@ -342,7 +342,7 @@ const requiredFields = {
 // @optional
 const optionalFields = {
   /* @default '::update' */
-  action: '::update' | '::delete' |  '::set',
+  action: '::update' | '::delete' | '::set',
 };
 
 // changes requested to your data
@@ -358,65 +358,111 @@ const firestoreDocument = {
   anotherArray: ['::arrayRemove', 1],
   someObject: { a: 1, b: 2 },
   'someObject.a': 3,
-}
+};
 
 const someChange = {
   ...requiredFields,
   ...optionalFields,
-  data: firestoreDocument
+  data: firestoreDocument,
 };
+```
 
-// Send the mutation as a solo operation
-firestore.mutate(someChange);
+##### single document change
 
-// or send as a batch
-firestore.mutate([someChange, otherChange]);
-
-// or send as a transaction (with document locked globally)
+```js
 firestore.mutate({
-  read: {
-    myLockedDocument: requiredFields
+  collection: 'full/path/to/the/collection',
+  doc: 'firestore-document-id',
+  data: {
+    someNumber: 1,
+    otherArray: ['::arrayUnion', 5],
   },
-  write: [({ myLockedDocument }) => {
-    return {
-      ...someChange,
-      data: {
-        ...someChange.data,
-        someString: ...myLockedDocument.someString
-        }
-      }
-    };
-  }]
 });
+```
 
-// or send as a multi-document mutation
+##### batch changes
+
+```js
+firestore.mutate([
+  {
+    collection: 'full/path/to/the/collection',
+    doc: 'firestore-document-id',
+    data: {
+      someNumber: 1,
+    },
+  },
+  {
+    collection: 'full/path/to/the/collection2',
+    doc: 'firestore-document-id2',
+    data: {
+      someNumber: 2,
+    },
+  },
+]);
+```
+
+##### single document transaction
+
+```js
 firestore.mutate({
-  read: {
-    myLockedDocument: requiredFields,
-    otherDocument: otherQuery,
+  reads: {
+    myLockedDocument: {
+      collection: 'full/path/to/the/collection',
+      doc: 'firestore-document-id',
+    }
   },
-  write: [({ myLockedDocument, otherDocument }) => {
+  writes: [({ myLockedDocument }) => {
     return {
-      ...someChange,
+      collection: 'full/path/to/the/collection',
+      doc: 'firestore-document-id',
       data: {
-        ...someChange.data,
-        someString: ...myLockedDocument.someString
-        }
-      }
-    };
-  },
-  ({ otherDocument }) => {
-    return {
-      ...otherChange,
-      data: {
-        ...otherChange.data,
-        otherString: ...otherDocument.someString
+        someString: myLockedDocument.someString + ' new'
         }
       }
     };
   }]
 });
 ```
+
+##### mutliple documents transaction
+
+```js
+firestore.mutate({
+  reads: {
+    myLockedDocument: [
+      collection: 'full/path/to/the/collection',
+      doc: 'firestore-document-id',
+    ],
+    otherDocument: {
+      collection: 'full/path/to/the/collection2',
+      doc: 'firestore-document-id2',
+    },
+  },
+  writes: [({ myLockedDocument, otherDocument }) => {
+    return {
+      collection: 'full/path/to/the/collection',
+      doc: 'firestore-document-id',
+      data: {
+        someString: myLockedDocument.someString + ' new',
+        someOther: otherDocument.someOther,
+        }
+      }
+    };
+  },
+  ({ otherDocument }) => {
+    return {
+      collection: 'full/path/to/the/collection2',
+      doc: 'firestore-document-id2',
+      data: {
+        otherString: otherDocument.someString + ' other'
+        }
+      }
+    };
+  }]
+});
+```
+
+---
 
 #### Types of Queries
 
