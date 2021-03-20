@@ -1,5 +1,5 @@
 import { get } from 'lodash';
-import { setWith } from 'lodash/fp';
+import { setWith, assign } from 'lodash/fp';
 import { actionTypes } from '../constants';
 import { pathFromMeta, preserveValuesFromState } from '../utils/reducers';
 
@@ -59,11 +59,13 @@ export default function dataReducer(state = {}, action) {
           state,
         );
       }
+      // Otherwise merge with existing data
+      const mergedData = assign(previousData, data);
       // Set data to state (with merge) immutabily (lodash/fp's setWith creates copy)
       return setWith(
         Object,
         meta.storeAs ? [meta.storeAs] : pathFromMeta(meta),
-        data,
+        mergedData,
         state,
       );
     case DOCUMENT_MODIFIED:
