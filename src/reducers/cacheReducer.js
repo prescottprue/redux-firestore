@@ -186,15 +186,27 @@ const populateTransducer = (collection, populates) =>
   partialRight(map, (state) => {
     const parent = JSON.parse(JSON.stringify(state.database[collection] || {}));
     populates.forEach(([id, siblingCollection, field]) => {
-      const sibling = state.database[siblingCollection];
+      const siblings = state.database[siblingCollection];
+      if (!siblings) return;
+
       Object.values(parent).forEach((doc) => {
-        const siblingId = doc[id];
-        const siblingDoc = sibling && sibling[siblingId];
+        const siblingValue = doc[id];
+
+        if (Array.isArray(siblingValue)) {
+          doc[field] = siblingValue.map((siblingId) => {
+            const siblingDoc = siblings[siblingId];
+            if (siblingDoc) {
+              return JSON.parse(JSON.stringify(siblingDoc));
+            }
+          });
+        }
+        const siblingDoc = siblings[siblingValue];
         if (siblingDoc) {
           doc[field] = JSON.parse(JSON.stringify(siblingDoc));
         }
       });
     });
+
     return { database: { [collection]: parent } };
   });
 

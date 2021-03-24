@@ -59,7 +59,7 @@ describe('cacheReducer', () => {
   });
 
   describe('fast populates', () => {
-    it('query fields return partial document', () => {
+    it('populate one-to-one', () => {
       const doc1 = {
         key1: 'value1',
         anotherId: 'anotherDocId1',
@@ -100,6 +100,58 @@ describe('cacheReducer', () => {
       });
       expect(pass2.cache.testStoreAs.docs[0]).to.eql({
         anotherDocument: doc2,
+        key1: 'value1',
+        id: 'testDocId1',
+      });
+    });
+
+    it('populate many-to-one', () => {
+      const doc1 = {
+        key1: 'value1',
+        anotherIds: ['anotherDocId2', 'anotherDocId1'],
+        id: 'testDocId1',
+        path,
+      };
+
+      const doc2 = { other: 'test', id: 'anotherDocId1', path: anotherPath };
+      const doc3 = { other: 'test', id: 'anotherDocId2', path: anotherPath };
+
+      // Initial seed
+      const action1 = {
+        meta: {
+          collection,
+          storeAs: 'testStoreAs',
+          where: [['key1', '==', 'value1']],
+          orderBy: ['value1'],
+          fields: ['id', 'key1', 'others'],
+          populates: [['anotherIds', anotherPath, 'others']],
+        },
+        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+
+      const action2 = {
+        meta: {
+          collection: another,
+          storeAs: 'anotherStoreAs',
+        },
+        payload: {
+          data: { [doc2.id]: doc2, [doc3.id]: doc3 },
+          ordered: [doc2, doc3],
+        },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+
+      const pass1 = reducer(initialState, action1);
+      const pass2 = reducer(pass1, action2);
+
+      expect(pass1.cache.testStoreAs.docs[0]).to.eql({
+        id: 'testDocId1',
+        key1: 'value1',
+      });
+
+      expect(pass2.cache.testStoreAs.docs[0]).to.eql({
+        others: [doc3, doc2],
         key1: 'value1',
         id: 'testDocId1',
       });
