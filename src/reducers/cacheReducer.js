@@ -170,7 +170,20 @@ const filterTransducers = (where) => {
   return clauses.map(([field, op, val]) => {
     const fnc = PROCESSES[op] || (() => true);
     return partialRight(map, (collection) =>
-      filter(Object.values(collection), (doc) => fnc(doc[field], val)),
+      filter(Object.values(collection || {}), (doc) => {
+        let value;
+        if (field === '__name__') {
+          value = doc.id;
+        } else if (field.includes('.')) {
+          value = field
+            .split('.')
+            .reduce((obj, subField) => obj && obj[subField], doc);
+        } else {
+          value = doc[field];
+        }
+
+        return fnc(value, val);
+      }),
     );
   });
 };
@@ -185,24 +198,26 @@ const filterTransducers = (where) => {
 const populateTransducer = (collection, populates) =>
   partialRight(map, (state) => {
     const parent = JSON.parse(JSON.stringify(state.database[collection] || {}));
-    populates.forEach(([id, siblingCollection, field]) => {
-      const siblings = state.database[siblingCollection];
+    const lookups = Array.isArray(populates[0]) ? populates : [populates];
+    lookups.forEach(([field, path, destination]) => {
+      const siblings = state.database[path];
       if (!siblings) return;
 
       Object.values(parent).forEach((doc) => {
-        const siblingValue = doc[id];
+        const siblingValue = doc[field];
 
         if (Array.isArray(siblingValue)) {
-          doc[field] = siblingValue.map((siblingId) => {
+          doc[destination] = siblingValue.map((siblingId) => {
             const siblingDoc = siblings[siblingId];
             if (siblingDoc) {
               return JSON.parse(JSON.stringify(siblingDoc));
             }
+            return undefined;
           });
         }
         const siblingDoc = siblings[siblingValue];
         if (siblingDoc) {
-          doc[field] = JSON.parse(JSON.stringify(siblingDoc));
+          doc[destination] = JSON.parse(JSON.stringify(siblingDoc));
         }
       });
     });

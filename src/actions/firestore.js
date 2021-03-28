@@ -415,7 +415,10 @@ export function mutate(firebase, dispatch, writes) {
         payload: { data: writes },
       },
       actionTypes.MUTATE_SUCCESS,
-      actionTypes.MUTATE_FAILURE,
+      {
+        type: actionTypes.MUTATE_FAILURE,
+        payload: { data: writes },
+      },
     ],
   });
 }
