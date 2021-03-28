@@ -9,13 +9,13 @@ import {
   map,
   partialRight,
   pick,
-  reject,
   compact,
   zip,
   setWith,
   extend,
   isFunction,
   findIndex,
+  isMatch,
 } from 'lodash';
 import { actionTypes } from '../constants';
 import { getBaseQueryName } from '../utils/query';
@@ -477,6 +477,24 @@ function translateMutationToOverrides({ payload }, db) {
 }
 
 /**
+ *
+ * @param {object} action
+ * @param {object} overrides
+ * @returns Boolean
+ */
+function shouldRemoveOverride(action, overrides) {
+  const path = !action.meta ? null : action.meta.collection;
+  if (!path) return false;
+
+  const override =
+    overrides && overrides[path] && overrides[path][action.meta.doc];
+
+  if (!override) return false;
+
+  return isMatch(action.payload.data, override);
+}
+
+/**
  * @name cacheReducer
  * Reducer for in-memory database
  * @param {object} [state={}] - Current listenersById redux state
@@ -558,11 +576,8 @@ export default function cacheReducer(state = {}, action) {
           Object,
         );
 
-        const shouldRemvoveOverride =
-          draft.databaseOverrides &&
-          draft.databaseOverrides[path] &&
-          draft.databaseOverrides[path][action.meta.doc];
-        if (shouldRemvoveOverride) {
+        const remove = shouldRemoveOverride(action, draft.databaseOverrides);
+        if (remove) {
           unset(draft, ['databaseOverrides', path, action.meta.doc]);
         }
 
@@ -615,8 +630,40 @@ export default function cacheReducer(state = {}, action) {
 
       case actionTypes.OPTIMISTIC_REMOVED:
         set(draft, ['databaseOverrides', path, action.meta.doc], null);
-
         updateCollectionQueries(draft, path);
+        return draft;
+
+      case actionTypes.MUTATE_FAILURE:
+      case actionTypes.DELETE_FAILURE:
+      case actionTypes.UPDATE_FAILURE:
+      case actionTypes.SET_FAILURE:
+      case actionTypes.ADD_FAILURE:
+        // All failures remove overrides
+        if (action.payload.data || action.payload.args) {
+          const write = action.payload.data
+            ? [{ writes: [action.payload.data] }]
+            : action.payload.args;
+          const allPaths = write.reduce(
+            (results, { writes }) => [
+              ...results,
+              ...writes.map(({ collection, path: _path, doc, id }) => {
+                unset(
+                  draft,
+                  ['databaseOverrides', _path || collection, id || doc],
+                  null,
+                );
+                return path || collection;
+              }),
+            ],
+            [],
+          );
+
+          const uniquePaths = Array.from(new Set(allPaths));
+          if (uniquePaths.length > 0) {
+            updateCollectionQueries(draft, uniquePaths);
+          }
+        }
+
         return draft;
 
       case actionTypes.MUTATE_START:

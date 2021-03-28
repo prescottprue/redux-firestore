@@ -235,6 +235,7 @@ describe('cacheReducer', () => {
         payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
         type: actionTypes.LISTENER_RESPONSE,
       };
+
       const action2 = {
         type: actionTypes.OPTIMISTIC_REMOVED,
         meta: {
@@ -299,26 +300,29 @@ describe('cacheReducer', () => {
   describe('DOCUMENT_ADDED', () => {
     it('Firestore added document removes override', () => {
       const doc1 = { key1: 'value1', id: 'testDocId1', path };
-      const doc2 = { key2: 'value2', id: 'testDocId1', path };
+      const change = { key2: 'value2', id: 'testDocId1', path };
+      const doc2 = { ...doc1, ...change };
 
       const action1 = {
         meta: {
           collection,
           storeAs: 'testStoreAs',
           where: [['key1', '==', 'value1']],
-          orderBy: ['value1'],
+          orderBy: ['key1'],
         },
         payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
         type: actionTypes.LISTENER_RESPONSE,
       };
+
       const action2 = {
         type: actionTypes.OPTIMISTIC_ADDED,
         meta: {
           collection,
-          doc: doc2.id,
+          doc: change.id,
         },
-        payload: { data: doc2 },
+        payload: { data: change },
       };
+
       const action3 = {
         type: actionTypes.DOCUMENT_ADDED,
         meta: {
@@ -326,7 +330,7 @@ describe('cacheReducer', () => {
           doc: doc2.id,
         },
         payload: {
-          data: { ...doc2, key1: 'value1' },
+          data: doc2,
           ordered: { newIndex: 0, oldIndex: -1 },
         },
       };
@@ -336,12 +340,12 @@ describe('cacheReducer', () => {
       const pass3 = reducer(pass2, action3);
 
       expect(pass1.cache.testStoreAs.docs[0]).to.eql(doc1);
-      expect(pass2.cache.testStoreAs.docs[0]).to.eql({ ...doc1, ...doc2 });
-      expect(pass3.cache.testStoreAs.docs[0]).to.eql({ ...doc1, ...doc2 });
+      expect(pass2.cache.testStoreAs.docs[0]).to.eql(doc2);
+      expect(pass3.cache.testStoreAs.docs[0]).to.eql(doc2);
 
       expect(pass1.cache.databaseOverrides).to.eql({});
       expect(pass2.cache.databaseOverrides[collection]).to.eql({
-        [doc2.id]: doc2,
+        [change.id]: change,
       });
       expect(pass3.cache.databaseOverrides[collection]).to.eql({});
     });
