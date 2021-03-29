@@ -40,6 +40,9 @@ export const actionTypes: {
   TRANSACTION_START: string;
   TRANSACTION_SUCCESS: string;
   TRANSACTION_FAILURE: string;
+  MUTATE_START: string;
+  MUTATE_SUCCESS: string;
+  MUTATE_FAILURE: string;
 };
 
 /**
@@ -94,6 +97,38 @@ export interface Config {
   };
 }
 
+export type Read = { collection: string; doc: string };
+
+export type Write = Read & { data: Record<string, unknown> };
+
+export type Batch = Write[];
+
+export type WriteFn = (readKeys: string) => Write | Write[];
+
+/**
+ * As of Mar 2021, Firestore does not support transactional queries.
+ * Queries are run as a standard read. Each document returned is read
+ * a second time in the transaction. This is a best effort. Full
+ * Transactional Query support is only available with firebase-admin.
+ */
+export type ReadQuery = Omit<Read, 'doc'> & { _slowCollectionRead: true };
+
+export type Transaction = {
+  reads: (Read | ReadQuery)[];
+  writes: (WriteFn | Writes)[];
+};
+
+/**
+ * Mutate turns Firestore into immedaite mode. Calling getFirestore returns
+ * a RRF wrapper around Firestore that included the mutate function.
+ * The primary aim of mutate is to make firestore feel lighting fast to user.
+ * Instead of Firestore's API which is async first, the mutate function
+ * provides eventual consistency. Change requests synchronously update the
+ * cache reducer. When the change is accepted or rejected it updated the
+ * cache reducer to reflect data in firestore.
+ */
+export type mutate = (operations: Write | Batch | Transaction) => Promise;
+
 /**
  * A redux store enhancer that adds store.firebase (passed to React component
  * context through react-redux's <Provider>).
@@ -101,7 +136,7 @@ export interface Config {
 export function reduxFirestore(
   firebaseInstance: typeof Firebase,
   otherConfig?: Partial<Config>,
-): any;
+): Firebase.default.firestore & { mutate: mutate };
 
 /**
  * Get extended firestore instance (attached to store.firestore)
@@ -109,7 +144,7 @@ export function reduxFirestore(
 export function getFirestore(
   firebaseInstance: typeof Firebase,
   otherConfig?: Partial<Config>,
-): any;
+): Firebase.default.firestore & { mutate: mutate };
 
 /**
  * Reducer for Firestore state
@@ -152,12 +187,13 @@ export namespace FirestoreReducer {
   declare const entitySymbol: unique symbol;
   declare const entityPath: unique symbol;
   declare const entityId: unique symbol;
+  declare const queryAlias: unique symbol;
 
   export type Entity<T> = T & {
     [entitySymbol]: never;
   };
-  export type EntityWithId<T> = T & { id: string };
-  export type EntityWithIdPath<T> = T & { id: string; path: string };
+  export type EntityWithId<T> = T & { id: entityId };
+  export type EntityWithIdPath<T> = EntityWithId<T> & { path: entityPath };
   export type FirestoreData<Schema extends Record<string, any>> = {
     [T in keyof Schema]: Record<
       string,
@@ -192,6 +228,10 @@ export namespace FirestoreReducer {
     cache: CachedData<Schema> & {
       database: CacheDatabase<Schema>;
       private databaseOverrides: CacheDatabase<Schema> | null;
+      [queryAlias]: ReduxFirestoreQuerySetting & {
+        docs: EntityWithIdPath<Schema>[];
+        private ordered: [entityId, entityPath][];
+      };
     };
     status: {
       requested: Dictionary<boolean>;

@@ -14,8 +14,8 @@ export {
   orderedReducer,
   statusReducer,
   queriesReducer,
-  crossSliceReducer,
   cacheReducer,
+  crossSliceReducer,
 };
 
 export default {
@@ -25,6 +25,6 @@ export default {
   orderedReducer,
   statusReducer,
   queriesReducer,
-  crossSliceReducer,
   cacheReducer,
+  crossSliceReducer,
 };
