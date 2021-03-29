@@ -189,88 +189,43 @@ store.firestore.get({ collection: 'cities' }),
 // store.firestore.get({ collection: 'cities', doc: 'SF' }), // doc
 ```
 
-##### set
+##### mutate
+
+Merge single document changes
 
 ```js
-store.firestore.set({ collection: 'cities', doc: 'SF' }, { name: 'San Francisco' }),
-```
-
-##### add
-
-```js
-store.firestore.add({ collection: 'cities' }, { name: 'Some Place' }),
-```
-
-##### mutate update
-
-```js
-const itemUpdates = {
+store.firestore.mutate({
   collection: 'cities',
   doc: 'SF',
   data: {
-    some: 'value',
-    updatedAt: ['::serverTimestamp'],
+    name: 'San Francisco',
   },
-};
-
-// fast immediate updates
-store.firestore.mutate(itemUpdates);
+});
 ```
 
-##### update
+Batch Updates
 
 ```js
-const itemUpdates = {
-  some: 'value',
-  updatedAt: store.firestore.FieldValue.serverTimestamp(),
-};
-
-// slow async updates
-store.firestore.update({ collection: 'cities', doc: 'SF' }, itemUpdates);
-```
-
-##### batch
-
-```js
-// fast immediate updates
-store.firestore.mutate([
+store.firestore.mutate({
+  collection: 'cities',
+  doc: 'SF',
+  data: {
+    name: 'San Francisco',
+  },
   {
     collection: 'cities',
     doc: 'Miami',
     data: {
-      some: 'newValue',
-      updatedAt: ['::serverTimestamp'],
+      name: 'Miami',
     },
   },
-  {
-    collection: 'cities',
-    doc: 'SF',
-    data: {
-      some: 'value',
-      updatedAt: ['::serverTimestamp'],
-    },
-  },
-]);
+});
 ```
 
-##### mutate delete
+**Firestore Transactions** - read keys are used in dependency injected into
+the write functions.
 
 ```js
-// fast immediate deletion
-store.firestore.mutate({ collection: 'cities', doc: 'SF', action:['::delete'] }),
-```
-
-##### delete
-
-```js
-// slow async deletion
-store.firestore.delete({ collection: 'cities', doc: 'SF' });
-```
-
-##### mutate transaction
-
-```js
-// fast immediate transaction
 store.firestore
   .mutate({
     reads: {
@@ -296,10 +251,42 @@ store.firestore
   });
 ```
 
-##### runTransaction
+#### Old API Actions
+
+The older API is a smaller wrapper around Firestore. It exposes most
+functionality but is not compatible with the cache reducer. All changes
+sent to the old API must wait for the data to complete a round-trip to the
+Firestore database in Google Cloud before it will be shown to the user.
+
+For changes that are reflected immeadiately to the user, see the mutate API.
+
+##### set - old api
 
 ```js
-// slow async transaction; requires round trip to server
+store.firestore.set({ collection: 'cities', doc: 'SF' }, { name: 'San Francisco' }),
+```
+
+##### add - old api
+
+```js
+store.firestore.add({ collection: 'cities' }, { name: 'Some Place' }),
+```
+
+##### update - old api
+
+```js
+store.firestore.update({ collection: 'cities', doc: 'SF' }, { some: 'value' });
+```
+
+##### delete - old api
+
+```js
+store.firestore.delete({ collection: 'cities', doc: 'SF' });
+```
+
+##### runTransaction - old api
+
+```js
 store.firestore
   .runTransaction(t => {
     return t.get(cityRef).then(doc => {
@@ -316,6 +303,8 @@ store.firestore
     console.log('Transaction failure:', err);
   });
 ```
+
+---
 
 #### Mutations
 
@@ -339,12 +328,6 @@ const requiredFields = {
   doc: 'firestore-document-id',
 };
 
-// @optional
-const optionalFields = {
-  /* @default '::update' */
-  action: '::update' | '::delete' | '::set',
-};
-
 // changes requested to your data
 const firestoreDocument = {
   someString: 'string',
@@ -362,7 +345,6 @@ const firestoreDocument = {
 
 const someChange = {
   ...requiredFields,
-  ...optionalFields,
   data: firestoreDocument,
 };
 ```
@@ -457,6 +439,51 @@ firestore.mutate({
         otherString: otherDocument.someString + ' other'
         }
       }
+    };
+  }]
+});
+```
+
+##### Mutations - future API plans
+
+Currently mutate only supports update actions. The next bump will include add,
+delete and set actions.
+
+```ts
+// WARNING: Future API plans. Not currently supported in mutate release 1.
+// Mutate release 1 only supports update action
+const optionalFields = {
+  /* @default '::update' */
+  action: '::update' | '::delete' | '::set' | '::add',
+};
+```
+
+Firestore front-end client transactions only support single document reads.
+In many cases that's not enough. The next bump will include support for
+read quieries. The query will be outside the transaction but lock every doc
+manually that is included in the original, non-transactional, read.
+
+```ts
+// WARNING: Future API plans. Not currently supported in mutate release 1.
+// Mutate release 1 only supports update action
+firestore.mutate({
+  reads: {
+    largeCities: [
+      collection: 'full/path/to/the/collection',
+      '_slowCollectionRead': {
+        where: [['population', '>', 400_000 ]]
+      }
+    ],
+  },
+  writes: [({ largeCities }) => {
+    return largeCities.map((city) => ({
+        collection: 'full/path/to/the/collection',
+        doc: city.id,
+        data: {
+          population: city.population + 1,
+          }
+        })
+      );
     };
   }]
 });
