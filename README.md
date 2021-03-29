@@ -191,7 +191,7 @@ store.firestore.get({ collection: 'cities' }),
 
 ##### mutate
 
-Merge single document changes
+**Single Document** - merge multiple changes for a single document
 
 ```js
 store.firestore.mutate({
@@ -203,10 +203,12 @@ store.firestore.mutate({
 });
 ```
 
-Batch Updates
+**Batch Updates** - run multiple changes as a single batch. Arrays larger
+then 500 will be broken into multiple batches when sent to firestore, then
+recombined and flattened when returned in the promise.
 
 ```js
-store.firestore.mutate({
+store.firestore.mutate([{
   collection: 'cities',
   doc: 'SF',
   data: {
@@ -219,11 +221,13 @@ store.firestore.mutate({
       name: 'Miami',
     },
   },
-});
+}]);
 ```
 
-**Firestore Transactions** - read keys are used in dependency injected into
-the write functions.
+**Firestore Transactions** - Read keys are used in dependency injected into
+the write functions. Static writes are also supported. A read that does not
+have a collection/doc value will be use to provide and dependency inject
+state data to the write function.
 
 ```js
 store.firestore
@@ -419,8 +423,13 @@ firestore.mutate({
       collection: 'full/path/to/the/collection2',
       doc: 'firestore-document-id2',
     },
+    myState: {
+      city: 'San Francisco',
+      email: email,
+    },
+    uid: uid,
   },
-  writes: [({ myLockedDocument, otherDocument }) => {
+  writes: [({ myLockedDocument, otherDocument, myState, uid }) => {
     return {
       collection: 'full/path/to/the/collection',
       doc: 'firestore-document-id',
@@ -465,7 +474,7 @@ manually that is included in the original, non-transactional, read.
 
 ```ts
 // WARNING: Future API plans. Not currently supported in mutate release 1.
-// Mutate release 1 only supports update action
+// Mutate release 1 only single document reads, not query reads
 firestore.mutate({
   reads: {
     largeCities: [
