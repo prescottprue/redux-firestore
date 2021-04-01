@@ -207,9 +207,11 @@ async function writeInTransaction(firebase, operations) {
   return firebase.firestore().runTransaction(async (transaction) => {
     const readsPromised = mapValues(operations.reads, (read) => {
       if (isDocRead(read)) {
-        return transaction
-          .get(firestoreRef(firebase, read))
-          .then((doc) => doc.data());
+        return transaction.get(firestoreRef(firebase, read)).then((doc) => ({
+          ...doc.data(),
+          id: doc.ref.id,
+          path: doc.ref.path,
+        }));
       }
 
       return firestoreRef(firebase, read)
@@ -217,7 +219,13 @@ async function writeInTransaction(firebase, operations) {
         .then((result) =>
           Promise.all(result.docs.map((doc) => transaction.get(doc.ref))),
         )
-        .then((docs) => docs.map((doc) => doc.data()));
+        .then((docs) =>
+          docs.map((doc) => ({
+            ...doc.data(),
+            id: doc.ref.id,
+            path: doc.ref.path,
+          })),
+        );
     });
 
     const fetchedData = await promiseAllObject(readsPromised);

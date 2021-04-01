@@ -98,7 +98,10 @@ describe('firestore.mutate()', () => {
   it('writes in transaction', async () => {
     const firestoreGet = sinon.spy(() =>
       Promise.resolve({
-        docs: [{ ref: 'task-1' }, { ref: 'task-2' }],
+        docs: [
+          { ref: { id: 'task-1', path: 'tasks' } },
+          { ref: { id: 'task-2', path: 'tasks' } },
+        ],
       }),
     );
     const withConverter = sinon.spy(() => ({ get: firestoreGet }));
@@ -107,12 +110,19 @@ describe('firestore.mutate()', () => {
     const set = sinon.spy();
     function* mock() {
       yield Promise.resolve({
+        ref: { id: 'sprint-1', path: 'sprints' },
         data: () => ({
           sprintSettings: { moveRemainingTasksTo: 'NextSprint' },
         }),
       });
-      yield Promise.resolve({ data: () => ({ id: 'task-id-1' }) });
-      yield Promise.resolve({ data: () => ({ id: 'task-id-2' }) });
+      yield Promise.resolve({
+        ref: { id: 'task-id-1', path: 'tasks' },
+        data: () => ({ id: 'task-id-1' }),
+      });
+      yield Promise.resolve({
+        ref: { id: 'task-id-2', path: 'tasks' },
+        data: () => ({ id: 'task-id-2' }),
+      });
     }
     const mocked = mock();
     const transactionGet = () => mocked.next().value;
