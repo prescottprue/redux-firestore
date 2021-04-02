@@ -1,5 +1,6 @@
 import { chunk, isFunction, mapValues } from 'lodash';
 import { firestoreRef } from './query';
+import mark from './perfmarks';
 
 /**
  * @param {object} firestore
@@ -160,13 +161,17 @@ function atomize(firebase, mutation) {
  * @returns Promise
  */
 function writeSingle(firebase, operations) {
+  mark('mutate.writeSingle');
   const { collection, path, doc, id, data, ...rest } = operations;
-  return docRef(firebase.firestore(), path || collection, id || doc).set(
-    atomize(firebase, data || rest),
-    {
-      merge: true,
-    },
-  );
+  const promise = docRef(
+    firebase.firestore(),
+    path || collection,
+    id || doc,
+  ).set(atomize(firebase, data || rest), {
+    merge: true,
+  });
+  mark('mutate.writeSingle', true);
+  return promise;
 }
 
 const MAX_BATCH_COUNT = 500;
@@ -177,6 +182,7 @@ const MAX_BATCH_COUNT = 500;
  * @returns Promise
  */
 async function writeInBatch(firebase, operations) {
+  mark('mutate.writeInBatch');
   const committedBatchesPromised = chunk(operations, MAX_BATCH_COUNT).map(
     (operationsChunk) => {
       const writesBatched = operationsChunk.reduce(
@@ -195,6 +201,7 @@ async function writeInBatch(firebase, operations) {
     },
   );
 
+  mark('mutate.writeInBatch', true);
   await Promise.all(committedBatchesPromised);
 }
 
@@ -205,6 +212,7 @@ async function writeInBatch(firebase, operations) {
  */
 async function writeInTransaction(firebase, operations) {
   return firebase.firestore().runTransaction(async (transaction) => {
+    mark('mutate.writeInTransaction');
     const readsPromised = mapValues(operations.reads, (read) => {
       if (isDocRead(read)) {
         return transaction.get(firestoreRef(firebase, read)).then((doc) => ({
@@ -228,10 +236,12 @@ async function writeInTransaction(firebase, operations) {
         );
     });
 
+    mark('mutate.writeInTransaction', true);
     const fetchedData = await promiseAllObject(readsPromised);
 
     operations.writes.forEach((writeFn) => {
       const writes = isFunction(writeFn) ? writeFn(fetchedData) : writeFn;
+      mark('mutate.writeInTransaction');
 
       const writer = ({ collection, path, doc, id, data, ...rest }) =>
         transaction.set(
@@ -247,6 +257,7 @@ async function writeInTransaction(firebase, operations) {
       } else {
         writer(writes);
       }
+      mark('mutate.writeInTransaction', true);
     });
   });
 }

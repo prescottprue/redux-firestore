@@ -19,6 +19,7 @@ import {
 } from 'lodash';
 import { actionTypes } from '../constants';
 import { getBaseQueryName } from '../utils/query';
+import mark from '../utils/perfmarks';
 
 /**
  * @typedef {object & Object.<string, RRFQuery>} CacheState
@@ -292,7 +293,7 @@ function buildTransducer(overrides, query) {
 
   return flow(
     compact([
-      xfPopulate,
+      xfPopulate, // TODO: error when overrides affect populates
       xfGetCollection,
       ...xfApplyOverrides,
       // xfSpy,
@@ -513,6 +514,7 @@ export default function cacheReducer(state = {}, action) {
     switch (action.type) {
       case actionTypes.GET_SUCCESS:
       case actionTypes.LISTENER_RESPONSE:
+        mark(`cache.${actionTypes.LISTENER_RESPONSE}`);
         if (!draft.database) {
           set(draft, ['database'], {});
           set(draft, ['databaseOverrides'], {});
@@ -538,14 +540,16 @@ export default function cacheReducer(state = {}, action) {
         // append docs field to query
         updateCollectionQueries(draft, path);
 
+        mark(`cache.${actionTypes.LISTENER_RESPONSE}`, true);
         return draft;
+
       case actionTypes.UNSET_LISTENER:
+        mark(`cache.${actionTypes.UNSET_LISTENER}`);
         if (draft[key]) {
           // all ids for the collection type, except query to be unset
           const activeIds = Object.keys(draft).reduce((inUse, dbKey) => {
             const { collection, ordered } = draft[dbKey];
             if (dbKey !== key && collection === path) {
-              console.log('remove', dbKey, key);
               return [...inUse, ...ordered.map(([___, id]) => id)];
             }
 
@@ -554,7 +558,6 @@ export default function cacheReducer(state = {}, action) {
 
           // remove docs from database if unsed by other queries
           draft[key].ordered.forEach(([__, id]) => {
-            console.log('activeIds', activeIds, id);
             if (!activeIds.includes(id)) {
               unset(draft, ['database', path, id]);
             }
@@ -565,10 +568,13 @@ export default function cacheReducer(state = {}, action) {
 
           updateCollectionQueries(draft, path);
         }
+
+        mark(`cache.${actionTypes.UNSET_LISTENER}`, true);
         return draft;
 
       case actionTypes.DOCUMENT_ADDED:
       case actionTypes.DOCUMENT_MODIFIED:
+        mark(`cache.${actionTypes.DOCUMENT_MODIFIED}`);
         setWith(
           draft,
           ['database', path, action.meta.doc],
@@ -598,10 +604,13 @@ export default function cacheReducer(state = {}, action) {
         }
 
         updateCollectionQueries(draft, path);
+
+        mark(`cache.${actionTypes.DOCUMENT_MODIFIED}`, true);
         return draft;
 
       case actionTypes.DOCUMENT_REMOVED:
       case actionTypes.DELETE_SUCCESS:
+        mark(`cache.${actionTypes.DELETE_SUCCESS}`);
         if (draft.databaseOverrides && draft.databaseOverrides[path]) {
           unset(draft, ['databaseOverrides', path, action.meta.doc]);
         }
@@ -614,6 +623,8 @@ export default function cacheReducer(state = {}, action) {
 
         // reprocess
         updateCollectionQueries(draft, path);
+
+        mark(`cache.${actionTypes.DELETE_SUCCESS}`, true);
         return draft;
 
       case actionTypes.OPTIMISTIC_ADDED:
@@ -638,6 +649,7 @@ export default function cacheReducer(state = {}, action) {
       case actionTypes.UPDATE_FAILURE:
       case actionTypes.SET_FAILURE:
       case actionTypes.ADD_FAILURE:
+        mark(`cache.${actionTypes.MUTATE_FAILURE}`);
         // All failures remove overrides
         if (action.payload.data || action.payload.args) {
           const write = action.payload.data
@@ -664,9 +676,11 @@ export default function cacheReducer(state = {}, action) {
           }
         }
 
+        mark(`cache.${actionTypes.MUTATE_FAILURE}`, true);
         return draft;
 
       case actionTypes.MUTATE_START:
+        mark(`cache.${actionTypes.MUTATE_START}`);
         if (action.payload && action.payload.data) {
           const optimisiticUpdates =
             translateMutationToOverrides(action, draft.database) || [];
@@ -688,6 +702,7 @@ export default function cacheReducer(state = {}, action) {
           });
         }
 
+        mark(`cache.${actionTypes.MUTATE_START}`, true);
         return draft;
 
       default:
