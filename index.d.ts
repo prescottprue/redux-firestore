@@ -46,7 +46,7 @@ export const actionTypes: {
 };
 
 /**
- * Constants used within redux-firetore. Includes actionTypes, actionsPrefix,
+ * Constants used within redux-firestore. Includes actionTypes, actionsPrefix,
  * and default config.
  */
 export const constants: {
