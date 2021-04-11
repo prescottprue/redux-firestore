@@ -1,4 +1,4 @@
-import produce from 'immer';
+import produce, { createDraft, finishDraft } from 'immer';
 import {
   set,
   unset,
@@ -198,32 +198,45 @@ const filterTransducers = (where) => {
  */
 const populateTransducer = (collection, populates) =>
   partialRight(map, (state) => {
-    const parent = JSON.parse(JSON.stringify(state.database[collection] || {}));
-    const lookups = Array.isArray(populates[0]) ? populates : [populates];
-    lookups.forEach(([field, path, destination]) => {
-      const siblings = state.database[path];
-      if (!siblings) return;
+    // Notice: by it's nature populate is O(2^n)/exponential.
+    // In large data sets, every populate will add substantial time.
 
-      Object.values(parent).forEach((doc) => {
-        const siblingValue = doc[field];
+    mark(`populate.${collection}`);
 
-        if (Array.isArray(siblingValue)) {
-          doc[destination] = siblingValue.map((siblingId) => {
-            const siblingDoc = siblings[siblingId];
-            if (siblingDoc) {
-              return JSON.parse(JSON.stringify(siblingDoc));
-            }
-            return undefined;
+    // pre-grab collection and remove empty populations
+    const lookups = (Array.isArray(populates[0]) ? populates : [populates])
+      .map((tuple) => [tuple[0], state.database[tuple[1]], tuple[2]])
+      .filter(
+        (tuple) =>
+          tuple[1] !== undefined && Object.keys(tuple[1] || []).length > 0,
+      );
+
+    const raw = state.database[collection] || {};
+    const ids = Object.keys(raw);
+
+    const collectionById = ids.reduce((draft, id) => {
+      lookups.forEach(([field, siblings, destination]) => {
+        const childID = draft[id][field];
+
+        if (Array.isArray(childID)) {
+          // eslint-disable-next-line no-param-reassign
+          draft[id][destination] = childID.map((childId) => {
+            const child = siblings[childId];
+            return child || undefined;
           });
         }
-        const siblingDoc = siblings[siblingValue];
-        if (siblingDoc) {
-          doc[destination] = JSON.parse(JSON.stringify(siblingDoc));
+        const child = siblings[childID];
+        if (child) {
+          // eslint-disable-next-line no-param-reassign
+          draft[id][destination] = child;
         }
       });
-    });
+      return draft;
+    }, createDraft(raw));
 
-    return { database: { [collection]: parent } };
+    mark(`populate.${collection}`, true);
+
+    return { database: { [collection]: finishDraft(collectionById) } };
   });
 
 /**

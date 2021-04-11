@@ -2,8 +2,9 @@ let win;
 try {
   win = window;
 } catch (e) {}
-const perf = win && win.performance && win.performance();
+const perf = win && win.performance;
 const tracer = {};
+const isDevelopment = false;
 
 /**
  *
@@ -11,7 +12,7 @@ const tracer = {};
  * @param {*} isDone
  */
 export default function mark(marker, isDone = false) {
-  if (!perf) return;
+  if (!isDevelopment || !perf) return;
 
   try {
     const trace = tracer[marker] || perf.trace(marker);
