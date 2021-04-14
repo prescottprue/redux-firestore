@@ -156,6 +156,58 @@ describe('cacheReducer', () => {
         id: 'testDocId1',
       });
     });
+
+    it('populate nested', () => {
+      const doc1 = {
+        key1: 'value1',
+        sub: { anotherIds: ['anotherDocId2', 'anotherDocId1'] },
+        id: 'testDocId1',
+        path,
+      };
+
+      const doc2 = { other: 'test', id: 'anotherDocId1', path: anotherPath };
+      const doc3 = { other: 'test', id: 'anotherDocId2', path: anotherPath };
+
+      // Initial seed
+      const action1 = {
+        meta: {
+          collection,
+          storeAs: 'testStoreAs',
+          where: [['key1', '==', 'value1']],
+          orderBy: ['value1'],
+          fields: ['id', 'key1', 'others'],
+          populates: [['sub.anotherIds', anotherPath, 'others']],
+        },
+        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+
+      const action2 = {
+        meta: {
+          collection: another,
+          storeAs: 'anotherStoreAs',
+        },
+        payload: {
+          data: { [doc2.id]: doc2, [doc3.id]: doc3 },
+          ordered: [doc2, doc3],
+        },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+
+      const pass1 = reducer(initialState, action1);
+      const pass2 = reducer(pass1, action2);
+
+      expect(pass1.cache.testStoreAs.docs[0]).to.eql({
+        id: 'testDocId1',
+        key1: 'value1',
+      });
+
+      expect(pass2.cache.testStoreAs.docs[0]).to.eql({
+        others: [doc3, doc2],
+        key1: 'value1',
+        id: 'testDocId1',
+      });
+    });
   });
 
   describe('LISTENER_RESPONSE', () => {
@@ -297,226 +349,227 @@ describe('cacheReducer', () => {
     });
   });
 
-  it('less than compare updates query', () => {
-    const first = { key1: 1, id: 'testDocId1', path };
-    const second = { key1: 2, id: 'testDocId1', path };
+  describe('optimistic updates', () => {
+    it('less than', () => {
+      const first = { key1: 1, id: 'testDocId1', path };
+      const second = { key1: 2, id: 'testDocId1', path };
 
-    // Initial seed
-    const action1 = {
-      meta: {
-        collection,
-        storeAs: 'testOne',
-        where: [['key1', '<=', 1]],
-      },
-      payload: { data: { [first.id]: first }, ordered: [first] },
-      type: actionTypes.LISTENER_RESPONSE,
-    };
-    const action2 = {
-      meta: {
-        collection,
-        storeAs: 'testTwo',
-        where: [['key1', '>=', 2]],
-      },
-      payload: { data: {}, ordered: [] },
-      type: actionTypes.LISTENER_RESPONSE,
-    };
-    const action3 = {
-      type: actionTypes.OPTIMISTIC_ADDED,
-      meta: {
-        collection,
-        doc: second.id,
-      },
-      payload: { data: second },
-    };
+      // Initial seed
+      const action1 = {
+        meta: {
+          collection,
+          storeAs: 'testOne',
+          where: [['key1', '<=', 1]],
+        },
+        payload: { data: { [first.id]: first }, ordered: [first] },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+      const action2 = {
+        meta: {
+          collection,
+          storeAs: 'testTwo',
+          where: [['key1', '>=', 2]],
+        },
+        payload: { data: {}, ordered: [] },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+      const action3 = {
+        type: actionTypes.OPTIMISTIC_ADDED,
+        meta: {
+          collection,
+          doc: second.id,
+        },
+        payload: { data: second },
+      };
 
-    const pass1 = reducer(initialState, action1);
-    const pass2 = reducer(pass1, action2);
-    const pass3 = reducer(pass2, action3);
+      const pass1 = reducer(initialState, action1);
+      const pass2 = reducer(pass1, action2);
+      const pass3 = reducer(pass2, action3);
 
-    expect(pass2.cache.testOne.docs[0]).to.eql(first);
-    expect(pass2.cache.testTwo.docs[0]).to.eql(undefined);
+      expect(pass2.cache.testOne.docs[0]).to.eql(first);
+      expect(pass2.cache.testTwo.docs[0]).to.eql(undefined);
 
-    // doc moved from testOne to testTwo query
-    expect(pass3.cache.testOne.docs[0]).to.eql(undefined);
-    expect(pass3.cache.testTwo.docs[0]).to.eql(second);
+      // doc moved from testOne to testTwo query
+      expect(pass3.cache.testOne.docs[0]).to.eql(undefined);
+      expect(pass3.cache.testTwo.docs[0]).to.eql(second);
+    });
+
+    it('less than or equal', () => {
+      const first = { key1: 1, id: 'testDocId1', path };
+      const second = { key1: 2, id: 'testDocId1', path };
+
+      // Initial seed
+      const action1 = {
+        meta: {
+          collection,
+          storeAs: 'testOne',
+          where: [['key1', '<', 0]],
+        },
+        payload: { data: { [first.id]: first }, ordered: [first] },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+      const action2 = {
+        meta: {
+          collection,
+          storeAs: 'testTwo',
+          where: [['key1', '>', 1]],
+        },
+        payload: { data: {}, ordered: [] },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+      const action3 = {
+        type: actionTypes.OPTIMISTIC_ADDED,
+        meta: {
+          collection,
+          doc: second.id,
+        },
+        payload: { data: second },
+      };
+
+      const pass1 = reducer(initialState, action1);
+      const pass2 = reducer(pass1, action2);
+      const pass3 = reducer(pass2, action3);
+
+      expect(pass2.cache.testOne.docs[0]).to.eql(first);
+      expect(pass2.cache.testTwo.docs[0]).to.eql(undefined);
+
+      // doc moved from testOne to testTwo query
+      expect(pass3.cache.testOne.docs[0]).to.eql(undefined);
+      expect(pass3.cache.testTwo.docs[0]).to.eql(second);
+    });
+
+    it('not compares', () => {
+      const first = { key1: 1, id: 'testDocId1', path };
+      const second = { key1: 2, id: 'testDocId1', path };
+
+      // Initial seed
+      const action1 = {
+        meta: {
+          collection,
+          storeAs: 'testOne',
+          where: [['key1', '!=', 2]],
+        },
+        payload: { data: { [first.id]: first }, ordered: [first] },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+      const action2 = {
+        meta: {
+          collection,
+          storeAs: 'testTwo',
+          where: [['key1', '>', 1]],
+        },
+        payload: { data: {}, ordered: [] },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+      const action3 = {
+        type: actionTypes.OPTIMISTIC_ADDED,
+        meta: {
+          collection,
+          doc: second.id,
+        },
+        payload: { data: second },
+      };
+
+      const pass1 = reducer(initialState, action1);
+      const pass2 = reducer(pass1, action2);
+      const pass3 = reducer(pass2, action3);
+
+      expect(pass2.cache.testOne.docs[0]).to.eql(first);
+      expect(pass2.cache.testTwo.docs[0]).to.eql(undefined);
+
+      // doc moved from testOne to testTwo query
+      expect(pass3.cache.testOne.docs[0]).to.eql(undefined);
+      expect(pass3.cache.testTwo.docs[0]).to.eql(second);
+    });
+
+    it('not in and __name__', () => {
+      const first = { key1: 1, id: 'testDocId1', path };
+      const second = { key1: 2, id: 'testDocId1', path };
+
+      // Initial seed
+      const action1 = {
+        meta: {
+          collection,
+          storeAs: 'testOne',
+          where: [['key1', 'not-in', [2]]],
+        },
+        payload: { data: { [first.id]: first }, ordered: [first] },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+      const action2 = {
+        meta: {
+          collection,
+          storeAs: 'testTwo',
+          where: [['__name__', '==', 'testDocId1']],
+        },
+        payload: { data: {}, ordered: [] },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+      const action3 = {
+        type: actionTypes.OPTIMISTIC_ADDED,
+        meta: {
+          collection,
+          doc: second.id,
+        },
+        payload: { data: second },
+      };
+
+      const pass1 = reducer(initialState, action1);
+      const pass2 = reducer(pass1, action2);
+      const pass3 = reducer(pass2, action3);
+
+      expect(pass2.cache.testOne.docs[0]).to.eql(first);
+      expect(pass2.cache.testTwo.docs[0]).to.eql(undefined);
+
+      // doc moved from testOne to testTwo query
+      expect(pass3.cache.testOne.docs[0]).to.eql(undefined);
+      expect(pass3.cache.testTwo.docs[0]).to.eql(second);
+    });
+
+    it('nested compare ', () => {
+      const first = { key1: { val: [1] }, id: 'testDocId1', path };
+      const second = { key1: { val: [2] }, id: 'testDocId1', path };
+
+      // Initial seed
+      const action1 = {
+        meta: {
+          collection,
+          storeAs: 'testOne',
+          where: [['key1.val', 'array-contains', 1]],
+        },
+        payload: { data: { [first.id]: first }, ordered: [first] },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+      const action2 = {
+        meta: {
+          collection,
+          storeAs: 'testTwo',
+          where: [['key1.val', 'array-contains-any', [2]]],
+        },
+        payload: { data: {}, ordered: [] },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+      const action3 = {
+        type: actionTypes.OPTIMISTIC_ADDED,
+        meta: {
+          collection,
+          doc: second.id,
+        },
+        payload: { data: second },
+      };
+
+      const pass1 = reducer(initialState, action1);
+      const pass2 = reducer(pass1, action2);
+      const pass3 = reducer(pass2, action3);
+
+      expect(pass2.cache.testOne.docs[0]).to.eql(first);
+      expect(pass2.cache.testTwo.docs[0]).to.eql(undefined);
+
+      // doc moved from testOne to testTwo query
+      expect(pass3.cache.testOne.docs[0]).to.eql(undefined);
+      expect(pass3.cache.testTwo.docs[0]).to.eql(second);
+    });
   });
-
-  it('less than or eqaul to compare updates query', () => {
-    const first = { key1: 1, id: 'testDocId1', path };
-    const second = { key1: 2, id: 'testDocId1', path };
-
-    // Initial seed
-    const action1 = {
-      meta: {
-        collection,
-        storeAs: 'testOne',
-        where: [['key1', '<', 0]],
-      },
-      payload: { data: { [first.id]: first }, ordered: [first] },
-      type: actionTypes.LISTENER_RESPONSE,
-    };
-    const action2 = {
-      meta: {
-        collection,
-        storeAs: 'testTwo',
-        where: [['key1', '>', 1]],
-      },
-      payload: { data: {}, ordered: [] },
-      type: actionTypes.LISTENER_RESPONSE,
-    };
-    const action3 = {
-      type: actionTypes.OPTIMISTIC_ADDED,
-      meta: {
-        collection,
-        doc: second.id,
-      },
-      payload: { data: second },
-    };
-
-    const pass1 = reducer(initialState, action1);
-    const pass2 = reducer(pass1, action2);
-    const pass3 = reducer(pass2, action3);
-
-    expect(pass2.cache.testOne.docs[0]).to.eql(first);
-    expect(pass2.cache.testTwo.docs[0]).to.eql(undefined);
-
-    // doc moved from testOne to testTwo query
-    expect(pass3.cache.testOne.docs[0]).to.eql(undefined);
-    expect(pass3.cache.testTwo.docs[0]).to.eql(second);
-  });
-
-  it('not compare updates query', () => {
-    const first = { key1: 1, id: 'testDocId1', path };
-    const second = { key1: 2, id: 'testDocId1', path };
-
-    // Initial seed
-    const action1 = {
-      meta: {
-        collection,
-        storeAs: 'testOne',
-        where: [['key1', '!=', 2]],
-      },
-      payload: { data: { [first.id]: first }, ordered: [first] },
-      type: actionTypes.LISTENER_RESPONSE,
-    };
-    const action2 = {
-      meta: {
-        collection,
-        storeAs: 'testTwo',
-        where: [['key1', '>', 1]],
-      },
-      payload: { data: {}, ordered: [] },
-      type: actionTypes.LISTENER_RESPONSE,
-    };
-    const action3 = {
-      type: actionTypes.OPTIMISTIC_ADDED,
-      meta: {
-        collection,
-        doc: second.id,
-      },
-      payload: { data: second },
-    };
-
-    const pass1 = reducer(initialState, action1);
-    const pass2 = reducer(pass1, action2);
-    const pass3 = reducer(pass2, action3);
-
-    expect(pass2.cache.testOne.docs[0]).to.eql(first);
-    expect(pass2.cache.testTwo.docs[0]).to.eql(undefined);
-
-    // doc moved from testOne to testTwo query
-    expect(pass3.cache.testOne.docs[0]).to.eql(undefined);
-    expect(pass3.cache.testTwo.docs[0]).to.eql(second);
-  });
-
-  it('not in compare updates query', () => {
-    const first = { key1: 1, id: 'testDocId1', path };
-    const second = { key1: 2, id: 'testDocId1', path };
-
-    // Initial seed
-    const action1 = {
-      meta: {
-        collection,
-        storeAs: 'testOne',
-        where: [['key1', 'not-in', [2]]],
-      },
-      payload: { data: { [first.id]: first }, ordered: [first] },
-      type: actionTypes.LISTENER_RESPONSE,
-    };
-    const action2 = {
-      meta: {
-        collection,
-        storeAs: 'testTwo',
-        where: [['__name__', '==', 'testDocId1']],
-      },
-      payload: { data: {}, ordered: [] },
-      type: actionTypes.LISTENER_RESPONSE,
-    };
-    const action3 = {
-      type: actionTypes.OPTIMISTIC_ADDED,
-      meta: {
-        collection,
-        doc: second.id,
-      },
-      payload: { data: second },
-    };
-
-    const pass1 = reducer(initialState, action1);
-    const pass2 = reducer(pass1, action2);
-    const pass3 = reducer(pass2, action3);
-
-    expect(pass2.cache.testOne.docs[0]).to.eql(first);
-    expect(pass2.cache.testTwo.docs[0]).to.eql(undefined);
-
-    // doc moved from testOne to testTwo query
-    expect(pass3.cache.testOne.docs[0]).to.eql(undefined);
-    expect(pass3.cache.testTwo.docs[0]).to.eql(second);
-  });
-
-  it('nested compare updates query', () => {
-    const first = { key1: { val: [1] }, id: 'testDocId1', path };
-    const second = { key1: { val: [2] }, id: 'testDocId1', path };
-
-    // Initial seed
-    const action1 = {
-      meta: {
-        collection,
-        storeAs: 'testOne',
-        where: [['key1.val', 'array-contains', 1]],
-      },
-      payload: { data: { [first.id]: first }, ordered: [first] },
-      type: actionTypes.LISTENER_RESPONSE,
-    };
-    const action2 = {
-      meta: {
-        collection,
-        storeAs: 'testTwo',
-        where: [['key1.val', 'array-contains-any', [2]]],
-      },
-      payload: { data: {}, ordered: [] },
-      type: actionTypes.LISTENER_RESPONSE,
-    };
-    const action3 = {
-      type: actionTypes.OPTIMISTIC_ADDED,
-      meta: {
-        collection,
-        doc: second.id,
-      },
-      payload: { data: second },
-    };
-
-    const pass1 = reducer(initialState, action1);
-    const pass2 = reducer(pass1, action2);
-    const pass3 = reducer(pass2, action3);
-
-    expect(pass2.cache.testOne.docs[0]).to.eql(first);
-    expect(pass2.cache.testTwo.docs[0]).to.eql(undefined);
-
-    // doc moved from testOne to testTwo query
-    expect(pass3.cache.testOne.docs[0]).to.eql(undefined);
-    expect(pass3.cache.testTwo.docs[0]).to.eql(second);
-  });
-
   describe('DOCUMENT_ADDED', () => {
     it('Firestore added document removes override', () => {
       const doc1 = { key1: 'value1', id: 'testDocId1', path };
@@ -966,6 +1019,54 @@ describe('cacheReducer', () => {
           }),
         ),
       );
+    });
+
+    it('Firestore does not support queries inside a transaction', () => {
+      const doc1 = {
+        path,
+        id: 'testDocId1',
+      }; // initial doc
+
+      const updates = {
+        path,
+        id: 'testDocId1',
+      };
+
+      // Initial seed
+      const action1 = {
+        meta: {
+          collection,
+          storeAs: 'testStoreAs',
+        },
+        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+      // mutate
+      const action2 = {
+        type: actionTypes.MUTATE_START,
+        meta: {
+          collection,
+          doc: updates.id,
+        },
+        payload: {
+          data: {
+            reads: {
+              firestore_doesnt_support_transction_queries: {
+                collection: path,
+              },
+            },
+            writes: [() => new Error('This should never be called.')],
+          },
+        },
+      };
+
+      const pass1 = reducer(initialState, action1);
+
+      try {
+        reducer(pass1, action2);
+      } catch (err) {
+        expect(err).to.be.a('Error');
+      }
     });
   });
 });

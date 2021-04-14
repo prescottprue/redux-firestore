@@ -216,7 +216,11 @@ const populateTransducer = (collection, populates) =>
 
     const collectionById = ids.reduce((draft, id) => {
       lookups.forEach(([field, siblings, destination]) => {
-        const childID = draft[id][field];
+        const fields = field.split('.');
+        const childID = fields.reduce(
+          (res, prop) => res && res[prop],
+          draft[id],
+        );
 
         if (Array.isArray(childID)) {
           // eslint-disable-next-line no-param-reassign
@@ -458,7 +462,7 @@ function translateMutationToOverrides({ payload }, db) {
     reader = Object.keys(reads).reduce((result, key) => {
       const { collection, doc } = result[key];
       if (!doc) {
-        throw new Error("Cache Reducer currently doesn't support queries.");
+        throw new Error("Firestore Transactions don't support query lookups.");
       }
       const coll = db[collection] || {};
       return {
