@@ -429,6 +429,94 @@ describe('cacheReducer', () => {
     expect(pass3.cache.testTwo.docs[0]).to.eql(second);
   });
 
+  it('not in compare updates query', () => {
+    const first = { key1: 1, id: 'testDocId1', path };
+    const second = { key1: 2, id: 'testDocId1', path };
+
+    // Initial seed
+    const action1 = {
+      meta: {
+        collection,
+        storeAs: 'testOne',
+        where: [['key1', 'not-in', [2]]],
+      },
+      payload: { data: { [first.id]: first }, ordered: [first] },
+      type: actionTypes.LISTENER_RESPONSE,
+    };
+    const action2 = {
+      meta: {
+        collection,
+        storeAs: 'testTwo',
+        where: [['__name__', '==', 'testDocId1']],
+      },
+      payload: { data: {}, ordered: [] },
+      type: actionTypes.LISTENER_RESPONSE,
+    };
+    const action3 = {
+      type: actionTypes.OPTIMISTIC_ADDED,
+      meta: {
+        collection,
+        doc: second.id,
+      },
+      payload: { data: second },
+    };
+
+    const pass1 = reducer(initialState, action1);
+    const pass2 = reducer(pass1, action2);
+    const pass3 = reducer(pass2, action3);
+
+    expect(pass2.cache.testOne.docs[0]).to.eql(first);
+    expect(pass2.cache.testTwo.docs[0]).to.eql(undefined);
+
+    // doc moved from testOne to testTwo query
+    expect(pass3.cache.testOne.docs[0]).to.eql(undefined);
+    expect(pass3.cache.testTwo.docs[0]).to.eql(second);
+  });
+
+  it('nested compare updates query', () => {
+    const first = { key1: { val: [1] }, id: 'testDocId1', path };
+    const second = { key1: { val: [2] }, id: 'testDocId1', path };
+
+    // Initial seed
+    const action1 = {
+      meta: {
+        collection,
+        storeAs: 'testOne',
+        where: [['key1.val', 'array-contains', 1]],
+      },
+      payload: { data: { [first.id]: first }, ordered: [first] },
+      type: actionTypes.LISTENER_RESPONSE,
+    };
+    const action2 = {
+      meta: {
+        collection,
+        storeAs: 'testTwo',
+        where: [['key1.val', 'array-contains-any', [2]]],
+      },
+      payload: { data: {}, ordered: [] },
+      type: actionTypes.LISTENER_RESPONSE,
+    };
+    const action3 = {
+      type: actionTypes.OPTIMISTIC_ADDED,
+      meta: {
+        collection,
+        doc: second.id,
+      },
+      payload: { data: second },
+    };
+
+    const pass1 = reducer(initialState, action1);
+    const pass2 = reducer(pass1, action2);
+    const pass3 = reducer(pass2, action3);
+
+    expect(pass2.cache.testOne.docs[0]).to.eql(first);
+    expect(pass2.cache.testTwo.docs[0]).to.eql(undefined);
+
+    // doc moved from testOne to testTwo query
+    expect(pass3.cache.testOne.docs[0]).to.eql(undefined);
+    expect(pass3.cache.testTwo.docs[0]).to.eql(second);
+  });
+
   describe('DOCUMENT_ADDED', () => {
     it('Firestore added document removes override', () => {
       const doc1 = { key1: 'value1', id: 'testDocId1', path };
