@@ -1,3 +1,4 @@
+import { expect } from 'chai';
 import { wrapInDispatch } from 'utils/actions';
 
 let dispatchSpy;
@@ -67,8 +68,26 @@ describe('actions utils', () => {
         types: [{ type: 'test' }, { type: 'test', payload: () => ({}) }],
         method: 'test',
       };
-      wrapInDispatch(dispatchSpy, opts);
+      wrapInDispatch(dispatchSpy, opts).catch((err) =>
+        expect(err).to.be.a('Error'),
+      );
       expect(dispatchSpy).to.have.been.calledOnce;
+    });
+
+    it('handles mutate action types', () => {
+      const set = sinon.spy(() => Promise.resolve());
+      const doc = sinon.spy(() => ({ set }));
+      const collection = sinon.spy(() => ({ doc }));
+      const firestore = sinon.spy(() => ({ collection }));
+      wrapInDispatch(dispatchSpy, {
+        ref: { firestore },
+        types: ['mutate', 'mutate', 'mutate'],
+        args: [{ collection: '/collection/path', doc: 'doc', data: { a: 1 } }],
+        method: 'mutate',
+      });
+      expect(collection).to.have.been.calledOnceWith('/collection/path');
+      expect(doc).to.have.been.calledOnceWith('doc');
+      expect(set).to.have.been.calledOnceWith({ a: 1 });
     });
   });
 });

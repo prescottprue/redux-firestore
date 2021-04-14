@@ -1,4 +1,5 @@
 /* eslint-disable require-jsdoc */
+import { expect } from 'chai';
 import mutate from 'utils/mutate';
 
 describe('firestore.mutate()', () => {
@@ -179,5 +180,116 @@ describe('firestore.mutate()', () => {
         { merge: true },
       ),
     );
+  });
+
+  it('writes transaction with signle write', async () => {
+    const firestoreGet = sinon.spy(() =>
+      Promise.resolve({
+        docs: [
+          { ref: { id: 'task-1', path: 'tasks' } },
+          { ref: { id: 'task-2', path: 'tasks' } },
+        ],
+      }),
+    );
+    const withConverter = sinon.spy(() => ({ get: firestoreGet }));
+    const where = sinon.spy(() => ({ get: firestoreGet, withConverter }));
+    const collection = sinon.spy(() => ({ doc, withConverter, where }));
+    const set = sinon.spy();
+    function* mock() {
+      yield Promise.resolve({
+        ref: { id: 'sprint-1', path: 'sprints' },
+        data: () => ({
+          sprintSettings: { moveRemainingTasksTo: 'NextSprint' },
+        }),
+      });
+      yield Promise.resolve({
+        ref: { id: 'task-id-1', path: 'tasks' },
+        data: () => ({ id: 'task-id-1' }),
+      });
+      yield Promise.resolve({
+        ref: { id: 'task-id-2', path: 'tasks' },
+        data: () => ({ id: 'task-id-2' }),
+      });
+    }
+    const mocked = mock();
+    const transactionGet = () => mocked.next().value;
+    const transaction = { set, get: transactionGet };
+    const runTransaction = sinon.spy((cb) => cb(transaction));
+    const doc = sinon.spy((val) => ({ doc: val, withConverter }));
+
+    const firestore = sinon.spy(() => ({ collection, runTransaction, doc }));
+
+    await mutate(
+      { firestore },
+      {
+        reads: {
+          team: {
+            collection: 'orgs/tara-ai/teams',
+            doc: 'team-id-123',
+            collectionName: 'teams',
+          },
+        },
+        writes: [
+          ({ team }) => ({
+            collection: 'orgs/tara-ai/team',
+            doc: team.id,
+            data: { teamCount: team.teamCount + 1 },
+          }),
+        ],
+      },
+    );
+
+    expect(set.calledTwice);
+    expect(
+      set.calledWith(
+        { doc: 'task-id-1' },
+        { nextSprintId: 'next-sprint-id-123' },
+        { merge: true },
+      ),
+    );
+    expect(
+      set.calledWith(
+        { doc: 'task-id-2' },
+        { nextSprintId: 'next-sprint-id-123' },
+        { merge: true },
+      ),
+    );
+  });
+
+  it('handles stringified Field Values', async () => {
+    const set = sinon.spy();
+    const doc = sinon.spy(() => ({ set }));
+    const collection = sinon.spy(() => ({ doc }));
+    const firestore = sinon.spy(() => ({ collection }));
+    firestore.FieldValue = {
+      serverTimestamp: sinon.spy(),
+      increment: sinon.spy(),
+      arrayRemove: sinon.spy(),
+      arrayUnion: sinon.spy(),
+    };
+
+    await mutate(
+      { firestore },
+      {
+        collection: 'orgs/tara-ai/teams',
+        doc: 'team-bravo',
+        data: {
+          name: 'Bravo Team 🎄',
+          'deeply.nested.map': 'value',
+          addArray: ['::arrayUnion', 'val'],
+          removeArray: ['::arrayRemove', 'item'],
+          updateAt: ['::serverTimestamp'],
+          counter: ['::increment', 3],
+        },
+      },
+    );
+
+    expect(collection.calledWith('orgs/tara-ai/teams'));
+    expect(doc.calledWith('team-bravo'));
+    expect(set.calledWith({ name: 'Bravo Team 🎄' }, { merge: true }));
+    expect(firestore.FieldValue.serverTimestamp).to.have.been.calledOnce;
+    expect(firestore.FieldValue.increment).to.have.been.calledOnce;
+    expect(firestore.FieldValue.arrayRemove).to.have.been.calledOnce;
+    expect(firestore.FieldValue.arrayUnion).to.have.been.calledOnce;
   });
 });

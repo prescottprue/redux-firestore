@@ -899,5 +899,27 @@ describe('firestoreActions', () => {
         );
       });
     });
+
+    describe('mutate', () => {
+      it('handles mutate action types', () => {
+        const set = sinon.spy(() => Promise.resolve());
+        const doc = sinon.spy(() => ({ set }));
+        const collection = sinon.spy(() => ({ doc }));
+        const firestore = sinon.spy(() => ({ collection }));
+
+        const instance = createFirestoreInstance(
+          { firestore },
+          { helpersNamespace: 'test' },
+          dispatchSpy,
+        );
+        instance.test.mutate({
+          collection: '/collection/path',
+          doc: 'doc',
+          data: { a: 1 },
+        });
+
+        expect(set).to.have.been.calledOnceWith({ a: 1 });
+      });
+    });
   });
 });
