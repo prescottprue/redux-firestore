@@ -359,7 +359,6 @@ const primaryValue = (arr) =>
  * @returns Null | object
  */
 const nestedMap = (obj, key, val) => {
-  if (!key.includes('.')) return null;
   // eslint-disable-next-line no-param-reassign
   delete obj[key];
   const fields = key.split('.');
