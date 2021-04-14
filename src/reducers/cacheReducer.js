@@ -258,13 +258,6 @@ const overridesTransducers = (overrides, collection) => {
   );
 };
 
-// eslint-disable-next-line no-unused-vars
-const xfSpy = partialRight(map, (data) => {
-  // eslint-disable-next-line no-console
-  console.log('xf-spy: ', JSON.parse(JSON.stringify(data)));
-  return data;
-});
-
 /**
  * @name buildTransducer
  * Convert the query to a transducer for the query results
@@ -306,10 +299,9 @@ function buildTransducer(overrides, query) {
 
   return flow(
     compact([
-      xfPopulate, // TODO: error when overrides affect populates
+      xfPopulate,
       xfGetCollection,
       ...xfApplyOverrides,
-      // xfSpy,
       ...xfFilter,
       xfOrder,
       xfLimit,
