@@ -1,4 +1,4 @@
-import { chunk, isFunction, mapValues } from 'lodash';
+import { chunk, cloneDeep, isFunction, mapValues } from 'lodash';
 import { firestoreRef } from './query';
 import mark from './perfmarks';
 
@@ -131,26 +131,28 @@ const serverTimestamp = (firebase, key) =>
 /**
  * Process Mutation to a vanilla JSON
  * @param {object} firestore - firestore
- * @param {*} mutation - payload mutation
+ * @param {*} operation - payload mutation
  * @returns
  */
-function atomize(firebase, mutation) {
-  return Object.keys(mutation).reduce((data, key) => {
+function atomize(firebase, operation) {
+  return Object.keys(operation).reduce((data, key) => {
     const clone = { ...data };
     const val = clone[key];
+    const value =
+      primaryValue(val) ||
+      serverTimestamp(firebase, val[0]) ||
+      arrayUnion(firebase, val[0], val[1]) ||
+      arrayRemove(firebase, val[0], val[1]) ||
+      increment(firebase, val[0], val[1]);
+
     if (key.includes('.')) {
-      nestedMap(clone, key, val);
+      nestedMap(clone, key, value);
     } else if (Array.isArray(val) && val.length > 0) {
       // eslint-disable-next-line no-param-reassign
-      clone[key] =
-        primaryValue(val) ||
-        serverTimestamp(firebase, val[0]) ||
-        arrayUnion(firebase, val[0], val[1]) ||
-        arrayRemove(firebase, val[0], val[1]) ||
-        increment(firebase, val[0], val[1]);
+      clone[key] = value;
     }
     return clone;
-  }, JSON.parse(JSON.stringify(mutation)));
+  }, cloneDeep(operation));
 }
 
 // ----- write functions -----
@@ -163,13 +165,9 @@ function atomize(firebase, mutation) {
 function writeSingle(firebase, operations) {
   mark('mutate.writeSingle');
   const { collection, path, doc, id, data, ...rest } = operations;
-  const promise = docRef(
-    firebase.firestore(),
-    path || collection,
-    id || doc,
-  ).set(atomize(firebase, data || rest), {
-    merge: true,
-  });
+  const ref = docRef(firebase.firestore(), path || collection, id || doc);
+  const changes = atomize(firebase, data || rest);
+  const promise = ref.set(changes, { merge: true });
   mark('mutate.writeSingle', true);
   return promise;
 }
