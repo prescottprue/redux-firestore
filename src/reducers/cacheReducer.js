@@ -280,7 +280,8 @@ function buildTransducer(overrides, query) {
     populates,
   } = query;
 
-  const useOverrides = JSON.stringify(overrides || {}) !== '{}';
+  const useOverrides =
+    Object.keys((overrides || {})[collection] || {}).length > 0;
 
   const xfPopulate = !populates
     ? null
@@ -305,6 +306,7 @@ function buildTransducer(overrides, query) {
     compact([
       xfPopulate,
       xfGetCollection,
+      partialRight(map, (db) => createDraft(db)),
       ...xfApplyOverrides,
       ...xfFilter,
       xfOrder,
@@ -333,13 +335,14 @@ function selectDocuments(reducerState, query) {
  * @param {string} path - path to rerun queries for
  */
 function updateCollectionQueries(draft, path) {
+  const paths = Array.isArray(path) ? path : [path];
   Object.keys(draft).forEach((key) => {
-    const { collection, populates } = draft[key];
-    if (
-      !collection ||
-      (collection !== path && !(populates && populates[1] !== path))
-    )
+    const { collection, populates = [] } = draft[key];
+    const pops = Array.isArray(populates[0]) ? populates : [populates];
+    const collections = pops.map(([__, coll]) => coll).concat(collection);
+    if (!collections.some((coll) => paths.includes(coll))) {
       return;
+    }
 
     set(draft, [key, 'docs'], selectDocuments(draft, draft[key]));
   });
@@ -616,9 +619,13 @@ export default function cacheReducer(state = {}, action) {
         mark(`cache.${actionTypes.DOCUMENT_MODIFIED}`, true);
         return draft;
 
-      case actionTypes.DOCUMENT_REMOVED:
       case actionTypes.DELETE_SUCCESS:
-        mark(`cache.${actionTypes.DELETE_SUCCESS}`);
+        if (draft.database && draft.database[path]) {
+          unset(draft, ['database', path, action.meta.doc]);
+        }
+      // eslint-disable-next-line no-fallthrough
+      case actionTypes.DOCUMENT_REMOVED:
+        mark(`cache.${actionTypes.DOCUMENT_REMOVED}`);
         if (draft.databaseOverrides && draft.databaseOverrides[path]) {
           unset(draft, ['databaseOverrides', path, action.meta.doc]);
         }
@@ -626,13 +633,13 @@ export default function cacheReducer(state = {}, action) {
         // remove document id from ordered index
         if (draft[key] && draft[key].ordered) {
           const idx = findIndex(draft[key].ordered, [1, action.meta.doc]);
-          unset(draft, [key, 'ordered', idx]);
+          draft[key].ordered.splice(idx, 1);
         }
 
         // reprocess
         updateCollectionQueries(draft, path);
 
-        mark(`cache.${actionTypes.DELETE_SUCCESS}`, true);
+        mark(`cache.${actionTypes.DOCUMENT_REMOVED}`, true);
         return draft;
 
       case actionTypes.OPTIMISTIC_ADDED:
@@ -648,7 +655,7 @@ export default function cacheReducer(state = {}, action) {
         return draft;
 
       case actionTypes.OPTIMISTIC_REMOVED:
-        set(draft, ['databaseOverrides', path, action.meta.doc], null);
+        unset(draft, ['databaseOverrides', path, action.meta.doc]);
         updateCollectionQueries(draft, path);
         return draft;
 

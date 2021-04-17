@@ -276,6 +276,7 @@ describe('cacheReducer', () => {
 
     it('override a document removal synchronously', () => {
       const doc1 = { key1: 'value1', id: 'testDocId1', path };
+      const doc2 = { ...doc1, key2: 'other' };
 
       // Initial seed
       const action1 = {
@@ -289,6 +290,15 @@ describe('cacheReducer', () => {
       };
 
       const action2 = {
+        type: actionTypes.OPTIMISTIC_ADDED,
+        meta: {
+          collection,
+          doc: doc2.id,
+        },
+        payload: { data: doc2 },
+      };
+
+      const action3 = {
         type: actionTypes.OPTIMISTIC_REMOVED,
         meta: {
           collection,
@@ -299,9 +309,11 @@ describe('cacheReducer', () => {
 
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
+      const pass3 = reducer(pass2, action3);
 
       expect(pass1.cache.testStoreAs.docs[0]).to.eql(doc1);
-      expect(pass2.cache.testStoreAs.docs[0]).to.eql(undefined);
+      expect(pass2.cache.testStoreAs.docs[0]).to.eql(doc2);
+      expect(pass3.cache.testStoreAs.docs[0]).to.eql(doc1);
     });
 
     it('overrides synchronously moves to new query', () => {
@@ -627,7 +639,7 @@ describe('cacheReducer', () => {
   describe('DOCUMENT_REMOVED', () => {
     it('Firestore removed document removes override', () => {
       const doc1 = { key1: 'value1', id: 'testDocId1', path };
-      const doc2 = { key2: 'value2', id: 'testDocId1', path };
+      const doc2 = { key2: 'value2', id: 'testDocId2', path };
 
       const action1 = {
         meta: {
@@ -636,21 +648,20 @@ describe('cacheReducer', () => {
           where: [['key1', '==', 'value1']],
           orderBy: ['value1'],
         },
-        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        payload: {
+          data: { [doc1.id]: doc1, [doc2.id]: doc2 },
+          ordered: [doc2, doc1],
+        },
         type: actionTypes.LISTENER_RESPONSE,
       };
+
       const action2 = {
-        type: actionTypes.OPTIMISTIC_REMOVED,
-        meta: {
-          collection,
-          doc: doc2.id,
-        },
-        payload: {},
-      };
-      const action3 = {
         type: actionTypes.DOCUMENT_REMOVED,
         meta: {
           collection,
+          storeAs: 'testStoreAs',
+          where: [['key1', '==', 'value1']],
+          orderBy: ['value1'],
           doc: doc2.id,
         },
         payload: {
@@ -661,17 +672,14 @@ describe('cacheReducer', () => {
 
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
-      const pass3 = reducer(pass2, action3);
 
-      expect(pass1.cache.testStoreAs.docs[0]).to.eql(doc1);
-      expect(pass2.cache.testStoreAs.docs[0]).to.eql(undefined);
-      expect(pass3.cache.testStoreAs.docs[0]).to.eql(undefined);
+      expect(pass1.cache.testStoreAs.docs[0]).to.eql(doc2);
+      expect(pass1.cache.testStoreAs.docs[1]).to.eql(doc1);
+      expect(pass2.cache.testStoreAs.docs[0]).to.eql(doc1);
+      expect(pass2.cache.testStoreAs.docs[1]).to.eql(undefined);
 
-      expect(pass1.cache.databaseOverrides).to.eql({});
-      expect(pass2.cache.databaseOverrides[collection]).to.eql({
-        [doc2.id]: null,
-      });
-      expect(pass3.cache.databaseOverrides[collection]).to.eql({});
+      // Removing from query !== deleting. Other queries could have the result
+      expect(pass1.cache.database.testCollection.testDocId2).to.eql(doc2);
     });
   });
 
@@ -1067,6 +1075,93 @@ describe('cacheReducer', () => {
       } catch (err) {
         expect(err).to.be.a('Error');
       }
+    });
+  });
+
+  describe('MUTATE_FAILURE', () => {
+    it('Remove overrides on Firestore failures.', () => {
+      const doc1 = {
+        path,
+        id: 'testDocId1',
+        key1: 'value1',
+      }; // initial doc
+
+      const updates = {
+        path,
+        id: 'testDocId1',
+        vanilla: 'some-data',
+      };
+
+      const expected2 = JSON.parse(
+        JSON.stringify({
+          ...doc1,
+          key1: 'value1',
+          ...updates,
+        }),
+      );
+
+      const expected3 = JSON.parse(
+        JSON.stringify({
+          ...doc1,
+          key1: 'value1',
+        }),
+      );
+
+      // Initial seed
+      const action1 = {
+        meta: {
+          collection,
+          where: ['key1', '==', 'value1'],
+          storeAs: 'testStoreAs',
+        },
+        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+
+      // mutate
+      const action2 = {
+        type: actionTypes.MUTATE_START,
+        meta: {
+          collection,
+          doc: updates.id,
+        },
+        payload: {
+          data: { collection: path, doc: updates.id, vanilla: 'some-data' },
+        },
+      };
+
+      // mutate
+      const action3 = {
+        type: actionTypes.ADD_FAILURE,
+        meta: {
+          collection,
+          doc: updates.id,
+        },
+        payload: {
+          data: { collection: path, doc: updates.id, vanilla: 'some-data' },
+        },
+      };
+
+      const pass1 = reducer(initialState, action1);
+      const pass2 = reducer(pass1, action2);
+      const pass3 = reducer(pass2, action3);
+
+      const pass2Doc = pass2.cache.testStoreAs.docs[0];
+      const pass3Doc = pass3.cache.testStoreAs.docs[0];
+
+      const result2 = JSON.parse(JSON.stringify(pass2Doc));
+      const result3 = JSON.parse(JSON.stringify(pass3Doc));
+
+      // database should never changes. It's a perfect mirror of firestore.
+      expect(pass1.cache.database.testCollection.testDocId1).to.eql(doc1);
+      expect(pass2.cache.database.testCollection.testDocId1).to.eql(doc1);
+      expect(pass3.cache.database.testCollection.testDocId1).to.eql(doc1);
+
+      // query has new override data
+      expect(result2).to.eql(expected2);
+
+      // query is back to a perfect mirror of firestore
+      expect(result3).to.eql(expected3);
     });
   });
 });

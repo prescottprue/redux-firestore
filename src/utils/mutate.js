@@ -1,4 +1,4 @@
-import { chunk, cloneDeep, isFunction, mapValues } from 'lodash';
+import { chunk, cloneDeep, flatten, isFunction, mapValues } from 'lodash';
 import { firestoreRef } from './query';
 import mark from './perfmarks';
 
@@ -34,7 +34,7 @@ function isBatchedWrite(operations) {
 }
 
 /**
- * @param {object} operations
+ * @param {Mutation_v1 | Mutation_v2} read
  * @returns Boolean
  */
 function isDocRead(read) {
@@ -42,7 +42,7 @@ function isDocRead(read) {
 }
 
 /**
- * @param {object} operations
+ * @param {Mutation_v1 | Mutation_v2} operations
  * @returns Boolean
  */
 function isSingleWrite(operations) {
@@ -60,30 +60,8 @@ const primaryValue = (arr) =>
   typeof arr[0] === 'string' && arr[0].indexOf('::') === 0 ? null : arr;
 
 /**
- * Mutate Nested Object
- * @param {*} obj - data
- * @param {*} key - nested key path
- * @param {*} val - value to be set
- * @returns Null | object
- */
-const nestedMap = (obj, key, val) => {
-  if (!key.includes('.')) return null;
-  // eslint-disable-next-line no-param-reassign
-  delete obj[key];
-  const fields = key.split('.');
-  fields.reduce((deep, field, idx) => {
-    // eslint-disable-next-line no-param-reassign
-    if (deep[field] === undefined) deep[field] = {};
-    // eslint-disable-next-line no-param-reassign
-    if (idx === fields.length - 1) deep[field] = val;
-    return deep[field];
-  }, obj);
-  return obj;
-};
-
-/**
  * Mutate ArrayUnion
- * @param {object} firestore - firestore
+ * @param {object} firebase - firebase
  * @param {string} key - mutate tuple key
  * @param {*} val - mutate tuple value
  * @returns Null | Array<*>
@@ -95,7 +73,7 @@ function arrayUnion(firebase, key, val) {
 
 /**
  * Mutate arrayRemove
- * @param {object} firestore - firestore
+ * @param {object} firebase - firebase
  * @param {string} key - mutate tuple key
  * @param {*} val - mutate tuple value
  * @returns Null | Array<*>
@@ -108,7 +86,7 @@ function arrayRemove(firebase, key, val) {
 
 /**
  * Mutate increment
- * @param {object} firestore - firestore
+ * @param {object} firebase - firebase
  * @param {string} key - mutate tuple key
  * @param {*} val - mutate tuple value
  * @returns Null | number
@@ -120,7 +98,7 @@ const increment = (firebase, key, val) =>
 
 /**
  * Mutate timestamp
- * @param {object} firestore - firestore
+ * @param {object} firebase - firebase
  * @param {*} key
  * @returns
  */
@@ -130,7 +108,7 @@ const serverTimestamp = (firebase, key) =>
 
 /**
  * Process Mutation to a vanilla JSON
- * @param {object} firestore - firestore
+ * @param {object} firebase - firebase
  * @param {*} operation - payload mutation
  * @returns
  */
@@ -145,9 +123,7 @@ function atomize(firebase, operation) {
       arrayRemove(firebase, val[0], val[1]) ||
       increment(firebase, val[0], val[1]);
 
-    if (key.includes('.')) {
-      nestedMap(clone, key, value);
-    } else if (Array.isArray(val) && val.length > 0) {
+    if (Array.isArray(val) && val.length > 0) {
       // eslint-disable-next-line no-param-reassign
       clone[key] = value;
     }
@@ -160,7 +136,7 @@ function atomize(firebase, operation) {
 /**
  * @param {object} firebase
  * @param {object} operations
- * @returns Promise
+ * @returns {Promise}
  */
 function writeSingle(firebase, operations) {
   mark('mutate.writeSingle');
@@ -177,7 +153,7 @@ const MAX_BATCH_COUNT = 500;
 /**
  * @param {object} firebase
  * @param {object} operations
- * @returns Promise
+ * @returns {Promise}
  */
 async function writeInBatch(firebase, operations) {
   mark('mutate.writeInBatch');
@@ -200,13 +176,13 @@ async function writeInBatch(firebase, operations) {
   );
 
   mark('mutate.writeInBatch', true);
-  await Promise.all(committedBatchesPromised);
+  return Promise.all(committedBatchesPromised).then(flatten);
 }
 
 /**
  * @param {object} firebase
  * @param {object} operations
- * @returns Promise
+ * @returns {Promise}
  */
 async function writeInTransaction(firebase, operations) {
   return firebase.firestore().runTransaction(async (transaction) => {
@@ -263,7 +239,7 @@ async function writeInTransaction(firebase, operations) {
 /**
  * @param {object} firestore
  * @param {object} operations
- * @returns Promise
+ * @returns {Promise}
  */
 export default function mutate(firestore, operations) {
   if (isSingleWrite(operations)) {
