@@ -903,7 +903,10 @@ describe('firestoreActions', () => {
     describe('mutate', () => {
       it('handles mutate action types', () => {
         const set = sinon.spy(() => Promise.resolve());
-        const doc = sinon.spy(() => ({ set }));
+        const doc = sinon.spy(() => ({
+          set,
+          ref: { id: 'id', parent: { path: 'path' } },
+        }));
         const collection = sinon.spy(() => ({ doc }));
         const firestore = sinon.spy(() => ({ collection }));
 

@@ -1,4 +1,5 @@
 import produce, { createDraft, finishDraft } from 'immer';
+import debug from 'debug';
 import {
   set,
   unset,
@@ -20,6 +21,8 @@ import {
 import { actionTypes } from '../constants';
 import { getBaseQueryName } from '../utils/query';
 import mark from '../utils/perfmarks';
+
+const info = debug('rrf:cache');
 
 /**
  * @typedef {object & Object.<string, RRFQuery>} CacheState
@@ -299,9 +302,17 @@ function buildTransducer(overrides, query) {
   const xfLimit = !useOverrides || limit ? null : limitTransducer(limit);
 
   if (!useOverrides) {
+    /* istanbul ignore next */
+    if (info.enabled) {
+      info('transducer', JSON.stringify(query, null, 2));
+    }
     return flow(compact([xfPopulate, xfGetCollection, xfGetDoc, xfFields]));
   }
 
+  /* istanbul ignore next */
+  if (info.enabled) {
+    info('optimistic transducer', JSON.stringify(query, null, 2));
+  }
   return flow(
     compact([
       xfPopulate,
@@ -335,6 +346,7 @@ function selectDocuments(reducerState, query) {
  * @param {string} path - path to rerun queries for
  */
 function updateCollectionQueries(draft, path) {
+  info(`reprocess queries for ${path}`);
   const paths = Array.isArray(path) ? path : [path];
   Object.keys(draft).forEach((key) => {
     const { collection, populates = [] } = draft[key];
@@ -674,6 +686,7 @@ export default function cacheReducer(state = {}, action) {
             (results, { writes }) => [
               ...results,
               ...writes.map(({ collection, path: _path, doc, id }) => {
+                info('remove override', `${collection}/${doc}`);
                 unset(
                   draft,
                   ['databaseOverrides', _path || collection, id || doc],
@@ -701,6 +714,7 @@ export default function cacheReducer(state = {}, action) {
             translateMutationToOverrides(action, draft.database) || [];
 
           optimisiticUpdates.forEach(({ collection, doc, data }) => {
+            info('overriding', `${collection}/${doc}`, data);
             setWith(
               draft,
               ['databaseOverrides', collection, doc],

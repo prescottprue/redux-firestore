@@ -1,6 +1,9 @@
 import { chunk, cloneDeep, flatten, isFunction, mapValues } from 'lodash';
+import debug from 'debug';
 import { firestoreRef } from './query';
 import mark from './perfmarks';
+
+const info = debug('rrf:mutate');
 
 /**
  * @param {object} firestore
@@ -134,16 +137,35 @@ function atomize(firebase, operation) {
 // ----- write functions -----
 
 /**
+ *
+ * @param {object} firebase
+ * @param {Mutation_v1 | Mutation_v2} operation
+ * @param {Batch | Transaction} writer
+ * @returns {Promise | Doc} - Batch & Transaction .set returns null
+ */
+function write(firebase, operation = {}, writer = null) {
+  const { collection, path, doc, id, data, ...rest } = operation;
+  const document = docRef(firebase.firestore(), path || collection, id || doc);
+  const changes = atomize(firebase, data || rest);
+  const { ref } = document;
+  if (writer) {
+    const writeType = writer.commit ? 'Batching' : 'Transaction.set';
+    info(writeType, { id: ref.id, path: ref.parent.path, ...changes });
+    writer.set(document, changes, { merge: true });
+    return { id: document.ref.id, path: document.ref.parent.path, ...changes };
+  }
+  info('Writing', { id: ref.id, path: ref.parent.path, ...changes });
+  return document.set(changes, { merge: true });
+}
+
+/**
  * @param {object} firebase
  * @param {object} operations
  * @returns {Promise}
  */
 function writeSingle(firebase, operations) {
   mark('mutate.writeSingle');
-  const { collection, path, doc, id, data, ...rest } = operations;
-  const ref = docRef(firebase.firestore(), path || collection, id || doc);
-  const changes = atomize(firebase, data || rest);
-  const promise = ref.set(changes, { merge: true });
+  const promise = write(firebase, operations);
   mark('mutate.writeSingle', true);
   return promise;
 }
@@ -159,19 +181,12 @@ async function writeInBatch(firebase, operations) {
   mark('mutate.writeInBatch');
   const committedBatchesPromised = chunk(operations, MAX_BATCH_COUNT).map(
     (operationsChunk) => {
-      const writesBatched = operationsChunk.reduce(
-        (batch, { collection, path, doc, id, data, ...rest }) =>
-          batch.set(
-            docRef(firebase.firestore(), path || collection, id || doc),
-            atomize(firebase, data || rest),
-            {
-              merge: true,
-            },
-          ),
-        firebase.firestore().batch(),
+      const batch = firebase.firestore().batch();
+      const writesBatched = operationsChunk.map((operation) =>
+        write(firebase, operation, batch),
       );
 
-      return writesBatched.commit();
+      return batch.commit().then(() => writesBatched);
     },
   );
 
@@ -186,53 +201,57 @@ async function writeInBatch(firebase, operations) {
  */
 async function writeInTransaction(firebase, operations) {
   return firebase.firestore().runTransaction(async (transaction) => {
-    mark('mutate.writeInTransaction');
+    const serialize = (doc) =>
+      !doc
+        ? null
+        : { ...doc.data(), id: doc.ref.id, path: doc.ref.parent.path };
+    const getter = ({ ref }) => {
+      info('Transaction.get ', { id: ref.id, path: ref.parent.path });
+      return transaction.get(ref);
+    };
+
+    mark('mutate.writeInTransaction:reads');
     const readsPromised = mapValues(operations.reads, (read) => {
       if (isDocRead(read)) {
-        return transaction.get(firestoreRef(firebase, read)).then((doc) => ({
-          ...doc.data(),
-          id: doc.ref.id,
-          path: doc.ref.path,
-        }));
+        const doc = firestoreRef(firebase, read);
+        return getter(doc)
+          .then((snapshot) => (snapshot.exsits === false ? null : snapshot))
+          .then(serialize);
       }
 
-      return firestoreRef(firebase, read)
+      // NOTE: Firestore Transaction don't support collection inside
+      const coll = firestoreRef(firebase, read);
+      return coll
         .get()
-        .then((result) =>
-          Promise.all(result.docs.map((doc) => transaction.get(doc.ref))),
-        )
-        .then((docs) =>
-          docs.map((doc) => ({
-            ...doc.data(),
-            id: doc.ref.id,
-            path: doc.ref.path,
-          })),
-        );
+        .then((snapshot) => {
+          if (snapshot.docs.length === 0) return Promise.resolve([]);
+          return Promise.all(snapshot.docs.map(getter));
+        })
+        .then((docs) => docs.map(serialize));
     });
 
-    mark('mutate.writeInTransaction', true);
-    const fetchedData = await promiseAllObject(readsPromised);
+    mark('mutate.writeInTransaction:reads', true);
+    const reads = await promiseAllObject(readsPromised);
 
-    operations.writes.forEach((writeFn) => {
-      const writes = isFunction(writeFn) ? writeFn(fetchedData) : writeFn;
-      mark('mutate.writeInTransaction');
+    const writes = [];
 
-      const writer = ({ collection, path, doc, id, data, ...rest }) =>
-        transaction.set(
-          docRef(firebase.firestore(), path || collection, id || doc),
-          atomize(firebase, data || rest),
-          {
-            merge: true,
-          },
-        );
+    operations.writes.forEach((writeFnc) => {
+      mark('mutate.writeInTransaction:writes', true);
+      const operation = isFunction(writeFnc) ? writeFnc(reads) : writeFnc;
 
-      if (Array.isArray(writes)) {
-        writes.forEach(writer);
+      if (Array.isArray(operation)) {
+        operation.map((op) => write(firebase, op, transaction));
+        writes.push(operation);
       } else {
-        writer(writes);
+        writes.push(write(firebase, operation, transaction));
       }
-      mark('mutate.writeInTransaction', true);
+
+      mark('mutate.writeInTransaction:writes', true);
     });
+
+    // Firestore Transaction return null.
+    // Instead we'll return the results of all read data & writes.
+    return { reads, writes };
   });
 }
 

@@ -5,7 +5,10 @@ import mutate from 'utils/mutate';
 describe('firestore.mutate()', () => {
   it('writes a single operation', async () => {
     const set = sinon.spy();
-    const doc = sinon.spy(() => ({ set }));
+    const doc = sinon.spy(() => ({
+      set,
+      ref: { id: 'id', parent: { path: 'path' } },
+    }));
     const collection = sinon.spy(() => ({ doc }));
     const firestore = sinon.spy(() => ({ collection }));
 
@@ -26,9 +29,12 @@ describe('firestore.mutate()', () => {
   });
 
   it('writes operations in batch', async () => {
-    const set = sinon.spy(() => ({ set, commit }));
-    const commit = sinon.spy();
-    const doc = sinon.spy((val) => ({ doc: val }));
+    const set = sinon.spy(() => {});
+    const commit = sinon.spy((val) => Promise.resolve(val));
+    const doc = sinon.spy((val) => ({
+      doc: val,
+      ref: { id: 'id', parent: { path: 'path' } },
+    }));
     const collection = sinon.spy(() => ({ doc }));
 
     const batch = sinon.spy(() => ({ set, commit }));
@@ -74,8 +80,11 @@ describe('firestore.mutate()', () => {
 
   it('writes operations in multiple batches when there are over 500 writes', async () => {
     const set = sinon.spy(() => ({ set, commit }));
-    const commit = sinon.spy();
-    const doc = sinon.spy((ref) => ({ ref }));
+    const commit = sinon.spy((val) => Promise.resolve(val));
+    const doc = sinon.spy((val) => ({
+      doc: val,
+      ref: { id: 'id', parent: { path: 'path' } },
+    }));
     const collection = sinon.spy(() => ({ doc }));
 
     const batch = sinon.spy(() => ({ set, commit }));
@@ -100,8 +109,8 @@ describe('firestore.mutate()', () => {
     const firestoreGet = sinon.spy(() =>
       Promise.resolve({
         docs: [
-          { ref: { id: 'task-1', path: 'tasks' } },
-          { ref: { id: 'task-2', path: 'tasks' } },
+          { ref: { id: 'task-1', parent: { path: 'tasks' } } },
+          { ref: { id: 'task-2', parent: { path: 'tasks' } } },
         ],
       }),
     );
@@ -111,17 +120,17 @@ describe('firestore.mutate()', () => {
     const set = sinon.spy();
     function* mock() {
       yield Promise.resolve({
-        ref: { id: 'sprint-1', path: 'sprints' },
+        ref: { id: 'sprint-1', parent: { path: 'sprints' } },
         data: () => ({
           sprintSettings: { moveRemainingTasksTo: 'NextSprint' },
         }),
       });
       yield Promise.resolve({
-        ref: { id: 'task-id-1', path: 'tasks' },
+        ref: { id: 'task-id-1', parent: { path: 'tasks' } },
         data: () => ({ id: 'task-id-1' }),
       });
       yield Promise.resolve({
-        ref: { id: 'task-id-2', path: 'tasks' },
+        ref: { id: 'task-id-2', parent: { path: 'tasks' } },
         data: () => ({ id: 'task-id-2' }),
       });
     }
@@ -129,7 +138,11 @@ describe('firestore.mutate()', () => {
     const transactionGet = () => mocked.next().value;
     const transaction = { set, get: transactionGet };
     const runTransaction = sinon.spy((cb) => cb(transaction));
-    const doc = sinon.spy((val) => ({ doc: val, withConverter }));
+    const doc = sinon.spy((val) => ({
+      doc: val,
+      withConverter,
+      ref: { id: 'id', parent: { path: 'path' } },
+    }));
 
     const firestore = sinon.spy(() => ({ collection, runTransaction, doc }));
 
@@ -182,12 +195,12 @@ describe('firestore.mutate()', () => {
     );
   });
 
-  it('writes transaction with signle write', async () => {
+  it('writes transaction with single write', async () => {
     const firestoreGet = sinon.spy(() =>
       Promise.resolve({
         docs: [
-          { ref: { id: 'task-1', path: 'tasks' } },
-          { ref: { id: 'task-2', path: 'tasks' } },
+          { ref: { id: 'task-1', parent: { path: 'tasks' } } },
+          { ref: { id: 'task-2', parent: { path: 'tasks' } } },
         ],
       }),
     );
@@ -195,19 +208,18 @@ describe('firestore.mutate()', () => {
     const where = sinon.spy(() => ({ get: firestoreGet, withConverter }));
     const collection = sinon.spy(() => ({ doc, withConverter, where }));
     const set = sinon.spy();
+    // eslint-disable-next-line
     function* mock() {
       yield Promise.resolve({
-        ref: { id: 'sprint-1', path: 'sprints' },
-        data: () => ({
-          sprintSettings: { moveRemainingTasksTo: 'NextSprint' },
-        }),
+        ref: { id: 'sprint-1', parent: { path: 'sprints' } },
+        data: () => ({ teamCount: 9 }),
       });
       yield Promise.resolve({
-        ref: { id: 'task-id-1', path: 'tasks' },
+        ref: { id: 'task-id-1', parent: { path: 'sprints' } },
         data: () => ({ id: 'task-id-1' }),
       });
       yield Promise.resolve({
-        ref: { id: 'task-id-2', path: 'tasks' },
+        ref: { id: 'task-id-2', parent: { path: 'sprints' } },
         data: () => ({ id: 'task-id-2' }),
       });
     }
@@ -215,7 +227,11 @@ describe('firestore.mutate()', () => {
     const transactionGet = () => mocked.next().value;
     const transaction = { set, get: transactionGet };
     const runTransaction = sinon.spy((cb) => cb(transaction));
-    const doc = sinon.spy((val) => ({ doc: val, withConverter }));
+    const doc = sinon.spy((val) => ({
+      doc: val,
+      withConverter,
+      ref: { id: 'id', parent: { path: 'path' } },
+    }));
 
     const firestore = sinon.spy(() => ({ collection, runTransaction, doc }));
 
@@ -258,14 +274,17 @@ describe('firestore.mutate()', () => {
 
   it('handles stringified Field Values', async () => {
     const set = sinon.spy();
-    const doc = sinon.spy(() => ({ set }));
+    const doc = sinon.spy(() => ({
+      set,
+      ref: { id: 'id', parent: { path: 'path' } },
+    }));
     const collection = sinon.spy(() => ({ doc }));
     const firestore = sinon.spy(() => ({ collection }));
     firestore.FieldValue = {
-      serverTimestamp: sinon.spy(),
-      increment: sinon.spy(),
-      arrayRemove: sinon.spy(),
-      arrayUnion: sinon.spy(),
+      serverTimestamp: sinon.spy(() => 'time'),
+      increment: sinon.spy(() => '++'),
+      arrayRemove: sinon.spy(() => '-'),
+      arrayUnion: sinon.spy(() => '+'),
     };
 
     await mutate(
@@ -276,6 +295,7 @@ describe('firestore.mutate()', () => {
         data: {
           name: 'Bravo Team 🎄',
           'deeply.nested.map': 'value',
+          'deeply.nested.array': ['::arrayUnion', 'add'],
           addArray: ['::arrayUnion', 'val'],
           removeArray: ['::arrayRemove', 'item'],
           updateAt: ['::serverTimestamp'],
@@ -290,6 +310,6 @@ describe('firestore.mutate()', () => {
     expect(firestore.FieldValue.serverTimestamp).to.have.been.calledOnce;
     expect(firestore.FieldValue.increment).to.have.been.calledOnce;
     expect(firestore.FieldValue.arrayRemove).to.have.been.calledOnce;
-    expect(firestore.FieldValue.arrayUnion).to.have.been.calledOnce;
+    expect(firestore.FieldValue.arrayUnion).to.have.been.calledTwice;
   });
 });
