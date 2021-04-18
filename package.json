@@ -1,6 +1,6 @@
 {
   "name": "redux-firestore",
-  "version": "0.15.0",
+  "version": "0.16.0",
   "description": "Redux bindings for Firestore.",
   "main": "lib/index.js",
   "module": "es/index.js",
@@ -30,8 +30,8 @@
     "lint": "eslint src test",
     "lint:fix": "npm run lint -- --fix",
     "format": "prettier --write \"src/**/*.js\" \"test/**/*.js\"",
-    "prepare": "npm run clean && npm run build",
-    "preversion": "npm run clean && npm run build",
+    "postinstall": "npm run build",
+    "prepublish": "npm run clean && npm run build",
     "pre-push": "npm run lint"
   },
   "dependencies": {
