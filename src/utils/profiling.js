@@ -1,7 +1,6 @@
 import { noop } from 'lodash';
 
-// webpack eternal removes
-let win = require('perf_hooks');
+let win;
 
 const isDev =
   !process.env.NODE_ENV ||
@@ -9,8 +8,15 @@ const isDev =
   process.env.NODE_ENV === 'test';
 
 try {
+  // eslint-disable-next-line dot-notation
+  const nodeRequire = module[`require`].bind(module);
+  win = nodeRequire('perf_hooks');
+} catch (e) {}
+
+try {
   win = window;
 } catch (e) {}
+
 const perf = win && win.performance;
 /**
  *
