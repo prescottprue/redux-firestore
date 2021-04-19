@@ -290,7 +290,7 @@ function buildTransducer(overrides, query) {
     ? null
     : populateTransducer(collection, populates);
   const xfGetCollection = getCollectionTransducer(collection);
-  const xfGetDoc = getDocumentTransducer(ordered.map(([__, id]) => id));
+  const xfGetDoc = getDocumentTransducer((ordered || []).map(([__, id]) => id));
   const xfFields = !fields ? null : fieldsTransducer(fields);
 
   const xfApplyOverrides = !useOverrides
@@ -349,6 +349,7 @@ function updateCollectionQueries(draft, path) {
   info(`reprocess queries for ${path}`);
   const paths = Array.isArray(path) ? path : [path];
   Object.keys(draft).forEach((key) => {
+    if (['database', 'databaseOverrides'].includes(key)) return;
     const { collection, populates = [] } = draft[key];
     const pops = Array.isArray(populates[0]) ? populates : [populates];
     const collections = pops.map(([__, coll]) => coll).concat(collection);
