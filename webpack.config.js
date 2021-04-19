@@ -1,5 +1,6 @@
 const path = require('path');
 const TerserPlugin = require('terser-webpack-plugin');
+const webpack = require('webpack');
 
 const libraryName = 'redux-firestore';
 const isProduction = process.env.NODE_ENV === 'production';
@@ -16,7 +17,7 @@ const config = {
     libraryTarget: 'umd',
     umdNamedDefine: true,
   },
-  externals: [],
+  externals: { perf_hooks: 'var {}' },
   optimization: {
     minimize: isProduction,
     minimizer: isProduction ? [new TerserPlugin()] : [],
@@ -30,7 +31,7 @@ const config = {
       },
     ],
   },
-  plugins: [],
+  plugins: [new webpack.IgnorePlugin(/perf_hooks/)],
 };
 
 module.exports = config;

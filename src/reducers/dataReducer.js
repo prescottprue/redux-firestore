@@ -2,7 +2,7 @@ import { get } from 'lodash';
 import { setWith } from 'lodash/fp';
 import { actionTypes } from '../constants';
 import { pathFromMeta, preserveValuesFromState } from '../utils/reducers';
-import mark from '../utils/perfmarks';
+import mark from '../utils/profiling';
 
 const {
   CLEAR_DATA,
@@ -32,7 +32,7 @@ export default function dataReducer(state = {}, action) {
   switch (action.type) {
     case GET_SUCCESS:
     case LISTENER_RESPONSE:
-      mark(`data.${LISTENER_RESPONSE}`);
+      const done = mark(`data.LISTENER_RESPONSE`);
       const { meta, payload } = action;
       // Return state if payload are invalid
       if (!payload || payload.data === undefined) {
@@ -61,7 +61,7 @@ export default function dataReducer(state = {}, action) {
           state,
         );
       }
-      mark(`data.${LISTENER_RESPONSE}`, true);
+      done();
       // Set data to state (with merge) immutabily (lodash/fp's setWith creates copy)
       return setWith(
         Object,

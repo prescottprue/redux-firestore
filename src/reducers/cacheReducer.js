@@ -20,7 +20,7 @@ import {
 } from 'lodash';
 import { actionTypes } from '../constants';
 import { getBaseQueryName } from '../utils/query';
-import mark from '../utils/perfmarks';
+import mark from '../utils/profiling';
 
 const info = debug('rrf:cache');
 
@@ -204,7 +204,7 @@ const populateTransducer = (collection, populates) =>
     // Notice: by it's nature populate is O(2^n)/exponential.
     // In large data sets, every populate will add substantial time.
 
-    mark(`populate.${collection}`);
+    const done = mark(`populate.${collection}`);
 
     // pre-grab collection and remove empty populations
     const lookups = (Array.isArray(populates[0]) ? populates : [populates])
@@ -241,7 +241,7 @@ const populateTransducer = (collection, populates) =>
       return draft;
     }, createDraft(raw));
 
-    mark(`populate.${collection}`, true);
+    done();
 
     return { database: { [collection]: finishDraft(collectionById) } };
   });
@@ -537,7 +537,7 @@ export default function cacheReducer(state = {}, action) {
     switch (action.type) {
       case actionTypes.GET_SUCCESS:
       case actionTypes.LISTENER_RESPONSE:
-        mark(`cache.${actionTypes.LISTENER_RESPONSE}`);
+        const done = mark(`cache.LISTENER_RESPONSE`);
         if (!draft.database) {
           set(draft, ['database'], {});
           set(draft, ['databaseOverrides'], {});
@@ -563,11 +563,11 @@ export default function cacheReducer(state = {}, action) {
         // append docs field to query
         updateCollectionQueries(draft, path);
 
-        mark(`cache.${actionTypes.LISTENER_RESPONSE}`, true);
+        done();
         return draft;
 
       case actionTypes.UNSET_LISTENER:
-        mark(`cache.${actionTypes.UNSET_LISTENER}`);
+        const unsetDone = mark(`cache.UNSET_LISTENER`);
         if (draft[key]) {
           // all ids for the collection type, except query to be unset
           const activeIds = Object.keys(draft).reduce((inUse, dbKey) => {
@@ -592,12 +592,12 @@ export default function cacheReducer(state = {}, action) {
           updateCollectionQueries(draft, path);
         }
 
-        mark(`cache.${actionTypes.UNSET_LISTENER}`, true);
+        unsetDone();
         return draft;
 
       case actionTypes.DOCUMENT_ADDED:
       case actionTypes.DOCUMENT_MODIFIED:
-        mark(`cache.${actionTypes.DOCUMENT_MODIFIED}`);
+        const addDone = mark(`cache.DOCUMENT_MODIFIED`);
         setWith(
           draft,
           ['database', path, action.meta.doc],
@@ -628,7 +628,7 @@ export default function cacheReducer(state = {}, action) {
 
         updateCollectionQueries(draft, path);
 
-        mark(`cache.${actionTypes.DOCUMENT_MODIFIED}`, true);
+        addDone();
         return draft;
 
       case actionTypes.DELETE_SUCCESS:
@@ -637,7 +637,7 @@ export default function cacheReducer(state = {}, action) {
         }
       // eslint-disable-next-line no-fallthrough
       case actionTypes.DOCUMENT_REMOVED:
-        mark(`cache.${actionTypes.DOCUMENT_REMOVED}`);
+        const removeDone = mark(`cache.DOCUMENT_REMOVED`);
         if (draft.databaseOverrides && draft.databaseOverrides[path]) {
           unset(draft, ['databaseOverrides', path, action.meta.doc]);
         }
@@ -651,7 +651,7 @@ export default function cacheReducer(state = {}, action) {
         // reprocess
         updateCollectionQueries(draft, path);
 
-        mark(`cache.${actionTypes.DOCUMENT_REMOVED}`, true);
+        removeDone();
         return draft;
 
       case actionTypes.OPTIMISTIC_ADDED:
@@ -676,7 +676,7 @@ export default function cacheReducer(state = {}, action) {
       case actionTypes.UPDATE_FAILURE:
       case actionTypes.SET_FAILURE:
       case actionTypes.ADD_FAILURE:
-        mark(`cache.${actionTypes.MUTATE_FAILURE}`);
+        const failureDone = mark(`cache.MUTATE_FAILURE`);
         // All failures remove overrides
         if (action.payload.data || action.payload.args) {
           const write = action.payload.data
@@ -704,11 +704,11 @@ export default function cacheReducer(state = {}, action) {
           }
         }
 
-        mark(`cache.${actionTypes.MUTATE_FAILURE}`, true);
+        failureDone();
         return draft;
 
       case actionTypes.MUTATE_START:
-        mark(`cache.${actionTypes.MUTATE_START}`);
+        const startDone = mark(`cache.MUTATE_START`);
         if (action.payload && action.payload.data) {
           const optimisiticUpdates =
             translateMutationToOverrides(action, draft.database) || [];
@@ -731,7 +731,7 @@ export default function cacheReducer(state = {}, action) {
           });
         }
 
-        mark(`cache.${actionTypes.MUTATE_START}`, true);
+        startDone();
         return draft;
 
       default:

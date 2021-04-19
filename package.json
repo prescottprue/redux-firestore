@@ -30,7 +30,7 @@
     "lint": "eslint src test",
     "lint:fix": "npm run lint -- --fix",
     "format": "prettier --write \"src/**/*.js\" \"test/**/*.js\"",
-    "postinstall": "npm run build",
+    "prepare": "npm run clean && npm run build",
     "prepublish": "npm run clean && npm run build",
     "pre-push": "npm run lint"
   },
