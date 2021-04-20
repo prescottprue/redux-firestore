@@ -7,7 +7,8 @@ describe('firestore.mutate()', () => {
     const set = sinon.spy();
     const doc = sinon.spy(() => ({
       set,
-      ref: { id: 'id', parent: { path: 'path' } },
+      id: 'id',
+      parent: { path: 'path' },
     }));
     const collection = sinon.spy(() => ({ doc }));
     const firestore = sinon.spy(() => ({ collection }));
@@ -33,7 +34,8 @@ describe('firestore.mutate()', () => {
     const commit = sinon.spy((val) => Promise.resolve(val));
     const doc = sinon.spy((val) => ({
       doc: val,
-      ref: { id: 'id', parent: { path: 'path' } },
+      id: 'id',
+      parent: { path: 'path' },
     }));
     const collection = sinon.spy(() => ({ doc }));
 
@@ -83,7 +85,8 @@ describe('firestore.mutate()', () => {
     const commit = sinon.spy((val) => Promise.resolve(val));
     const doc = sinon.spy((val) => ({
       doc: val,
-      ref: { id: 'id', parent: { path: 'path' } },
+      id: 'id',
+      parent: { path: 'path' },
     }));
     const collection = sinon.spy(() => ({ doc }));
 
@@ -109,8 +112,8 @@ describe('firestore.mutate()', () => {
     const firestoreGet = sinon.spy(() =>
       Promise.resolve({
         docs: [
-          { ref: { id: 'task-1', parent: { path: 'tasks' } } },
-          { ref: { id: 'task-2', parent: { path: 'tasks' } } },
+          { id: 'task-1', parent: { path: 'tasks' } },
+          { id: 'task-2', parent: { path: 'tasks' } },
         ],
       }),
     );
@@ -141,7 +144,8 @@ describe('firestore.mutate()', () => {
     const doc = sinon.spy((val) => ({
       doc: val,
       withConverter,
-      ref: { id: 'id', parent: { path: 'path' } },
+      id: 'id',
+      parent: { path: 'path' },
     }));
 
     const firestore = sinon.spy(() => ({ collection, runTransaction, doc }));
@@ -199,8 +203,8 @@ describe('firestore.mutate()', () => {
     const firestoreGet = sinon.spy(() =>
       Promise.resolve({
         docs: [
-          { ref: { id: 'task-1', parent: { path: 'tasks' } } },
-          { ref: { id: 'task-2', parent: { path: 'tasks' } } },
+          { id: 'task-1', parent: { path: 'tasks' } },
+          { id: 'task-2', parent: { path: 'tasks' } },
         ],
       }),
     );
@@ -230,7 +234,8 @@ describe('firestore.mutate()', () => {
     const doc = sinon.spy((val) => ({
       doc: val,
       withConverter,
-      ref: { id: 'id', parent: { path: 'path' } },
+      id: 'id',
+      parent: { path: 'path' },
     }));
 
     const firestore = sinon.spy(() => ({ collection, runTransaction, doc }));
@@ -276,7 +281,8 @@ describe('firestore.mutate()', () => {
     const set = sinon.spy();
     const doc = sinon.spy(() => ({
       set,
-      ref: { id: 'id', parent: { path: 'path' } },
+      id: 'id',
+      parent: { path: 'path' },
     }));
     const collection = sinon.spy(() => ({ doc }));
     const firestore = sinon.spy(() => ({ collection }));

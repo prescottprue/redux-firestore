@@ -97,9 +97,24 @@ export interface Config {
   };
 }
 
+type ArrayUnion = ['::arrayUnion', unknown];
+type ArrayRemove = ['::arrayRemove', unknown];
+type Increment = ['::increment', number];
+type ServerTimestamp = ['::serverTimestamp'];
+type FieldValueTuple = ArrayUnion | ArrayRemove | Increment | ServerTimestamp;
+
+export type MutateData =
+  | FieldValueTuple
+  | number
+  | null
+  | boolean
+  | string
+  | object
+  | array;
+
 export type Read = { collection: string; doc: string };
 
-export type Write = Read & { data: Record<string, unknown> };
+export type Write = Read & { data: Record<string, MutateData> };
 
 export type Batch = Write[];
 

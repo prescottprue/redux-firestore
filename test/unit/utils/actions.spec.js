@@ -78,7 +78,8 @@ describe('actions utils', () => {
       const set = sinon.spy(() => Promise.resolve());
       const doc = sinon.spy(() => ({
         set,
-        ref: { id: 'id', parent: { path: 'path' } },
+        id: 'id',
+        parent: { path: 'path' },
       }));
       const collection = sinon.spy(() => ({ doc }));
       const firestore = sinon.spy(() => ({ collection }));

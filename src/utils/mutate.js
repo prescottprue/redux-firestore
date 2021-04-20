@@ -145,17 +145,17 @@ function atomize(firebase, operation) {
  */
 function write(firebase, operation = {}, writer = null) {
   const { collection, path, doc, id, data, ...rest } = operation;
-  const document = docRef(firebase.firestore(), path || collection, id || doc);
+  const ref = docRef(firebase.firestore(), path || collection, id || doc);
   const changes = atomize(firebase, data || rest);
-  const { ref } = document;
+  console.log('debug', ref, changes);
   if (writer) {
     const writeType = writer.commit ? 'Batching' : 'Transaction.set';
     info(writeType, { id: ref.id, path: ref.parent.path, ...changes });
-    writer.set(document, changes, { merge: true });
-    return { id: document.ref.id, path: document.ref.parent.path, ...changes };
+    writer.set(ref, changes, { merge: true });
+    return { id: ref.id, path: ref.parent.path, ...changes };
   }
   info('Writing', { id: ref.id, path: ref.parent.path, ...changes });
-  return document.set(changes, { merge: true });
+  return ref.set(changes, { merge: true });
 }
 
 /**
@@ -205,7 +205,7 @@ async function writeInTransaction(firebase, operations) {
       !doc
         ? null
         : { ...doc.data(), id: doc.ref.id, path: doc.ref.parent.path };
-    const getter = ({ ref }) => {
+    const getter = (ref) => {
       info('Transaction.get ', { id: ref.id, path: ref.parent.path });
       return transaction.get(ref);
     };
