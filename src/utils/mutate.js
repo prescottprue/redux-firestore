@@ -60,7 +60,7 @@ function isSingleWrite(operations) {
  * @returns Null | Array
  */
 const primaryValue = (arr) =>
-  typeof arr[0] === 'string' && arr[0].indexOf('::') === 0 ? null : arr;
+  arr && typeof arr[0] === 'string' && arr[0].indexOf('::') === 0 ? null : arr;
 
 /**
  * Mutate ArrayUnion
