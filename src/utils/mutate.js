@@ -147,7 +147,7 @@ function write(firebase, operation = {}, writer = null) {
   const { collection, path, doc, id, data, ...rest } = operation;
   const ref = docRef(firebase.firestore(), path || collection, id || doc);
   const changes = atomize(firebase, data || rest);
-  console.log('debug', ref, changes);
+
   if (writer) {
     const writeType = writer.commit ? 'Batching' : 'Transaction.set';
     info(writeType, { id: ref.id, path: ref.parent.path, ...changes });

@@ -274,7 +274,7 @@ describe('cacheReducer', () => {
       expect(pass2.cache.testStoreAs.docs[1]).to.eql(doc2);
     });
 
-    it('override a document removal synchronously', () => {
+    it('remove a document override synchronously', () => {
       const doc1 = { key1: 'value1', id: 'testDocId1', path };
       const doc2 = { ...doc1, key2: 'other' };
 
@@ -672,6 +672,54 @@ describe('cacheReducer', () => {
 
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
+
+      expect(pass1.cache.testStoreAs.docs[0]).to.eql(doc2);
+      expect(pass1.cache.testStoreAs.docs[1]).to.eql(doc1);
+      expect(pass2.cache.testStoreAs.docs[0]).to.eql(doc1);
+      expect(pass2.cache.testStoreAs.docs[1]).to.eql(undefined);
+
+      // Removing from query !== deleting. Other queries could have the result
+      expect(pass1.cache.database.testCollection.testDocId2).to.eql(doc2);
+    });
+
+    it('Firestore deletes document', () => {
+      const doc1 = { key1: 'value1', id: 'testDocId1', path };
+      const doc2 = { key2: 'value2', id: 'testDocId2', path };
+
+      const action1 = {
+        meta: {
+          collection,
+          storeAs: 'testStoreAs',
+          where: [['key1', '==', 'value1']],
+          orderBy: ['value1'],
+        },
+        payload: {
+          data: { [doc1.id]: doc1, [doc2.id]: doc2 },
+          ordered: [doc2, doc1],
+        },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+
+      const action2 = {
+        type: actionTypes.DELETE_SUCCESS,
+        meta: {
+          collection,
+          storeAs: 'testStoreAs',
+          where: [['key1', '==', 'value1']],
+          orderBy: ['value1'],
+          doc: doc2.id,
+        },
+        payload: {
+          data: {},
+          ordered: { newIndex: -1, oldIndex: 0 },
+        },
+      };
+
+      const pass1 = reducer(initialState, action1);
+      const pass2 = reducer(pass1, action2);
+
+      console.dir(pass1.cache.database.testCollection);
+      console.dir(pass2.cache.database.testCollection);
 
       expect(pass1.cache.testStoreAs.docs[0]).to.eql(doc2);
       expect(pass1.cache.testStoreAs.docs[1]).to.eql(doc1);

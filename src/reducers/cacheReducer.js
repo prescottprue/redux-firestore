@@ -319,6 +319,7 @@ function buildTransducer(overrides, query) {
       xfGetCollection,
       partialRight(map, (db) => createDraft(db)),
       ...xfApplyOverrides,
+      partialRight(map, (db) => finishDraft(db)),
       ...xfFilter,
       xfOrder,
       xfLimit,
@@ -519,6 +520,244 @@ function shouldRemoveOverride(action, overrides) {
   return isMatch(action.payload.data, override);
 }
 
+// --- action type handlers ---
+
+const initialize = (state, { action, key, path }) =>
+  produce(state, (draft) => {
+    const done = mark(`cache.LISTENER_RESPONSE`);
+    if (!draft.database) {
+      set(draft, ['database'], {});
+      set(draft, ['databaseOverrides'], {});
+    }
+
+    if (action.payload.data) {
+      Object.keys(action.payload.data).forEach((id) => {
+        setWith(draft, ['database', path, id], action.payload.data[id], Object);
+      });
+    }
+
+    // set the query
+    set(draft, [key], {
+      ordered: action.payload.ordered.map(({ path, id }) => [path, id]),
+      ...action.meta,
+    });
+
+    // append docs field to query
+    updateCollectionQueries(draft, path);
+
+    done();
+    return draft;
+  });
+
+const conclude = (state, { action, key, path }) =>
+  produce(state, (draft) => {
+    const unsetDone = mark(`cache.UNSET_LISTENER`);
+    if (draft[key]) {
+      // all ids for the collection type, except query to be unset
+      const activeIds = Object.keys(draft).reduce((inUse, dbKey) => {
+        const { collection, ordered } = draft[dbKey];
+        if (dbKey !== key && collection === path) {
+          return [...inUse, ...ordered.map(([___, id]) => id)];
+        }
+
+        return inUse;
+      }, []);
+
+      // remove docs from database if unsed by other queries
+      draft[key].ordered.forEach(([__, id]) => {
+        if (!activeIds.includes(id)) {
+          unset(draft, ['database', path, id]);
+        }
+      });
+
+      // remove query
+      unset(draft, [key]);
+
+      updateCollectionQueries(draft, path);
+    }
+
+    unsetDone();
+    return draft;
+  });
+
+const modify = (state, { action, key, path }) =>
+  produce(state, (draft) => {
+    const addDone = mark(`cache.DOCUMENT_MODIFIED`);
+    setWith(
+      draft,
+      ['database', path, action.meta.doc],
+      action.payload.data,
+      Object,
+    );
+
+    const remove = shouldRemoveOverride(action, draft.databaseOverrides);
+    if (remove) {
+      unset(draft, ['databaseOverrides', path, action.meta.doc]);
+    }
+
+    const { payload } = action;
+    const { oldIndex = 0, newIndex = 0 } = payload.ordered || {};
+    if (newIndex !== oldIndex) {
+      const tuple =
+        (payload.data && [payload.data.path, payload.data.id]) ||
+        draft[key].ordered[oldIndex];
+
+      const { ordered } = draft[key] || { ordered: [] };
+      if (oldIndex !== -1) {
+        ordered.splice(oldIndex, 0);
+      }
+      ordered.splice(newIndex, 0, tuple);
+
+      set(draft, [key, 'ordered'], ordered);
+    }
+
+    updateCollectionQueries(draft, path);
+
+    addDone();
+    return draft;
+  });
+
+const failure = (state, { action, key, path }) =>
+  produce(state, (draft) => {
+    const failureDone = mark(`cache.MUTATE_FAILURE`);
+    // All failures remove overrides
+    if (action.payload.data || action.payload.args) {
+      const write = action.payload.data
+        ? [{ writes: [action.payload.data] }]
+        : action.payload.args;
+      const allPaths = write.reduce(
+        (results, { writes }) => [
+          ...results,
+          ...writes.map(({ collection, path: _path, doc, id }) => {
+            info('remove override', `${collection}/${doc}`);
+            unset(
+              draft,
+              ['databaseOverrides', _path || collection, id || doc],
+              null,
+            );
+            return path || collection;
+          }),
+        ],
+        [],
+      );
+
+      const uniquePaths = Array.from(new Set(allPaths));
+      if (uniquePaths.length > 0) {
+        updateCollectionQueries(draft, uniquePaths);
+      }
+    }
+
+    failureDone();
+    return draft;
+  });
+
+const deletion = (state, { action, key, path }) =>
+  produce(state, (draft) => {
+    const done = mark(`cache.DELETE_SUCCESS`);
+    if (draft.database && draft.database[path]) {
+      unset(draft, ['database', path, action.meta.doc]);
+    }
+
+    if (draft.databaseOverrides && draft.databaseOverrides[path]) {
+      unset(draft, ['databaseOverrides', path, action.meta.doc]);
+    }
+
+    // remove document id from ordered index
+    if (draft[key] && draft[key].ordered) {
+      const idx = findIndex(draft[key].ordered, [1, action.meta.doc]);
+      draft[key].ordered.splice(idx, 1);
+    }
+
+    // reprocess
+    updateCollectionQueries(draft, path);
+
+    done();
+    return draft;
+  });
+
+const remove = (state, { action, key, path }) =>
+  produce(state, (draft) => {
+    const removeDone = mark(`cache.DOCUMENT_REMOVED`);
+    if (draft.databaseOverrides && draft.databaseOverrides[path]) {
+      unset(draft, ['databaseOverrides', path, action.meta.doc]);
+    }
+
+    // remove document id from ordered index
+    if (draft[key] && draft[key].ordered) {
+      const idx = findIndex(draft[key].ordered, [1, action.meta.doc]);
+      draft[key].ordered.splice(idx, 1);
+    }
+
+    // reprocess
+    updateCollectionQueries(draft, path);
+
+    removeDone();
+    return draft;
+  });
+
+const optimistic = (state, { action, key, path }) =>
+  produce(state, (draft) => {
+    setWith(
+      draft,
+      ['databaseOverrides', path, action.meta.doc],
+      action.payload.data,
+      Object,
+    );
+
+    updateCollectionQueries(draft, path);
+    return draft;
+  });
+
+const reset = (state, { action, key, path }) =>
+  produce(state, (draft) => {
+    unset(draft, ['databaseOverrides', path, action.meta.doc]);
+    updateCollectionQueries(draft, path);
+    return draft;
+  });
+
+const mutation = (state, { action, key, path }) =>
+  produce(state, (draft) => {
+    const startDone = mark(`cache.MUTATE_START`);
+    if (action.payload && action.payload.data) {
+      const optimisiticUpdates =
+        translateMutationToOverrides(action, draft.database) || [];
+
+      optimisiticUpdates.forEach(({ collection, doc, data }) => {
+        info('overriding', `${collection}/${doc}`, data);
+        setWith(draft, ['databaseOverrides', collection, doc], data, Object);
+      });
+
+      const updatePaths = [
+        ...new Set(optimisiticUpdates.map(({ collection }) => collection)),
+      ];
+      updatePaths.forEach((path) => {
+        updateCollectionQueries(draft, path);
+      });
+    }
+
+    startDone();
+    return draft;
+  });
+
+const HANDLERS = {
+  [actionTypes.GET_SUCCESS]: initialize,
+  [actionTypes.LISTENER_RESPONSE]: initialize,
+  [actionTypes.UNSET_LISTENER]: conclude,
+  [actionTypes.DOCUMENT_ADDED]: modify,
+  [actionTypes.DOCUMENT_MODIFIED]: modify,
+  [actionTypes.DELETE_SUCCESS]: deletion,
+  [actionTypes.DOCUMENT_REMOVED]: remove,
+  [actionTypes.OPTIMISTIC_ADDED]: optimistic,
+  [actionTypes.OPTIMISTIC_MODIFIED]: optimistic,
+  [actionTypes.OPTIMISTIC_REMOVED]: reset,
+  [actionTypes.MUTATE_FAILURE]: failure,
+  [actionTypes.DELETE_FAILURE]: failure,
+  [actionTypes.UPDATE_FAILURE]: failure,
+  [actionTypes.SET_FAILURE]: failure,
+  [actionTypes.ADD_FAILURE]: failure,
+  [actionTypes.MUTATE_START]: mutation,
+};
+
 /**
  * @name cacheReducer
  * Reducer for in-memory database
@@ -528,215 +767,14 @@ function shouldRemoveOverride(action, overrides) {
  * @returns {object} Queries state
  */
 export default function cacheReducer(state = {}, action) {
-  return produce(state, (draft) => {
-    const key =
-      !action.meta || !action.meta.collection
-        ? null
-        : action.meta.storeAs || getBaseQueryName(action.meta);
-    const path = !action.meta ? null : action.meta.collection;
+  const fnc = HANDLERS[action.type];
+  if (!fnc) return state;
 
-    switch (action.type) {
-      case actionTypes.GET_SUCCESS:
-      case actionTypes.LISTENER_RESPONSE:
-        const done = mark(`cache.LISTENER_RESPONSE`);
-        if (!draft.database) {
-          set(draft, ['database'], {});
-          set(draft, ['databaseOverrides'], {});
-        }
+  const key =
+    !action.meta || !action.meta.collection
+      ? null
+      : action.meta.storeAs || getBaseQueryName(action.meta);
+  const path = !action.meta ? null : action.meta.collection;
 
-        if (action.payload.data) {
-          Object.keys(action.payload.data).forEach((id) => {
-            setWith(
-              draft,
-              ['database', path, id],
-              action.payload.data[id],
-              Object,
-            );
-          });
-        }
-
-        // set the query
-        set(draft, [key], {
-          ordered: action.payload.ordered.map(({ path, id }) => [path, id]),
-          ...action.meta,
-        });
-
-        // append docs field to query
-        updateCollectionQueries(draft, path);
-
-        done();
-        return draft;
-
-      case actionTypes.UNSET_LISTENER:
-        const unsetDone = mark(`cache.UNSET_LISTENER`);
-        if (draft[key]) {
-          // all ids for the collection type, except query to be unset
-          const activeIds = Object.keys(draft).reduce((inUse, dbKey) => {
-            const { collection, ordered } = draft[dbKey];
-            if (dbKey !== key && collection === path) {
-              return [...inUse, ...ordered.map(([___, id]) => id)];
-            }
-
-            return inUse;
-          }, []);
-
-          // remove docs from database if unsed by other queries
-          draft[key].ordered.forEach(([__, id]) => {
-            if (!activeIds.includes(id)) {
-              unset(draft, ['database', path, id]);
-            }
-          });
-
-          // remove query
-          unset(draft, [key]);
-
-          updateCollectionQueries(draft, path);
-        }
-
-        unsetDone();
-        return draft;
-
-      case actionTypes.DOCUMENT_ADDED:
-      case actionTypes.DOCUMENT_MODIFIED:
-        const addDone = mark(`cache.DOCUMENT_MODIFIED`);
-        setWith(
-          draft,
-          ['database', path, action.meta.doc],
-          action.payload.data,
-          Object,
-        );
-
-        const remove = shouldRemoveOverride(action, draft.databaseOverrides);
-        if (remove) {
-          unset(draft, ['databaseOverrides', path, action.meta.doc]);
-        }
-
-        const { payload } = action;
-        const { oldIndex = 0, newIndex = 0 } = payload.ordered || {};
-        if (newIndex !== oldIndex) {
-          const tuple =
-            (payload.data && [payload.data.path, payload.data.id]) ||
-            draft[key].ordered[oldIndex];
-
-          const { ordered } = draft[key] || { ordered: [] };
-          if (oldIndex !== -1) {
-            ordered.splice(oldIndex, 0);
-          }
-          ordered.splice(newIndex, 0, tuple);
-
-          set(draft, [key, 'ordered'], ordered);
-        }
-
-        updateCollectionQueries(draft, path);
-
-        addDone();
-        return draft;
-
-      case actionTypes.DELETE_SUCCESS:
-        if (draft.database && draft.database[path]) {
-          unset(draft, ['database', path, action.meta.doc]);
-        }
-      // eslint-disable-next-line no-fallthrough
-      case actionTypes.DOCUMENT_REMOVED:
-        const removeDone = mark(`cache.DOCUMENT_REMOVED`);
-        if (draft.databaseOverrides && draft.databaseOverrides[path]) {
-          unset(draft, ['databaseOverrides', path, action.meta.doc]);
-        }
-
-        // remove document id from ordered index
-        if (draft[key] && draft[key].ordered) {
-          const idx = findIndex(draft[key].ordered, [1, action.meta.doc]);
-          draft[key].ordered.splice(idx, 1);
-        }
-
-        // reprocess
-        updateCollectionQueries(draft, path);
-
-        removeDone();
-        return draft;
-
-      case actionTypes.OPTIMISTIC_ADDED:
-      case actionTypes.OPTIMISTIC_MODIFIED:
-        setWith(
-          draft,
-          ['databaseOverrides', path, action.meta.doc],
-          action.payload.data,
-          Object,
-        );
-
-        updateCollectionQueries(draft, path);
-        return draft;
-
-      case actionTypes.OPTIMISTIC_REMOVED:
-        unset(draft, ['databaseOverrides', path, action.meta.doc]);
-        updateCollectionQueries(draft, path);
-        return draft;
-
-      case actionTypes.MUTATE_FAILURE:
-      case actionTypes.DELETE_FAILURE:
-      case actionTypes.UPDATE_FAILURE:
-      case actionTypes.SET_FAILURE:
-      case actionTypes.ADD_FAILURE:
-        const failureDone = mark(`cache.MUTATE_FAILURE`);
-        // All failures remove overrides
-        if (action.payload.data || action.payload.args) {
-          const write = action.payload.data
-            ? [{ writes: [action.payload.data] }]
-            : action.payload.args;
-          const allPaths = write.reduce(
-            (results, { writes }) => [
-              ...results,
-              ...writes.map(({ collection, path: _path, doc, id }) => {
-                info('remove override', `${collection}/${doc}`);
-                unset(
-                  draft,
-                  ['databaseOverrides', _path || collection, id || doc],
-                  null,
-                );
-                return path || collection;
-              }),
-            ],
-            [],
-          );
-
-          const uniquePaths = Array.from(new Set(allPaths));
-          if (uniquePaths.length > 0) {
-            updateCollectionQueries(draft, uniquePaths);
-          }
-        }
-
-        failureDone();
-        return draft;
-
-      case actionTypes.MUTATE_START:
-        const startDone = mark(`cache.MUTATE_START`);
-        if (action.payload && action.payload.data) {
-          const optimisiticUpdates =
-            translateMutationToOverrides(action, draft.database) || [];
-
-          optimisiticUpdates.forEach(({ collection, doc, data }) => {
-            info('overriding', `${collection}/${doc}`, data);
-            setWith(
-              draft,
-              ['databaseOverrides', collection, doc],
-              data,
-              Object,
-            );
-          });
-
-          const updatePaths = [
-            ...new Set(optimisiticUpdates.map(({ collection }) => collection)),
-          ];
-          updatePaths.forEach((path) => {
-            updateCollectionQueries(draft, path);
-          });
-        }
-
-        startDone();
-        return draft;
-
-      default:
-        return state;
-    }
-  });
+  return fnc(state, { action, key, path });
 }

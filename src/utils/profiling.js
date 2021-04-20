@@ -1,11 +1,7 @@
 import { noop } from 'lodash';
+import debug from 'debug';
 
 let win;
-
-const isDev =
-  !process.env.NODE_ENV ||
-  process.env.NODE_ENV === 'development' ||
-  process.env.NODE_ENV === 'test';
 
 try {
   // eslint-disable-next-line dot-notation
@@ -25,7 +21,7 @@ const perf = win && win.performance;
  * @returns {Function}
  */
 export default function mark(marker) {
-  if (!isDev || !perf) return noop;
+  if (!debug.enabled('rrf') || !perf) return noop;
 
   try {
     const now = perf.now();
