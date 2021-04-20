@@ -54,57 +54,24 @@ function isSingleWrite(operations) {
 
 // ----- FieldValue support -----
 
-/**
- * Not a Mutate, just an array
- * @param {Array} arr
- * @returns Null | Array
- */
 const primaryValue = (arr) =>
-  arr && typeof arr[0] === 'string' && arr[0].indexOf('::') === 0 ? null : arr;
+  Array.isArray(arr) && typeof arr[0] === 'string' && arr[0].indexOf('::') === 0
+    ? null
+    : arr;
 
-/**
- * Mutate ArrayUnion
- * @param {object} firebase - firebase
- * @param {string} key - mutate tuple key
- * @param {*} val - mutate tuple value
- * @returns Null | Array<*>
- */
-function arrayUnion(firebase, key, val) {
+const arrayUnion = (firebase, key, val) => {
   if (key !== '::arrayUnion') return null;
   return firebase.firestore.FieldValue.arrayUnion(val);
-}
+};
 
-/**
- * Mutate arrayRemove
- * @param {object} firebase - firebase
- * @param {string} key - mutate tuple key
- * @param {*} val - mutate tuple value
- * @returns Null | Array<*>
- */
-function arrayRemove(firebase, key, val) {
-  return (
-    key === '::arrayRemove' && firebase.firestore.FieldValue.arrayRemove(val)
-  );
-}
+const arrayRemove = (firebase, key, val) =>
+  key === '::arrayRemove' && firebase.firestore.FieldValue.arrayRemove(val);
 
-/**
- * Mutate increment
- * @param {object} firebase - firebase
- * @param {string} key - mutate tuple key
- * @param {*} val - mutate tuple value
- * @returns Null | number
- */
 const increment = (firebase, key, val) =>
   key === '::increment' &&
   typeof val === 'number' &&
   firebase.firestore.FieldValue.increment(val);
 
-/**
- * Mutate timestamp
- * @param {object} firebase - firebase
- * @param {*} key
- * @returns
- */
 const serverTimestamp = (firebase, key) =>
   key === '::serverTimestamp' &&
   firebase.firestore.FieldValue.serverTimestamp();
@@ -119,6 +86,8 @@ function atomize(firebase, operation) {
   return Object.keys(operation).reduce((data, key) => {
     const clone = { ...data };
     const val = clone[key];
+    if (!val) return clone;
+
     const value =
       primaryValue(val) ||
       serverTimestamp(firebase, val[0]) ||

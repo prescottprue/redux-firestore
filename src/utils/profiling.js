@@ -23,6 +23,7 @@ const perf = win && win.performance;
 export default function mark(marker) {
   if (!debug.enabled('rrf') || !perf) return noop;
 
+  /* istanbul ignore next */
   try {
     const now = perf.now();
     const start = `@rrf/${marker}-${now}`;
