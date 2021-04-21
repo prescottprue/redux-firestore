@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 import { noop } from 'lodash';
 import debug from 'debug';
 
@@ -23,7 +24,6 @@ const perf = win && win.performance;
 export default function mark(marker) {
   if (!debug.enabled('rrf') || !perf) return noop;
 
-  /* istanbul ignore next */
   try {
     const now = perf.now();
     const start = `@rrf/${marker}-${now}`;
@@ -35,4 +35,34 @@ export default function mark(marker) {
     // ensure timings never impact the user
     return noop;
   }
+}
+
+if (win) {
+  win.rrfStats = () => {
+    const stats = performance
+      .getEntries()
+      .filter(({ entryType }) => entryType === 'measure')
+      .filter(({ name }) => name.indexOf('@rrf/') === 0)
+      .reduce((stats, { duration, name }) => {
+        if (stats[name]) {
+          stats[name].push(duration);
+        } else {
+          // eslint-disable-next-line no-param-reassign
+          stats[name] = [duration];
+        }
+        return stats;
+      }, {});
+    Object.keys(stats).map((name) => {
+      const arr = stats[name];
+      const sum = arr.reduce((a, b) => a + b, 0);
+      const mean = (sum / arr.length).toFixed(2);
+      const min = arr.reduce((a, b) => (a < b ? a : b), arr[0]).toFixed(2);
+      const max = arr.reduce((a, b) => (a > b ? a : b), arr[0]).toFixed(2);
+      console.log(
+        `${name}\nmean: ${mean}ms\nmin: ${min}ms\nmax: ${max}ms\ntotal: ${sum.toFixed(
+          2,
+        )}ms\ncount: ${arr.length}`,
+      );
+    });
+  };
 }

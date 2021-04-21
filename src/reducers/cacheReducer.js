@@ -302,17 +302,9 @@ function buildTransducer(overrides, query) {
   const xfLimit = !useOverrides || limit ? null : limitTransducer(limit);
 
   if (!useOverrides) {
-    /* istanbul ignore next */
-    if (info.enabled) {
-      info('transducer', JSON.stringify(query, null, 2));
-    }
     return flow(compact([xfPopulate, xfGetCollection, xfGetDoc, xfFields]));
   }
 
-  /* istanbul ignore next */
-  if (info.enabled) {
-    info('optimistic transducer', JSON.stringify(query, null, 2));
-  }
   return flow(
     compact([
       xfPopulate,
@@ -341,12 +333,14 @@ function selectDocuments(reducerState, query) {
 }
 
 /**
- * @name updateCollectionQueries
+ * @name reprocessQuerires
  * Rerun all queries that contain the same collection
  * @param {object} draft - reducer state
  * @param {string} path - path to rerun queries for
  */
-function updateCollectionQueries(draft, path) {
+function reprocessQuerires(draft, path) {
+  const done = mark(`reprocess-${path}`);
+
   info(`reprocess queries for ${path}`);
   const paths = Array.isArray(path) ? path : [path];
   Object.keys(draft).forEach((key) => {
@@ -360,6 +354,8 @@ function updateCollectionQueries(draft, path) {
 
     set(draft, [key, 'docs'], selectDocuments(draft, draft[key]));
   });
+
+  done();
 }
 
 // --- Mutate support ---
@@ -466,6 +462,7 @@ function atomize(mutation, cached) {
  */
 function translateMutationToOverrides({ payload }, db) {
   // turn everything to a write
+  const done = mark('mutation overrides');
   let { reads, writes } = payload.data || {};
   if (!writes) {
     writes = Array.isArray(payload.data) ? payload.data : [payload.data];
@@ -489,7 +486,7 @@ function translateMutationToOverrides({ payload }, db) {
     }, reads);
   }
 
-  return writes
+  const overrides = writes
     .map((writer) => (isFunction(writer) ? writer(reader) : writer))
     .map(({ collection, path, doc, id, data, ...rest }) => ({
       collection: path || collection,
@@ -500,6 +497,9 @@ function translateMutationToOverrides({ payload }, db) {
         return (coll[id || doc] || {})[key];
       }),
     }));
+
+  done();
+  return overrides;
 }
 
 /**
@@ -543,7 +543,7 @@ const initialize = (state, { action, key, path }) =>
     });
 
     // append docs field to query
-    updateCollectionQueries(draft, path);
+    reprocessQuerires(draft, path);
 
     done();
     return draft;
@@ -573,7 +573,7 @@ const conclude = (state, { action, key, path }) =>
       // remove query
       unset(draft, [key]);
 
-      updateCollectionQueries(draft, path);
+      reprocessQuerires(draft, path);
     }
 
     unsetDone();
@@ -611,7 +611,7 @@ const modify = (state, { action, key, path }) =>
       set(draft, [key, 'ordered'], ordered);
     }
 
-    updateCollectionQueries(draft, path);
+    reprocessQuerires(draft, path);
 
     addDone();
     return draft;
@@ -643,7 +643,7 @@ const failure = (state, { action, key, path }) =>
 
       const uniquePaths = Array.from(new Set(allPaths));
       if (uniquePaths.length > 0) {
-        updateCollectionQueries(draft, uniquePaths);
+        reprocessQuerires(draft, uniquePaths);
       }
     }
 
@@ -669,7 +669,7 @@ const deletion = (state, { action, key, path }) =>
     }
 
     // reprocess
-    updateCollectionQueries(draft, path);
+    reprocessQuerires(draft, path);
 
     done();
     return draft;
@@ -689,7 +689,7 @@ const remove = (state, { action, key, path }) =>
     }
 
     // reprocess
-    updateCollectionQueries(draft, path);
+    reprocessQuerires(draft, path);
 
     removeDone();
     return draft;
@@ -704,14 +704,14 @@ const optimistic = (state, { action, key, path }) =>
       Object,
     );
 
-    updateCollectionQueries(draft, path);
+    reprocessQuerires(draft, path);
     return draft;
   });
 
 const reset = (state, { action, key, path }) =>
   produce(state, (draft) => {
     unset(draft, ['databaseOverrides', path, action.meta.doc]);
-    updateCollectionQueries(draft, path);
+    reprocessQuerires(draft, path);
     return draft;
   });
 
@@ -731,7 +731,7 @@ const mutation = (state, { action, key, path }) =>
         ...new Set(optimisiticUpdates.map(({ collection }) => collection)),
       ];
       updatePaths.forEach((path) => {
-        updateCollectionQueries(draft, path);
+        reprocessQuerires(draft, path);
       });
     }
 
