@@ -272,6 +272,9 @@ describe('cacheReducer', () => {
       expect(pass1.cache.testStoreAs.docs[1]).to.eql(undefined);
       expect(pass2.cache.testStoreAs.docs[0]).to.eql(doc1);
       expect(pass2.cache.testStoreAs.docs[1]).to.eql(doc2);
+
+      expect(pass1.cache.testStoreAs.ordered[1]).to.eql(undefined);
+      expect(pass2.cache.testStoreAs.ordered[1]).to.eql([doc2.path, doc2.id]);
     });
 
     it('remove a document override synchronously', () => {
@@ -717,9 +720,6 @@ describe('cacheReducer', () => {
 
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
-
-      console.dir(pass1.cache.database.testCollection);
-      console.dir(pass2.cache.database.testCollection);
 
       expect(pass1.cache.testStoreAs.docs[0]).to.eql(doc2);
       expect(pass1.cache.testStoreAs.docs[1]).to.eql(doc1);

@@ -351,8 +351,10 @@ function reprocessQuerires(draft, path) {
     if (!collections.some((coll) => paths.includes(coll))) {
       return;
     }
-
-    set(draft, [key, 'docs'], selectDocuments(draft, draft[key]));
+    const docs = selectDocuments(draft, draft[key]);
+    const ordered = docs.map(({ id, path: _path }) => [_path, id]);
+    set(draft, [key, 'docs'], docs);
+    set(draft, [key, 'ordered'], ordered);
   });
 
   done();
