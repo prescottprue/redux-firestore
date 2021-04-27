@@ -687,7 +687,10 @@ const remove = (state, { action, key, path }) =>
     // remove document id from ordered index
     if (draft[key] && draft[key].ordered) {
       const idx = findIndex(draft[key].ordered, [1, action.meta.doc]);
-      draft[key].ordered.splice(idx, 1);
+      const wasNotAlreadyRemoved = idx !== -1;
+      if (wasNotAlreadyRemoved) {
+        draft[key].ordered.splice(idx, 1);
+      }
     }
 
     // reprocess
