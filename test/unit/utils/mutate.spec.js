@@ -120,7 +120,7 @@ describe('firestore.mutate()', () => {
     const withConverter = sinon.spy(() => ({ get: firestoreGet }));
     const where = sinon.spy(() => ({ get: firestoreGet, withConverter }));
     const collection = sinon.spy(() => ({ doc, withConverter, where }));
-    const set = sinon.spy();
+    const update = sinon.spy();
     function* mock() {
       yield Promise.resolve({
         ref: { id: 'sprint-1', parent: { path: 'sprints' } },
@@ -139,7 +139,7 @@ describe('firestore.mutate()', () => {
     }
     const mocked = mock();
     const transactionGet = () => mocked.next().value;
-    const transaction = { set, get: transactionGet };
+    const transaction = { update, get: transactionGet };
     const runTransaction = sinon.spy((cb) => cb(transaction));
     const doc = sinon.spy((val) => ({
       doc: val,
@@ -172,6 +172,7 @@ describe('firestore.mutate()', () => {
               collection: 'orgs/tara-ai/tasks',
               doc: task.id,
               data: {
+                'nested.field': 'new-value',
                 nextSprintId:
                   team?.sprintSettings.moveRemainingTasksTo === 'Backlog'
                     ? null
@@ -182,18 +183,18 @@ describe('firestore.mutate()', () => {
       },
     );
 
-    expect(set.calledTwice);
+    expect(update.calledTwice);
     expect(
-      set.calledWith(
+      update.calledWith(
         { doc: 'task-id-1' },
-        { nextSprintId: 'next-sprint-id-123' },
+        { nextSprintId: 'next-sprint-id-123', 'nested.field': 'new-value' },
         { merge: true },
       ),
     );
     expect(
-      set.calledWith(
+      update.calledWith(
         { doc: 'task-id-2' },
-        { nextSprintId: 'next-sprint-id-123' },
+        { nextSprintId: 'next-sprint-id-123', 'nested.field': 'new-value' },
         { merge: true },
       ),
     );
@@ -279,8 +280,10 @@ describe('firestore.mutate()', () => {
 
   it('handles stringified Field Values', async () => {
     const set = sinon.spy();
+    const update = sinon.spy();
     const doc = sinon.spy(() => ({
       set,
+      update,
       id: 'id',
       parent: { path: 'path' },
     }));
@@ -312,7 +315,8 @@ describe('firestore.mutate()', () => {
 
     expect(collection.calledWith('orgs/tara-ai/teams'));
     expect(doc.calledWith('team-bravo'));
-    expect(set.calledWith({ name: 'Bravo Team 🎄' }, { merge: true }));
+    expect(update.calledWith({ name: 'Bravo Team 🎄' }));
+    expect(set.notCalled);
     expect(firestore.FieldValue.serverTimestamp).to.have.been.calledOnce;
     expect(firestore.FieldValue.increment).to.have.been.calledOnce;
     expect(firestore.FieldValue.arrayRemove).to.have.been.calledOnce;

@@ -83,30 +83,38 @@ const serverTimestamp = (firebase, key) =>
  * @returns
  */
 function atomize(firebase, operation) {
-  return Object.keys(operation).reduce((data, key) => {
-    const clone = { ...data };
-    const val = clone[key];
-    if (!val) return clone;
+  let requiresUpdate = false;
+  return [
+    Object.keys(operation).reduce((data, key) => {
+      const clone = { ...data };
+      const val = clone[key];
+      if (key.includes('.')) {
+        requiresUpdate = true;
+      }
+      if (!val) return clone;
 
-    const value =
-      primaryValue(val) ||
-      serverTimestamp(firebase, val[0]) ||
-      arrayUnion(firebase, val[0], val[1]) ||
-      arrayRemove(firebase, val[0], val[1]) ||
-      increment(firebase, val[0], val[1]);
+      const value =
+        primaryValue(val) ||
+        serverTimestamp(firebase, val[0]) ||
+        arrayUnion(firebase, val[0], val[1]) ||
+        arrayRemove(firebase, val[0], val[1]) ||
+        increment(firebase, val[0], val[1]);
 
-    if (Array.isArray(val) && val.length > 0) {
-      // eslint-disable-next-line no-param-reassign
-      clone[key] = value;
-    }
-    return clone;
-  }, cloneDeep(operation));
+      if (Array.isArray(val) && val.length > 0) {
+        // eslint-disable-next-line no-param-reassign
+        clone[key] = value;
+      }
+      return clone;
+    }, cloneDeep(operation)),
+    requiresUpdate,
+  ];
 }
 
 // ----- write functions -----
 
 /**
- *
+ * For details between set & udpate see:
+ * https://firebase.google.com/docs/reference/js/firebase.firestore.Transaction#update
  * @param {object} firebase
  * @param {Mutation_v1 | Mutation_v2} operation
  * @param {Batch | Transaction} writer
@@ -115,15 +123,23 @@ function atomize(firebase, operation) {
 function write(firebase, operation = {}, writer = null) {
   const { collection, path, doc, id, data, ...rest } = operation;
   const ref = docRef(firebase.firestore(), path || collection, id || doc);
-  const changes = atomize(firebase, data || rest);
+  const [changes, useUpdate = false] = atomize(firebase, data || rest);
 
   if (writer) {
     const writeType = writer.commit ? 'Batching' : 'Transaction.set';
     info(writeType, { id: ref.id, path: ref.parent.path, ...changes });
-    writer.set(ref, changes, { merge: true });
+    if (useUpdate) {
+      writer.update(ref, changes);
+    } else {
+      writer.set(ref, changes, { merge: true });
+    }
     return { id: ref.id, path: ref.parent.path, ...changes };
   }
   info('Writing', { id: ref.id, path: ref.parent.path, ...changes });
+  if (useUpdate) {
+    return ref.update(changes);
+  }
+
   return ref.set(changes, { merge: true });
 }
 
