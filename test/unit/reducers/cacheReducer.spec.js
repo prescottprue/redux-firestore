@@ -213,7 +213,7 @@ describe('cacheReducer', () => {
   describe('LISTENER_RESPONSE', () => {
     it('override a document modification synchronously', () => {
       const doc1 = { key1: 'value1', id: 'testDocId1', path }; // initial doc
-      const doc2 = { key2: 'value2', id: 'testDocId1', path }; // added doc
+      const doc2 = { key2: null, id: 'testDocId1', path }; // added doc
 
       // Initial seed
       const action1 = {
@@ -237,7 +237,8 @@ describe('cacheReducer', () => {
 
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
-
+      console.log(pass2.cache.databaseOverrides);
+      console.log(pass2.cache.testStoreAs.docs[0]);
       expect(pass1.cache.testStoreAs.docs[0]).to.eql(doc1);
       expect(pass2.cache.testStoreAs.docs[0]).to.eql({ ...doc1, ...doc2 });
     });
@@ -635,7 +636,7 @@ describe('cacheReducer', () => {
       expect(pass2.cache.databaseOverrides[collection]).to.eql({
         [change.id]: change,
       });
-      expect(pass3.cache.databaseOverrides[collection]).to.eql({});
+      expect(pass3.cache.databaseOverrides).to.eql({});
     });
   });
 

@@ -22,7 +22,9 @@ const perf = win && win.performance;
  * @returns {Function}
  */
 export default function mark(marker) {
-  if (!debug.enabled('rrf') || !perf) return noop;
+  if (!debug.enabled('rrf:*') || !debug.enabled('rrf:profile') || !perf) {
+    return noop;
+  }
 
   try {
     const now = perf.now();
