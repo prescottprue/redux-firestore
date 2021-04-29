@@ -361,7 +361,7 @@ function reprocessQuerires(draft, path) {
 
   if (info.enabled) {
     const overrides = JSON.parse(JSON.stringify(draft.databaseOverrides || {}));
-    info(`reprocess ${path} (${q.length} queries) with overrides`, overrides);
+    info(`reprocess ${path} (${queries.length} queries) with overrides`, overrides);
   }
 
   done();
