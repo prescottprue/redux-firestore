@@ -471,7 +471,6 @@ function atomize(mutation, cached) {
  */
 function translateMutationToOverrides({ payload }, db) {
   // turn everything to a write
-  const done = mark('mutation overrides');
   let { reads, writes } = payload.data || {};
   if (!writes) {
     writes = Array.isArray(payload.data) ? payload.data : [payload.data];
@@ -507,7 +506,6 @@ function translateMutationToOverrides({ payload }, db) {
       }),
     }));
 
-  done();
   return overrides;
 }
 

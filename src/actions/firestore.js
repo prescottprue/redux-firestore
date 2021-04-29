@@ -1,5 +1,6 @@
 /* eslint-disable jsdoc/require-param */
 import { every } from 'lodash';
+import { resource } from '../utils/profiling';
 import { wrapInDispatch } from '../utils/actions';
 import { actionTypes } from '../constants';
 import {
@@ -186,9 +187,12 @@ export function deleteRef(firebase, dispatch, queryOption) {
  */
 export function setListener(firebase, dispatch, queryOpts, successCb, errorCb) {
   const meta = getQueryConfig(queryOpts);
+  const done = resource(meta.collection);
 
   // Create listener
   const success = (docData) => {
+    done(docData.size);
+
     // Dispatch directly if no populates
     if (!meta.populates) {
       dispatchListenerResponse({ dispatch, docData, meta, firebase });
@@ -228,6 +232,7 @@ export function setListener(firebase, dispatch, queryOpts, successCb, errorCb) {
   };
 
   const error = (err) => {
+    done(0);
     const {
       mergeOrdered,
       mergeOrderedDocUpdates,
