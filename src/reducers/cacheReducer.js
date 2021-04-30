@@ -188,6 +188,8 @@ const filterTransducers = (where) => {
           value = doc[field];
         }
 
+        if (value === undefined) value = null;
+
         return fnc(value, val);
       }),
     );
