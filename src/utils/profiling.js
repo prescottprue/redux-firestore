@@ -76,7 +76,7 @@ if (win) {
       );
     }
     const getMarks = ({ name }) => name.indexOf('@rrf/') === 0;
-    const getLoads = ({ name }) => name.indexOf('@rrf/') > 0;
+    const getLoads = ({ name }) => name.indexOf('@rrf.load/') === 0;
     const duration = (stats, { duration, name }) => {
       if (stats[name]) {
         stats[name].push(duration);
