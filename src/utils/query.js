@@ -752,7 +752,7 @@ const changeTypeToEventType = {
  * @returns {object} Resolves with doc change action object
  */
 function docChangeEvent(change, originalMeta = {}) {
-  const meta = { ...cloneDeep(originalMeta), path: change.doc.ref.path };
+  const meta = { ...cloneDeep(originalMeta), path: change.doc.ref.parent.path };
   if (originalMeta.subcollections && !originalMeta.storeAs) {
     meta.subcollections[0] = { ...meta.subcollections[0], doc: change.doc.id };
   } else {

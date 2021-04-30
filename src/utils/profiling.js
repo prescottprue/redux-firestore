@@ -3,6 +3,8 @@
 import { noop } from 'lodash';
 import debug from 'debug';
 
+const info = debug('rrf:profile');
+
 let win;
 
 try {
@@ -22,7 +24,7 @@ const perf = win && win.performance;
  * @param {*} isDone
  * @returns {Function}
  */
-export default function mark(marker) {
+export default function mark(marker, context = '') {
   if (!debug.enabled('rrf:*') || !debug.enabled('rrf:profile') || !perf) {
     return noop;
   }
@@ -31,6 +33,9 @@ export default function mark(marker) {
     const now = perf.now();
     const start = `@rrf/${marker}-${now}`;
     perf.mark(start);
+    if (context) {
+      info(`${marker}.${context}`);
+    }
     return () => {
       perf.measure(`@rrf/${marker}`, start);
     };
