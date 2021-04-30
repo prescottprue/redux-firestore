@@ -119,7 +119,7 @@ const PROCESSES = {
  * @returns {xFormDocument} - transducer
  */
 const getDocumentTransducer = (ids) =>
-  partialRight(map, (coll) => ids.map((id) => coll[id]));
+  partialRight(map, (coll) => ids.map((id) => coll[id]).filter(Boolean));
 
 /**
  * @name getCollectionTransducer
@@ -515,9 +515,10 @@ function translateMutationToOverrides({ payload }, db) {
 }
 
 /**
- *
- * @param {object} draft
- * @param {object} action
+ * @param {object} draft - reduce state
+ * @param {string} action.path - path of the parent collection
+ * @param {string} action.id - document id
+ * @param {object} action.data - data in the payload
  */
 function cleanOverride(draft, { path, id, data }) {
   if (!path || !id) return;
@@ -526,34 +527,31 @@ function cleanOverride(draft, { path, id, data }) {
 
   if (!override || (data && !isMatch(data, override))) return;
 
-  const props = Object.keys(override).filter((key) => {
-    console.log(
-      key,
-      data && data[key],
-      JSON.parse(JSON.stringify(override[key])),
-      isEqual(data, { [key]: override[key] }),
-    );
+  const keys = Object.keys(override);
+  const props = !data
+    ? keys
+    : keys.filter((key) => {
+        // manually check draft proxy values
+        const current = get(data, key);
+        const optimistic = override[key];
 
-    // manually check draft proxy values
-    const current = get(data, key);
-    const optimistic = override[key];
-    if (current === null || current === undefined) {
-      return current === optimistic;
-    }
-    if (Array.isArray(current)) {
-      return current.every((val, idx) => val === optimistic[idx]);
-    }
-    if (typeof current === 'object') {
-      return Object.keys(current).every(
-        (key) => current[key] === optimistic[key],
-      );
-    }
-    return isEqual(data[key], override[key]);
-  });
+        if (current === null || current === undefined) {
+          return current === optimistic;
+        }
+        if (Array.isArray(current)) {
+          return current.every((val, idx) => val === optimistic[idx]);
+        }
+        if (typeof current === 'object') {
+          return Object.keys(current).every(
+            (key) => current[key] === optimistic[key],
+          );
+        }
+        return isEqual(data[key], override[key]);
+      });
 
   const isDone = props.length === Object.keys(override).length;
   const isEmpty =
-    isDone && Object.keys(draft.databaseOverrides[path] || {}).length >= 1;
+    isDone && Object.keys(draft.databaseOverrides[path] || {}).length === 1;
 
   if (isEmpty) {
     unset(draft, ['databaseOverrides', path]);

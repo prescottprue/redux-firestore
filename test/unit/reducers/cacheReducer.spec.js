@@ -532,8 +532,6 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
       const pass3 = reducer(pass2, action3);
-      console.log(pass2.cache.notTwo.docs[0]);
-      console.log(pass2.cache.isIdMatch.docs[0]);
 
       // doc moved from testOne to testTwo query
       expect(pass3.cache.notTwo.docs[0]).to.eql(undefined);
@@ -677,9 +675,9 @@ describe('cacheReducer', () => {
 
     it('Firestore added document multiple overrides', () => {
       const doc1 = { key1: 'value1', id: 'testDocId1', path };
-      const change = { key2: 'value2', id: 'testDocId1', path };
-      const doc2 = { ...doc1, ...change };
-      const doc3 = { key1: 'value1', id: 'testDocId2', path };
+      const change1 = { key2: 'value2', id: 'testDocId1', path };
+      const doc1a = { ...doc1, ...change1 };
+      const doc2 = { key1: 'value1', id: 'testDocId2', path };
 
       const action1 = {
         meta: {
@@ -696,28 +694,28 @@ describe('cacheReducer', () => {
         type: actionTypes.OPTIMISTIC_ADDED,
         meta: {
           collection,
-          doc: change.id,
+          doc: change1.id,
         },
-        payload: { data: change },
+        payload: { data: change1 },
       };
 
       const action3 = {
         type: actionTypes.OPTIMISTIC_ADDED,
         meta: {
           collection,
-          doc: doc3.id,
+          doc: doc2.id,
         },
-        payload: { data: doc3 },
+        payload: { data: doc2 },
       };
 
       const action4 = {
         type: actionTypes.DOCUMENT_ADDED,
         meta: {
           collection,
-          doc: doc2.id,
+          doc: doc1a.id,
         },
         payload: {
-          data: doc2,
+          data: doc1a,
           ordered: { newIndex: 0, oldIndex: -1 },
         },
       };
@@ -729,22 +727,22 @@ describe('cacheReducer', () => {
 
       // docs
       expect(pass1.cache.testStoreAs.docs[0]).to.eql(doc1);
-      expect(pass2.cache.testStoreAs.docs[0]).to.eql(doc2);
+      expect(pass2.cache.testStoreAs.docs[0]).to.eql(doc1a);
 
-      expect(pass3.cache.testStoreAs.docs).to.eql([doc2, doc3]);
-      expect(pass4.cache.testStoreAs.docs).to.eql([doc2, doc3]);
+      expect(pass3.cache.testStoreAs.docs).to.eql([doc1a, doc2]);
+      expect(pass4.cache.testStoreAs.docs).to.eql([doc1a, doc2]);
 
       // overrides
       expect(pass1.cache.databaseOverrides).to.eql({});
       expect(pass2.cache.databaseOverrides[collection]).to.eql({
-        [change.id]: change,
+        [change1.id]: change1,
       });
       expect(pass3.cache.databaseOverrides[collection]).to.eql({
-        [change.id]: change,
-        [doc3.id]: doc3,
+        [change1.id]: change1,
+        [doc2.id]: doc2,
       });
       expect(pass4.cache.databaseOverrides[collection]).to.eql({
-        [doc3.id]: doc3,
+        [doc2.id]: doc2,
       });
     });
   });
@@ -786,9 +784,6 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      console.log(pass2.cache.database);
-      console.log(pass2.cache.databaseOverrides);
-      console.log(pass2.cache.lessThanTwo);
       expect(pass1.cache.lessThanTwo.docs[0]).to.eql(doc2);
       expect(pass1.cache.lessThanTwo.docs[1]).to.eql(doc1);
 
