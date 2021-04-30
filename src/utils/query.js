@@ -172,11 +172,9 @@ export function firestoreRef(firebase, meta) {
   const { globalDataConvertor } =
     (firebase && firebase._ && firebase._.config) || {};
 
-  if (path) ref = ref.collection(path);
-  if (collection) ref = ref.collection(collection);
+  if (path || collection) ref = ref.collection(path || collection);
   if (collectionGroup) ref = ref.collectionGroup(collectionGroup);
-  if (id) ref = ref.doc(id);
-  if (doc) ref = ref.doc(doc);
+  if (id || doc) ref = ref.doc(id || doc);
   ref = handleSubcollections(ref, subcollections);
   if (where) ref = addWhereToRef(ref, where);
   if (orderBy) ref = addOrderByToRef(ref, orderBy);

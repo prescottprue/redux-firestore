@@ -10,8 +10,7 @@ describe('firestore.mutate()', () => {
       id: 'id',
       parent: { path: 'path' },
     }));
-    const collection = sinon.spy(() => ({ doc }));
-    const firestore = sinon.spy(() => ({ collection }));
+    const firestore = sinon.spy(() => ({ doc }));
 
     await mutate(
       { firestore },
@@ -24,8 +23,7 @@ describe('firestore.mutate()', () => {
       },
     );
 
-    expect(collection.calledWith('orgs/tara-ai/teams'));
-    expect(doc.calledWith('team-bravo'));
+    expect(doc.calledWith('orgs/tara-ai/teams/team-bravo'));
     expect(set.calledWith({ name: 'Bravo Team 🎄' }, { merge: true }));
   });
 
@@ -37,10 +35,9 @@ describe('firestore.mutate()', () => {
       id: 'id',
       parent: { path: 'path' },
     }));
-    const collection = sinon.spy(() => ({ doc }));
 
     const batch = sinon.spy(() => ({ set, commit }));
-    const firestore = sinon.spy(() => ({ batch, collection }));
+    const firestore = sinon.spy(() => ({ batch, doc }));
 
     await mutate({ firestore }, [
       {
@@ -88,10 +85,9 @@ describe('firestore.mutate()', () => {
       id: 'id',
       parent: { path: 'path' },
     }));
-    const collection = sinon.spy(() => ({ doc }));
 
     const batch = sinon.spy(() => ({ set, commit }));
-    const firestore = sinon.spy(() => ({ batch, collection }));
+    const firestore = sinon.spy(() => ({ batch, doc }));
 
     const writes = Array.from(Array(501), (_el, index) => ({
       collection: 'orgs/tara-ai/teams',
@@ -288,7 +284,7 @@ describe('firestore.mutate()', () => {
       parent: { path: 'path' },
     }));
     const collection = sinon.spy(() => ({ doc }));
-    const firestore = sinon.spy(() => ({ collection }));
+    const firestore = sinon.spy(() => ({ collection, doc }));
     firestore.FieldValue = {
       serverTimestamp: sinon.spy(() => 'time'),
       increment: sinon.spy(() => '++'),

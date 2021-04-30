@@ -909,7 +909,7 @@ describe('firestoreActions', () => {
           parent: { path: 'path' },
         }));
         const collection = sinon.spy(() => ({ doc }));
-        const firestore = sinon.spy(() => ({ collection }));
+        const firestore = sinon.spy(() => ({ collection, doc }));
 
         const instance = createFirestoreInstance(
           { firestore },

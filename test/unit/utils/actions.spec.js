@@ -82,15 +82,14 @@ describe('actions utils', () => {
         parent: { path: 'path' },
       }));
       const collection = sinon.spy(() => ({ doc }));
-      const firestore = sinon.spy(() => ({ collection }));
+      const firestore = sinon.spy(() => ({ collection, doc }));
       wrapInDispatch(dispatchSpy, {
         ref: { firestore },
         types: ['mutate', 'mutate', 'mutate'],
         args: [{ collection: '/collection/path', doc: 'doc', data: { a: 1 } }],
         method: 'mutate',
       });
-      expect(collection).to.have.been.calledOnceWith('/collection/path');
-      expect(doc).to.have.been.calledOnceWith('doc');
+      expect(doc).to.have.been.calledOnceWith('/collection/path/doc');
       expect(set).to.have.been.calledOnceWith({ a: 1 });
     });
   });

@@ -403,46 +403,15 @@ const nestedMap = (obj, key, val) => {
   return obj;
 };
 
-/**
- * Mutate ArrayUnion
- * @param {string} key - mutate tuple key
- * @param {*} val - mutate tuple value
- * @param {Function} cached - function that returns in-memory cached instance
- * @returns Null | Array<*>
- */
-function arrayUnion(key, val, cached) {
-  if (key !== '::arrayUnion') return null;
-  return (cached() || []).concat([val]);
-}
+const arrayUnion = (key, val, cached) =>
+  key !== '::arrayUnion' ? null : (cached() || []).concat([val]);
 
-/**
- * Mutate arrayRemove
- * @param {string} key - mutate tuple key
- * @param {*} val - mutate tuple value
- * @param {Function} cached - function that returns in-memory cached instance
- * @returns Null | Array<*>
- */
-function arrayRemove(key, val, cached) {
-  return (
-    key === '::arrayRemove' && (cached() || []).filter((item) => item !== val)
-  );
-}
+const arrayRemove = (key, val, cached) =>
+  key === '::arrayRemove' && (cached() || []).filter((item) => item !== val);
 
-/**
- * Mutate increment
- * @param {string} key - mutate tuple key
- * @param {*} val - mutate tuple value
- * @param {Function} cached - function that returns in-memory cached instance
- * @returns Null | number
- */
 const increment = (key, val, cached) =>
   key === '::increment' && typeof val === 'number' && (cached() || 0) + val;
 
-/**
- * Mutate timestamp
- * @param {*} key
- * @returns
- */
 const serverTimestamp = (key) => key === '::serverTimestamp' && new Date();
 
 /**

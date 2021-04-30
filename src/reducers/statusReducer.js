@@ -71,7 +71,7 @@ export function requestedReducer(state = {}, { type, meta }) {
  * @param {object} action - Object containing the action that was dispatched
  * @param {string} action.type - Type of action that was dispatched
  * @param {string} action.path - Path of action that was dispatched
- * @param action.meta
+ * @param {object} action.meta - Metadata for action
  * @returns {object} Profile state after reduction
  */
 export function timestampsReducer(state = {}, { type, meta }) {

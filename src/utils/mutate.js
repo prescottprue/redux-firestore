@@ -1,4 +1,4 @@
-import { chunk, cloneDeep, flatten, isFunction, mapValues } from 'lodash';
+import { chunk, cloneDeep, flatten, mapValues } from 'lodash';
 import debug from 'debug';
 import { firestoreRef } from './query';
 import mark from './profiling';
@@ -12,7 +12,7 @@ const info = debug('rrf:mutate');
  * @returns Boolean
  */
 const docRef = (firestore, collection, doc) =>
-  firestore.collection(collection).doc(doc);
+  firestore.doc(`${collection}/${doc}`);
 
 /**
  * @param object
@@ -123,12 +123,12 @@ function atomize(firebase, operation) {
 function write(firebase, operation = {}, writer = null) {
   const { collection, path, doc, id, data, ...rest } = operation;
   const ref = docRef(firebase.firestore(), path || collection, id || doc);
-  const [changes, useUpdate = false] = atomize(firebase, data || rest);
+  const [changes, requiresUpdate = false] = atomize(firebase, data || rest);
 
   if (writer) {
     const writeType = writer.commit ? 'Batching' : 'Transaction.set';
     info(writeType, { id: ref.id, path: ref.parent.path, ...changes });
-    if (useUpdate) {
+    if (requiresUpdate) {
       writer.update(ref, changes);
     } else {
       writer.set(ref, changes, { merge: true });
@@ -136,7 +136,7 @@ function write(firebase, operation = {}, writer = null) {
     return { id: ref.id, path: ref.parent.path, ...changes };
   }
   info('Writing', { id: ref.id, path: ref.parent.path, ...changes });
-  if (useUpdate) {
+  if (requiresUpdate) {
     return ref.update(changes);
   }
 
@@ -196,23 +196,19 @@ async function writeInTransaction(firebase, operations) {
     };
 
     const done = mark('mutate.writeInTransaction:reads');
-    const readsPromised = mapValues(operations.reads, (read) => {
+    const readsPromised = mapValues(operations.reads, async (read) => {
       if (isDocRead(read)) {
         const doc = firestoreRef(firebase, read);
-        return getter(doc)
-          .then((snapshot) => (snapshot.exsits === false ? null : snapshot))
-          .then(serialize);
+        const snapshot = await getter(doc);
+        return serialize(snapshot.exsits === false ? null : snapshot);
       }
 
-      // NOTE: Firestore Transaction don't support collection inside
+      // NOTE: Queries are not supported in Firestore Transactions (client-side)
       const coll = firestoreRef(firebase, read);
-      return coll
-        .get()
-        .then((snapshot) => {
-          if (snapshot.docs.length === 0) return Promise.resolve([]);
-          return Promise.all(snapshot.docs.map(getter));
-        })
-        .then((docs) => docs.map(serialize));
+      const snapshot = await coll.get();
+      if (snapshot.docs.length === 0) return [];
+      const unserializedDocs = await Promise.all(snapshot.docs.map(getter));
+      return unserializedDocs.map(serialize);
     });
 
     done();
@@ -222,7 +218,8 @@ async function writeInTransaction(firebase, operations) {
 
     operations.writes.forEach((writeFnc) => {
       const complete = mark('mutate.writeInTransaction:writes');
-      const operation = isFunction(writeFnc) ? writeFnc(reads) : writeFnc;
+      const operation =
+        typeof writeFnc === 'function' ? writeFnc(reads) : writeFnc;
 
       if (Array.isArray(operation)) {
         operation.map((op) => write(firebase, op, transaction));

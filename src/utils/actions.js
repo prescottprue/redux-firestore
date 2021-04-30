@@ -35,46 +35,40 @@ export function wrapInDispatch(
     meta,
     payload: isObject(requestingType) ? requestingType.payload : { args },
   });
-  const success = (result) => {
-    const successIsObject = isObject(successType);
-    // Built action object handling function for custom payload
-    const actionObj = {
-      type: successIsObject ? successType.type : successType,
-      meta,
-      payload:
-        successIsObject && successType.payload
-          ? makePayload(successType, result)
-          : { args },
-    };
-    // Attach preserve to action if it is passed
-    if (successIsObject && successType.preserve) {
-      actionObj.preserve = successType.preserve;
-    }
-    // Attach merge to action if it is passed
-    if (successIsObject && successType.merge) {
-      actionObj.merge = successType.merge;
-    }
-    dispatch(actionObj);
-    return result;
-  };
-  const failure = (err) => {
-    dispatch({
-      type: errorType,
-      meta,
-      payload: err,
+
+  const actionPromise =
+    method === 'mutate' ? mutate(ref, ...args) : ref[method](...args);
+  return actionPromise
+    .then((result) => {
+      const successIsObject = isObject(successType);
+      // Built action object handling function for custom payload
+      const actionObj = {
+        type: successIsObject ? successType.type : successType,
+        meta,
+        payload:
+          successIsObject && successType.payload
+            ? makePayload(successType, result)
+            : { args },
+      };
+      // Attach preserve to action if it is passed
+      if (successIsObject && successType.preserve) {
+        actionObj.preserve = successType.preserve;
+      }
+      // Attach merge to action if it is passed
+      if (successIsObject && successType.merge) {
+        actionObj.merge = successType.merge;
+      }
+      dispatch(actionObj);
+      return result;
+    })
+    .catch((err) => {
+      dispatch({
+        type: errorType,
+        meta,
+        payload: err,
+      });
+      return Promise.reject(err);
     });
-    return Promise.reject(err);
-  };
-
-  if (method === 'mutate') {
-    return mutate(ref, ...args)
-      .then(success)
-      .catch(failure);
-  }
-
-  return ref[method](...args)
-    .then(success)
-    .catch(failure);
 }
 
 /**
