@@ -7,7 +7,6 @@ import {
   preserveValuesFromState,
   pathToArr,
 } from '../utils/reducers';
-import debug from 'debug';
 
 const {
   DOCUMENT_ADDED,
@@ -18,8 +17,6 @@ const {
   DOCUMENT_REMOVED,
   DOCUMENT_MODIFIED,
 } = actionTypes;
-
-const info = debug('rrf:ordered');
 
 /**
  * Create a new copy of an array with the provided item in a new array index
@@ -60,7 +57,6 @@ function newArrayWithItemMoved(collectionState, meta, ordered, newValue) {
 function modifyDoc(collectionState, action) {
   // Support moving a doc within an array
   if (action.payload.ordered) {
-    info('DOCUMENT_MODIFIED new order:', action.payload.ordered);
     const { newIndex, oldIndex } = action.payload.ordered;
     // newIndex/oldIndex values exist, item isn't being removed or added, and the index has changed
     if (

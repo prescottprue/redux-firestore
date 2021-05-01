@@ -1,5 +1,4 @@
 import produce, { createDraft, finishDraft } from 'immer';
-import debug from 'debug';
 import {
   set,
   unset,
@@ -23,8 +22,6 @@ import {
 import { actionTypes } from '../constants';
 import { getBaseQueryName } from '../utils/query';
 import mark from '../utils/profiling';
-
-const info = debug('rrf:cache');
 
 /**
  * @typedef {object & Object.<string, RRFQuery>} CacheState
@@ -363,16 +360,6 @@ function reprocessQuerires(draft, path) {
     set(draft, [key, 'ordered'], ordered);
   });
 
-  if (info.enabled) {
-    /* istanbul ignore next */
-    const overrides = JSON.parse(JSON.stringify(draft.databaseOverrides || {}));
-    /* istanbul ignore next */
-    info(
-      `reprocess ${path} (${queries.length} queries) with overrides`,
-      overrides,
-    );
-  }
-
   done();
 }
 
@@ -658,8 +645,6 @@ const failure = (state, { action, key, path }) =>
         (results, { writes }) => [
           ...results,
           ...writes.map(({ collection, path: _path, doc, id }) => {
-            info('remove override', `${collection}/${doc}`);
-
             // don't send data to ensure document override is deleted
             cleanOverride(draft, { path: _path || collection, id: id || doc });
 
@@ -755,7 +740,6 @@ const mutation = (state, { action, key, path }) =>
         translateMutationToOverrides(action, draft.database) || [];
 
       optimisiticUpdates.forEach(({ collection, doc, data }) => {
-        info('overriding', `${collection}/${doc}`, data);
         setWith(draft, ['databaseOverrides', collection, doc], data, Object);
       });
 

@@ -2,7 +2,6 @@ import { get } from 'lodash';
 import { setWith } from 'lodash/fp';
 import { actionTypes } from '../constants';
 import { pathFromMeta, preserveValuesFromState } from '../utils/reducers';
-import debug from 'debug';
 
 const {
   CLEAR_DATA,
@@ -15,7 +14,6 @@ const {
   DOCUMENT_REMOVED,
 } = actionTypes;
 
-const info = debug('rrf:data');
 /**
  * Reducer for data state.
  * @param {object} [state={}] - Current data redux state
@@ -62,7 +60,6 @@ export default function dataReducer(state = {}, action) {
         );
       }
       const alias = meta.storeAs ? [meta.storeAs] : pathFromMeta(meta);
-      info('LISTENER_RESPONSE', alias, data);
       // Set data to state (with merge) immutabily (lodash/fp's setWith creates copy)
       return setWith(Object, alias, data, state);
 
@@ -89,16 +86,13 @@ export default function dataReducer(state = {}, action) {
     case CLEAR_DATA:
       // support keeping data when logging out - #125 of react-redux-firebase
       if (action.preserve && action.preserve.data) {
-        info('log out and preserve', action.preserve.data);
         return preserveValuesFromState(state, action.preserve.data, {});
       }
       return {};
     case LISTENER_ERROR:
-      info('listener error');
       // Set data to state immutabily (lodash/fp's setWith creates copy)
       const nextState = setWith(Object, pathFromMeta(action.meta), null, state);
       if (action.preserve && action.preserve.data) {
-        info('error and preserve', action.preserve.data);
         return preserveValuesFromState(state, action.preserve.data, nextState);
       }
       const existingState = get(state, pathFromMeta(action.meta));

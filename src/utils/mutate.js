@@ -1,9 +1,6 @@
 import { chunk, cloneDeep, flatten, mapValues } from 'lodash';
-import debug from 'debug';
 import { firestoreRef } from './query';
 import mark from './profiling';
-
-const info = debug('rrf:mutate');
 
 /**
  * @param {object} firestore
@@ -127,7 +124,6 @@ function write(firebase, operation = {}, writer = null) {
 
   if (writer) {
     const writeType = writer.commit ? 'Batching' : 'Transaction.set';
-    info(writeType, { id: ref.id, path: ref.parent.path, ...changes });
     if (requiresUpdate) {
       writer.update(ref, changes);
     } else {
@@ -135,7 +131,6 @@ function write(firebase, operation = {}, writer = null) {
     }
     return { id: ref.id, path: ref.parent.path, ...changes };
   }
-  info('Writing', { id: ref.id, path: ref.parent.path, ...changes });
   if (requiresUpdate) {
     return ref.update(changes);
   }
@@ -191,7 +186,6 @@ async function writeInTransaction(firebase, operations) {
         ? null
         : { ...doc.data(), id: doc.ref.id, path: doc.ref.parent.path };
     const getter = (ref) => {
-      info('Transaction.get ', { id: ref.id, path: ref.parent.path });
       return transaction.get(ref);
     };
 
