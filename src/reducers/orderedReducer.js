@@ -7,6 +7,7 @@ import {
   preserveValuesFromState,
   pathToArr,
 } from '../utils/reducers';
+import debug from 'debug';
 
 const {
   DOCUMENT_ADDED,
@@ -17,6 +18,8 @@ const {
   DOCUMENT_REMOVED,
   DOCUMENT_MODIFIED,
 } = actionTypes;
+
+const info = debug('rrf:ordered');
 
 /**
  * Create a new copy of an array with the provided item in a new array index
@@ -57,6 +60,7 @@ function newArrayWithItemMoved(collectionState, meta, ordered, newValue) {
 function modifyDoc(collectionState, action) {
   // Support moving a doc within an array
   if (action.payload.ordered) {
+    info('DOCUMENT_MODIFIED new order:', action.payload.ordered);
     const { newIndex, oldIndex } = action.payload.ordered;
     // newIndex/oldIndex values exist, item isn't being removed or added, and the index has changed
     if (
@@ -76,7 +80,7 @@ function modifyDoc(collectionState, action) {
   }
 
   if (!action.meta.subcollections || action.meta.storeAs) {
-    return updateItemInArray(collectionState, action.meta.doc, item =>
+    return updateItemInArray(collectionState, action.meta.doc, (item) =>
       // Merge is no longer used to prevent removal of subcollections since this will change in v1
       ({ id: action.meta.doc, ...action.payload.data }),
     );
@@ -86,13 +90,13 @@ function modifyDoc(collectionState, action) {
   const [, docId, subcollectionName, subDocId] = pathToArr(action.meta.path);
 
   // Update document item within top array
-  return updateItemInArray(collectionState, docId, item => ({
+  return updateItemInArray(collectionState, docId, (item) => ({
     ...item, // preserve document (only updating subcollection)
     [subcollectionName]: updateItemInArray(
       get(item, subcollectionName, []),
       subDocId,
       // Merge with existing subcollection doc (only updates changed keys)
-      subitem => mergeObjects(subitem, action.payload.data),
+      (subitem) => mergeObjects(subitem, action.payload.data),
     ),
   }));
 }
@@ -137,12 +141,12 @@ function removeDoc(array, action) {
     return updateItemInArray(
       array,
       action.meta.doc,
-      item => omit(item, [subcollectionSetting.collection]), // omit creates a new object
+      (item) => omit(item, [subcollectionSetting.collection]), // omit creates a new object
     );
   }
 
   // Meta contains doc setting, remove doc from subcollection
-  return updateItemInArray(array, action.meta.doc, item => {
+  return updateItemInArray(array, action.meta.doc, (item) => {
     const subcollectionVal = get(item, subcollectionSetting.collection, []);
     // Subcollection exists within doc, update item within subcollection
     if (subcollectionVal.length) {
@@ -188,7 +192,7 @@ function writeCollection(collectionState, action) {
     // Key existing state collection by id (used to prevent multiple array lookups)
     const existingKeys = collectionState && keyBy(collectionState, 'id');
     // Map new doc data with existing doc data (preserves existing sub-collections)
-    return map(action.payload.ordered, newDocObj => {
+    return map(action.payload.ordered, (newDocObj) => {
       const existingDoc = get(existingKeys, newDocObj.id);
       // merge with existing doc if existing doc is not equal
       return !!existingDoc && !isEqual(existingDoc, newDocObj)
@@ -211,7 +215,7 @@ function writeCollection(collectionState, action) {
       ];
     }
     // Merge with existing document if collection state exists
-    return updateItemInArray(collectionState, meta.doc, item =>
+    return updateItemInArray(collectionState, meta.doc, (item) =>
       // check if action contains ordered payload
       payloadExists
         ? // merge with existing subcollection
@@ -234,7 +238,7 @@ function writeCollection(collectionState, action) {
       return collectionState;
     }
     // Update item in array
-    return updateItemInArray(collectionState, meta.doc, item =>
+    return updateItemInArray(collectionState, meta.doc, (item) =>
       mergeObjects(item, action.payload.ordered[0]),
     );
   }

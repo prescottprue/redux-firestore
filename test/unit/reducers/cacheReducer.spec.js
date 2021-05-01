@@ -674,8 +674,22 @@ describe('cacheReducer', () => {
     });
 
     it('Firestore added document multiple overrides', () => {
-      const doc1 = { key1: 'value1', id: 'testDocId1', path };
-      const change1 = { key2: 'value2', id: 'testDocId1', path };
+      const doc1 = {
+        key1: 'value1',
+        new: 'val',
+        arr: [1, 2],
+        obj: { a: 1 },
+        id: 'testDocId1',
+        path,
+      };
+      const change1 = {
+        key2: 'value2',
+        new: null,
+        arr: [2, 1],
+        obj: { a: 2 },
+        id: 'testDocId1',
+        path,
+      };
       const doc1a = { ...doc1, ...change1 };
       const doc2 = { key1: 'value1', id: 'testDocId2', path };
 

@@ -305,6 +305,7 @@ describe('firestore.mutate()', () => {
           removeArray: ['::arrayRemove', 'item'],
           updateAt: ['::serverTimestamp'],
           counter: ['::increment', 3],
+          null: null,
         },
       },
     );

@@ -364,7 +364,9 @@ function reprocessQuerires(draft, path) {
   });
 
   if (info.enabled) {
+    /* istanbul ignore next */
     const overrides = JSON.parse(JSON.stringify(draft.databaseOverrides || {}));
+    /* istanbul ignore next */
     info(
       `reprocess ${path} (${queries.length} queries) with overrides`,
       overrides,
