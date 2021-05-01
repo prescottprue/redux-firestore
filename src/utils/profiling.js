@@ -1,5 +1,5 @@
-/* eslint-disable no-console */
 /* istanbul ignore file */
+
 import { noop } from 'lodash';
 import debug from 'debug';
 
