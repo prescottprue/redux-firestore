@@ -29,6 +29,7 @@ export default function mark(marker, context = '') {
     return noop;
   }
 
+  /* istanbul ignore next */
   try {
     const now = perf.now();
     const start = `@rrf/${marker}-${now}`;
@@ -55,6 +56,7 @@ export function resource(marker) {
     return noop;
   }
 
+  /* istanbul ignore next */
   try {
     const now = perf.now();
     const start = `@rrf.load/${marker}-${now}`;
@@ -68,6 +70,7 @@ export function resource(marker) {
   }
 }
 
+/* istanbul ignore next */
 if (win) {
   win.rrfStats = () => {
     if (!debug.enabled('rrf:*') || !debug.enabled('rrf:profile') || !perf) {
