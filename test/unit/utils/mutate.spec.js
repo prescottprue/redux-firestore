@@ -300,9 +300,10 @@ describe('firestore.mutate()', () => {
         data: {
           name: 'Bravo Team 🎄',
           'deeply.nested.map': 'value',
-          'deeply.nested.array': ['::arrayUnion', 'add'],
+          'deeply.nested.array': ['::arrayUnion', ['first', 'second']],
           addArray: ['::arrayUnion', 'val'],
-          removeArray: ['::arrayRemove', 'item'],
+          removeItem: ['::arrayRemove', 'item'],
+          removeArray: ['::arrayRemove', ['item1', 'item2']],
           updateAt: ['::serverTimestamp'],
           counter: ['::increment', 3],
           null: null,
@@ -316,7 +317,7 @@ describe('firestore.mutate()', () => {
     expect(set.notCalled);
     expect(firestore.FieldValue.serverTimestamp).to.have.been.calledOnce;
     expect(firestore.FieldValue.increment).to.have.been.calledOnce;
-    expect(firestore.FieldValue.arrayRemove).to.have.been.calledOnce;
+    expect(firestore.FieldValue.arrayRemove).to.have.been.calledTwice;
     expect(firestore.FieldValue.arrayUnion).to.have.been.calledTwice;
   });
 });

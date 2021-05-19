@@ -56,13 +56,15 @@ const primaryValue = (arr) =>
     ? null
     : arr;
 
-const arrayUnion = (firebase, key, val) => {
+const arrayUnion = (firebase, key, ...val) => {
   if (key !== '::arrayUnion') return null;
-  return firebase.firestore.FieldValue.arrayUnion(val);
+  return firebase.firestore.FieldValue.arrayUnion(...val);
 };
 
-const arrayRemove = (firebase, key, val) =>
-  key === '::arrayRemove' && firebase.firestore.FieldValue.arrayRemove(val);
+const arrayRemove = (firebase, key, ...val) => {
+  if (key !== '::arrayRemove') return null;
+  return firebase.firestore.FieldValue.arrayRemove(...val);
+};
 
 const increment = (firebase, key, val) =>
   key === '::increment' &&
