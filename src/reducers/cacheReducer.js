@@ -150,7 +150,16 @@ const fieldsTransducer = (fields) =>
 const orderTransducer = (order) => {
   const isFlat = typeof order[0] === 'string';
   const orders = isFlat ? [order] : order;
-  return partialRight.apply(null, [orderBy, ...zip.apply(null, orders)]);
+  const [fields, direction] = zip(
+    ...orders.map(([field, dir]) => [
+      (data) =>
+        typeof data[field] === 'string'
+          ? data[field].toLowerCase()
+          : data[field],
+      dir || 'asc',
+    ]),
+  );
+  return partialRight(map, (docs) => orderBy(docs, fields, direction));
 };
 
 /**
@@ -542,7 +551,7 @@ function cleanOverride(draft, { path, id, data }) {
 
 const initialize = (state, { action, key, path }) =>
   produce(state, (draft) => {
-    const done = mark(`cache.LISTENER_RESPONSE`, key);
+    const done = mark(`cache.${action.type.replace(/(@@.+\/)/, '')}`, key);
     if (!draft.database) {
       set(draft, ['database'], {});
       set(draft, ['databaseOverrides'], {});
