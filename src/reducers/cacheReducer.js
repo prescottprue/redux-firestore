@@ -105,7 +105,7 @@ const PROCESSES = {
   '>=': (a, b) => a >= b,
   '>': (a, b) => a > b,
   'array-contains': (a, b) => a.includes(b),
-  in: (a, b) => a.includes(b),
+  in: (a, b) => a && a.includes(b),
   'array-contains-any': (a, b) => b.some((b1) => a.includes(b1)),
   'not-in': (a, b) => !b.includes(a),
   '*': () => true,
@@ -150,7 +150,16 @@ const fieldsTransducer = (fields) =>
 const orderTransducer = (order) => {
   const isFlat = typeof order[0] === 'string';
   const orders = isFlat ? [order] : order;
-  return partialRight.apply(null, [orderBy, ...zip.apply(null, orders)]);
+  const [fields, direction] = zip(
+    ...orders.map(([field, dir]) => [
+      (data) =>
+        typeof data[field] === 'string'
+          ? data[field].toLowerCase()
+          : data[field],
+      dir || 'asc',
+    ]),
+  );
+  return partialRight(map, (docs) => orderBy(docs, fields, direction));
 };
 
 /**
@@ -288,6 +297,7 @@ function buildTransducer(overrides, query) {
   } = query;
 
   const useOverrides =
+    ordered === undefined ||
     Object.keys((overrides || {})[collection] || {}).length > 0;
 
   const xfPopulate = !populates
@@ -299,7 +309,7 @@ function buildTransducer(overrides, query) {
 
   const xfApplyOverrides = !useOverrides
     ? null
-    : overridesTransducers(overrides, collection);
+    : overridesTransducers(overrides || { [collection]: [] }, collection);
   const xfFilter =
     !useOverrides || filterTransducers(!where ? ['', '*', ''] : where);
   const xfOrder = !useOverrides || !order ? null : orderTransducer(order);
@@ -313,7 +323,7 @@ function buildTransducer(overrides, query) {
     compact([
       xfPopulate,
       xfGetCollection,
-      partialRight(map, (db) => createDraft(db)),
+      partialRight(map, (db) => createDraft(db || {})),
       ...xfApplyOverrides,
       partialRight(map, (db) => finishDraft(db)),
       ...xfFilter,
@@ -541,7 +551,7 @@ function cleanOverride(draft, { path, id, data }) {
 
 const initialize = (state, { action, key, path }) =>
   produce(state, (draft) => {
-    const done = mark(`cache.LISTENER_RESPONSE`, key);
+    const done = mark(`cache.${action.type.replace(/(@@.+\/)/, '')}`, key);
     if (!draft.database) {
       set(draft, ['database'], {});
       set(draft, ['databaseOverrides'], {});
@@ -556,8 +566,11 @@ const initialize = (state, { action, key, path }) =>
     }
 
     // set the query
-    set(draft, [key], {
-      ordered: action.payload.ordered.map(({ path, id }) => [path, id]),
+    const ordered = (
+      action.payload.ordered || selectDocuments(draft, action.meta)
+    ).map(({ path, id }) => [path, id]);
+    set(draft, [action.meta.storeAs], {
+      ordered,
       ...action.meta,
     });
 
@@ -581,13 +594,6 @@ const conclude = (state, { action, key, path }) =>
 
         return inUse;
       }, []);
-
-      // remove docs from database if unsed by other queries
-      draft[key].ordered.forEach(([__, id]) => {
-        if (!activeIds.includes(id)) {
-          unset(draft, ['database', path, id]);
-        }
-      });
 
       // remove query
       unset(draft, [key]);
@@ -774,6 +780,7 @@ const mutation = (state, { action, key, path }) =>
 const HANDLERS = {
   [actionTypes.GET_SUCCESS]: initialize,
   [actionTypes.LISTENER_RESPONSE]: initialize,
+  [actionTypes.SET_LISTENER]: initialize,
   [actionTypes.UNSET_LISTENER]: conclude,
   [actionTypes.DOCUMENT_ADDED]: modify,
   [actionTypes.DOCUMENT_MODIFIED]: modify,

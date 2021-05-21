@@ -855,7 +855,7 @@ describe('cacheReducer', () => {
   });
 
   describe('UNSET_LISTENER', () => {
-    it('handles unset listener', () => {
+    it('unset removes query but maintains in database cache', () => {
       const doc1 = { key1: 'value1', id: 'testDocId1' }; // initial doc
 
       // Initial seed
@@ -887,7 +887,7 @@ describe('cacheReducer', () => {
       const pass2 = reducer(pass1, action2);
 
       expect(pass2.cache.testStoreAs).to.eql(undefined);
-      expect(pass2.cache.database[collection]).to.eql({});
+      expect(pass2.cache.database[collection]).to.eql({ [doc1.id]: doc1 });
     });
 
     it('handles a null payload.data', () => {
