@@ -369,7 +369,11 @@ function reprocessQuerires(draft, path) {
 
     const docs = selectDocuments(draft, draft[key]);
     const ordered = docs.map(({ id, path: _path }) => [_path, id]);
-    set(draft, [key, 'docs'], docs);
+    set(
+      draft,
+      [key, 'docs'],
+      draft[key].via === 'memory' && docs.length === 0 ? undefined : docs,
+    );
     set(draft, [key, 'ordered'], ordered);
   });
 
@@ -557,6 +561,12 @@ const initialize = (state, { action, key, path }) =>
       set(draft, ['databaseOverrides'], {});
     }
 
+    const via = {
+      undefined: 'memory',
+      true: 'cache',
+      false: 'server',
+    }[action.payload.fromCache];
+
     if (action.payload.data) {
       Object.keys(action.payload.data).forEach((id) => {
         setWith(draft, ['database', path, id], action.payload.data[id], Object);
@@ -569,9 +579,11 @@ const initialize = (state, { action, key, path }) =>
     const ordered = (
       action.payload.ordered || selectDocuments(draft, action.meta)
     ).map(({ path, id }) => [path, id]);
+
     set(draft, [action.meta.storeAs], {
       ordered,
       ...action.meta,
+      via,
     });
 
     // append docs field to query
@@ -778,9 +790,9 @@ const mutation = (state, { action, key, path }) =>
   });
 
 const HANDLERS = {
-  [actionTypes.GET_SUCCESS]: initialize,
-  [actionTypes.LISTENER_RESPONSE]: initialize,
   [actionTypes.SET_LISTENER]: initialize,
+  [actionTypes.LISTENER_RESPONSE]: initialize,
+  [actionTypes.GET_SUCCESS]: initialize,
   [actionTypes.UNSET_LISTENER]: conclude,
   [actionTypes.DOCUMENT_ADDED]: modify,
   [actionTypes.DOCUMENT_MODIFIED]: modify,

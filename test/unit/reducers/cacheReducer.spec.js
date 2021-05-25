@@ -12,6 +12,68 @@ const initialState = {
 };
 
 describe('cacheReducer', () => {
+  describe('optimistic reads', () => {
+    it('SET_LISTENER returns undefined if nothing in memory', () => {
+      // Request to set listener
+      const action1 = {
+        meta: {
+          collection,
+          storeAs: 'testStoreAs',
+          where: [['key1', '==', 'value1']],
+          orderBy: ['key1'],
+          fields: ['id', 'other'],
+        },
+        payload: { name: 'testStoreAs' },
+        type: actionTypes.SET_LISTENER,
+      };
+
+      const pass1 = reducer(initialState, action1);
+
+      expect(pass1.cache.testStoreAs.docs).to.eql(undefined);
+    });
+
+    it('SET_LISTENER returns data if in memory', () => {
+      const doc1 = { key1: 'value1', other: 'test', id: 'testDocId1', path };
+
+      // Initial seed
+      const action1 = {
+        meta: {
+          collection,
+          storeAs: 'testStoreAs',
+          where: [['key1', '==', 'value1']],
+          orderBy: ['key1'],
+          fields: ['id', 'other'],
+        },
+        payload: {
+          data: { [doc1.id]: doc1 },
+          ordered: [doc1],
+          fromCache: true,
+        },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+
+      const action2 = {
+        meta: {
+          collection,
+          storeAs: 'testStoreAs2',
+          where: [['other', '==', 'test']],
+          orderBy: ['key1'],
+          fields: ['id', 'other'],
+        },
+        payload: { name: 'testStoreAs2' },
+        type: actionTypes.SET_LISTENER,
+      };
+
+      const pass1 = reducer(initialState, action1);
+      const pass2 = reducer(pass1, action2);
+
+      expect(pass2.cache.testStoreAs2.docs[0]).to.eql({
+        other: 'test',
+        id: 'testDocId1',
+      });
+    });
+  });
+
   describe('query fields', () => {
     it('query fields return partial document', () => {
       const doc1 = { key1: 'value1', other: 'test', id: 'testDocId1', path };
@@ -25,7 +87,11 @@ describe('cacheReducer', () => {
           orderBy: ['value1'],
           fields: ['id', 'other'],
         },
-        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        payload: {
+          data: { [doc1.id]: doc1 },
+          ordered: [doc1],
+          fromCache: true,
+        },
         type: actionTypes.LISTENER_RESPONSE,
       };
 
@@ -48,7 +114,11 @@ describe('cacheReducer', () => {
           where: [['key1', '!=', 'value2']],
           orderBy: ['key1'],
         },
-        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        payload: {
+          data: { [doc1.id]: doc1 },
+          ordered: [doc1],
+          fromCache: true,
+        },
         type: actionTypes.LISTENER_RESPONSE,
       };
 
@@ -78,7 +148,11 @@ describe('cacheReducer', () => {
           fields: ['id', 'key1', 'anotherDocument'],
           populates: [['anotherId', anotherPath, 'anotherDocument']],
         },
-        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        payload: {
+          data: { [doc1.id]: doc1 },
+          ordered: [doc1],
+          fromCache: true,
+        },
         type: actionTypes.LISTENER_RESPONSE,
       };
 
@@ -87,7 +161,11 @@ describe('cacheReducer', () => {
           collection: another,
           storeAs: 'anotherStoreAs',
         },
-        payload: { data: { [doc2.id]: doc2 }, ordered: [doc2] },
+        payload: {
+          data: { [doc2.id]: doc2 },
+          ordered: [doc2],
+          fromCache: true,
+        },
         type: actionTypes.LISTENER_RESPONSE,
       };
 
@@ -126,7 +204,11 @@ describe('cacheReducer', () => {
           fields: ['id', 'key1', 'others'],
           populates: [['anotherIds', anotherPath, 'others']],
         },
-        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        payload: {
+          data: { [doc1.id]: doc1 },
+          ordered: [doc1],
+          fromCache: true,
+        },
         type: actionTypes.LISTENER_RESPONSE,
       };
 
@@ -138,6 +220,7 @@ describe('cacheReducer', () => {
         payload: {
           data: { [doc2.id]: doc2, [doc3.id]: doc3 },
           ordered: [doc2, doc3],
+          fromCache: true,
         },
         type: actionTypes.LISTENER_RESPONSE,
       };
@@ -178,7 +261,11 @@ describe('cacheReducer', () => {
           fields: ['id', 'key1', 'others'],
           populates: [['sub.anotherIds', anotherPath, 'others']],
         },
-        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        payload: {
+          data: { [doc1.id]: doc1 },
+          ordered: [doc1],
+          fromCache: true,
+        },
         type: actionTypes.LISTENER_RESPONSE,
       };
 
@@ -190,6 +277,7 @@ describe('cacheReducer', () => {
         payload: {
           data: { [doc2.id]: doc2, [doc3.id]: doc3 },
           ordered: [doc2, doc3],
+          fromCache: true,
         },
         type: actionTypes.LISTENER_RESPONSE,
       };
@@ -223,7 +311,11 @@ describe('cacheReducer', () => {
           where: [['key1', '==', 'value1']],
           orderBy: ['value1'],
         },
-        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        payload: {
+          data: { [doc1.id]: doc1 },
+          ordered: [doc1],
+          fromCache: true,
+        },
         type: actionTypes.LISTENER_RESPONSE,
       };
       const action2 = {
@@ -253,7 +345,11 @@ describe('cacheReducer', () => {
           storeAs: 'testStoreAs',
           where: [['key1', '==', 'value1']],
         },
-        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        payload: {
+          data: { [doc1.id]: doc1 },
+          ordered: [doc1],
+          fromCache: true,
+        },
         type: actionTypes.LISTENER_RESPONSE,
       };
       const action2 = {
@@ -288,7 +384,11 @@ describe('cacheReducer', () => {
           storeAs: 'testStoreAs',
           where: [['key1', '==', 'value1']],
         },
-        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        payload: {
+          data: { [doc1.id]: doc1 },
+          ordered: [doc1],
+          fromCache: true,
+        },
         type: actionTypes.LISTENER_RESPONSE,
       };
 
@@ -330,7 +430,11 @@ describe('cacheReducer', () => {
           storeAs: 'testOne',
           where: [['key1', 'in', ['value1']]],
         },
-        payload: { data: { [first.id]: first }, ordered: [first] },
+        payload: {
+          data: { [first.id]: first },
+          ordered: [first],
+          fromCache: true,
+        },
         type: actionTypes.LISTENER_RESPONSE,
       };
       const action2 = {
@@ -339,7 +443,7 @@ describe('cacheReducer', () => {
           storeAs: 'testTwo',
           where: [['key1', '==', 'value2']],
         },
-        payload: { data: {}, ordered: [] },
+        payload: { data: {}, ordered: [], fromCache: true },
         type: actionTypes.LISTENER_RESPONSE,
       };
       const action3 = {
@@ -364,7 +468,7 @@ describe('cacheReducer', () => {
     });
   });
 
-  describe('optimistic updates', () => {
+  describe('optimistic writes', () => {
     it('less than or equal', () => {
       const first = { key1: 1, id: 'testDocId1', path };
       const second = { key1: 2, id: 'testDocId1', path };
@@ -376,7 +480,11 @@ describe('cacheReducer', () => {
           storeAs: 'testOne',
           where: [['key1', '<=', 1]],
         },
-        payload: { data: { [first.id]: first }, ordered: [first] },
+        payload: {
+          data: { [first.id]: first },
+          ordered: [first],
+          fromCache: true,
+        },
         type: actionTypes.LISTENER_RESPONSE,
       };
       const action2 = {
@@ -385,7 +493,7 @@ describe('cacheReducer', () => {
           storeAs: 'testTwo',
           where: [['key1', '>=', 2]],
         },
-        payload: { data: {}, ordered: [] },
+        payload: { data: {}, ordered: [], fromCache: true },
         type: actionTypes.LISTENER_RESPONSE,
       };
       const action3 = {
@@ -420,7 +528,11 @@ describe('cacheReducer', () => {
           storeAs: 'testOne',
           where: [['key1', '<', 2]],
         },
-        payload: { data: { [first.id]: first }, ordered: [first] },
+        payload: {
+          data: { [first.id]: first },
+          ordered: [first],
+          fromCache: true,
+        },
         type: actionTypes.LISTENER_RESPONSE,
       };
       const action2 = {
@@ -429,7 +541,7 @@ describe('cacheReducer', () => {
           storeAs: 'testTwo',
           where: [['key1', '>', 1]],
         },
-        payload: { data: {}, ordered: [] },
+        payload: { data: {}, ordered: [], fromCache: true },
         type: actionTypes.LISTENER_RESPONSE,
       };
       const action3 = {
@@ -464,7 +576,11 @@ describe('cacheReducer', () => {
           storeAs: 'testOne',
           where: [['key1', '!=', 2]],
         },
-        payload: { data: { [first.id]: first }, ordered: [first] },
+        payload: {
+          data: { [first.id]: first },
+          ordered: [first],
+          fromCache: true,
+        },
         type: actionTypes.LISTENER_RESPONSE,
       };
       const action2 = {
@@ -473,7 +589,7 @@ describe('cacheReducer', () => {
           storeAs: 'testTwo',
           where: [['key1', '>', 1]],
         },
-        payload: { data: {}, ordered: [] },
+        payload: { data: {}, ordered: [], fromCache: true },
         type: actionTypes.LISTENER_RESPONSE,
       };
       const action3 = {
@@ -508,7 +624,11 @@ describe('cacheReducer', () => {
           storeAs: 'notTwo',
           where: [['key1', 'not-in', [2]]],
         },
-        payload: { data: { [first.id]: first }, ordered: [first] },
+        payload: {
+          data: { [first.id]: first },
+          ordered: [first],
+          fromCache: true,
+        },
         type: actionTypes.LISTENER_RESPONSE,
       };
       const action2 = {
@@ -517,7 +637,11 @@ describe('cacheReducer', () => {
           storeAs: 'isIdMatch',
           where: [['__name__', '==', 'testDocId1']],
         },
-        payload: { data: { [first.id]: first }, ordered: [first] },
+        payload: {
+          data: { [first.id]: first },
+          ordered: [first],
+          fromCache: true,
+        },
         type: actionTypes.LISTENER_RESPONSE,
       };
       const action3 = {
@@ -549,7 +673,11 @@ describe('cacheReducer', () => {
           storeAs: 'testOne',
           where: [['key1.val', 'array-contains', 1]],
         },
-        payload: { data: { [first.id]: first }, ordered: [first] },
+        payload: {
+          data: { [first.id]: first },
+          ordered: [first],
+          fromCache: true,
+        },
         type: actionTypes.LISTENER_RESPONSE,
       };
       const action2 = {
@@ -558,7 +686,7 @@ describe('cacheReducer', () => {
           storeAs: 'testTwo',
           where: [['key1.val', 'array-contains-any', [2]]],
         },
-        payload: { data: {}, ordered: [] },
+        payload: { data: {}, ordered: [], fromCache: true },
         type: actionTypes.LISTENER_RESPONSE,
       };
       const action3 = {
@@ -582,6 +710,7 @@ describe('cacheReducer', () => {
       expect(pass3.cache.testTwo.docs[0]).to.eql(second);
     });
   });
+
   describe('DOCUMENT_ADDED', () => {
     it('Firestore adds new document without overrides', () => {
       const doc1 = { key1: 'value1', id: 'testDocId1', path };
@@ -594,7 +723,11 @@ describe('cacheReducer', () => {
           where: [['key1', '==', 'value1']],
           orderBy: ['key1'],
         },
-        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        payload: {
+          data: { [doc1.id]: doc1 },
+          ordered: [doc1],
+          fromCache: true,
+        },
         type: actionTypes.LISTENER_RESPONSE,
       };
 
@@ -633,7 +766,11 @@ describe('cacheReducer', () => {
           where: [['key1', '==', 'value1']],
           orderBy: ['key1'],
         },
-        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        payload: {
+          data: { [doc1.id]: doc1 },
+          ordered: [doc1],
+          fromCache: true,
+        },
         type: actionTypes.LISTENER_RESPONSE,
       };
 
@@ -700,7 +837,11 @@ describe('cacheReducer', () => {
           where: [['key1', '==', 'value1']],
           orderBy: ['key1'],
         },
-        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        payload: {
+          data: { [doc1.id]: doc1 },
+          ordered: [doc1],
+          fromCache: true,
+        },
         type: actionTypes.LISTENER_RESPONSE,
       };
 
@@ -776,6 +917,7 @@ describe('cacheReducer', () => {
         payload: {
           data: { [doc1.id]: doc1, [doc2.id]: doc2 },
           ordered: [doc2, doc1],
+          fromCache: true,
         },
         type: actionTypes.LISTENER_RESPONSE,
       };
@@ -792,6 +934,7 @@ describe('cacheReducer', () => {
         payload: {
           data: { key2: 2, id: 'testDocId2', path },
           ordered: { newIndex: -1, oldIndex: 0 },
+          fromCache: true,
         },
       };
 
@@ -822,6 +965,7 @@ describe('cacheReducer', () => {
         payload: {
           data: { [doc1.id]: doc1, [doc2.id]: doc2 },
           ordered: [doc2, doc1],
+          fromCache: true,
         },
         type: actionTypes.LISTENER_RESPONSE,
       };
@@ -866,7 +1010,11 @@ describe('cacheReducer', () => {
           where: [['key1', '==', 'value1']],
           orderBy: ['value1'],
         },
-        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        payload: {
+          data: { [doc1.id]: doc1 },
+          ordered: [doc1],
+          fromCache: true,
+        },
         type: actionTypes.LISTENER_RESPONSE,
       };
 
@@ -897,7 +1045,7 @@ describe('cacheReducer', () => {
           storeAs: 'testStoreAs',
           where: ['abc', '===', 123],
         },
-        payload: { data: null, ordered: [] },
+        payload: { data: null, ordered: [], fromCache: true },
         type: actionTypes.LISTENER_RESPONSE,
       };
       const pass1 = reducer(initialState, action1);
@@ -947,7 +1095,11 @@ describe('cacheReducer', () => {
           where: ['key1', '==', 'value1'],
           storeAs: 'testStoreAs',
         },
-        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        payload: {
+          data: { [doc1.id]: doc1 },
+          ordered: [doc1],
+          fromCache: true,
+        },
         type: actionTypes.LISTENER_RESPONSE,
       };
       // mutate
@@ -1000,7 +1152,11 @@ describe('cacheReducer', () => {
           where: ['key1', '==', 'value1'],
           storeAs: 'testStoreAs',
         },
-        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        payload: {
+          data: { [doc1.id]: doc1 },
+          ordered: [doc1],
+          fromCache: true,
+        },
         type: actionTypes.LISTENER_RESPONSE,
       };
       // mutate
@@ -1065,7 +1221,11 @@ describe('cacheReducer', () => {
           collection,
           storeAs: 'testStoreAs',
         },
-        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        payload: {
+          data: { [doc1.id]: doc1 },
+          ordered: [doc1],
+          fromCache: true,
+        },
         type: actionTypes.LISTENER_RESPONSE,
       };
       // mutate
@@ -1148,7 +1308,11 @@ describe('cacheReducer', () => {
           collection,
           storeAs: 'testStoreAs',
         },
-        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        payload: {
+          data: { [doc1.id]: doc1 },
+          ordered: [doc1],
+          fromCache: true,
+        },
         type: actionTypes.LISTENER_RESPONSE,
       };
       // mutate
@@ -1217,7 +1381,11 @@ describe('cacheReducer', () => {
           collection,
           storeAs: 'testStoreAs',
         },
-        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        payload: {
+          data: { [doc1.id]: doc1 },
+          ordered: [doc1],
+          fromCache: true,
+        },
         type: actionTypes.LISTENER_RESPONSE,
       };
       // mutate
@@ -1285,7 +1453,11 @@ describe('cacheReducer', () => {
           where: ['key1', '==', 'value1'],
           storeAs: 'testStoreAs',
         },
-        payload: { data: { [doc1.id]: doc1 }, ordered: [doc1] },
+        payload: {
+          data: { [doc1.id]: doc1 },
+          ordered: [doc1],
+          fromCache: true,
+        },
         type: actionTypes.LISTENER_RESPONSE,
       };
 

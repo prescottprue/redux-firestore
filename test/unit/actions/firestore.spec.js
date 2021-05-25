@@ -463,7 +463,7 @@ describe('firestoreActions', () => {
             };
             const expectedAction2 = {
               meta: listenerConfig,
-              payload: { data: null, ordered: [] },
+              payload: { data: null, ordered: [], fromCache: true },
               merge: { collections: true, docs: true },
               type: actionTypes.LISTENER_RESPONSE,
             };
@@ -644,7 +644,7 @@ describe('firestoreActions', () => {
             };
             const expectedAction2 = {
               meta: listenerConfig,
-              payload: { data: null, ordered: [] },
+              payload: { data: null, ordered: [], fromCache: true },
               merge: { collections: true, docs: true },
               type: actionTypes.LISTENER_RESPONSE,
             };

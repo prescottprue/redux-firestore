@@ -791,6 +791,7 @@ export function dispatchListenerResponse({
     mergeOrderedDocUpdates,
     mergeOrderedCollectionUpdates,
   } = firebase._.config || {};
+  const fromCache = (docData.metadata && docData.metadata.fromCache) || true;
   const docChanges =
     typeof docData.docChanges === 'function'
       ? docData.docChanges()
@@ -810,6 +811,7 @@ export function dispatchListenerResponse({
       payload: {
         data: dataByIdSnapshot(docData),
         ordered: orderedFromSnap(docData),
+        fromCache,
       },
       merge: {
         docs: mergeOrdered && mergeOrderedDocUpdates,

@@ -97,6 +97,7 @@ export function get(firebase, dispatch, queryOption) {
         payload: (snap) => ({
           data: dataByIdSnapshot(snap),
           ordered: orderedFromSnap(snap),
+          fromCache: (snap.metadata && snap.metadata.fromCache) || true,
         }),
         merge: {
           docs: mergeOrdered && mergeOrderedDocUpdates,
