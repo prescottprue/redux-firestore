@@ -791,7 +791,9 @@ export function dispatchListenerResponse({
     mergeOrderedDocUpdates,
     mergeOrderedCollectionUpdates,
   } = firebase._.config || {};
-  const fromCache = (docData.metadata && docData.metadata.fromCache) || true;
+  const fromCache =
+    (docData.metadata && typeof docData.metadata.fromCache === 'boolean') ||
+    true;
   const docChanges =
     typeof docData.docChanges === 'function'
       ? docData.docChanges()

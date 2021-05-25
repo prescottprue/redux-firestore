@@ -369,11 +369,8 @@ function reprocessQuerires(draft, path) {
 
     const docs = selectDocuments(draft, draft[key]);
     const ordered = docs.map(({ id, path: _path }) => [_path, id]);
-    set(
-      draft,
-      [key, 'docs'],
-      draft[key].via === 'memory' && docs.length === 0 ? undefined : docs,
-    );
+    const isInitialLoad = draft[key].via === 'memory' && docs.length === 0;
+    set(draft, [key, 'docs'], isInitialLoad ? undefined : docs);
     set(draft, [key, 'ordered'], ordered);
   });
 
