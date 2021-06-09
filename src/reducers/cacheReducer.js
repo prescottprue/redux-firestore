@@ -283,7 +283,6 @@ const overridesTransducers = (overrides, collection) => {
 /**
  * @name buildTransducer
  * Convert the query to a transducer for the query results
- * partialRight(map, (spy) => { console.log(spy); return spy; })
  * @param {?CacheState.databaseOverrides} overrides -
  * @param {RRFQuery} query - query used to get data from firestore
  * @returns {Function} - Transducer will return a modifed array of documents
