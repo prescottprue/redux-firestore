@@ -803,8 +803,9 @@ export function dispatchListenerResponse({
   if (docChanges && docChanges.length < docData.size) {
     // Loop to dispatch for each change if there are multiple
     // TODO: Option for dispatching multiple changes in single action
-    docChanges.forEach((change) => {
-      dispatch(docChangeEvent(change, meta));
+    docChanges.forEach((change, index) => {
+      const lastChange = index === docChanges.length - 1;
+      dispatch(docChangeEvent(change, { reprocess: lastChange, ...meta }));
     });
   } else {
     // Dispatch action for whole collection change
