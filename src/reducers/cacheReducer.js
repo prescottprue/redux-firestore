@@ -138,7 +138,9 @@ const getCollectionTransducer = (collection) =>
  * @returns {xFormPartialFields} - transducer
  */
 const fieldsTransducer = (fields) =>
-  partialRight(map, (docs) => docs.map((doc) => pick(doc, fields)));
+  partialRight(map, (docs) =>
+    docs.map((doc) => pick(doc, ['id', 'path', ...fields])),
+  );
 
 /**
  * @name orderTransducer
@@ -169,7 +171,7 @@ const orderTransducer = (order) => {
  * limit from the firestore query
  * @returns {xFormLimiter} - transducer
  */
-const limitTransducer = (limit) => partialRight(take, limit);
+const limitTransducer = (limit) => ([arr] = []) => [take(arr, limit)];
 
 /**
  * @name filterTransducers
@@ -313,10 +315,12 @@ function buildTransducer(overrides, query) {
   const xfFilter =
     !useOverrides || filterTransducers(!where ? ['', '*', ''] : where);
   const xfOrder = !useOverrides || !order ? null : orderTransducer(order);
-  const xfLimit = !useOverrides || limit ? null : limitTransducer(limit);
+  const xfLimit = !limit ? null : limitTransducer(limit);
 
   if (!useOverrides) {
-    return flow(compact([xfPopulate, xfGetCollection, xfGetDoc, xfFields]));
+    return flow(
+      compact([xfPopulate, xfGetCollection, xfGetDoc, xfLimit, xfFields]),
+    );
   }
 
   return flow(

@@ -70,6 +70,7 @@ describe('cacheReducer', () => {
       expect(pass2.cache.testStoreAs2.docs[0]).to.eql({
         other: 'test',
         id: 'testDocId1',
+        path,
       });
     });
   });
@@ -77,6 +78,9 @@ describe('cacheReducer', () => {
   describe('query fields', () => {
     it('query fields return partial document', () => {
       const doc1 = { key1: 'value1', other: 'test', id: 'testDocId1', path };
+      const doc2 = { key1: 'value1', other: 'limit', id: 'testDocId2', path };
+      const doc3 = { key1: 'value1', other: 'third', id: 'testDocId3', path };
+      const doc4 = { key1: 'value1', other: 'fourth', id: 'testDocId4', path };
 
       // Initial seed
       const action1 = {
@@ -84,23 +88,46 @@ describe('cacheReducer', () => {
           collection,
           storeAs: 'testStoreAs',
           where: [['key1', '==', 'value1']],
-          orderBy: ['value1'],
+          orderBy: ['key1'],
           fields: ['id', 'other'],
+          limit: 2,
         },
         payload: {
-          data: { [doc1.id]: doc1 },
-          ordered: [doc1],
+          data: { [doc1.id]: doc1, [doc2.id]: doc2, [doc3.id]: doc3 },
+          ordered: [doc1, doc2, doc3],
           fromCache: true,
         },
         type: actionTypes.LISTENER_RESPONSE,
       };
+      const action2 = {
+        type: actionTypes.OPTIMISTIC_ADDED,
+        meta: {
+          collection,
+          doc: doc4.id,
+        },
+        payload: { data: doc4 },
+      };
 
       const pass1 = reducer(initialState, action1);
+      const pass2 = reducer(pass1, action2);
 
       expect(pass1.cache.testStoreAs.docs[0]).to.eql({
         other: 'test',
         id: 'testDocId1',
+        path,
       });
+      expect(pass1.cache.testStoreAs.docs[1]).to.eql({
+        other: 'limit',
+        id: 'testDocId2',
+        path,
+      });
+      expect(pass2.cache.testStoreAs.docs[1]).to.eql({
+        other: 'limit',
+        id: 'testDocId2',
+        path,
+      });
+
+      expect(pass2.cache.testStoreAs.docs[2]).to.eql(undefined);
     });
 
     it('empty fields return entire document', () => {
@@ -175,11 +202,13 @@ describe('cacheReducer', () => {
       expect(pass1.cache.testStoreAs.docs[0]).to.eql({
         id: 'testDocId1',
         key1: 'value1',
+        path,
       });
       expect(pass2.cache.testStoreAs.docs[0]).to.eql({
         anotherDocument: doc2,
         key1: 'value1',
         id: 'testDocId1',
+        path,
       });
     });
 
@@ -231,12 +260,14 @@ describe('cacheReducer', () => {
       expect(pass1.cache.testStoreAs.docs[0]).to.eql({
         id: 'testDocId1',
         key1: 'value1',
+        path,
       });
 
       expect(pass2.cache.testStoreAs.docs[0]).to.eql({
         others: [doc3, doc2],
         key1: 'value1',
         id: 'testDocId1',
+        path,
       });
     });
 
@@ -288,12 +319,14 @@ describe('cacheReducer', () => {
       expect(pass1.cache.testStoreAs.docs[0]).to.eql({
         id: 'testDocId1',
         key1: 'value1',
+        path,
       });
 
       expect(pass2.cache.testStoreAs.docs[0]).to.eql({
         others: [doc3, doc2],
         key1: 'value1',
         id: 'testDocId1',
+        path,
       });
     });
   });
