@@ -659,7 +659,9 @@ const modify = (state, { action, key, path }) =>
     }
 
     // reprocessing unifies any order changes from firestore
-    reprocessQuerires(draft, path);
+    if (action.meta.reprocess !== false) {
+      reprocessQuerires(draft, path);
+    }
 
     done();
     return draft;
