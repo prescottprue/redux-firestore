@@ -105,7 +105,7 @@ const PROCESSES = {
   '>=': (a, b) => a >= b,
   '>': (a, b) => a > b,
   'array-contains': (a, b) => a.includes(b),
-  in: (a, b) => a && b && b.includes(a),
+  in: (a, b) => Array.isArray(b) && b.includes(a),
   'array-contains-any': (a, b) => b.some((b1) => a.includes(b1)),
   'not-in': (a, b) => !b.includes(a),
   '*': () => true,
