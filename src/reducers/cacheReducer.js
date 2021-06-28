@@ -594,30 +594,6 @@ const initialize = (state, { action, key, path }) =>
     return draft;
   });
 
-const conclude = (state, { action, key, path }) =>
-  produce(state, (draft) => {
-    const done = mark(`cache.UNSET_LISTENER`, key);
-    if (draft[key]) {
-      // all ids for the collection type, except query to be unset
-      const activeIds = Object.keys(draft).reduce((inUse, dbKey) => {
-        const { collection, ordered } = draft[dbKey];
-        if (dbKey !== key && collection === path) {
-          return [...inUse, ...ordered.map(([___, id]) => id)];
-        }
-
-        return inUse;
-      }, []);
-
-      // remove query
-      unset(draft, [key]);
-
-      reprocessQuerires(draft, path);
-    }
-
-    done();
-    return draft;
-  });
-
 const modify = (state, { action, key, path }) =>
   produce(state, (draft) => {
     const done = mark(`cache.DOCUMENT_MODIFIED`, key);
@@ -796,7 +772,6 @@ const HANDLERS = {
   [actionTypes.SET_LISTENER]: initialize,
   [actionTypes.LISTENER_RESPONSE]: initialize,
   [actionTypes.GET_SUCCESS]: initialize,
-  [actionTypes.UNSET_LISTENER]: conclude,
   [actionTypes.DOCUMENT_ADDED]: modify,
   [actionTypes.DOCUMENT_MODIFIED]: modify,
   [actionTypes.DELETE_SUCCESS]: deletion,
