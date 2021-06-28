@@ -351,12 +351,12 @@ function selectDocuments(reducerState, query) {
 }
 
 /**
- * @name reprocessQuerires
+ * @name reprocessQueries
  * Rerun all queries that contain the same collection
  * @param {object} draft - reducer state
  * @param {string} path - path to rerun queries for
  */
-function reprocessQuerires(draft, path) {
+function reprocessQueries(draft, path) {
   const done = mark(`reprocess.${path}`);
   const queries = [];
 
@@ -588,7 +588,7 @@ const initialize = (state, { action, key, path }) =>
     });
 
     // append docs field to query
-    reprocessQuerires(draft, path);
+    reprocessQueries(draft, path);
 
     done();
     return draft;
@@ -636,7 +636,7 @@ const modify = (state, { action, key, path }) =>
 
     // reprocessing unifies any order changes from firestore
     if (action.meta.reprocess !== false) {
-      reprocessQuerires(draft, path);
+      reprocessQueries(draft, path);
     }
 
     done();
@@ -668,7 +668,7 @@ const failure = (state, { action, key, path }) =>
 
       const uniquePaths = Array.from(new Set(allPaths));
       if (uniquePaths.length > 0) {
-        reprocessQuerires(draft, uniquePaths);
+        reprocessQueries(draft, uniquePaths);
       }
     }
 
@@ -692,7 +692,7 @@ const deletion = (state, { action, key, path }) =>
     }
 
     // reprocess
-    reprocessQuerires(draft, path);
+    reprocessQueries(draft, path);
 
     done();
     return draft;
@@ -717,7 +717,7 @@ const remove = (state, { action, key, path }) =>
     }
 
     // reprocess
-    reprocessQuerires(draft, path);
+    reprocessQueries(draft, path);
 
     done();
     return draft;
@@ -732,7 +732,7 @@ const optimistic = (state, { action, key, path }) =>
       Object,
     );
 
-    reprocessQuerires(draft, path);
+    reprocessQueries(draft, path);
     return draft;
   });
 
@@ -740,7 +740,7 @@ const reset = (state, { action, key, path }) =>
   produce(state, (draft) => {
     cleanOverride(draft, { path, id: action.meta.doc });
 
-    reprocessQuerires(draft, path);
+    reprocessQueries(draft, path);
     return draft;
   });
 
@@ -760,7 +760,7 @@ const mutation = (state, { action, key, path }) =>
         ...new Set(optimisiticUpdates.map(({ collection }) => collection)),
       ];
       updatePaths.forEach((path) => {
-        reprocessQuerires(draft, path);
+        reprocessQueries(draft, path);
       });
     }
 
