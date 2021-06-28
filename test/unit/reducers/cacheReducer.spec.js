@@ -1062,12 +1062,11 @@ describe('cacheReducer', () => {
       };
 
       const pass1 = reducer(initialState, action1);
-      expect(pass1.cache.testStoreAs.docs[0]).to.eql(doc1);
+      expect(pass1.cache.testStoreAs.docs).to.eql([doc1]);
       expect(pass1.cache.database[collection]).to.eql({ [doc1.id]: doc1 });
 
       const pass2 = reducer(pass1, action2);
-
-      expect(pass2.cache.testStoreAs).to.eql(undefined);
+      expect(pass2.cache.testStoreAs.docs).to.eql([doc1]);
       expect(pass2.cache.database[collection]).to.eql({ [doc1.id]: doc1 });
     });
 
