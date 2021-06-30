@@ -66,14 +66,14 @@ const info = debug('rrf:cache');
  */
 
 /**
- * @typedef {Object} Mutation_v1
+ * @typedef {object} Mutation_v1
  * @property {string} collection - firestore path into the parent collection
  * @property {string} doc - firestore document id
- * @property {Object} data - document to be saved
+ * @property {object} data - document to be saved
  */
 
 /**
- * @typedef {Object} Mutation_v2
+ * @typedef {object} Mutation_v2
  * The full document to be saved in firestore with 2 additional properties
  * @property {string} path - firestore path into the parent collection
  * @property {string} id - firestore document id
