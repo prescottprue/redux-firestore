@@ -16,7 +16,6 @@ import {
   snapshotCache,
 } from '../utils/query';
 
-const pathListenerCounts = {};
 /**
  * Add data to a collection or document on Cloud Firestore with the call to
  * the Firebase library being wrapped in action dispatches.
@@ -305,8 +304,8 @@ export function setListeners(firebase, dispatch, listeners) {
   if (config.oneListenerPerPath) {
     listeners.forEach((listener) => {
       const path = getQueryName(listener);
-      const oldListenerCount = pathListenerCounts[path] || 0;
-      pathListenerCounts[path] = oldListenerCount + 1;
+      const oldListenerCount = firebase._.pathListenerCounts[path] || 0;
+      firebase._.pathListenerCounts[path] = oldListenerCount + 1;
 
       // If we already have an attached listener exit here
       if (oldListenerCount > 0) {
@@ -320,13 +319,13 @@ export function setListeners(firebase, dispatch, listeners) {
 
     listeners.forEach((listener) => {
       const path = getQueryName(listener);
-      const oldListenerCount = pathListenerCounts[path] || 0;
+      const oldListenerCount = firebase._.pathListenerCounts[path] || 0;
       const multipleListenersEnabled =
         typeof allowMultipleListeners === 'function'
           ? allowMultipleListeners(listener, firebase._.listeners)
           : allowMultipleListeners;
 
-      pathListenerCounts[path] = oldListenerCount + 1;
+      firebase._.pathListenerCounts[path] = oldListenerCount + 1;
 
       // If we already have an attached listener exit here
       if (oldListenerCount === 0 || multipleListenersEnabled) {
@@ -369,16 +368,19 @@ export function unsetListeners(firebase, dispatch, listeners) {
   // Keep one listener path even when detaching
   listeners.forEach((listener) => {
     const path = getQueryName(listener);
-    const listenerExists = pathListenerCounts[path] >= 1;
+    const listenerExists = firebase._.pathListenerCounts[path] >= 1;
     const multipleListenersEnabled =
       typeof allowMultipleListeners === 'function'
         ? allowMultipleListeners(listener, firebase._.listeners)
         : allowMultipleListeners;
 
     if (listenerExists) {
-      pathListenerCounts[path] -= 1;
+      firebase._.pathListenerCounts[path] -= 1;
       // If we aren't supposed to have listners for this path, then remove them
-      if (pathListenerCounts[path] === 0 || multipleListenersEnabled) {
+      if (
+        firebase._.pathListenerCounts[path] === 0 ||
+        multipleListenersEnabled
+      ) {
         unsetListener(firebase, dispatch, listener);
       }
     }

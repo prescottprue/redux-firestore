@@ -51,7 +51,7 @@ describe('firestoreActions', () => {
       onSnapshot: onSnapshotSpy,
     });
     fakeFirebase = {
-      _: { listeners: {}, config: defaultConfig },
+      _: { listeners: {}, pathListenerCounts: {}, config: defaultConfig },
       firestore: () => ({
         collection: collectionClass,
       }),
@@ -831,7 +831,7 @@ describe('firestoreActions', () => {
 
       it('dispatches UNSET_LISTENER action', () => {
         const instance = createFirestoreInstance(
-          {},
+          { _: { pathListenerCounts: { test: 1 } } },
           { helpersNamespace: 'test' },
           dispatchSpy,
         );
