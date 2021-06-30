@@ -24,7 +24,7 @@ function errorsAllIds(state = [], { meta, type }) {
     case CLEAR_ERRORS:
       return [];
     case CLEAR_ERROR:
-      return state.filter(lId => lId !== getQueryName(meta));
+      return state.filter((lId) => lId !== getQueryName(meta));
     default:
       return state;
   }

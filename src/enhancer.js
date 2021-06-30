@@ -46,7 +46,7 @@ let firestoreInstance;
  * const store = createStoreWithFirestore(rootReducer, initialState)
  */
 export default function reduxFirestore(firebaseInstance, otherConfig) {
-  return next => (reducer, initialState, middleware) => {
+  return (next) => (reducer, initialState, middleware) => {
     const store = next(reducer, initialState, middleware);
 
     const configs = { ...defaultConfig, ...otherConfig };

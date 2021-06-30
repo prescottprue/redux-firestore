@@ -1057,17 +1057,54 @@ describe('cacheReducer', () => {
           storeAs: 'testStoreAs',
           where: ['key1', '==', 'value1'],
         },
-        payload: {}, // actually query string
+        payload: {},
         type: actionTypes.UNSET_LISTENER,
       };
 
       const pass1 = reducer(initialState, action1);
-      expect(pass1.cache.testStoreAs.docs[0]).to.eql(doc1);
+      expect(pass1.cache.testStoreAs.docs).to.eql([doc1]);
       expect(pass1.cache.database[collection]).to.eql({ [doc1.id]: doc1 });
 
       const pass2 = reducer(pass1, action2);
-
       expect(pass2.cache.testStoreAs).to.eql(undefined);
+      expect(pass2.cache.database[collection]).to.eql({ [doc1.id]: doc1 });
+    });
+
+    it('unset preserves query and maintains in database cache (preserve mode)', () => {
+      const doc1 = { key1: 'value1', id: 'testDocId1' }; // initial doc
+
+      // Initial seed
+      const action1 = {
+        meta: {
+          collection,
+          storeAs: 'testStoreAs',
+          where: [['key1', '==', 'value1']],
+          orderBy: ['value1'],
+        },
+        payload: {
+          data: { [doc1.id]: doc1 },
+          ordered: [doc1],
+          fromCache: true,
+        },
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+
+      const action2 = {
+        meta: {
+          collection,
+          storeAs: 'testStoreAs',
+          where: ['key1', '==', 'value1'],
+        },
+        payload: { preserveCache: true },
+        type: actionTypes.UNSET_LISTENER,
+      };
+
+      const pass1 = reducer(initialState, action1);
+      expect(pass1.cache.testStoreAs.docs).to.eql([doc1]);
+      expect(pass1.cache.database[collection]).to.eql({ [doc1.id]: doc1 });
+
+      const pass2 = reducer(pass1, action2);
+      expect(pass2.cache.testStoreAs.docs).to.eql([doc1]);
       expect(pass2.cache.database[collection]).to.eql({ [doc1.id]: doc1 });
     });
 

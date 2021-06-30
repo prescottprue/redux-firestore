@@ -413,11 +413,12 @@ export function detachListener(firebase, dispatch, meta) {
     firebase._.listeners[name]();
     delete firebase._.listeners[name]; // eslint-disable-line no-param-reassign
   }
+  const { preserveCacheAfterUnset: preserveCache } = firebase._.config || {};
 
   dispatch({
     type: actionTypes.UNSET_LISTENER,
     meta,
-    payload: { name },
+    payload: { name, preserveCache },
   });
 }
 

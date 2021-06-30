@@ -1,8 +1,8 @@
 import { get } from 'lodash';
 import { setWith } from 'lodash/fp';
+import debug from 'debug';
 import { actionTypes } from '../constants';
 import { pathFromMeta, preserveValuesFromState } from '../utils/reducers';
-import debug from 'debug';
 
 const {
   CLEAR_DATA,

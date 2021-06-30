@@ -342,7 +342,7 @@ describe('dataReducer', () => {
           action = {
             meta: { collection },
             payload: { data },
-            preserve: { data: currentState => currentState },
+            preserve: { data: (currentState) => currentState },
             type: actionTypes.LISTENER_ERROR,
           };
           result = dataReducer({ [collection]: {} }, action);

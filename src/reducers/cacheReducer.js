@@ -66,14 +66,14 @@ const info = debug('rrf:cache');
  */
 
 /**
- * @typedef {Object} Mutation_v1
+ * @typedef {object} Mutation_v1
  * @property {string} collection - firestore path into the parent collection
  * @property {string} doc - firestore document id
- * @property {Object} data - document to be saved
+ * @property {object} data - document to be saved
  */
 
 /**
- * @typedef {Object} Mutation_v2
+ * @typedef {object} Mutation_v2
  * The full document to be saved in firestore with 2 additional properties
  * @property {string} path - firestore path into the parent collection
  * @property {string} id - firestore document id
@@ -351,12 +351,12 @@ function selectDocuments(reducerState, query) {
 }
 
 /**
- * @name reprocessQuerires
+ * @name reprocessQueries
  * Rerun all queries that contain the same collection
  * @param {object} draft - reducer state
  * @param {string} path - path to rerun queries for
  */
-function reprocessQuerires(draft, path) {
+function reprocessQueries(draft, path) {
   const done = mark(`reprocess.${path}`);
   const queries = [];
 
@@ -588,7 +588,7 @@ const initialize = (state, { action, key, path }) =>
     });
 
     // append docs field to query
-    reprocessQuerires(draft, path);
+    reprocessQueries(draft, path);
 
     done();
     return draft;
@@ -598,20 +598,12 @@ const conclude = (state, { action, key, path }) =>
   produce(state, (draft) => {
     const done = mark(`cache.UNSET_LISTENER`, key);
     if (draft[key]) {
-      // all ids for the collection type, except query to be unset
-      const activeIds = Object.keys(draft).reduce((inUse, dbKey) => {
-        const { collection, ordered } = draft[dbKey];
-        if (dbKey !== key && collection === path) {
-          return [...inUse, ...ordered.map(([___, id]) => id)];
-        }
+      if (!action.payload.preserveCache) {
+        // remove query
+        unset(draft, [key]);
+      }
 
-        return inUse;
-      }, []);
-
-      // remove query
-      unset(draft, [key]);
-
-      reprocessQuerires(draft, path);
+      reprocessQueries(draft, path);
     }
 
     done();
@@ -660,7 +652,7 @@ const modify = (state, { action, key, path }) =>
 
     // reprocessing unifies any order changes from firestore
     if (action.meta.reprocess !== false) {
-      reprocessQuerires(draft, path);
+      reprocessQueries(draft, path);
     }
 
     done();
@@ -692,7 +684,7 @@ const failure = (state, { action, key, path }) =>
 
       const uniquePaths = Array.from(new Set(allPaths));
       if (uniquePaths.length > 0) {
-        reprocessQuerires(draft, uniquePaths);
+        reprocessQueries(draft, uniquePaths);
       }
     }
 
@@ -716,7 +708,7 @@ const deletion = (state, { action, key, path }) =>
     }
 
     // reprocess
-    reprocessQuerires(draft, path);
+    reprocessQueries(draft, path);
 
     done();
     return draft;
@@ -741,7 +733,7 @@ const remove = (state, { action, key, path }) =>
     }
 
     // reprocess
-    reprocessQuerires(draft, path);
+    reprocessQueries(draft, path);
 
     done();
     return draft;
@@ -756,7 +748,7 @@ const optimistic = (state, { action, key, path }) =>
       Object,
     );
 
-    reprocessQuerires(draft, path);
+    reprocessQueries(draft, path);
     return draft;
   });
 
@@ -764,7 +756,7 @@ const reset = (state, { action, key, path }) =>
   produce(state, (draft) => {
     cleanOverride(draft, { path, id: action.meta.doc });
 
-    reprocessQuerires(draft, path);
+    reprocessQueries(draft, path);
     return draft;
   });
 
@@ -784,7 +776,7 @@ const mutation = (state, { action, key, path }) =>
         ...new Set(optimisiticUpdates.map(({ collection }) => collection)),
       ];
       updatePaths.forEach((path) => {
-        reprocessQuerires(draft, path);
+        reprocessQueries(draft, path);
       });
     }
 

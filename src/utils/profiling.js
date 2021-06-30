@@ -22,6 +22,7 @@ const perf = win && win.performance;
  *
  * @param {*} marker
  * @param {*} isDone
+ * @param context
  * @returns {Function}
  */
 export default function mark(marker, context = '') {

@@ -27,7 +27,8 @@ module.exports = {
     'valid-jsdoc': 0, // from google
     'no-confusing-arrow': 0,
     'no-case-declarations': 0,
-    'arrow-parens': [2, 'as-needed'],
+    'no-param-reassign': [2, { props: false }],
+    'arrow-parens': 0, // handled by Prettier
     'prefer-default-export': 0,
     'jsdoc/newline-after-description': 0,
     'jsdoc/no-undefined-types': [1, { definedTypes: ['firebase'] }],

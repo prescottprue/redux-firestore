@@ -77,6 +77,8 @@ export interface Config {
   // https://github.com/prescottprue/redux-firestore#preserveonlistenererror
   preserveOnListenerError: null | object;
 
+  preserveCacheAfterUnset: boolean;
+
   // https://github.com/prescottprue/redux-firestore#onattemptcollectiondelete
   onAttemptCollectionDelete:
     | null

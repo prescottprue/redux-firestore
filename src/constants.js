@@ -104,6 +104,8 @@ export const actionTypes = {
  * state.ordered if you have a listener attached.
  * @property {object} preserveOnListenerError - `null` Values to
  * preserve from state when LISTENER_ERROR action is dispatched.
+ * @property {boolean} preserveCacheAfterUnset - `true` Indicates whether to
+ * preserve or remove the cache data from the store after a listener is unset.
  * @property {boolean} enhancerNamespace - `'firestore'` Namespace under which
  * enhancer places internal instance on redux store (i.e. store.firestore).
  * @property {boolean|Function} allowMultipleListeners - `false` Whether or not
@@ -126,6 +128,7 @@ export const defaultConfig = {
   allowMultipleListeners: false,
   preserveOnDelete: null,
   preserveOnListenerError: null,
+  preserveCacheAfterUnset: true,
   onAttemptCollectionDelete: null,
   mergeOrdered: true,
   mergeOrderedDocUpdates: true,

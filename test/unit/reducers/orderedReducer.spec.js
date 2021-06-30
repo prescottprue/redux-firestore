@@ -790,7 +790,7 @@ describe('orderedReducer', () => {
         it('function returns state to save', () => {
           action = {
             type: actionTypes.CLEAR_DATA,
-            preserve: { ordered: currentState => currentState },
+            preserve: { ordered: (currentState) => currentState },
           };
           state = { some: 'value' };
           expect(orderedReducer(state, action)).to.have.property('some');

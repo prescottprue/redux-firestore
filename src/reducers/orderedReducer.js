@@ -1,5 +1,6 @@
 import { size, get, unionBy, reject, omit, map, keyBy, isEqual } from 'lodash';
 import { merge as mergeObjects } from 'lodash/fp';
+import debug from 'debug';
 import { actionTypes } from '../constants';
 import {
   updateItemInArray,
@@ -7,7 +8,6 @@ import {
   preserveValuesFromState,
   pathToArr,
 } from '../utils/reducers';
-import debug from 'debug';
 
 const {
   DOCUMENT_ADDED,

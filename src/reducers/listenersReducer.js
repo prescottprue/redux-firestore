@@ -8,7 +8,7 @@ import { combineReducers } from '../utils/reducers';
  * @param {object} [state={}] - Current listenersById redux state
  * @param {object} action - Object containing the action that was dispatched
  * @param {string} action.type - Type of action that was dispatched
- * @param {String} action.path - Path of action
+ * @param {string} action.path - Path of action
  * @param {object} action.payload - THe payload
  * @returns {object} listenersById state after reduction (used in listeners)
  * @private

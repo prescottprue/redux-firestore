@@ -51,7 +51,7 @@ describe('firestoreActions', () => {
       onSnapshot: onSnapshotSpy,
     });
     fakeFirebase = {
-      _: { listeners: {}, config: defaultConfig },
+      _: { listeners: {}, pathListenerCounts: {}, config: defaultConfig },
       firestore: () => ({
         collection: collectionClass,
       }),
@@ -831,14 +831,33 @@ describe('firestoreActions', () => {
 
       it('dispatches UNSET_LISTENER action', () => {
         const instance = createFirestoreInstance(
-          {},
+          { _: { pathListenerCounts: { test: 1 } } },
           { helpersNamespace: 'test' },
           dispatchSpy,
         );
         instance.test.unsetListeners([{ collection: 'test' }]);
         expect(dispatchSpy).to.have.been.calledWith({
           meta: { collection: 'test' },
-          payload: { name: 'test' },
+          payload: { name: 'test', preserveCache: true },
+          type: actionTypes.UNSET_LISTENER,
+        });
+      });
+
+      it('dispatches UNSET_LISTENER action with preserveCache: false', async () => {
+        const instance = createFirestoreInstance(
+          {
+            _: {
+              pathListenerCounts: { test: 1 },
+              config: { preserveCacheAfterUnset: false },
+            },
+          },
+          { helpersNamespace: 'test' },
+          dispatchSpy,
+        );
+        instance.test.unsetListeners([{ collection: 'test' }]);
+        expect(dispatchSpy).to.have.been.calledWith({
+          meta: { collection: 'test' },
+          payload: { name: 'test', preserveCache: false },
           type: actionTypes.UNSET_LISTENER,
         });
       });

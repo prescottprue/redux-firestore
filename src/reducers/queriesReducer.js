@@ -20,7 +20,7 @@ export function isComposable(action) {
  * @returns {object} Queries state
  */
 export default function queriesReducer(state = {}, action) {
-  return produce(state, draft => {
+  return produce(state, (draft) => {
     if (!isComposable(action)) {
       return state;
     }
