@@ -390,6 +390,12 @@ Default: `null`
 
 Values to preserve from state when LISTENER_ERROR action is dispatched.
 
+#### preserveCacheAfterUnset
+
+Default: `true`
+
+Indicates whether to preserve or remove the cache data from the store after a listener is unset.
+
 #### onAttemptCollectionDelete
 
 Default: `null`

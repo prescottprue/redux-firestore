@@ -8,7 +8,7 @@ import {
   dataByIdSnapshot,
   getSnapshotByObject,
 } from 'utils/query';
-import { actionTypes } from 'constants';
+import { actionTypes, defaultConfig } from 'constants';
 
 let dispatch = sinon.spy();
 let meta;
@@ -242,13 +242,15 @@ describe('query utils', () => {
 
     it('calls dispatch with unlisten actionType', () => {
       const callbackSpy = sinon.spy();
-      detachListener({ _: { listeners: { test: callbackSpy } } }, dispatch, {
-        collection,
-      });
+      detachListener(
+        { _: { listeners: { test: callbackSpy }, config: defaultConfig } },
+        dispatch,
+        { collection },
+      );
       expect(dispatch).to.be.calledWith({
         type: actionTypes.UNSET_LISTENER,
         meta: { collection },
-        payload: { name: collection },
+        payload: { name: collection, preserveCache: true },
       });
     });
 
