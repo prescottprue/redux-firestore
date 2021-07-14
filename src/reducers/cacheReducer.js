@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-/* eslint-disable prettier/prettier */
 import produce, { createDraft, finishDraft } from 'immer';
 import debug from 'debug';
 import {
@@ -116,14 +114,19 @@ const PROCESSES = {
 };
 
 const PROCESSES_TIMESTAMP = {
-  '<': (a, b) => a.seconds < b.seconds ||
+  '<': (a, b) =>
+    a.seconds < b.seconds ||
     (a.seconds === b.seconds && a.nanoseconds < b.nanoseconds),
-  '<=': (a, b) => a.seconds < b.seconds ||
+  '<=': (a, b) =>
+    a.seconds < b.seconds ||
     (a.seconds === b.seconds && a.nanoseconds <= b.nanoseconds),
   '==': (a, b) => a.seconds === b.seconds && a.nanoseconds === b.nanoseconds,
   '!=': (a, b) => a.seconds !== b.seconds || a.nanoseconds !== b.nanoseconds,
-  '>=': (a, b) => a.seconds > b.seconds || (a.seconds === b.seconds && a.nanoseconds >= b.nanoseconds),
-  '>': (a, b) => a.seconds > b.seconds ||
+  '>=': (a, b) =>
+    a.seconds > b.seconds ||
+    (a.seconds === b.seconds && a.nanoseconds >= b.nanoseconds),
+  '>': (a, b) =>
+    a.seconds > b.seconds ||
     (a.seconds === b.seconds && a.nanoseconds > b.nanoseconds),
   'array-contains': (a, b) => a.includes(b),
   in: (a, b) => Array.isArray(b) && b.includes(a),
@@ -206,7 +209,9 @@ const filterTransducers = (where) => {
   const clauses = isFlat ? [where] : where;
 
   return clauses.map(([field, op, val]) => {
-    const fnc = isTimestamp(val) ? PROCESSES_TIMESTAMP[op] : PROCESSES[op] || (() => true);
+    const fnc = isTimestamp(val)
+      ? PROCESSES_TIMESTAMP[op]
+      : PROCESSES[op] || (() => true);
     return partialRight(map, (collection) =>
       filter(Object.values(collection || {}), (doc) => {
         let value;
