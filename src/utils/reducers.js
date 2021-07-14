@@ -7,7 +7,7 @@ import { isBoolean, pick, replace, trimStart, flatten } from 'lodash';
  * @private
  */
 export function pathToArr(path) {
-  return path ? path.split(/\//).filter(p => !!p) : [];
+  return path ? path.split(/\//).filter((p) => !!p) : [];
 }
 
 /**
@@ -114,7 +114,7 @@ export function pathFromMeta(meta) {
 export function updateItemInArray(array, itemId, updateItemCallback) {
   let matchFound = false;
   const modified = Array.isArray(array)
-    ? array.map(item => {
+    ? array.map((item) => {
         // Preserve items that do not have matching ids
         if (!item || item.id !== itemId) {
           return item;

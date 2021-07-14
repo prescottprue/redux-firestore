@@ -47,7 +47,7 @@ const typesMap = {
  * @returns {Function} Middleware function
  */
 export default function reduxFirestoreMiddleware(firestore) {
-  return store => next => action => {
+  return (store) => (next) => (action) => {
     const callAPI = action.type === CALL_FIRESTORE ? action : undefined;
     if (typeof callAPI === 'undefined') return next(action);
 
@@ -64,7 +64,7 @@ export default function reduxFirestoreMiddleware(firestore) {
       throw new Error('Expected an array of three action types.');
     }
 
-    if (!types.every(type => typeof type === 'string')) {
+    if (!types.every((type) => typeof type === 'string')) {
       throw new Error('Expected action types to be strings.');
     }
 
@@ -83,8 +83,8 @@ export default function reduxFirestoreMiddleware(firestore) {
     next({ type: requestType });
     const callInfoObj = { method };
     return callFirestore(firestore, callInfoObj)
-      .then(response => next({ response, method, args, type: successType }))
-      .catch(error =>
+      .then((response) => next({ response, method, args, type: successType }))
+      .catch((error) =>
         next(
           actionWith({
             type: failureType,

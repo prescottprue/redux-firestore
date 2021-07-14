@@ -1,4 +1,5 @@
 import { isObject, mapValues } from 'lodash';
+import mutate from './mutate';
 
 /**
  * Build payload by invoking payload function if it a function, otherwise
@@ -19,6 +20,8 @@ function makePayload({ payload }, valToPass) {
  * @param {Function} opts.method - Method to call
  * @param {Array} opts.args - Arguments to call method with
  * @param {Array} opts.types - Action types array ([BEFORE, SUCCESS, FAILURE])
+ * @param opts.ref
+ * @param opts.meta
  * @returns {Promise} Results of method call
  * @private
  */
@@ -32,8 +35,11 @@ export function wrapInDispatch(
     meta,
     payload: isObject(requestingType) ? requestingType.payload : { args },
   });
-  return ref[method](...args)
-    .then(result => {
+
+  const actionPromise =
+    method === 'mutate' ? mutate(ref, ...args) : ref[method](...args);
+  return actionPromise
+    .then((result) => {
       const successIsObject = isObject(successType);
       // Built action object handling function for custom payload
       const actionObj = {
@@ -55,7 +61,7 @@ export function wrapInDispatch(
       dispatch(actionObj);
       return result;
     })
-    .catch(err => {
+    .catch((err) => {
       dispatch({
         type: errorType,
         meta,
@@ -74,7 +80,7 @@ export function wrapInDispatch(
  * and dispatch.
  */
 function createWithFirebaseAndDispatch(firebase, dispatch) {
-  return func => (...args) =>
+  return (func) => (...args) =>
     func.apply(firebase, [firebase, dispatch, ...args]);
 }
 
