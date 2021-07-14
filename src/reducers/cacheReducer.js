@@ -214,6 +214,7 @@ const filterTransducers = (where) => {
       : PROCESSES[op] || (() => true);
     return partialRight(map, (collection) =>
       filter(Object.values(collection || {}), (doc) => {
+        if (!doc) return false;
         let value;
         if (field === '__name__') {
           value = doc.id;
@@ -232,6 +233,61 @@ const filterTransducers = (where) => {
     );
   });
 };
+
+const paginateTransducers = (query) => {
+  const { orderBy, startAt, startAfter, endAt, endBefore } = query;
+  const start = startAt || startAfter;
+  const end = endAt || endBefore;
+  if (start === undefined && end === undefined) return null;
+
+  const isFlat = typeof orderBy[0] === 'string';
+  const orders = isFlat ? [orderBy] : orderBy;
+  const isPaginateMatched = (doc, at, before, after) => {
+    let matched = null;
+    orders.forEach((field, idx) => {
+      if (matched) return;
+      const value = Array.isArray(at) ? at[idx] : at;
+      if (value === undefined) return;
+
+      // TODO: missing support for document refs
+      const isTimestamp = doc[field]?.nanoseconds >= 0;
+      const isMatched = isTimestamp
+        ? doc[field]?.seconds === value.seconds &&
+          doc[field]?.nanoseconds === value.nanoseconds
+        : doc[field] === value;
+      if (isMatched) {
+        matched = (after && 1) || before ? -1 : 0;
+      }
+    });
+    return matched;
+  };
+
+  return partialRight(map, (docs) => {
+    const results = [];
+    let started = startAt === undefined && startAfter === undefined;
+
+    docs.forEach((doc) => {
+      let skipOne = false;
+      if (!started) {
+        const matched = isPaginateMatched(doc, start, undefined, startAfter);
+        if (matched !== undefined) started = true;
+        if (matched === 1) skipOne = true;
+      }
+
+      if (started && end) {
+        const matched = isPaginateMatched(doc, end, endBefore, undefined);
+        if (matched !== undefined) started = false;
+        if (matched === -1) skipOne = true;
+      }
+
+      if (started && !skipOne) {
+        results.push(doc);
+      }
+    });
+    return results;
+  });
+};
+
 /**
  * @name populateTransducer
  * @param {string} collection - path to collection in Firestore
@@ -341,11 +397,20 @@ function buildTransducer(overrides, query) {
   const xfFilter =
     !useOverrides || filterTransducers(!where ? ['', '*', ''] : where);
   const xfOrder = !useOverrides || !order ? null : orderTransducer(order);
+  const xfPaginate = paginateTransducers(query);
   const xfLimit = !limit ? null : limitTransducer(limit);
 
   if (!useOverrides) {
     return flow(
-      compact([xfPopulate, xfGetCollection, xfGetDoc, xfLimit, xfFields]),
+      compact([
+        xfPopulate,
+        xfGetCollection,
+        xfGetDoc,
+        xfOrder,
+        xfPaginate,
+        xfLimit,
+        xfFields,
+      ]),
     );
   }
 
@@ -358,6 +423,7 @@ function buildTransducer(overrides, query) {
       partialRight(map, (db) => finishDraft(db)),
       ...xfFilter,
       xfOrder,
+      xfPaginate,
       xfLimit,
       xfFields,
     ]),
