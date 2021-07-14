@@ -16,6 +16,7 @@ export default function crossSliceReducer(state = {}, action) {
       case actionTypes.DOCUMENT_MODIFIED:
       case actionTypes.DOCUMENT_ADDED:
       case actionTypes.DOCUMENT_REMOVED:
+      case actionTypes.MULTIPLE_DOCUMENTS_ADDED:
       case actionTypes.LISTENER_RESPONSE:
       case actionTypes.UNSET_LISTENER:
         // Take all of the query values and plop them into composite, replacing the existing data entirely

@@ -9,6 +9,7 @@ import {
   get,
   set,
   cloneDeep,
+  partition
 } from 'lodash';
 import { actionTypes } from '../constants';
 
@@ -736,6 +737,43 @@ function docChangeEvent(change, originalMeta = {}) {
 }
 
 /**
+ * Action creator for multiple document additions event. Used to create action objects
+ * to be passed to dispatch.
+ * @param {object} additions - Array of document addition objects from Firebase callback
+ * @param {object} [originalMeta={}] - Original meta data of action
+ * @returns {object} Resolves with docs change action object
+ */
+function docMultipleAdditionsEvent(additionObjects, originalMeta= {}) {
+  const additionsToMake = additionObjects.map(change => {
+    const meta = { ...cloneDeep(originalMeta),
+      path: change.doc.ref.path
+    };
+
+    if (originalMeta.subcollections && !originalMeta.storeAs) {
+      meta.subcollections[0] = { ...meta.subcollections[0],
+        doc: change.doc.id
+      };
+    } else {
+      meta.doc = change.doc.id;
+    }
+
+    return ({
+      meta,
+      payload: {
+        data: change.doc.data(),
+        ordered: { oldIndex: change.oldIndex, newIndex: change.newIndex },
+      },
+    })
+  })
+
+  return {
+    meta: originalMeta,
+    type: actionTypes.MULTIPLE_DOCUMENTS_ADDED,
+    payload: additionsToMake
+  };
+}
+
+/**
  * Dispatch action(s) response from listener response.
  * @private
  * @param {object} opts - Options object
@@ -761,9 +799,13 @@ export function dispatchListenerResponse({
       : docData.docChanges;
   // Dispatch different actions for doc changes (only update doc(s) by key)
   if (docChanges && docChanges.length < docData.size) {
-    // Loop to dispatch for each change if there are multiple
-    // TODO: Option for dispatching multiple changes in single action
-    docChanges.forEach(change => {
+    // Divide docChanges by types
+    const [docAdditions, otherDocChanges] = partition(docChanges, (change) => changeTypeToEventType[change.type] === actionTypes.DOCUMENT_ADDED)
+
+    dispatch(docMultipleAdditionsEvent(docAdditions, meta))
+
+    // Handle all other doc changes
+    otherDocChanges.forEach(change => {
       dispatch(docChangeEvent(change, meta));
     });
   } else {
