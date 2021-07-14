@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+/* eslint-disable prettier/prettier */
 import produce, { createDraft, finishDraft } from 'immer';
 import debug from 'debug';
 import {
@@ -97,6 +99,8 @@ const info = debug('rrf:cache');
  * @property {object} meta
  */
 
+const isTimestamp = (a) => a instanceof Object && a.seconds !== undefined;
+
 const PROCESSES = {
   '<': (a, b) => a < b,
   '<=': (a, b) => a <= b,
@@ -104,6 +108,23 @@ const PROCESSES = {
   '!=': (a, b) => a !== b,
   '>=': (a, b) => a >= b,
   '>': (a, b) => a > b,
+  'array-contains': (a, b) => a.includes(b),
+  in: (a, b) => Array.isArray(b) && b.includes(a),
+  'array-contains-any': (a, b) => b.some((b1) => a.includes(b1)),
+  'not-in': (a, b) => !b.includes(a),
+  '*': () => true,
+};
+
+const PROCESSES_TIMESTAMP = {
+  '<': (a, b) => a.seconds < b.seconds ||
+    (a.seconds === b.seconds && a.nanoseconds < b.nanoseconds),
+  '<=': (a, b) => a.seconds < b.seconds ||
+    (a.seconds === b.seconds && a.nanoseconds <= b.nanoseconds),
+  '==': (a, b) => a.seconds === b.seconds && a.nanoseconds === b.nanoseconds,
+  '!=': (a, b) => a.seconds !== b.seconds || a.nanoseconds !== b.nanoseconds,
+  '>=': (a, b) => a.seconds > b.seconds || (a.seconds === b.seconds && a.nanoseconds >= b.nanoseconds),
+  '>': (a, b) => a.seconds > b.seconds ||
+    (a.seconds === b.seconds && a.nanoseconds > b.nanoseconds),
   'array-contains': (a, b) => a.includes(b),
   in: (a, b) => Array.isArray(b) && b.includes(a),
   'array-contains-any': (a, b) => b.some((b1) => a.includes(b1)),
@@ -185,7 +206,7 @@ const filterTransducers = (where) => {
   const clauses = isFlat ? [where] : where;
 
   return clauses.map(([field, op, val]) => {
-    const fnc = PROCESSES[op] || (() => true);
+    const fnc = isTimestamp(val) ? PROCESSES_TIMESTAMP[op] : PROCESSES[op] || (() => true);
     return partialRight(map, (collection) =>
       filter(Object.values(collection || {}), (doc) => {
         let value;
