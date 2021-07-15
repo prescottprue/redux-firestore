@@ -19,6 +19,7 @@ import {
   isMatch,
   get,
   isEqual,
+  takeRight,
 } from 'lodash';
 import { actionTypes } from '../constants';
 import { getBaseQueryName } from '../utils/query';
@@ -178,10 +179,11 @@ const orderTransducer = (order) => {
   const orders = isFlat ? [order] : order;
   const [fields, direction] = zip(
     ...orders.map(([field, dir]) => [
-      (data) =>
-        typeof data[field] === 'string'
-          ? data[field].toLowerCase()
-          : data[field],
+      (data) => {
+        if (typeof data[field] === 'string') return data[field].toLowerCase();
+        if (isTimestamp(data[field])) return data[field].seconds;
+        return data[field];
+      },
       dir || 'asc',
     ]),
   );
@@ -195,7 +197,13 @@ const orderTransducer = (order) => {
  * limit from the firestore query
  * @returns {xFormLimiter} - transducer
  */
-const limitTransducer = (limit) => ([arr] = []) => [take(arr, limit)];
+const limitTransducer = ({ limit, endAt, endBefore }) => {
+  if (!limit) return null;
+  const fromRight = (endAt || endBefore) !== undefined;
+  return fromRight
+    ? ([arr] = []) => [takeRight(arr, limit)]
+    : ([arr] = []) => [take(arr, limit)];
+};
 
 /**
  * @name filterTransducers
@@ -238,58 +246,64 @@ const filterTransducers = (where) => {
  * @name paginateTransducers
  * @param {RRFQuery} query - Firestore wquery
  * @typedef {Function} xFormFilter - run the same where cause sent to
- * firestore for all the optimitic overrides
+ * Only apply pagination if we get the full list of docs, pre-sorted
  * @returns {xFormFilter} - transducer
  */
 const paginateTransducers = (query) => {
-  const { orderBy: order, startAt, startAfter, endAt, endBefore } = query;
+  const { orderBy: order, startAt, startAfter, endAt, endBefore, via } = query;
+  const isOptimisticRead = via === undefined;
+  if (!isOptimisticRead) return null;
+
   const start = startAt || startAfter;
   const end = endAt || endBefore;
+  const isAfter = startAfter !== undefined;
+  const isBefore = endBefore !== undefined;
   if (start === undefined && end === undefined) return null;
 
   const isFlat = typeof order[0] === 'string';
   const orders = isFlat ? [order] : order;
-  const isPaginateMatched = (doc, at, before, after) => {
+  const isPaginateMatched = (doc, at, before = false, after = false) => {
     let matched = null;
-    orders.forEach((field, idx) => {
-      if (matched) return;
+    orders.forEach(([field, sort = 'asc'], idx) => {
+      if (matched !== null) return;
       const value = Array.isArray(at) ? at[idx] : at;
       if (value === undefined) return;
 
-      // TODO: missing support for document refs
-      const isMatched = isTimestamp
-        ? doc[field]?.seconds === value.seconds &&
-          doc[field]?.nanoseconds === value.nanoseconds
-        : doc[field] === value;
+      // TODO: add support for document refs
+      const proc = isTimestamp(doc[field]) ? PROCESSES_TIMESTAMP : PROCESSES;
+      let compare = process['=='];
+      if (startAt || endAt) compare = proc[sort === 'desc' ? '<=' : '>='];
+      if (startAfter || endBefore) compare = proc[sort === 'desc' ? '<' : '>'];
+
+      const isMatched = compare(doc[field], value);
       if (isMatched) {
-        matched = (after && 1) || before ? -1 : 0;
+        matched = true;
       }
     });
+
     return matched;
   };
 
   return partialRight(map, (docs) => {
     const results = [];
-    let started = startAt === undefined && startAfter === undefined;
+    let started = start === undefined;
 
-    docs.forEach((doc) => {
-      let skipOne = false;
-      if (!started) {
-        const matched = isPaginateMatched(doc, start, undefined, startAfter);
-        if (matched !== undefined) started = true;
-        if (matched === 1) skipOne = true;
+    docs.forEach((doc, idx) => {
+      if (!started && start) {
+        const matched = isPaginateMatched(doc, start, undefined, isAfter);
+        if (matched !== null) started = true;
       }
 
       if (started && end) {
-        const matched = isPaginateMatched(doc, end, endBefore, undefined);
-        if (matched !== undefined) started = false;
-        if (matched === -1) skipOne = true;
+        const matched = isPaginateMatched(doc, end, isBefore, undefined);
+        if (matched !== null) started = false;
       }
 
-      if (started && !skipOne) {
+      if (started) {
         results.push(doc);
       }
     });
+
     return results;
   });
 };
@@ -380,7 +394,6 @@ function buildTransducer(overrides, query) {
     collection,
     where,
     orderBy: order,
-    limit,
     ordered,
     fields,
     populates,
@@ -403,8 +416,8 @@ function buildTransducer(overrides, query) {
   const xfFilter =
     !useOverrides || filterTransducers(!where ? ['', '*', ''] : where);
   const xfOrder = !useOverrides || !order ? null : orderTransducer(order);
-  const xfPaginate = paginateTransducers(query);
-  const xfLimit = !limit ? null : limitTransducer(limit);
+  const xfPaginate = paginateTransducers(query); // -- need to skip when not optimitic read
+  const xfLimit = limitTransducer(query);
 
   if (!useOverrides) {
     return flow(

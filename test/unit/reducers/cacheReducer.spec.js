@@ -11,6 +11,38 @@ const initialState = {
   data: { testStoreAs: { obsoleteDocId: {} } },
   ordered: {},
 };
+const testDocId0 = {
+  dateKey: { seconds: 0, nanoseconds: 0 },
+  id: 'testDocId0',
+  other: 'first',
+  path,
+};
+const testDocId1 = {
+  ...testDocId0,
+  dateKey: { seconds: 1, nanoseconds: 1 },
+  other: 'second',
+  id: 'testDocId1',
+};
+const testDocId3 = {
+  ...testDocId0,
+  dateKey: { seconds: 3, nanoseconds: 3 },
+  other: 'third',
+  id: 'testDocId3',
+};
+const testDocId4 = {
+  ...testDocId0,
+  dateKey: { seconds: 4, nanoseconds: 4 },
+  other: 'fourth',
+  id: 'testDocId4',
+};
+
+const primedState = {
+  cache: {
+    database: {
+      [path]: { testDocId0, testDocId1, testDocId3, testDocId4 },
+    },
+  },
+};
 
 describe('cacheReducer', () => {
   describe('optimistic reads', () => {
@@ -76,11 +108,20 @@ describe('cacheReducer', () => {
     });
 
     it('SET_LISTENER returns smaller filtered date', () => {
+      const thresholdDate = { seconds: 0, nanoseconds: 1 };
 
-      const thresholdDate = { seconds: 0, nanoseconds: 1 }
-
-      const doc1 = { dateKey: { seconds: 0, nanoseconds: 0 }, other: 'test', id: 'testDocId1', path };
-      const doc2 = { dateKey: { seconds: 1, nanoseconds: 1 }, other: 'test', id: 'testDocId2', path };
+      const doc1 = {
+        dateKey: { seconds: 0, nanoseconds: 0 },
+        other: 'test',
+        id: 'testDocId1',
+        path,
+      };
+      const doc2 = {
+        dateKey: { seconds: 1, nanoseconds: 1 },
+        other: 'test',
+        id: 'testDocId2',
+        path,
+      };
 
       // Initial seed
       const action1 = {
@@ -114,15 +155,24 @@ describe('cacheReducer', () => {
       const pass2 = reducer(pass1, action2);
 
       expect(pass2.cache.testStoreAs2.docs.length).to.eql(1);
-      expect(pass2.cache.testStoreAs2.docs[0].id).to.eql('testDocId1')
+      expect(pass2.cache.testStoreAs2.docs[0].id).to.eql('testDocId1');
     });
 
     it('SET_LISTENER returns greater filtered date', () => {
+      const thresholdDate = { seconds: 0, nanoseconds: 1 };
 
-      const thresholdDate = { seconds: 0, nanoseconds: 1 }
-
-      const doc1 = { dateKey: { seconds: 0, nanoseconds: 0 }, other: 'test', id: 'testDocId1', path };
-      const doc2 = { dateKey: { seconds: 1, nanoseconds: 1 }, other: 'test', id: 'testDocId2', path };
+      const doc1 = {
+        dateKey: { seconds: 0, nanoseconds: 0 },
+        other: 'test',
+        id: 'testDocId1',
+        path,
+      };
+      const doc2 = {
+        dateKey: { seconds: 1, nanoseconds: 1 },
+        other: 'test',
+        id: 'testDocId2',
+        path,
+      };
 
       // Initial seed
       const action1 = {
@@ -156,17 +206,31 @@ describe('cacheReducer', () => {
       const pass2 = reducer(pass1, action2);
 
       expect(pass2.cache.testStoreAs2.docs.length).to.eql(1);
-      expect(pass2.cache.testStoreAs2.docs[0].id).to.eql('testDocId2')
+      expect(pass2.cache.testStoreAs2.docs[0].id).to.eql('testDocId2');
     });
 
     it('SET_LISTENER returns smaller or equal filtered date', () => {
+      const thresholdDate = { seconds: 1, nanoseconds: 1 };
 
-      const thresholdDate = { seconds: 1, nanoseconds: 1 }
-  
-      const doc1 = { dateKey: { seconds: 0, nanoseconds: 0 }, other: 'test', id: 'testDocId1', path };
-      const doc2 = { dateKey: { seconds: 1, nanoseconds: 1 }, other: 'test', id: 'testDocId2', path };
-      const doc3 = { dateKey: { seconds: 3, nanoseconds: 3 }, other: 'test', id: 'testDocId3', path };
-  
+      const doc1 = {
+        dateKey: { seconds: 0, nanoseconds: 0 },
+        other: 'test',
+        id: 'testDocId1',
+        path,
+      };
+      const doc2 = {
+        dateKey: { seconds: 1, nanoseconds: 1 },
+        other: 'test',
+        id: 'testDocId2',
+        path,
+      };
+      const doc3 = {
+        dateKey: { seconds: 3, nanoseconds: 3 },
+        other: 'test',
+        id: 'testDocId3',
+        path,
+      };
+
       // Initial seed
       const action1 = {
         meta: {
@@ -182,7 +246,7 @@ describe('cacheReducer', () => {
         },
         type: actionTypes.LISTENER_RESPONSE,
       };
-  
+
       const action2 = {
         meta: {
           collection,
@@ -194,23 +258,37 @@ describe('cacheReducer', () => {
         payload: { name: 'testStoreAs2' },
         type: actionTypes.SET_LISTENER,
       };
-  
+
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
-  
+
       expect(pass2.cache.testStoreAs2.docs.length).to.eql(2);
-      expect(pass2.cache.testStoreAs2.docs[0].id).to.eql('testDocId1')
-      expect(pass2.cache.testStoreAs2.docs[1].id).to.eql('testDocId2')
+      expect(pass2.cache.testStoreAs2.docs[0].id).to.eql('testDocId1');
+      expect(pass2.cache.testStoreAs2.docs[1].id).to.eql('testDocId2');
     });
 
     it('SET_LISTENER returns greater or equal filtered date', () => {
+      const thresholdDate = { seconds: 1, nanoseconds: 1 };
 
-      const thresholdDate = { seconds: 1, nanoseconds: 1 }
-  
-      const doc1 = { dateKey: { seconds: 0, nanoseconds: 0 }, other: 'test', id: 'testDocId1', path };
-      const doc2 = { dateKey: { seconds: 1, nanoseconds: 1 }, other: 'test', id: 'testDocId2', path };
-      const doc3 = { dateKey: { seconds: 3, nanoseconds: 3 }, other: 'test', id: 'testDocId3', path };
-  
+      const doc1 = {
+        dateKey: { seconds: 0, nanoseconds: 0 },
+        other: 'test',
+        id: 'testDocId1',
+        path,
+      };
+      const doc2 = {
+        dateKey: { seconds: 1, nanoseconds: 1 },
+        other: 'test',
+        id: 'testDocId2',
+        path,
+      };
+      const doc3 = {
+        dateKey: { seconds: 3, nanoseconds: 3 },
+        other: 'test',
+        id: 'testDocId3',
+        path,
+      };
+
       // Initial seed
       const action1 = {
         meta: {
@@ -226,7 +304,7 @@ describe('cacheReducer', () => {
         },
         type: actionTypes.LISTENER_RESPONSE,
       };
-  
+
       const action2 = {
         meta: {
           collection,
@@ -238,23 +316,37 @@ describe('cacheReducer', () => {
         payload: { name: 'testStoreAs2' },
         type: actionTypes.SET_LISTENER,
       };
-  
+
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
-  
+
       expect(pass2.cache.testStoreAs2.docs.length).to.eql(2);
-      expect(pass2.cache.testStoreAs2.docs[0].id).to.eql('testDocId2')
-      expect(pass2.cache.testStoreAs2.docs[1].id).to.eql('testDocId3')
+      expect(pass2.cache.testStoreAs2.docs[0].id).to.eql('testDocId2');
+      expect(pass2.cache.testStoreAs2.docs[1].id).to.eql('testDocId3');
     });
 
     it('SET_LISTENER returns exact filtered date', () => {
+      const thresholdDate = { seconds: 1, nanoseconds: 1 };
 
-      const thresholdDate = { seconds: 1, nanoseconds: 1 }
-  
-      const doc1 = { dateKey: { seconds: 0, nanoseconds: 0 }, other: 'test', id: 'testDocId1', path };
-      const doc2 = { dateKey: { seconds: 1, nanoseconds: 1 }, other: 'test', id: 'testDocId2', path };
-      const doc3 = { dateKey: { seconds: 3, nanoseconds: 3 }, other: 'test', id: 'testDocId3', path };
-  
+      const doc1 = {
+        dateKey: { seconds: 0, nanoseconds: 0 },
+        other: 'test',
+        id: 'testDocId1',
+        path,
+      };
+      const doc2 = {
+        dateKey: { seconds: 1, nanoseconds: 1 },
+        other: 'test',
+        id: 'testDocId2',
+        path,
+      };
+      const doc3 = {
+        dateKey: { seconds: 3, nanoseconds: 3 },
+        other: 'test',
+        id: 'testDocId3',
+        path,
+      };
+
       // Initial seed
       const action1 = {
         meta: {
@@ -270,7 +362,7 @@ describe('cacheReducer', () => {
         },
         type: actionTypes.LISTENER_RESPONSE,
       };
-  
+
       const action2 = {
         meta: {
           collection,
@@ -282,58 +374,117 @@ describe('cacheReducer', () => {
         payload: { name: 'testStoreAs2' },
         type: actionTypes.SET_LISTENER,
       };
-  
+
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
-  
+
       expect(pass2.cache.testStoreAs2.docs.length).to.eql(1);
-      expect(pass2.cache.testStoreAs2.docs[0].id).to.eql('testDocId2')
+      expect(pass2.cache.testStoreAs2.docs[0].id).to.eql('testDocId2');
     });
 
-    it('SET_LISTENER returns different filtered date', () => {
-
-      const thresholdDate = { seconds: 1, nanoseconds: 1 }
-  
-      const doc1 = { dateKey: { seconds: 0, nanoseconds: 0 }, other: 'test', id: 'testDocId1', path };
-      const doc2 = { dateKey: { seconds: 1, nanoseconds: 1 }, other: 'test', id: 'testDocId2', path };
-      const doc3 = { dateKey: { seconds: 3, nanoseconds: 3 }, other: 'test', id: 'testDocId3', path };
-  
-      // Initial seed
-      const action1 = {
+    it('SET_LISTENER pagination with startAt', () => {
+      const stateDesc = {
         meta: {
           collection,
           storeAs: 'testStoreAs',
-          orderBy: ['dateKey'],
-          fields: ['id', 'other'],
+          orderBy: ['dateKey', 'desc'],
+          startAt: { seconds: 2, nanoseconds: 2 },
+          limit: 2,
         },
-        payload: {
-          data: { [doc1.id]: doc1, [doc2.id]: doc2, [doc3.id]: doc3 },
-          ordered: [doc1, doc2],
-          fromCache: true,
-        },
-        type: actionTypes.LISTENER_RESPONSE,
-      };
-  
-      const action2 = {
-        meta: {
-          collection,
-          storeAs: 'testStoreAs2',
-          where: [['dateKey', '!=', thresholdDate]],
-          orderBy: ['dateKey'],
-          fields: ['id', 'other'],
-        },
-        payload: { name: 'testStoreAs2' },
+        payload: { name: 'testStoreAs' },
         type: actionTypes.SET_LISTENER,
       };
-  
-      const pass1 = reducer(initialState, action1);
-      const pass2 = reducer(pass1, action2);
-  
-      expect(pass2.cache.testStoreAs2.docs.length).to.eql(2);
-      expect(pass2.cache.testStoreAs2.docs[0].id).to.eql('testDocId1')
-      expect(pass2.cache.testStoreAs2.docs[1].id).to.eql('testDocId3')
+      const stateAsc = JSON.parse(JSON.stringify(stateDesc));
+      stateAsc.meta.orderBy = ['dateKey'];
+
+      const passA = reducer(primedState, stateDesc);
+      expect(passA.cache.testStoreAs.docs[0].id).to.eql('testDocId1');
+      expect(passA.cache.testStoreAs.docs[1].id).to.eql('testDocId0');
+      expect(passA.cache.testStoreAs.docs[2]).to.eql(undefined);
+
+      const passB = reducer(primedState, stateAsc);
+      expect(passB.cache.testStoreAs.docs[0].id).to.eql('testDocId3');
+      expect(passB.cache.testStoreAs.docs[1].id).to.eql('testDocId4');
+      expect(passB.cache.testStoreAs.docs[2]).to.eql(undefined);
     });
 
+    it('SET_LISTENER pagination with startAfter', () => {
+      const stateDesc = {
+        meta: {
+          collection,
+          storeAs: 'testStoreAs',
+          orderBy: ['dateKey', 'desc'],
+          startAfter: { seconds: 2, nanoseconds: 2 },
+          limit: 2,
+        },
+        payload: { name: 'testStoreAs' },
+        type: actionTypes.SET_LISTENER,
+      };
+      const stateAsc = JSON.parse(JSON.stringify(stateDesc));
+      stateAsc.meta.orderBy = ['dateKey', 'asc'];
+
+      const passA = reducer(primedState, stateDesc);
+      expect(passA.cache.testStoreAs.docs[0].id).to.eql('testDocId1');
+      expect(passA.cache.testStoreAs.docs[1].id).to.eql('testDocId0');
+      expect(passA.cache.testStoreAs.docs[2]).to.eql(undefined);
+
+      const passB = reducer(primedState, stateAsc);
+      expect(passB.cache.testStoreAs.docs[0].id).to.eql('testDocId3');
+      expect(passB.cache.testStoreAs.docs[1].id).to.eql('testDocId4');
+      expect(passB.cache.testStoreAs.docs[2]).to.eql(undefined);
+    });
+
+    it('SET_LISTENER pagination with endAt', () => {
+      const stateDesc = {
+        meta: {
+          collection,
+          storeAs: 'testStoreAs',
+          orderBy: ['dateKey', 'desc'],
+          endAt: { seconds: 2, nanoseconds: 2 },
+          limit: 2,
+        },
+        payload: { name: 'testStoreAs' },
+        type: actionTypes.SET_LISTENER,
+      };
+      const stateAsc = JSON.parse(JSON.stringify(stateDesc));
+      stateAsc.meta.orderBy = ['dateKey', 'asc'];
+
+      const passA = reducer(primedState, stateDesc);
+      expect(passA.cache.testStoreAs.docs[0].id).to.eql('testDocId4');
+      expect(passA.cache.testStoreAs.docs[1].id).to.eql('testDocId3');
+      expect(passA.cache.testStoreAs.docs[2]).to.eql(undefined);
+
+      const passB = reducer(primedState, stateAsc);
+      expect(passB.cache.testStoreAs.docs[0].id).to.eql('testDocId0');
+      expect(passB.cache.testStoreAs.docs[1].id).to.eql('testDocId1');
+      expect(passB.cache.testStoreAs.docs[2]).to.eql(undefined);
+    });
+
+    it('SET_LISTENER pagination with endBefore', () => {
+      const stateDesc = {
+        meta: {
+          collection,
+          storeAs: 'testStoreAs',
+          orderBy: ['dateKey', 'desc'],
+          endBefore: { seconds: 2, nanoseconds: 2 },
+          limit: 2,
+        },
+        payload: { name: 'testStoreAs' },
+        type: actionTypes.SET_LISTENER,
+      };
+      const stateAsc = JSON.parse(JSON.stringify(stateDesc));
+      stateAsc.meta.orderBy = ['dateKey'];
+
+      const passA = reducer(primedState, stateDesc);
+      expect(passA.cache.testStoreAs.docs[0].id).to.eql('testDocId4');
+      expect(passA.cache.testStoreAs.docs[1].id).to.eql('testDocId3');
+      expect(passA.cache.testStoreAs.docs[2]).to.eql(undefined);
+
+      const passB = reducer(primedState, stateAsc);
+      expect(passB.cache.testStoreAs.docs[0].id).to.eql('testDocId0');
+      expect(passB.cache.testStoreAs.docs[1].id).to.eql('testDocId1');
+      expect(passB.cache.testStoreAs.docs[2]).to.eql(undefined);
+    });
   });
 
   describe('query fields', () => {
