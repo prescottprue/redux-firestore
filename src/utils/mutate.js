@@ -18,7 +18,7 @@ const promiseAllObject = async (object) =>
   );
 
 const isBatchedWrite = (operations) => Array.isArray(operations);
-const isDocRead = ({ doc } = {}) => doc === 'string';
+const isDocRead = ({ doc } = {}) => typeof doc === 'string';
 const isProviderRead = (read) => isFunction(read);
 const isSingleWrite = ({ collection } = {}) => typeof collection === 'string';
 

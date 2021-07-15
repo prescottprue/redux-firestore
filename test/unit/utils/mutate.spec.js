@@ -104,7 +104,7 @@ describe('firestore.mutate()', () => {
     expect(commit.calledTwice);
   });
 
-  it('writes in transaction', async () => {
+  it('writes transaction w/ provider, query & doc', async () => {
     const firestoreGet = sinon.spy(() =>
       Promise.resolve({
         docs: [
@@ -150,6 +150,7 @@ describe('firestore.mutate()', () => {
       { firestore },
       {
         reads: {
+          org: () => `tara`,
           team: {
             collection: 'orgs/tara-ai/teams',
             doc: 'team-id-123',
@@ -163,9 +164,9 @@ describe('firestore.mutate()', () => {
           },
         },
         writes: [
-          ({ unfinishedTasks, team }) =>
+          ({ org, unfinishedTasks, team }) =>
             unfinishedTasks.map((task) => ({
-              collection: 'orgs/tara-ai/tasks',
+              collection: `orgs/${org}/tasks`,
               doc: task.id,
               data: {
                 'nested.field': 'new-value',
@@ -196,7 +197,7 @@ describe('firestore.mutate()', () => {
     );
   });
 
-  it('writes transaction with single write', async () => {
+  it('writes transaction w/ single write', async () => {
     const firestoreGet = sinon.spy(() =>
       Promise.resolve({
         docs: [
