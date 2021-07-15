@@ -234,14 +234,21 @@ const filterTransducers = (where) => {
   });
 };
 
+/**
+ * @name paginateTransducers
+ * @param {RRFQuery} query - Firestore wquery
+ * @typedef {Function} xFormFilter - run the same where cause sent to
+ * firestore for all the optimitic overrides
+ * @returns {xFormFilter} - transducer
+ */
 const paginateTransducers = (query) => {
-  const { orderBy, startAt, startAfter, endAt, endBefore } = query;
+  const { orderBy: order, startAt, startAfter, endAt, endBefore } = query;
   const start = startAt || startAfter;
   const end = endAt || endBefore;
   if (start === undefined && end === undefined) return null;
 
-  const isFlat = typeof orderBy[0] === 'string';
-  const orders = isFlat ? [orderBy] : orderBy;
+  const isFlat = typeof order[0] === 'string';
+  const orders = isFlat ? [order] : order;
   const isPaginateMatched = (doc, at, before, after) => {
     let matched = null;
     orders.forEach((field, idx) => {
@@ -250,7 +257,6 @@ const paginateTransducers = (query) => {
       if (value === undefined) return;
 
       // TODO: missing support for document refs
-      const isTimestamp = doc[field]?.nanoseconds >= 0;
       const isMatched = isTimestamp
         ? doc[field]?.seconds === value.seconds &&
           doc[field]?.nanoseconds === value.nanoseconds
