@@ -1,56 +1,26 @@
-import { chunk, cloneDeep, flatten, mapValues } from 'lodash';
+import { chunk, cloneDeep, flatten, isFunction, mapValues } from 'lodash';
 import debug from 'debug';
 import { firestoreRef } from './query';
 import mark from './profiling';
 
 const info = debug('rrf:mutate');
 
-/**
- * @param {object} firestore
- * @param {string} collection
- * @param {string} doc
- * @returns Boolean
- */
 const docRef = (firestore, collection, doc) =>
   firestore.doc(`${collection}/${doc}`);
 
-/**
- * @param object
- * @returns Promise
- */
-async function promiseAllObject(object) {
-  return Object.fromEntries(
+const promiseAllObject = async (object) =>
+  Object.fromEntries(
     await Promise.all(
       Object.entries(object).map(([key, promise]) =>
         promise.then((value) => [key, value]),
       ),
     ),
   );
-}
 
-/**
- * @param {object} operations
- * @returns Boolean
- */
-function isBatchedWrite(operations) {
-  return Array.isArray(operations);
-}
-
-/**
- * @param {Mutation_v1 | Mutation_v2} read
- * @returns Boolean
- */
-function isDocRead(read) {
-  return read && typeof read.doc === 'string';
-}
-
-/**
- * @param {Mutation_v1 | Mutation_v2} operations
- * @returns Boolean
- */
-function isSingleWrite(operations) {
-  return operations && typeof operations.collection === 'string';
-}
+const isBatchedWrite = (operations) => Array.isArray(operations);
+const isDocRead = ({ doc } = {}) => doc === 'string';
+const isProviderRead = (read) => isFunction(read);
+const isSingleWrite = ({ collection } = {}) => typeof collection === 'string';
 
 // ----- FieldValue support -----
 
@@ -199,13 +169,15 @@ async function writeInTransaction(firebase, operations) {
 
     const done = mark('mutate.writeInTransaction:reads');
     const readsPromised = mapValues(operations.reads, async (read) => {
+      if (isProviderRead(read)) return read();
+
       if (isDocRead(read)) {
         const doc = firestoreRef(firebase, read);
         const snapshot = await getter(doc);
         return serialize(snapshot.exsits === false ? null : snapshot);
       }
 
-      // NOTE: Queries are not supported in Firestore Transactions (client-side)
+      // else query (As of 7/2021, Firestore doesn't support client-side queries)
       const coll = firestoreRef(firebase, read);
       const snapshot = await coll.get();
       if (snapshot.docs.length === 0) return [];
