@@ -177,7 +177,7 @@ async function writeInTransaction(firebase, operations) {
         return serialize(snapshot.exsits === false ? null : snapshot);
       }
 
-      // else query (As of 7/2021, Firestore doesn't support client-side queries)
+      // else query (As of 7/2021, Firestore doesn't include queries in client-side transactions)
       const coll = firestoreRef(firebase, read);
       const snapshot = await coll.get();
       if (snapshot.docs.length === 0) return [];

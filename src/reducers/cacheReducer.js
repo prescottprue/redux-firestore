@@ -244,15 +244,17 @@ const filterTransducers = (where) => {
 
 /**
  * @name paginateTransducers
- * @param {RRFQuery} query - Firestore wquery
- * @typedef {Function} xFormFilter - run the same where cause sent to
- * Only apply pagination if we get the full list of docs, pre-sorted
+ * @param {RRFQuery} query - Firestore query
+ * @param {Boolean} isOptimisticWrite - includes optimistic data
+ * @typedef {Function} xFormFilter - in optimistic reads and overrides
+ * the reducer needs to take all documents and make a best effort to
+ * filter down the document based on a cursor.
  * @returns {xFormFilter} - transducer
  */
-const paginateTransducers = (query) => {
+const paginateTransducers = (query, isOptimisticWrite = false) => {
   const { orderBy: order, startAt, startAfter, endAt, endBefore, via } = query;
   const isOptimisticRead = via === undefined;
-  if (!isOptimisticRead) return null;
+  if (!(isOptimisticRead || isOptimisticWrite)) return null;
 
   const start = startAt || startAfter;
   const end = endAt || endBefore;
@@ -262,12 +264,10 @@ const paginateTransducers = (query) => {
 
   const isFlat = typeof order[0] === 'string';
   const orders = isFlat ? [order] : order;
-  const isPaginateMatched = (doc, at, before = false, after = false) => {
-    let matched = null;
-    orders.forEach(([field, sort = 'asc'], idx) => {
-      if (matched !== null) return;
+  const isPaginateMatched = (doc, at, before = false, after = false) =>
+    orders.find(([field, sort = 'asc'], idx) => {
       const value = Array.isArray(at) ? at[idx] : at;
-      if (value === undefined) return;
+      if (value === undefined) return false;
 
       // TODO: add support for document refs
       const proc = isTimestamp(doc[field]) ? PROCESSES_TIMESTAMP : PROCESSES;
@@ -277,26 +277,23 @@ const paginateTransducers = (query) => {
 
       const isMatched = compare(doc[field], value);
       if (isMatched) {
-        matched = true;
+        return true;
       }
-    });
-
-    return matched;
-  };
+    }) !== undefined;
 
   return partialRight(map, (docs) => {
     const results = [];
     let started = start === undefined;
 
-    docs.forEach((doc, idx) => {
+    docs.forEach((doc) => {
       if (!started && start) {
         const matched = isPaginateMatched(doc, start, undefined, isAfter);
-        if (matched !== null) started = true;
+        if (matched) started = true;
       }
 
       if (started && end) {
         const matched = isPaginateMatched(doc, end, isBefore, undefined);
-        if (matched !== null) started = false;
+        if (matched) started = false;
       }
 
       if (started) {
@@ -399,7 +396,7 @@ function buildTransducer(overrides, query) {
     populates,
   } = query;
 
-  const useOverrides =
+  const isOptimistic =
     ordered === undefined ||
     Object.keys((overrides || {})[collection] || {}).length > 0;
 
@@ -410,16 +407,16 @@ function buildTransducer(overrides, query) {
   const xfGetDoc = getDocumentTransducer((ordered || []).map(([__, id]) => id));
   const xfFields = !fields ? null : fieldsTransducer(fields);
 
-  const xfApplyOverrides = !useOverrides
+  const xfApplyOverrides = !isOptimistic
     ? null
     : overridesTransducers(overrides || { [collection]: [] }, collection);
   const xfFilter =
-    !useOverrides || filterTransducers(!where ? ['', '*', ''] : where);
-  const xfOrder = !useOverrides || !order ? null : orderTransducer(order);
-  const xfPaginate = paginateTransducers(query); // -- need to skip when not optimitic read
+    !isOptimistic || filterTransducers(!where ? ['', '*', ''] : where);
+  const xfOrder = !isOptimistic || !order ? null : orderTransducer(order);
+  const xfPaginate = paginateTransducers(query, isOptimistic);
   const xfLimit = limitTransducer(query);
 
-  if (!useOverrides) {
+  if (!isOptimistic) {
     return flow(
       compact([
         xfPopulate,
