@@ -287,13 +287,15 @@ const paginateTransducers = (query, isOptimisticWrite = false) => {
 
     docs.forEach((doc) => {
       if (!started && start) {
-        const matched = isPaginateMatched(doc, start, undefined, isAfter);
-        if (matched) started = true;
+        if (isPaginateMatched(doc, start, undefined, isAfter)) {
+          started = true;
+        }
       }
 
       if (started && end) {
-        const matched = isPaginateMatched(doc, end, isBefore, undefined);
-        if (matched) started = false;
+        if (isPaginateMatched(doc, end, isBefore, undefined)) {
+          started = false;
+        }
       }
 
       if (started) {
