@@ -29,6 +29,7 @@ const config = {
           loader: 'babel-loader',
           options: {
             presets: ['@babel/preset-env'],
+            plugins: ['@babel/transform-runtime'],
           },
         },
         exclude: /node_modules/,
