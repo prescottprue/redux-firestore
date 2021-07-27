@@ -14,7 +14,9 @@
     "src",
     "index.d.ts"
   ],
-  "browserslist": ["> 2%"],
+  "browserslist": [
+    "> 2%"
+  ],
   "scripts": {
     "clean": "rimraf lib dist",
     "build:commonjs": "cross-env BABEL_ENV=commonjs babel src --out-dir lib",
