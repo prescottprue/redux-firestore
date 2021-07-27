@@ -20,6 +20,7 @@ import {
   get,
   isEqual,
   takeRight,
+  isEmpty,
 } from 'lodash';
 import { actionTypes } from '../constants';
 import { getBaseQueryName } from '../utils/query';
@@ -570,9 +571,10 @@ function atomize(mutation, cached) {
  * Translate mutation to a set of database overrides
  * @param {MutateAction} action - Standard Redux action
  * @param {object.<FirestorePath, object<FirestoreDocumentId, Doc>>} db - in-memory database
+ * @param {object.<FirestorePath, object<FirestoreDocumentId, Doc>>} dbo - in-memory database overrides
  * @returns Array<object<FirestoreDocumentId, Doc>>
  */
-function translateMutationToOverrides({ payload }, db) {
+function translateMutationToOverrides({ payload }, db = {}, dbo = {}) {
   // turn everything to a write
   let { reads, writes } = payload.data || {};
   if (!writes) {
@@ -582,32 +584,61 @@ function translateMutationToOverrides({ payload }, db) {
   }
 
   // grab reads sync from in-memory database
-  let reader = {};
+  let optimistic = {};
   if (reads) {
-    reader = Object.keys(reads).reduce((result, key) => {
-      const { collection, doc } = result[key];
-      if (!doc) {
+    optimistic = Object.keys(reads).reduce((result, key) => {
+      if (isFunction(reads[key])) {
+        return { ...result, [key]: reads[key]() };
+      }
+
+      const path = reads[key]?.path || reads[key]?.collection;
+      const id = reads[key]?.id || reads[key]?.doc;
+      if (!id) {
         throw new Error("Firestore Transactions don't support query lookups.");
       }
-      const coll = db[collection] || {};
+
+      const collection = db[path] || {};
+      const overrides = dbo[path] || {};
       return {
         ...result,
-        [key]: coll[doc],
+        [key]: { ...collection[id], ...(overrides[id] || {}) },
       };
-    }, reads);
+    }, {});
   }
 
   const overrides = writes
-    .map((writer) => (isFunction(writer) ? writer(reader) : writer))
-    .map(({ collection, path, doc, id, data, ...rest }) => ({
-      collection: path || collection,
-      doc: id || doc,
-      data: atomize(data || rest, (key) => {
-        const overrides = Object.keys(db).length > 0 ? db : {};
-        const coll = overrides[path || collection] || {};
-        return (coll[id || doc] || {})[key];
-      }),
-    }));
+    .map((writer) => {
+      if (isFunction(writer)) {
+        try {
+          return writer(optimistic);
+        } catch (err) {
+          const read = JSON.stringify(optimistic, null, 2);
+          err.message += `\nmutate reads: ${read}`;
+          throw err;
+        }
+      }
+      return writer;
+    })
+    .filter((data) => !data || !isEmpty(data))
+    .map((write) => {
+      const { collection, path, doc, id, data, ...rest } = write;
+      return {
+        path: path || collection,
+        id: id || doc,
+        ...atomize(collection ? data : rest, (key) => {
+          const database = Object.keys(db).length > 0 ? db : {};
+          const coll = database[path || collection] || {};
+          return (coll[id || doc] || {})[key];
+        }),
+      };
+    });
+
+  if (debug.enabled('rrf:mutate')) {
+    debug('rrf:mutate')('optimistic write', {
+      input: { reads, writes },
+      output: { optimistic, overrides },
+    });
+  }
 
   return overrides;
 }
@@ -870,29 +901,40 @@ const reset = (state, { action, key, path }) =>
     return draft;
   });
 
-const mutation = (state, { action, key, path }) =>
-  produce(state, (draft) => {
-    const done = mark(`cache.MUTATE_START`, key);
-    if (action.payload && action.payload.data) {
-      const optimisiticUpdates =
-        translateMutationToOverrides(action, draft.database) || [];
+const mutation = (state, { action, key, path }) => {
+  const { _promise } = action;
+  try {
+    const result = produce(state, (draft) => {
+      const done = mark(`cache.MUTATE_START`, key);
+      if (action.payload && action.payload.data) {
+        const optimisiticUpdates =
+          translateMutationToOverrides(action, draft.database) || [];
 
-      optimisiticUpdates.forEach(({ collection, doc, data }) => {
-        info('overriding', `${collection}/${doc}`, data);
-        setWith(draft, ['databaseOverrides', collection, doc], data, Object);
-      });
+        optimisiticUpdates.forEach(({ path: _path, id, ...data }) => {
+          info('overriding', `${path}/${id}`, data);
+          setWith(draft, ['databaseOverrides', path, id], data, Object);
+        });
 
-      const updatePaths = [
-        ...new Set(optimisiticUpdates.map(({ collection }) => collection)),
-      ];
-      updatePaths.forEach((path) => {
-        reprocessQueries(draft, path);
-      });
-    }
+        const updatePaths = [
+          ...new Set(optimisiticUpdates.map(({ path }) => path)),
+        ];
 
-    done();
-    return draft;
-  });
+        updatePaths.forEach((_path) => {
+          reprocessQueries(draft, _path);
+        });
+      }
+
+      done();
+      _promise?.resolve();
+
+      return draft;
+    });
+    return result;
+  } catch (error) {
+    _promise?.reject(error);
+    return state;
+  }
+};
 
 const HANDLERS = {
   [actionTypes.SET_LISTENER]: initialize,
