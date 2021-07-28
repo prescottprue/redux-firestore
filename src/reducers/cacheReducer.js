@@ -585,6 +585,8 @@ function translateMutationToOverrides({ payload }, db) {
   let reader = {};
   if (reads) {
     reader = Object.keys(reads).reduce((result, key) => {
+      if (isFunction(result[key])) return {...result, [key]: result[key]() };
+      
       const { collection, doc } = result[key];
       if (!doc) {
         throw new Error("Firestore Transactions don't support query lookups.");
