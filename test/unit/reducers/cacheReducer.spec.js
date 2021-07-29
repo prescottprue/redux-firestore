@@ -1592,7 +1592,7 @@ describe('cacheReducer', () => {
           doc: updates.id,
         },
         payload: {
-          data: { collection: path, doc: updates.id, data: { ...updates } },
+          data: { ...updates },
         },
       };
 
@@ -1649,7 +1649,7 @@ describe('cacheReducer', () => {
           doc: updates.id,
         },
         payload: {
-          data: [{ collection: path, doc: updates.id, data: { ...updates } }],
+          data: [{ ...updates }],
         },
       };
 
@@ -1727,12 +1727,10 @@ describe('cacheReducer', () => {
             },
             writes: [
               ({ fromReducerCache }) => ({
-                collection: path,
-                doc: updates.id,
-                data: {
-                  multipled: fromReducerCache.multipled * 4,
-                  ...updates,
-                },
+                path,
+                id: updates.id,
+                multipled: fromReducerCache.multipled * 4,
+                ...updates,
               }),
             ],
           },
@@ -1813,12 +1811,10 @@ describe('cacheReducer', () => {
               },
             },
             writes: ({ fromReducerCache }) => ({
-              collection: path,
-              doc: updates.id,
-              data: {
-                multipled: fromReducerCache.multipled * 4,
-                ...updates,
-              },
+              path,
+              id: updates.id,
+              multipled: fromReducerCache.multipled * 4,
+              ...updates,
             }),
           },
         },

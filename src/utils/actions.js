@@ -1,4 +1,4 @@
-import { isObject, mapValues } from 'lodash';
+import { isFunction, isObject, mapValues } from 'lodash';
 import mutate from './mutate';
 
 /**
@@ -29,6 +29,10 @@ export function wrapInDispatch(
   dispatch,
   { ref, meta = {}, method, args = [], types },
 ) {
+  if (!isFunction(dispatch)) {
+    throw new Error('dispatch is not a function');
+  }
+
   const [requestingType, successType, errorType] = types;
   const startAction = {
     type: isObject(requestingType) ? requestingType.type : requestingType,
@@ -42,6 +46,9 @@ export function wrapInDispatch(
       writable: false,
       value: { resolve, reject },
     });
+    if (method !== 'mutate') {
+      resolve();
+    }
     dispatch(startAction);
   });
 

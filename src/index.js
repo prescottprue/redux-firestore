@@ -13,14 +13,11 @@ export const version = process.env.npm_package_version;
 
 const mockMutate = (state, writes) =>
   new Promise((resolve, reject) => {
-    reducer(
-      { cache: state },
-      {
-        type: actionTypes.MUTATE_START,
-        payload: { data: writes },
-        _promise: { resolve, reject },
-      },
-    );
+    state.cache = reducer(state, {
+      type: actionTypes.MUTATE_START,
+      payload: { data: writes },
+      _promise: { resolve, reject },
+    }).cache;
   });
 
 export {

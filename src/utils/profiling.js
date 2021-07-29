@@ -1,3 +1,4 @@
+/* eslint-disable prefer-template */
 /* istanbul ignore file */
 
 import { noop } from 'lodash';
@@ -75,9 +76,7 @@ export function resource(marker) {
 if (win) {
   win.rrfStats = () => {
     if (!debug.enabled('rrf:*') || !debug.enabled('rrf:profile') || !perf) {
-      return console.log(
-        "Profiling not enabled. Enable using `debug.enable('rrf:profile').`",
-      );
+      return debug.enable('rrf:*');
     }
     const getMarks = ({ name }) => name.indexOf('@rrf/') === 0;
     const getLoads = ({ name }) => name.indexOf('@rrf.load/') === 0;
@@ -124,21 +123,24 @@ if (win) {
 
     logStats(marks);
 
-    const phases = ((last, phase) => ({ startTime, duration, name }) => {
-      if (last + 16 <= startTime) {
-        phase++;
+    const phases = (
+      (last, phase) =>
+      ({ startTime, duration, name }) => {
+        if (last + 16 <= startTime) {
+          phase++;
+        }
+        const item = {
+          name,
+          start: parseFloat(startTime.toFixed(2)),
+          phase,
+          duration: parseFloat(duration.toFixed(2)),
+          loaded: (/\|(\d+)\|/g.exec(name) || [0, 0])[1],
+        };
+        // eslint-disable-next-line no-param-reassign
+        last = startTime;
+        return item;
       }
-      const item = {
-        name,
-        start: parseFloat(startTime.toFixed(2)),
-        phase,
-        duration: parseFloat(duration.toFixed(2)),
-        loaded: (/\|(\d+)\|/g.exec(name) || [0, 0])[1],
-      };
-      // eslint-disable-next-line no-param-reassign
-      last = startTime;
-      return item;
-    })(false, 0);
+    )(false, 0);
 
     const group = (arr, prop) =>
       arr.reduce((stats, { phase, name, start, duration, loaded }) => {
@@ -175,3 +177,45 @@ if (win) {
     logPhases(group(loads, 'phase'));
   };
 }
+
+Object.size = (obj) => {
+  let bytes = 0;
+
+  const sizeOf = (obj) => {
+    if (obj !== null && obj !== undefined) {
+      // eslint-disable-next-line default-case
+      switch (typeof obj) {
+        case 'number':
+          bytes += 8;
+          break;
+        case 'string':
+          bytes += obj.length * 2;
+          break;
+        case 'boolean':
+          bytes += 4;
+          break;
+        case 'object':
+          const objClass = Object.prototype.toString.call(obj).slice(8, -1);
+          if (objClass === 'Object' || objClass === 'Array') {
+            // eslint-disable-next-line no-restricted-syntax
+            for (const key in obj) {
+              // eslint-disable-next-line no-continue,no-prototype-builtins
+              if (!obj.hasOwnProperty(key)) continue;
+              sizeOf(obj[key]);
+            }
+          } else bytes += obj.toString().length * 2;
+          break;
+      }
+    }
+    return bytes;
+  };
+
+  const formatByteSize = (total) => {
+    if (total < 1024) return total + ' bytes';
+    if (total < 1048576) return (total / 1024).toFixed(3) + ' KiB';
+    if (total < 1073741824) return (total / 1048576).toFixed(3) + ' MiB';
+    return (total / 1073741824).toFixed(3) + ' GiB';
+  };
+
+  return formatByteSize(sizeOf(obj));
+};

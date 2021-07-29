@@ -25,6 +25,7 @@ import {
 import { actionTypes } from '../constants';
 import { getBaseQueryName } from '../utils/query';
 import mark from '../utils/profiling';
+import firebase from 'firebase';
 
 const info = debug('rrf:cache');
 
@@ -542,7 +543,8 @@ const arrayRemove = (key, val, cached) =>
 const increment = (key, val, cached) =>
   key === '::increment' && typeof val === 'number' && (cached() || 0) + val;
 
-const serverTimestamp = (key) => key === '::serverTimestamp' && new Date();
+const serverTimestamp = (key) =>
+  key === '::serverTimestamp' && firebase.firestore.Timestamp.now();
 
 /**
  * Process Mutation to a vanilla JSON
@@ -607,28 +609,20 @@ function translateMutationToOverrides({ payload }, db = {}, dbo = {}) {
   }
 
   const overrides = writes
-    .map((writer) => {
-      if (isFunction(writer)) {
-        try {
-          return writer(optimistic);
-        } catch (err) {
-          const read = JSON.stringify(optimistic, null, 2);
-          err.message += `\nmutate reads: ${read}`;
-          throw err;
-        }
-      }
-      return writer;
-    })
+    .map((writer) => (isFunction(writer) ? writer(optimistic) : writer))
     .filter((data) => !data || !isEmpty(data))
     .map((write) => {
       const { collection, path, doc, id, data, ...rest } = write;
+
+      const coll = path || collection;
+      const docId = id || doc;
       return {
-        path: path || collection,
-        id: id || doc,
+        path: coll,
+        id: docId,
         ...atomize(collection ? data : rest, (key) => {
           const database = Object.keys(db).length > 0 ? db : {};
-          const coll = database[path || collection] || {};
-          return (coll[id || doc] || {})[key];
+          const location = database[coll] || {};
+          return (location[docId] || {})[key];
         }),
       };
     });
@@ -911,12 +905,12 @@ const mutation = (state, { action, key, path }) => {
           translateMutationToOverrides(action, draft.database) || [];
 
         optimisiticUpdates.forEach(({ path: _path, id, ...data }) => {
-          info('overriding', `${path}/${id}`, data);
-          setWith(draft, ['databaseOverrides', path, id], data, Object);
+          info('overriding', `${_path}/${id}`, data);
+          setWith(draft, ['databaseOverrides', _path, id], data, Object);
         });
 
         const updatePaths = [
-          ...new Set(optimisiticUpdates.map(({ path }) => path)),
+          ...new Set(optimisiticUpdates.map(({ path: _path }) => _path)),
         ];
 
         updatePaths.forEach((_path) => {
@@ -929,6 +923,7 @@ const mutation = (state, { action, key, path }) => {
 
       return draft;
     });
+
     return result;
   } catch (error) {
     _promise?.reject(error);
