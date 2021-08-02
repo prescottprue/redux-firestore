@@ -105,7 +105,7 @@ describe('cacheReducer', () => {
 
       const pass1 = reducer(initialState, action1);
 
-      expect(pass1.cache.testStoreAs.docs).to.eql(undefined);
+      expect(pass1.cache.testStoreAs.ordered).to.eql(undefined);
     });
 
     it('SET_LISTENER returns data if in memory', () => {
@@ -127,11 +127,9 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass2.cache.testStoreAs2.docs[0]).to.eql({
-        other: 'test',
-        id: 'testDocId1',
-        path,
-      });
+      expect(pass2.cache.testStoreAs2.ordered).to.eql([
+        ['testCollection', 'testDocId1'],
+      ]);
     });
 
     it('SET_LISTENER returns smaller filtered date', () => {
@@ -151,8 +149,8 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass2.cache.testStoreAs2.docs.length).to.eql(1);
-      expect(pass2.cache.testStoreAs2.docs[0].id).to.eql('testDocId0');
+      expect(pass2.cache.testStoreAs2.ordered.length).to.eql(1);
+      expect(pass2.cache.testStoreAs2.ordered[0][1]).to.eql('testDocId0');
     });
 
     it('SET_LISTENER returns greater filtered date', () => {
@@ -175,8 +173,8 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass2.cache.testStoreAs2.docs.length).to.eql(1);
-      expect(pass2.cache.testStoreAs2.docs[0].id).to.eql('testDocId1');
+      expect(pass2.cache.testStoreAs2.ordered.length).to.eql(1);
+      expect(pass2.cache.testStoreAs2.ordered[0][1]).to.eql('testDocId1');
     });
 
     it('SET_LISTENER returns smaller or equal filtered date', () => {
@@ -199,9 +197,9 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass2.cache.testStoreAs2.docs.length).to.eql(2);
-      expect(pass2.cache.testStoreAs2.docs[0].id).to.eql('testDocId0');
-      expect(pass2.cache.testStoreAs2.docs[1].id).to.eql('testDocId1');
+      expect(pass2.cache.testStoreAs2.ordered.length).to.eql(2);
+      expect(pass2.cache.testStoreAs2.ordered[0][1]).to.eql('testDocId0');
+      expect(pass2.cache.testStoreAs2.ordered[1][1]).to.eql('testDocId1');
     });
 
     it('SET_LISTENER returns greater or equal filtered date', () => {
@@ -224,9 +222,9 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass2.cache.testStoreAs2.docs.length).to.eql(2);
-      expect(pass2.cache.testStoreAs2.docs[0].id).to.eql('testDocId1');
-      expect(pass2.cache.testStoreAs2.docs[1].id).to.eql('testDocId3');
+      expect(pass2.cache.testStoreAs2.ordered.length).to.eql(2);
+      expect(pass2.cache.testStoreAs2.ordered[0][1]).to.eql('testDocId1');
+      expect(pass2.cache.testStoreAs2.ordered[1][1]).to.eql('testDocId3');
     });
 
     it('SET_LISTENER returns exact filtered date', () => {
@@ -249,8 +247,8 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass2.cache.testStoreAs2.docs.length).to.eql(1);
-      expect(pass2.cache.testStoreAs2.docs[0].id).to.eql('testDocId1');
+      expect(pass2.cache.testStoreAs2.ordered.length).to.eql(1);
+      expect(pass2.cache.testStoreAs2.ordered[0][1]).to.eql('testDocId1');
     });
 
     it('SET_LISTENER pagination with startAt', () => {
@@ -266,14 +264,14 @@ describe('cacheReducer', () => {
       stateAsc.meta.orderBy = ['dateKey'];
 
       const passA = reducer(primedState, stateDesc);
-      expect(passA.cache.testStoreAs.docs[0].id).to.eql('testDocId1');
-      expect(passA.cache.testStoreAs.docs[1].id).to.eql('testDocId0');
-      expect(passA.cache.testStoreAs.docs[2]).to.eql(undefined);
+      expect(passA.cache.testStoreAs.ordered[0][1]).to.eql('testDocId1');
+      expect(passA.cache.testStoreAs.ordered[1][1]).to.eql('testDocId0');
+      expect(passA.cache.testStoreAs.ordered[2]).to.eql(undefined);
 
       const passB = reducer(primedState, stateAsc);
-      expect(passB.cache.testStoreAs.docs[0].id).to.eql('testDocId3');
-      expect(passB.cache.testStoreAs.docs[1].id).to.eql('testDocId4');
-      expect(passB.cache.testStoreAs.docs[2]).to.eql(undefined);
+      expect(passB.cache.testStoreAs.ordered[0][1]).to.eql('testDocId3');
+      expect(passB.cache.testStoreAs.ordered[1][1]).to.eql('testDocId4');
+      expect(passB.cache.testStoreAs.ordered[2]).to.eql(undefined);
     });
 
     it('SET_LISTENER pagination with startAfter', () => {
@@ -289,14 +287,14 @@ describe('cacheReducer', () => {
       stateAsc.meta.orderBy = ['dateKey', 'asc'];
 
       const passA = reducer(primedState, stateDesc);
-      expect(passA.cache.testStoreAs.docs[0].id).to.eql('testDocId1');
-      expect(passA.cache.testStoreAs.docs[1].id).to.eql('testDocId0');
-      expect(passA.cache.testStoreAs.docs[2]).to.eql(undefined);
+      expect(passA.cache.testStoreAs.ordered[0][1]).to.eql('testDocId1');
+      expect(passA.cache.testStoreAs.ordered[1][1]).to.eql('testDocId0');
+      expect(passA.cache.testStoreAs.ordered[2]).to.eql(undefined);
 
       const passB = reducer(primedState, stateAsc);
-      expect(passB.cache.testStoreAs.docs[0].id).to.eql('testDocId3');
-      expect(passB.cache.testStoreAs.docs[1].id).to.eql('testDocId4');
-      expect(passB.cache.testStoreAs.docs[2]).to.eql(undefined);
+      expect(passB.cache.testStoreAs.ordered[0][1]).to.eql('testDocId3');
+      expect(passB.cache.testStoreAs.ordered[1][1]).to.eql('testDocId4');
+      expect(passB.cache.testStoreAs.ordered[2]).to.eql(undefined);
     });
 
     it('SET_LISTENER pagination with endAt', () => {
@@ -309,14 +307,14 @@ describe('cacheReducer', () => {
       stateAsc.meta.orderBy = ['dateKey', 'asc'];
 
       const passA = reducer(primedState, stateDesc);
-      expect(passA.cache.testStoreAs.docs[0].id).to.eql('testDocId4');
-      expect(passA.cache.testStoreAs.docs[1].id).to.eql('testDocId3');
-      expect(passA.cache.testStoreAs.docs[2]).to.eql(undefined);
+      expect(passA.cache.testStoreAs.ordered[0][1]).to.eql('testDocId4');
+      expect(passA.cache.testStoreAs.ordered[1][1]).to.eql('testDocId3');
+      expect(passA.cache.testStoreAs.ordered[2]).to.eql(undefined);
 
       const passB = reducer(primedState, stateAsc);
-      expect(passB.cache.testStoreAs.docs[0].id).to.eql('testDocId0');
-      expect(passB.cache.testStoreAs.docs[1].id).to.eql('testDocId1');
-      expect(passB.cache.testStoreAs.docs[2]).to.eql(undefined);
+      expect(passB.cache.testStoreAs.ordered[0][1]).to.eql('testDocId0');
+      expect(passB.cache.testStoreAs.ordered[1][1]).to.eql('testDocId1');
+      expect(passB.cache.testStoreAs.ordered[2]).to.eql(undefined);
     });
 
     it('SET_LISTENER pagination with endBefore', () => {
@@ -329,14 +327,14 @@ describe('cacheReducer', () => {
       stateAsc.meta.orderBy = ['dateKey'];
 
       const passA = reducer(primedState, stateDesc);
-      expect(passA.cache.testStoreAs.docs[0].id).to.eql('testDocId4');
-      expect(passA.cache.testStoreAs.docs[1].id).to.eql('testDocId3');
-      expect(passA.cache.testStoreAs.docs[2]).to.eql(undefined);
+      expect(passA.cache.testStoreAs.ordered[0][1]).to.eql('testDocId4');
+      expect(passA.cache.testStoreAs.ordered[1][1]).to.eql('testDocId3');
+      expect(passA.cache.testStoreAs.ordered[2]).to.eql(undefined);
 
       const passB = reducer(primedState, stateAsc);
-      expect(passB.cache.testStoreAs.docs[0].id).to.eql('testDocId0');
-      expect(passB.cache.testStoreAs.docs[1].id).to.eql('testDocId1');
-      expect(passB.cache.testStoreAs.docs[2]).to.eql(undefined);
+      expect(passB.cache.testStoreAs.ordered[0][1]).to.eql('testDocId0');
+      expect(passB.cache.testStoreAs.ordered[1][1]).to.eql('testDocId1');
+      expect(passB.cache.testStoreAs.ordered[2]).to.eql(undefined);
     });
   });
 
@@ -366,28 +364,14 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass1.cache.testStoreAs.docs[0]).to.eql({
-        other: 'test',
-        id: 'testDocId1',
-        path,
-      });
-      expect(pass1.cache.testStoreAs.docs[1]).to.eql({
-        other: 'limit',
-        id: 'testDocId2',
-        path,
-      });
-      expect(pass2.cache.testStoreAs.docs[1]).to.eql({
-        other: 'limit',
-        id: 'testDocId2',
-        path,
-      });
+      expect(pass1.cache.testStoreAs.ordered[0][1]).to.eql('testDocId1');
+      expect(pass1.cache.testStoreAs.ordered[1][1]).to.eql('testDocId2');
+      expect(pass2.cache.testStoreAs.ordered[1][1]).to.eql('testDocId2');
 
-      expect(pass2.cache.testStoreAs.docs[2]).to.eql(undefined);
+      expect(pass2.cache.testStoreAs.ordered[2]).to.eql(undefined);
     });
 
     it('empty fields return entire document', () => {
-      const doc1 = { key1: 'value1', other: 'test', id: 'testDocId1', path };
-
       // Initial seed
       const action1 = {
         meta: {
@@ -400,11 +384,7 @@ describe('cacheReducer', () => {
 
       const pass1 = reducer(initialState, action1);
 
-      expect(pass1.cache.testStoreAs.docs[0]).to.eql({
-        id: testDocId0.id,
-        other: testDocId0.other,
-        path: testDocId0.path,
-      });
+      expect(pass1.cache.testStoreAs.ordered[0][1]).to.eql(testDocId0.id);
     });
   });
 
@@ -440,8 +420,10 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass1.cache.testStoreAs.docs[0]).to.eql(doc1);
-      expect(pass2.cache.testStoreAs.docs[0]).to.eql({ ...doc1, ...doc2 });
+      expect(pass1.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
+      expect(pass2.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
+      expect(pass2.cache.database[collection][doc1.id]).to.eql(doc1);
+      expect(pass2.cache.databaseOverrides[collection][doc1.id]).to.eql(doc2);
     });
 
     it('override a document add synchronously', () => {
@@ -474,10 +456,10 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass1.cache.testStoreAs.docs[0]).to.eql(doc1);
-      expect(pass1.cache.testStoreAs.docs[1]).to.eql(undefined);
-      expect(pass2.cache.testStoreAs.docs[0]).to.eql(doc1);
-      expect(pass2.cache.testStoreAs.docs[1]).to.eql(doc2);
+      expect(pass1.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
+      expect(pass1.cache.testStoreAs.ordered[1]).to.eql(undefined);
+      expect(pass2.cache.database[collection][doc1.id]).to.eql(doc1);
+      expect(pass2.cache.databaseOverrides[collection][doc2.id]).to.eql(doc2);
 
       expect(pass1.cache.testStoreAs.ordered[1]).to.eql(undefined);
       expect(pass2.cache.testStoreAs.ordered[1]).to.eql([doc2.path, doc2.id]);
@@ -494,11 +476,7 @@ describe('cacheReducer', () => {
           storeAs: 'testStoreAs',
           where: [['key1', '==', 'value1']],
         },
-        payload: {
-          data: { [doc1.id]: doc1 },
-          ordered: [doc1],
-          fromCache: true,
-        },
+        payload: setPayload([doc1]),
         type: actionTypes.LISTENER_RESPONSE,
       };
 
@@ -524,9 +502,9 @@ describe('cacheReducer', () => {
       const pass2 = reducer(pass1, action2);
       const pass3 = reducer(pass2, action3);
 
-      expect(pass1.cache.testStoreAs.docs[0]).to.eql(doc1);
-      expect(pass2.cache.testStoreAs.docs[0]).to.eql(doc2);
-      expect(pass3.cache.testStoreAs.docs[0]).to.eql(doc1);
+      expect(pass1.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
+      expect(pass2.cache.testStoreAs.ordered[0][1]).to.eql(doc2.id);
+      expect(pass3.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
     });
 
     it('overrides synchronously moves to new query', () => {
@@ -569,12 +547,12 @@ describe('cacheReducer', () => {
       const pass2 = reducer(pass1, action2);
       const pass3 = reducer(pass2, action3);
 
-      expect(pass2.cache.testOne.docs[0]).to.eql(first);
-      expect(pass2.cache.testTwo.docs[0]).to.eql(undefined);
+      expect(pass2.cache.testOne.ordered[0][1]).to.eql(first.id);
+      expect(pass2.cache.testTwo.ordered[0]).to.eql(undefined);
 
       // doc moved from testOne to testTwo query
-      expect(pass3.cache.testOne.docs[0]).to.eql(undefined);
-      expect(pass3.cache.testTwo.docs[0]).to.eql(second);
+      expect(pass3.cache.testOne.ordered[0]).to.eql(undefined);
+      expect(pass3.cache.testTwo.ordered[0][1]).to.eql(second.id);
     });
   });
 
@@ -619,12 +597,12 @@ describe('cacheReducer', () => {
       const pass2 = reducer(pass1, action2);
       const pass3 = reducer(pass2, action3);
 
-      expect(pass2.cache.testOne.docs[0]).to.eql(first);
-      expect(pass2.cache.testTwo.docs[0]).to.eql(undefined);
+      expect(pass2.cache.testOne.ordered[0][1]).to.eql(first.id);
+      expect(pass2.cache.testTwo.ordered[0]).to.eql(undefined);
 
       // doc moved from testOne to testTwo query
-      expect(pass3.cache.testOne.docs[0]).to.eql(undefined);
-      expect(pass3.cache.testTwo.docs[0]).to.eql(second);
+      expect(pass3.cache.testOne.ordered[0]).to.eql(undefined);
+      expect(pass3.cache.testTwo.ordered[0][1]).to.eql(second.id);
     });
 
     it('less than', () => {
@@ -667,12 +645,12 @@ describe('cacheReducer', () => {
       const pass2 = reducer(pass1, action2);
       const pass3 = reducer(pass2, action3);
 
-      expect(pass2.cache.testOne.docs[0]).to.eql(first);
-      expect(pass2.cache.testTwo.docs[0]).to.eql(undefined);
+      expect(pass2.cache.testOne.ordered[0][1]).to.eql(first.id);
+      expect(pass2.cache.testTwo.ordered[0]).to.eql(undefined);
 
       // doc moved from testOne to testTwo query
-      expect(pass3.cache.testOne.docs[0]).to.eql(undefined);
-      expect(pass3.cache.testTwo.docs[0]).to.eql(second);
+      expect(pass3.cache.testOne.ordered[0]).to.eql(undefined);
+      expect(pass3.cache.testTwo.ordered[0][1]).to.eql(second.id);
     });
 
     it('not compares', () => {
@@ -715,12 +693,12 @@ describe('cacheReducer', () => {
       const pass2 = reducer(pass1, action2);
       const pass3 = reducer(pass2, action3);
 
-      expect(pass2.cache.testOne.docs[0]).to.eql(first);
-      expect(pass2.cache.testTwo.docs[0]).to.eql(undefined);
+      expect(pass2.cache.testOne.ordered[0][1]).to.eql(first.id);
+      expect(pass2.cache.testTwo.ordered[0]).to.eql(undefined);
 
       // doc moved from testOne to testTwo query
-      expect(pass3.cache.testOne.docs[0]).to.eql(undefined);
-      expect(pass3.cache.testTwo.docs[0]).to.eql(second);
+      expect(pass3.cache.testOne.ordered[0]).to.eql(undefined);
+      expect(pass3.cache.testTwo.ordered[0][1]).to.eql(second.id);
     });
 
     it('not in and __name__', () => {
@@ -768,8 +746,8 @@ describe('cacheReducer', () => {
       const pass3 = reducer(pass2, action3);
 
       // doc moved from testOne to testTwo query
-      expect(pass3.cache.notTwo.docs[0]).to.eql(undefined);
-      expect(pass3.cache.isIdMatch.docs[0]).to.eql(second);
+      expect(pass3.cache.notTwo.ordered[0]).to.eql(undefined);
+      expect(pass3.cache.isIdMatch.ordered[0][1]).to.eql(second.id);
     });
 
     it('nested compare ', () => {
@@ -812,12 +790,12 @@ describe('cacheReducer', () => {
       const pass2 = reducer(pass1, action2);
       const pass3 = reducer(pass2, action3);
 
-      expect(pass2.cache.testOne.docs[0]).to.eql(first);
-      expect(pass2.cache.testTwo.docs[0]).to.eql(undefined);
+      expect(pass2.cache.testOne.ordered[0][1]).to.eql(first.id);
+      expect(pass2.cache.testTwo.ordered[0]).to.eql(undefined);
 
       // doc moved from testOne to testTwo query
-      expect(pass3.cache.testOne.docs[0]).to.eql(undefined);
-      expect(pass3.cache.testTwo.docs[0]).to.eql(second);
+      expect(pass3.cache.testOne.ordered[0]).to.eql(undefined);
+      expect(pass3.cache.testTwo.ordered[0][1]).to.eql(second.id);
     });
   });
 
@@ -859,9 +837,9 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass1.cache.testStoreAs.docs[0]).to.eql(doc1);
-      expect(pass2.cache.testStoreAs.docs[0]).to.eql(doc2);
-      expect(pass2.cache.testStoreAs.docs[1]).to.eql(doc1);
+      expect(pass1.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
+      expect(pass2.cache.testStoreAs.ordered[0][1]).to.eql(doc2.id);
+      expect(pass2.cache.testStoreAs.ordered[1][1]).to.eql(doc1.id);
     });
 
     it('Firestore added document removes override', () => {
@@ -909,9 +887,9 @@ describe('cacheReducer', () => {
       const pass2 = reducer(pass1, action2);
       const pass3 = reducer(pass2, action3);
 
-      expect(pass1.cache.testStoreAs.docs[0]).to.eql(doc1);
-      expect(pass2.cache.testStoreAs.docs[0]).to.eql(doc2);
-      expect(pass3.cache.testStoreAs.docs[0]).to.eql(doc2);
+      expect(pass1.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
+      expect(pass2.cache.testStoreAs.ordered[0][1]).to.eql(doc2.id);
+      expect(pass3.cache.testStoreAs.ordered[0][1]).to.eql(doc2.id);
 
       expect(pass1.cache.databaseOverrides).to.eql({});
       expect(pass2.cache.databaseOverrides[collection]).to.eql({
@@ -991,11 +969,17 @@ describe('cacheReducer', () => {
       const pass4 = reducer(pass3, action4);
 
       // docs
-      expect(pass1.cache.testStoreAs.docs[0]).to.eql(doc1);
-      expect(pass2.cache.testStoreAs.docs[0]).to.eql(doc1a);
+      expect(pass1.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
+      expect(pass2.cache.testStoreAs.ordered[0][1]).to.eql(doc1a.id);
 
-      expect(pass3.cache.testStoreAs.docs).to.eql([doc1a, doc2]);
-      expect(pass4.cache.testStoreAs.docs).to.eql([doc1a, doc2]);
+      expect(pass3.cache.testStoreAs.ordered).to.eql([
+        [path, doc1a.id],
+        [path, doc2.id],
+      ]);
+      expect(pass4.cache.testStoreAs.ordered).to.eql([
+        [path, doc1a.id],
+        [path, doc2.id],
+      ]);
 
       // overrides
       expect(pass1.cache.databaseOverrides).to.eql({});
@@ -1051,11 +1035,11 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass1.cache.lessThanTwo.docs[0]).to.eql(doc2);
-      expect(pass1.cache.lessThanTwo.docs[1]).to.eql(doc1);
+      expect(pass1.cache.lessThanTwo.ordered[0][1]).to.eql(doc2.id);
+      expect(pass1.cache.lessThanTwo.ordered[1][1]).to.eql(doc1.id);
 
-      expect(pass2.cache.lessThanTwo.docs[0]).to.eql(doc1);
-      expect(pass2.cache.lessThanTwo.docs[1]).to.eql(undefined);
+      expect(pass2.cache.lessThanTwo.ordered[0][1]).to.eql(doc1.id);
+      expect(pass2.cache.lessThanTwo.ordered[1]).to.eql(undefined);
 
       // Removing from query !== deleting. Other queries could have the result
       expect(pass1.cache.database.testCollection.testDocId2).to.eql(doc2);
@@ -1098,10 +1082,10 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass1.cache.testStoreAs.docs[0]).to.eql(doc2);
-      expect(pass1.cache.testStoreAs.docs[1]).to.eql(doc1);
-      expect(pass2.cache.testStoreAs.docs[0]).to.eql(doc1);
-      expect(pass2.cache.testStoreAs.docs[1]).to.eql(undefined);
+      expect(pass1.cache.testStoreAs.ordered[0][1]).to.eql(doc2.id);
+      expect(pass1.cache.testStoreAs.ordered[1][1]).to.eql(doc1.id);
+      expect(pass2.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
+      expect(pass2.cache.testStoreAs.ordered[1]).to.eql(undefined);
 
       // Removing from query !== deleting. Other queries could have the result
       expect(pass1.cache.database.testCollection.testDocId2).to.eql(doc2);
@@ -1110,7 +1094,7 @@ describe('cacheReducer', () => {
 
   describe('UNSET_LISTENER', () => {
     it('unset removes query but maintains in database cache', () => {
-      const doc1 = { key1: 'value1', id: 'testDocId1' }; // initial doc
+      const doc1 = { key1: 'value1', id: 'testDocId1', path }; // initial doc
 
       // Initial seed
       const action1 = {
@@ -1139,7 +1123,7 @@ describe('cacheReducer', () => {
       };
 
       const pass1 = reducer(initialState, action1);
-      expect(pass1.cache.testStoreAs.docs).to.eql([doc1]);
+      expect(pass1.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
       expect(pass1.cache.database[collection]).to.eql({ [doc1.id]: doc1 });
 
       const pass2 = reducer(pass1, action2);
@@ -1148,7 +1132,7 @@ describe('cacheReducer', () => {
     });
 
     it('unset preserves query and maintains in database cache (preserve mode)', () => {
-      const doc1 = { key1: 'value1', id: 'testDocId1' }; // initial doc
+      const doc1 = { key1: 'value1', id: 'testDocId1', path }; // initial doc
 
       // Initial seed
       const action1 = {
@@ -1177,11 +1161,11 @@ describe('cacheReducer', () => {
       };
 
       const pass1 = reducer(initialState, action1);
-      expect(pass1.cache.testStoreAs.docs).to.eql([doc1]);
+      expect(pass1.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
       expect(pass1.cache.database[collection]).to.eql({ [doc1.id]: doc1 });
 
       const pass2 = reducer(pass1, action2);
-      expect(pass2.cache.testStoreAs.docs).to.eql([doc1]);
+      expect(pass2.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
       expect(pass2.cache.database[collection]).to.eql({ [doc1.id]: doc1 });
     });
 
@@ -1197,7 +1181,7 @@ describe('cacheReducer', () => {
       };
       const pass1 = reducer(initialState, action1);
 
-      expect(pass1.cache.testStoreAs.docs).to.eql([]);
+      expect(pass1.cache.testStoreAs.ordered).to.eql([]);
     });
   });
 
@@ -1225,8 +1209,6 @@ describe('cacheReducer', () => {
 
       const expected = JSON.parse(
         JSON.stringify({
-          ...doc1,
-          key1: 'value1',
           array: [1, 2, 3, 4, 5],
           obj: { a: 0, b: { y: 9 }, c: { z: 10 } },
           vanilla: 'some-data',
@@ -1242,11 +1224,7 @@ describe('cacheReducer', () => {
           where: ['key1', '==', 'value1'],
           storeAs: 'testStoreAs',
         },
-        payload: {
-          data: { [doc1.id]: doc1 },
-          ordered: [doc1],
-          fromCache: true,
-        },
+        payload: setPayload([doc1]),
         type: actionTypes.LISTENER_RESPONSE,
       };
       // mutate
@@ -1264,10 +1242,13 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      const pass2Doc = pass2.cache.testStoreAs.docs[0];
-
-      const result = JSON.parse(JSON.stringify(pass2Doc));
-      expect(result).to.eql(expected);
+      expect(pass2.cache.testStoreAs.ordered).to.eql([[path, doc1.id]]);
+      expect(pass2.cache.database).to.eql({
+        [collection]: { [doc1.id]: doc1 },
+      });
+      expect(pass2.cache.databaseOverrides).to.eql({
+        [collection]: { [doc1.id]: expected },
+      });
     });
 
     it('Firestore batch update adds override', () => {
@@ -1321,19 +1302,22 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      const pass2Doc = pass2.cache.testStoreAs.docs[0];
+      expect(pass2.cache.testStoreAs.ordered).to.eql([[path, doc1.id]]);
+      expect(pass2.cache.database).to.eql({
+        [collection]: { [doc1.id]: doc1 },
+      });
 
-      const result = JSON.parse(JSON.stringify(pass2Doc));
-      expect(result).to.eql(
+      expect(pass2.cache.databaseOverrides).to.eql(
         JSON.parse(
           JSON.stringify({
-            ...doc1,
-            key1: 'value1',
-            number: 15,
-            array: [1, 3, 4],
-            obj: { a: 0, b: { y: 9 }, c: { z: 10 } },
-            date: new Date('2021-01-01'),
-            // "serverTimestamp": new Date()}
+            [collection]: {
+              [doc1.id]: {
+                array: [1, 3, 4],
+                number: 15,
+                obj: { a: 0, b: { y: 9 }, c: { z: 10 } },
+                date: new Date('2021-01-01'),
+              },
+            },
           }),
         ),
       );
@@ -1405,20 +1389,24 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      const pass2Doc = pass2.cache.testStoreAs.docs[0];
+      expect(pass2.cache.testStoreAs.ordered).to.eql([[path, doc1.id]]);
+      expect(pass2.cache.database).to.eql({
+        [collection]: { [doc1.id]: doc1 },
+      });
 
-      const result = JSON.parse(JSON.stringify(pass2Doc));
-      expect(result).to.eql(
+      expect(pass2.cache.databaseOverrides).to.eql(
         JSON.parse(
           JSON.stringify({
-            ...doc1,
-            key1: 'value1',
-            multipled: 12,
-            number: 15,
-            array: [1, 3, 4],
-            obj: { a: 0, b: { y: 9 }, c: { z: 10 } },
-            date: new Date('2021-01-01'),
-            // "serverTimestamp": new Date()}
+            [collection]: {
+              [doc1.id]: {
+                multipled: 12,
+                number: 15,
+                array: [1, 3, 4],
+                obj: { a: 0, b: { y: 9 }, c: { z: 10 } },
+                date: new Date('2021-01-01'),
+                // "serverTimestamp": new Date()}
+              },
+            },
           }),
         ),
       );
@@ -1488,20 +1476,24 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      const pass2Doc = pass2.cache.testStoreAs.docs[0];
+      expect(pass2.cache.testStoreAs.ordered).to.eql([[path, doc1.id]]);
+      expect(pass2.cache.database).to.eql({
+        [collection]: { [doc1.id]: doc1 },
+      });
 
-      const result = JSON.parse(JSON.stringify(pass2Doc));
-      expect(result).to.eql(
+      expect(pass2.cache.databaseOverrides).to.eql(
         JSON.parse(
           JSON.stringify({
-            ...doc1,
-            key1: 'value1',
-            multipled: 12,
-            number: 15,
-            array: [1, 3, 4],
-            obj: { a: 0, b: { y: 9 }, c: { z: 10 } },
-            date: new Date('2021-01-01'),
-            // "serverTimestamp": new Date()}
+            [collection]: {
+              [doc1.id]: {
+                multipled: 12,
+                number: 15,
+                array: [1, 3, 4],
+                obj: { a: 0, b: { y: 9 }, c: { z: 10 } },
+                date: new Date('2021-01-01'),
+                // "serverTimestamp": new Date()}
+              },
+            },
           }),
         ),
       );
@@ -1643,22 +1635,23 @@ describe('cacheReducer', () => {
       const pass2 = reducer(pass1, action2);
       const pass3 = reducer(pass2, action3);
 
-      const pass2Doc = pass2.cache.testStoreAs.docs[0];
-      const pass3Doc = pass3.cache.testStoreAs.docs[0];
-
-      const result2 = JSON.parse(JSON.stringify(pass2Doc));
-      const result3 = JSON.parse(JSON.stringify(pass3Doc));
-
       // database should never changes. It's a perfect mirror of firestore.
       expect(pass1.cache.database.testCollection.testDocId1).to.eql(doc1);
       expect(pass2.cache.database.testCollection.testDocId1).to.eql(doc1);
       expect(pass3.cache.database.testCollection.testDocId1).to.eql(doc1);
 
-      // query has new override data
-      expect(result2).to.eql(expected2);
+      expect(pass2.cache.database).to.eql({
+        [collection]: { [doc1.id]: doc1 },
+      });
+      expect(pass2.cache.databaseOverrides).to.eql({
+        [collection]: { [doc1.id]: { vanilla: 'some-data' } },
+      });
 
-      // query is back to a perfect mirror of firestore
-      expect(result3).to.eql(expected3);
+      // overrides were deleted
+      expect(pass3.cache.database).to.eql({
+        [collection]: { [doc1.id]: doc1 },
+      });
+      expect(pass3.cache.databaseOverrides[collection]).to.eql();
     });
   });
 
@@ -1700,7 +1693,9 @@ describe('cacheReducer', () => {
         },
         type: actionTypes.LISTENER_RESPONSE,
       };
-      const manyActions = new Array(100).fill(null).map(() => action1);
+
+      const count = 1;
+      const manyActions = new Array(count).fill(null).map(() => action1);
 
       await benchmark.record(
         () => manyActions.forEach((action) => reducer(primedState, action)),
