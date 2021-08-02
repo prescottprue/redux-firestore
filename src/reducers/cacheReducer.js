@@ -310,61 +310,6 @@ const paginateTransducers = (query, isOptimisticWrite = false) => {
 };
 
 /**
- * @name populateTransducer
- * @param {string} collection - path to collection in Firestore
- * @param {Array.<Populates>} populates - array of populates
- * @typedef {Function} xFormPopulate - run the populate when a firestore listener
- * triggers instead of on a case by case basis in the selector
- * @returns {xFormPopulate}
- */
-const populateTransducer = (collection, populates) =>
-  partialRight(map, (state) => {
-    // Notice: by it's nature populate is O(2^n)/exponential.
-    // In large data sets, every populate will add substantial time.
-
-    const done = mark(`populate.${collection}`);
-
-    // pre-grab collection and remove empty populations
-    const lookups = (Array.isArray(populates[0]) ? populates : [populates])
-      .map((tuple) => [tuple[0], state.database[tuple[1]], tuple[2]])
-      .filter(
-        (tuple) =>
-          tuple[1] !== undefined && Object.keys(tuple[1] || []).length > 0,
-      );
-
-    const raw = state.database[collection] || {};
-    const ids = Object.keys(raw);
-
-    const collectionById = ids.reduce((draft, id) => {
-      lookups.forEach(([field, siblings, destination]) => {
-        const fields = field.split('.');
-        const childID = fields.reduce(
-          (res, prop) => res && res[prop],
-          draft[id],
-        );
-
-        if (Array.isArray(childID)) {
-          // eslint-disable-next-line no-param-reassign
-          draft[id][destination] = childID.map((childId) => {
-            const child = siblings[childId];
-            return child || undefined;
-          });
-        }
-        const child = siblings[childID];
-        if (child) {
-          // eslint-disable-next-line no-param-reassign
-          draft[id][destination] = child;
-        }
-      });
-      return draft;
-    }, createDraft(raw));
-
-    done();
-
-    return { database: { [collection]: finishDraft(collectionById) } };
-  });
-
-/**
  * @name overridesTransducers
  * @param {object} overrides - mirrored structure to database but only with updates
  * @param {string} collection - path to firestore collection
@@ -391,22 +336,12 @@ const overridesTransducers = (overrides, collection) => {
  * @returns {Function} - Transducer will return a modifed array of documents
  */
 function buildTransducer(overrides, query) {
-  const {
-    collection,
-    where,
-    orderBy: order,
-    ordered,
-    fields,
-    populates,
-  } = query;
+  const { collection, where, orderBy: order, ordered, fields } = query;
 
   const isOptimistic =
     ordered === undefined ||
     Object.keys((overrides || {})[collection] || {}).length > 0;
 
-  const xfPopulate = !populates
-    ? null
-    : populateTransducer(collection, populates);
   const xfGetCollection = getCollectionTransducer(collection);
   const xfGetDoc = getDocumentTransducer((ordered || []).map(([__, id]) => id));
   const xfFields = !fields ? null : fieldsTransducer(fields);
@@ -423,7 +358,6 @@ function buildTransducer(overrides, query) {
   if (!isOptimistic) {
     return flow(
       compact([
-        xfPopulate,
         xfGetCollection,
         xfGetDoc,
         xfOrder,
@@ -436,7 +370,6 @@ function buildTransducer(overrides, query) {
 
   return flow(
     compact([
-      xfPopulate,
       xfGetCollection,
       partialRight(map, (db) => createDraft(db || {})),
       ...xfApplyOverrides,
@@ -485,9 +418,9 @@ function reprocessQueries(draft, path) {
 
     const docs = selectDocuments(draft, draft[key]);
     const ordered = docs.map(({ id, path: _path }) => [_path, id]);
-    const isInitialLoad = draft[key].via === 'memory' && docs.length === 0;
+    const isInitialLoad = draft[key].via === 'memory' && ordered.length === 0;
     set(draft, [key, 'docs'], isInitialLoad ? undefined : docs);
-    set(draft, [key, 'ordered'], ordered);
+    set(draft, [key, 'ordered'], isInitialLoad ? undefined : ordered);
   });
 
   if (info.enabled) {
