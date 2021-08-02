@@ -59,7 +59,6 @@ const whereKey1IsValue1 = {
   storeAs: 'testStoreAs',
   where: [['key1', '==', 'value1']],
   orderBy: ['key1'],
-  fields: ['id', 'other'],
 };
 
 const whereOtherIsTest = {
@@ -67,7 +66,6 @@ const whereOtherIsTest = {
   storeAs: 'testStoreAs2',
   where: [['other', '==', 'test']],
   orderBy: ['key1'],
-  fields: ['id', 'other'],
 };
 
 const whereDateKeyLessOneNS = {
@@ -75,7 +73,6 @@ const whereDateKeyLessOneNS = {
   storeAs: 'testStoreAs2',
   where: [['dateKey', '<', { seconds: 0, nanoseconds: 1 }]],
   orderBy: ['dateKey'],
-  fields: ['id', 'other'],
 };
 
 const orderDateLimit2 = {
@@ -335,56 +332,6 @@ describe('cacheReducer', () => {
       expect(passB.cache.testStoreAs.ordered[0][1]).to.eql('testDocId0');
       expect(passB.cache.testStoreAs.ordered[1][1]).to.eql('testDocId1');
       expect(passB.cache.testStoreAs.ordered[2]).to.eql(undefined);
-    });
-  });
-
-  describe('query fields', () => {
-    it('query fields return partial document', () => {
-      const doc1 = { key1: 'value1', other: 'test', id: 'testDocId1', path };
-      const doc2 = { key1: 'value1', other: 'limit', id: 'testDocId2', path };
-      const doc3 = { key1: 'value1', other: 'third', id: 'testDocId3', path };
-      const doc4 = { key1: 'value1', other: 'fourth', id: 'testDocId4', path };
-
-      // Initial seed
-      const action1 = {
-        meta: { ...whereKey1IsValue1, limit: 2 },
-        payload: setPayload([doc1, doc2, doc3]),
-        type: actionTypes.LISTENER_RESPONSE,
-      };
-
-      const action2 = {
-        type: actionTypes.OPTIMISTIC_ADDED,
-        meta: {
-          collection,
-          doc: doc4.id,
-        },
-        payload: { data: doc4 },
-      };
-
-      const pass1 = reducer(initialState, action1);
-      const pass2 = reducer(pass1, action2);
-
-      expect(pass1.cache.testStoreAs.ordered[0][1]).to.eql('testDocId1');
-      expect(pass1.cache.testStoreAs.ordered[1][1]).to.eql('testDocId2');
-      expect(pass2.cache.testStoreAs.ordered[1][1]).to.eql('testDocId2');
-
-      expect(pass2.cache.testStoreAs.ordered[2]).to.eql(undefined);
-    });
-
-    it('empty fields return entire document', () => {
-      // Initial seed
-      const action1 = {
-        meta: {
-          ...whereKey1IsValue1,
-          where: [['key1', '!=', 'value2']],
-        },
-        payload: setPayload([testDocId0]),
-        type: actionTypes.LISTENER_RESPONSE,
-      };
-
-      const pass1 = reducer(initialState, action1);
-
-      expect(pass1.cache.testStoreAs.ordered[0][1]).to.eql(testDocId0.id);
     });
   });
 
@@ -1660,42 +1607,36 @@ describe('cacheReducer', () => {
       // eslint-disable-next-line no-invalid-this
       this.timeout(30_000);
 
-      const doc1 = {
-        dateKey: { seconds: 0, nanoseconds: 0 },
-        other: 'test',
-        id: 'testDocId1',
-        path,
-      };
-      const doc2 = {
-        dateKey: { seconds: 1, nanoseconds: 1 },
-        other: 'test',
-        id: 'testDocId2',
-        path,
-      };
-      const doc3 = {
-        dateKey: { seconds: 3, nanoseconds: 3 },
-        other: 'test',
-        id: 'testDocId3',
-        path,
-      };
-
-      const action1 = {
-        meta: {
-          collection,
-          storeAs: 'testStoreAs',
-          orderBy: ['dateKey'],
-          fields: ['id', 'other'],
+      const actions = [
+        {
+          meta: whereKey1IsValue1,
+          payload: setPayload([testDocId0, testDocId1, testDocId3]),
+          type: actionTypes.LISTENER_RESPONSE,
         },
-        payload: {
-          data: { [doc1.id]: doc1, [doc2.id]: doc2, [doc3.id]: doc3 },
-          ordered: [doc1, doc2],
-          fromCache: true,
+        {
+          meta: whereOtherIsTest,
+          payload: { name: 'testStoreAs2' },
+          type: actionTypes.SET_LISTENER,
         },
-        type: actionTypes.LISTENER_RESPONSE,
-      };
+        {
+          type: actionTypes.MUTATE_START,
+          meta: { collection: testDocId0.path, doc: testDocId0.id },
+          payload: {
+            data: [
+              {
+                path: testDocId0.path,
+                id: testDocId0.id,
+                dateKey: { seconds: 99, nanoseconds: 99 },
+              },
+            ],
+          },
+        },
+      ];
 
-      const count = 1;
-      const manyActions = new Array(count).fill(null).map(() => action1);
+      const count = 100;
+      const manyActions = new Array(count)
+        .fill(null)
+        .map(() => actions[Math.floor(Math.random() * actions.length)]);
 
       await benchmark.record(
         () => manyActions.forEach((action) => reducer(primedState, action)),

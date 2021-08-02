@@ -158,18 +158,6 @@ const getCollectionTransducer = (collection) =>
   partialRight(map, (state) => state.database[collection]);
 
 /**
- * @name fieldsTransducer
- * @param {Array.<string>} fields - properties of the document to include in the return
- * @typedef {Function} xFormPartialFields - pick selected doc fields to
- * improve React rendering performance
- * @returns {xFormPartialFields} - transducer
- */
-const fieldsTransducer = (fields) =>
-  partialRight(map, (docs) =>
-    docs.map((doc) => pick(doc, ['id', 'path', ...fields])),
-  );
-
-/**
  * @name orderTransducer
  * @param {Array.<string>} order - Firestore order property
  * @typedef {Function} xFormOrdering - sort docs bases on criteria from the
@@ -336,7 +324,7 @@ const overridesTransducers = (overrides, collection) => {
  * @returns {Function} - Transducer will return a modifed array of documents
  */
 function buildTransducer(overrides, query) {
-  const { collection, where, orderBy: order, ordered, fields } = query;
+  const { collection, where, orderBy: order, ordered } = query;
 
   const isOptimistic =
     ordered === undefined ||
@@ -344,7 +332,6 @@ function buildTransducer(overrides, query) {
 
   const xfGetCollection = getCollectionTransducer(collection);
   const xfGetDoc = getDocumentTransducer((ordered || []).map(([__, id]) => id));
-  const xfFields = !fields ? null : fieldsTransducer(fields);
 
   const xfApplyOverrides = !isOptimistic
     ? null
@@ -357,14 +344,7 @@ function buildTransducer(overrides, query) {
 
   if (!isOptimistic) {
     return flow(
-      compact([
-        xfGetCollection,
-        xfGetDoc,
-        xfOrder,
-        xfPaginate,
-        xfLimit,
-        xfFields,
-      ]),
+      compact([xfGetCollection, xfGetDoc, xfOrder, xfPaginate, xfLimit]),
     );
   }
 
@@ -378,7 +358,6 @@ function buildTransducer(overrides, query) {
       xfOrder,
       xfPaginate,
       xfLimit,
-      xfFields,
     ]),
   );
 }
@@ -419,7 +398,7 @@ function reprocessQueries(draft, path) {
     const docs = selectDocuments(draft, draft[key]);
     const ordered = docs.map(({ id, path: _path }) => [_path, id]);
     const isInitialLoad = draft[key].via === 'memory' && ordered.length === 0;
-    set(draft, [key, 'docs'], isInitialLoad ? undefined : docs);
+
     set(draft, [key, 'ordered'], isInitialLoad ? undefined : ordered);
   });
 
