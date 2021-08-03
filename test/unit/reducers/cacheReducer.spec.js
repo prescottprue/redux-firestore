@@ -3,6 +3,7 @@
 import reducer from 'reducer';
 import { actionTypes } from 'constants';
 import { benchmark } from 'kelonio';
+import largeAction from './stub.json';
 // import * as mutate from 'utils/mutate';
 
 const collection = 'testCollection';
@@ -1695,7 +1696,7 @@ describe('cacheReducer', () => {
       const actions = [
         {
           meta: whereKey1IsValue1,
-          payload: setPayload(generate(500)),
+          payload: setPayload(generate(5_000)),
           type: actionTypes.LISTENER_RESPONSE,
         },
         {
@@ -1705,8 +1706,8 @@ describe('cacheReducer', () => {
         },
         {
           type: actionTypes.MUTATE_START,
-          meta: { collection: testDocId0.path, doc: testDocId0.id },
           payload: {
+            meta: { collection: testDocId0.path, doc: testDocId0.id },
             data: [
               {
                 path: testDocId0.path,
@@ -1724,10 +1725,10 @@ describe('cacheReducer', () => {
         .map(() => actions[Math.floor(Math.random() * actions.length)]);
 
       await benchmark.record(
-        () => actions.forEach((action) => reducer(primedState, action)),
+        () => [largeAction].forEach((action) => reducer(primedState, action)),
         {
-          iterations: 100,
-          meanUnder: 10,
+          iterations: 10,
+          meanUnder: 1,
         },
       );
     });

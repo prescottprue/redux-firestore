@@ -623,6 +623,7 @@ const initialize = (state, { action, key, path }) =>
       false: 'server',
     }[action.payload.fromCache];
 
+    // 35%
     if (action.payload.data) {
       Object.keys(action.payload.data).forEach((id) => {
         setWith(draft, ['database', path, id], action.payload.data[id], Object);
@@ -636,13 +637,14 @@ const initialize = (state, { action, key, path }) =>
       action.payload.ordered?.map(({ path: _path, id }) => [_path, id]) ||
       processOptimistic(action.meta, draft);
 
+    // 20%
     set(draft, [action.meta.storeAs], {
       ordered,
       ...action.meta,
       via,
     });
 
-    // append docs field to query
+    // 15%
     reprocessQueries(draft, path);
 
     done();
