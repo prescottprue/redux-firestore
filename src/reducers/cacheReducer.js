@@ -405,9 +405,10 @@ function reprocessQueries(draft, path) {
     const ordered = processOptimistic(draft[key], draft);
 
     const isInitialLoad = draft[key].via === 'memory' && ordered.length === 0;
-
-    set(draft, [key, 'ordered'], isInitialLoad ? undefined : ordered);
-    set(draft, [key, 'via'], 'memory');
+    if (!ordered.every((value, idx) => value === draft[key].ordered[idx])) {
+      set(draft, [key, 'ordered'], isInitialLoad ? undefined : ordered);
+      set(draft, [key, 'via'], 'memory');
+    }
   });
 
   if (info.enabled) {
@@ -637,15 +638,15 @@ const initialize = (state, { action, key, path }) =>
       action.payload.ordered?.map(({ path: _path, id }) => [_path, id]) ||
       processOptimistic(action.meta, draft);
 
+    // 15%
+    reprocessQueries(draft, path);
+
     // 20%
     set(draft, [action.meta.storeAs], {
       ordered,
       ...action.meta,
       via,
     });
-
-    // 15%
-    reprocessQueries(draft, path);
 
     done();
     return draft;
