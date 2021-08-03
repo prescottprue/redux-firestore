@@ -21,6 +21,9 @@ import {
   isEqual,
   takeRight,
   isEmpty,
+  partial,
+  identity,
+  flatMap,
 } from 'lodash';
 import { actionTypes } from '../constants';
 import { getBaseQueryName } from '../utils/query';
@@ -28,6 +31,7 @@ import mark from '../utils/profiling';
 import firebase from 'firebase';
 
 const info = debug('rrf:cache');
+const verbose = debug('rrfVerbose:cache');
 
 /**
  * @typedef {object & Object.<string, RRFQuery>} CacheState
@@ -138,71 +142,41 @@ const PROCESSES_TIMESTAMP = {
   '*': () => true,
 };
 
-/**
- * @name getDocumentTransducer
- * @param ids - array of document ids
- * @typedef {Function} xFormDocument - use cache[storeAs].ordered to get
- * documents from cache.database
- * @returns {xFormDocument} - transducer
- */
-const getDocumentTransducer = (ids) =>
-  partialRight(map, (coll) => ids.map((id) => coll[id]).filter(Boolean));
+const xfVerbose = (title) =>
+  partialRight(map, (data) => {
+    verbose(title, data);
+    return data;
+  });
 
 /**
- * @name getCollectionTransducer
- * @param {string} collection - stirng of the full firestore path for the collection
+ * @name xfAllIds
+ * @param {string} path - string of the full firestore path for the collection
  * @typedef xFormCollection - return a single collection from the fragment database
  * @returns {xFormCollection} - transducer
  */
-const getCollectionTransducer = (collection) =>
-  partialRight(map, (state) => state.database[collection]);
+const xfAllIds = (path) =>
+  function allIdsTransducer(state) {
+    const { database: db = {}, databaseOverrides: dbo = {} } = state;
+    const allIds = new Set([
+      ...Object.keys(db[path] || {}),
+      ...Object.keys(dbo[path] || {}),
+    ]);
+
+    return [Array.from(allIds).map((id) => [path, id])];
+  };
 
 /**
- * @name orderTransducer
- * @param {Array.<string>} order - Firestore order property
- * @typedef {Function} xFormOrdering - sort docs bases on criteria from the
- * firestore query
- * @returns {xFormOrdering} - transducer
- */
-const orderTransducer = (order) => {
-  const isFlat = typeof order[0] === 'string';
-  const orders = isFlat ? [order] : order;
-  const [fields, direction] = zip(
-    ...orders.map(([field, dir]) => [
-      (data) => {
-        if (typeof data[field] === 'string') return data[field].toLowerCase();
-        if (isTimestamp(data[field])) return data[field].seconds;
-        return data[field];
-      },
-      dir || 'asc',
-    ]),
-  );
-  return partialRight(map, (docs) => orderBy(docs, fields, direction));
-};
-
-/**
- * @name limitTransducer
- * @param {number} limit - firestore limit number
- * @typedef {Function} xFormLimiter - limit the results to align with
- * limit from the firestore query
- * @returns {xFormLimiter} - transducer
- */
-const limitTransducer = ({ limit, endAt, endBefore }) => {
-  if (!limit) return null;
-  const fromRight = (endAt || endBefore) !== undefined;
-  return fromRight
-    ? ([arr] = []) => [takeRight(arr, limit)]
-    : ([arr] = []) => [take(arr, limit)];
-};
-
-/**
- * @name filterTransducers
+ * @name xfWhere
  * @param {Array.<Array.<string>>} where - Firestore where clauses
+ * @property {object.<FirestorePath, object<FirestoreDocumentId, Doc>>}  db
+ * @property {object.<FirestorePath, object<FirestoreDocumentId, ParitalDoc>>}  dbo
  * @typedef {Function} xFormFilter - run the same where cause sent to
  * firestore for all the optimitic overrides
  * @returns {xFormFilter} - transducer
  */
-const filterTransducers = (where) => {
+const xfWhere = (where, getDoc) => {
+  if (!where) return [partialRight(map, identity)];
+
   const isFlat = typeof where[0] === 'string';
   const clauses = isFlat ? [where] : where;
 
@@ -210,18 +184,19 @@ const filterTransducers = (where) => {
     const fnc = isTimestamp(val)
       ? PROCESSES_TIMESTAMP[op]
       : PROCESSES[op] || (() => true);
-    return partialRight(map, (collection) =>
-      filter(Object.values(collection || {}), (doc) => {
-        if (!doc) return false;
+
+    return partialRight(map, (tuples) =>
+      filter(tuples, ([path, id] = []) => {
+        if (!path || !id) return false;
         let value;
         if (field === '__name__') {
-          value = doc.id;
+          value = id;
         } else if (field.includes('.')) {
           value = field
             .split('.')
-            .reduce((obj, subField) => obj && obj[subField], doc);
+            .reduce((obj, subField) => obj && obj[subField], getDoc(path, id));
         } else {
-          value = doc[field];
+          value = getDoc(path, id)[field];
         }
 
         if (value === undefined) value = null;
@@ -233,7 +208,62 @@ const filterTransducers = (where) => {
 };
 
 /**
- * @name paginateTransducers
+ * @name xfOrder
+ * @param {Array.<string>} order - Firestore order property
+ * @property {object.<FirestorePath, object<FirestoreDocumentId, Doc>>}  db
+ * @property {object.<FirestorePath, object<FirestoreDocumentId, ParitalDoc>>}  dbo
+ * @typedef {Function} xFormOrdering - sort docs bases on criteria from the
+ * firestore query
+ * @returns {xFormOrdering} - transducer
+ */
+const xfOrder = (order, getDoc) => {
+  if (!order) return identity;
+
+  const isFlat = typeof order[0] === 'string';
+  const orders = isFlat ? [order] : order;
+
+  const [fields, direction] = zip(
+    ...orders.map(([field, dir]) => [
+      (data) => {
+        if (typeof data[field] === 'string') return data[field].toLowerCase();
+        if (isTimestamp(data[field])) return data[field].seconds;
+        return data[field];
+      },
+      dir || 'asc',
+    ]),
+  );
+
+  return partialRight(map, (tuples) => {
+    // TODO: refactor to manually lookup and compare
+    const docs = tuples.map(([path, id]) => getDoc(path, id));
+
+    const result = orderBy(docs, fields, direction).map(
+      ({ id, path } = {}) => path && id && [path, id],
+    );
+
+    return result;
+  });
+};
+
+/**
+ * @name xfLimit
+ * @param {number} limit - firestore limit number
+ * @typedef {Function} xFormLimiter - limit the results to align with
+ * limit from the firestore query
+ * @returns {xFormLimiter} - transducer
+ */
+const xfLimit = ({ limit, endAt, endBefore }) => {
+  if (!limit) return identity;
+  const fromRight = (endAt || endBefore) !== undefined;
+  return fromRight
+    ? ([arr] = []) => [takeRight(arr, limit)]
+    : ([arr] = []) => [take(arr, limit)];
+};
+
+/**
+ * @name xfPaginate
+ * @param {?CacheState.database} db -
+ * @param {?CacheState.databaseOverrides} dbo -
  * @param {RRFQuery} query - Firestore query
  * @param {Boolean} isOptimisticWrite - includes optimistic data
  * @typedef {Function} xFormFilter - in optimistic reads and overrides
@@ -241,138 +271,117 @@ const filterTransducers = (where) => {
  * filter down the document based on a cursor.
  * @returns {xFormFilter} - transducer
  */
-const paginateTransducers = (query, isOptimisticWrite = false) => {
+const xfPaginate = (query, getDoc) => {
   const { orderBy: order, startAt, startAfter, endAt, endBefore, via } = query;
   const isOptimisticRead = via === undefined;
-  if (!(isOptimisticRead || isOptimisticWrite)) return null;
+
+  if (!isOptimisticRead) return identity;
 
   const start = startAt || startAfter;
   const end = endAt || endBefore;
   const isAfter = startAfter !== undefined;
   const isBefore = endBefore !== undefined;
-  if (start === undefined && end === undefined) return null;
+
+  if (start === undefined && end === undefined) return identity;
 
   const isFlat = typeof order[0] === 'string';
   const orders = isFlat ? [order] : order;
-  const isPaginateMatched = (doc, at, before = false, after = false) =>
+  const isPaginateMatched = (document, at, before = false, after = false) =>
     orders.find(([field, sort = 'asc'], idx) => {
       const value = Array.isArray(at) ? at[idx] : at;
       if (value === undefined) return false;
 
       // TODO: add support for document refs
-      const proc = isTimestamp(doc[field]) ? PROCESSES_TIMESTAMP : PROCESSES;
+      const proc = isTimestamp(document[field])
+        ? PROCESSES_TIMESTAMP
+        : PROCESSES;
       let compare = process['=='];
       if (startAt || endAt) compare = proc[sort === 'desc' ? '<=' : '>='];
       if (startAfter || endBefore) compare = proc[sort === 'desc' ? '<' : '>'];
 
-      const isMatched = compare(doc[field], value);
+      const isMatched = compare(document[field], value);
       if (isMatched) {
         return true;
       }
     }) !== undefined;
 
-  return partialRight(map, (docs) => {
+  return partialRight(map, (tuples) => {
     const results = [];
     let started = start === undefined;
 
-    docs.forEach((doc) => {
+    tuples.forEach(([path, id]) => {
       if (!started && start) {
-        if (isPaginateMatched(doc, start, undefined, isAfter)) {
+        if (isPaginateMatched(getDoc(path, id), start, undefined, isAfter)) {
           started = true;
         }
       }
 
       if (started && end) {
-        if (isPaginateMatched(doc, end, isBefore, undefined)) {
+        if (isPaginateMatched(getDoc(path, id), end, isBefore, undefined)) {
           started = false;
         }
       }
 
       if (started) {
-        results.push(doc);
+        results.push([path, id]);
       }
     });
-
     return results;
   });
 };
 
 /**
- * @name overridesTransducers
- * @param {object} overrides - mirrored structure to database but only with updates
- * @param {string} collection - path to firestore collection
- * @typedef {Function} xFormOverrides - takes synchronous, in-memory change
- * requests and applies them to the in-memory database
- * @returns {xFormOverrides}
- */
-const overridesTransducers = (overrides, collection) => {
-  const partials = (overrides && overrides[collection]) || {};
-  return Object.keys(partials).map((docId) =>
-    partialRight(map, (coll) =>
-      partials[docId] === null
-        ? unset(coll, docId)
-        : set(coll, [docId], extend({}, coll[docId], partials[docId])),
-    ),
-  );
-};
-
-/**
- * @name buildTransducer
+ * @name processOptimistic
  * Convert the query to a transducer for the query results
+ * @param {?CacheState.database} database -
  * @param {?CacheState.databaseOverrides} overrides -
  * @param {RRFQuery} query - query used to get data from firestore
  * @returns {Function} - Transducer will return a modifed array of documents
  */
-function buildTransducer(overrides, query) {
-  const { collection, where, orderBy: order, ordered } = query;
+function processOptimistic(query, state) {
+  const { collection, where, orderBy: order, ordered, storeAs } = query;
+  const { database: db, databaseOverrides: dbo } = state;
 
-  const isOptimistic =
-    ordered === undefined ||
-    Object.keys((overrides || {})[collection] || {}).length > 0;
+  const getDoc = (path, id) => {
+    const data = (db && db[path] && db[path][id]) || {};
+    const override = dbo && dbo[path] && dbo[path][id];
+    return override ? { ...data, ...override } : data;
+  };
 
-  const xfGetCollection = getCollectionTransducer(collection);
-  const xfGetDoc = getDocumentTransducer((ordered || []).map(([__, id]) => id));
+  const process = flow([
+    xfAllIds(collection),
 
-  const xfApplyOverrides = !isOptimistic
-    ? null
-    : overridesTransducers(overrides || { [collection]: [] }, collection);
-  const xfFilter =
-    !isOptimistic || filterTransducers(!where ? ['', '*', ''] : where);
-  const xfOrder = !isOptimistic || !order ? null : orderTransducer(order);
-  const xfPaginate = paginateTransducers(query, isOptimistic);
-  const xfLimit = limitTransducer(query);
+    xfVerbose('xfAllIds'),
 
-  if (!isOptimistic) {
-    return flow(
-      compact([xfGetCollection, xfGetDoc, xfOrder, xfPaginate, xfLimit]),
-    );
-  }
+    ...xfWhere(where, getDoc),
 
-  return flow(
-    compact([
-      xfGetCollection,
-      partialRight(map, (db) => createDraft(db || {})),
-      ...xfApplyOverrides,
-      partialRight(map, (db) => finishDraft(db)),
-      ...xfFilter,
-      xfOrder,
-      xfPaginate,
-      xfLimit,
-    ]),
-  );
+    xfVerbose('xfWhere'),
+
+    xfOrder(order, getDoc),
+
+    xfVerbose('xfOrder'),
+
+    xfPaginate(query, getDoc),
+
+    xfVerbose('xfPaginate'),
+
+    xfLimit(query),
+
+    xfVerbose('xfLimit'),
+  ]);
+
+  return process(state)[0];
 }
 
-/**
- * @name selectDocuments
- * Merge overrides with database cache and resort/filter when needed
- * @param {object} reducerState - optimitic redux state
- * @param {RRFQuery} query - query from the meta field of the action
- * @returns {object} updated reducerState
- */
-function selectDocuments(reducerState, query) {
-  const transduce = buildTransducer(reducerState.databaseOverrides, query);
-  return transduce([reducerState])[0];
-}
+const skipReprocessing = (query, { databaseOverrides = {} }) => {
+  const { collection, via } = query;
+  const fromFirestore = ['cache', 'server'].includes(via);
+  const noOverrieds = isEmpty(databaseOverrides[collection]);
+
+  if (fromFirestore && noOverrieds) return true;
+
+  return false;
+};
 
 /**
  * @name reprocessQueries
@@ -387,19 +396,18 @@ function reprocessQueries(draft, path) {
   const paths = Array.isArray(path) ? path : [path];
   Object.keys(draft).forEach((key) => {
     if (['database', 'databaseOverrides'].includes(key)) return;
-    const { collection, populates = [] } = draft[key];
-    const pops = Array.isArray(populates[0]) ? populates : [populates];
-    const collections = pops.map(([__, coll]) => coll).concat(collection);
-    if (!collections.some((coll) => paths.includes(coll))) {
-      return;
-    }
+    if (!paths.includes(draft[key].collection)) return;
+    if (skipReprocessing(key, draft)) return;
+
     queries.push(key);
 
-    const docs = selectDocuments(draft, draft[key]);
-    const ordered = docs.map(({ id, path: _path }) => [_path, id]);
+    // either was processed via reducer or had optimistic data
+    const ordered = processOptimistic(draft[key], draft);
+
     const isInitialLoad = draft[key].via === 'memory' && ordered.length === 0;
 
     set(draft, [key, 'ordered'], isInitialLoad ? undefined : ordered);
+    set(draft, [key, 'via'], 'memory');
   });
 
   if (info.enabled) {
@@ -624,9 +632,9 @@ const initialize = (state, { action, key, path }) =>
     }
 
     // set the query
-    const ordered = (
-      action.payload.ordered || selectDocuments(draft, action.meta)
-    ).map(({ path, id }) => [path, id]);
+    const ordered =
+      action.payload.ordered?.map(({ path: _path, id }) => [_path, id]) ||
+      processOptimistic(action.meta, draft);
 
     set(draft, [action.meta.storeAs], {
       ordered,

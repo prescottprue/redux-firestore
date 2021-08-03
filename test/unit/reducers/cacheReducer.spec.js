@@ -261,14 +261,33 @@ describe('cacheReducer', () => {
       stateAsc.meta.orderBy = ['dateKey'];
 
       const passA = reducer(primedState, stateDesc);
-      expect(passA.cache.testStoreAs.ordered[0][1]).to.eql('testDocId1');
-      expect(passA.cache.testStoreAs.ordered[1][1]).to.eql('testDocId0');
-      expect(passA.cache.testStoreAs.ordered[2]).to.eql(undefined);
+
+      expect(passA.cache.testStoreAs).to.eql({
+        ordered: [
+          ['testCollection', 'testDocId4'],
+          ['testCollection', 'testDocId3'],
+        ],
+        collection: 'testCollection',
+        storeAs: 'testStoreAs',
+        orderBy: ['dateKey', 'desc'],
+        limit: 2,
+        startAt: { seconds: 2, nanoseconds: 2 },
+        via: 'memory',
+      });
 
       const passB = reducer(primedState, stateAsc);
-      expect(passB.cache.testStoreAs.ordered[0][1]).to.eql('testDocId3');
-      expect(passB.cache.testStoreAs.ordered[1][1]).to.eql('testDocId4');
-      expect(passB.cache.testStoreAs.ordered[2]).to.eql(undefined);
+      expect(passB.cache.testStoreAs).to.eql({
+        ordered: [
+          ['testCollection', 'testDocId0'],
+          ['testCollection', 'testDocId1'],
+        ],
+        collection: 'testCollection',
+        storeAs: 'testStoreAs',
+        orderBy: ['dateKey'],
+        limit: 2,
+        startAt: { seconds: 2, nanoseconds: 2 },
+        via: 'memory',
+      });
     });
 
     it('SET_LISTENER pagination with startAfter', () => {
@@ -284,14 +303,32 @@ describe('cacheReducer', () => {
       stateAsc.meta.orderBy = ['dateKey', 'asc'];
 
       const passA = reducer(primedState, stateDesc);
-      expect(passA.cache.testStoreAs.ordered[0][1]).to.eql('testDocId1');
-      expect(passA.cache.testStoreAs.ordered[1][1]).to.eql('testDocId0');
-      expect(passA.cache.testStoreAs.ordered[2]).to.eql(undefined);
+      expect(passA.cache.testStoreAs).to.eql({
+        ordered: [
+          ['testCollection', 'testDocId4'],
+          ['testCollection', 'testDocId3'],
+        ],
+        collection: 'testCollection',
+        storeAs: 'testStoreAs',
+        orderBy: ['dateKey', 'desc'],
+        limit: 2,
+        startAfter: { seconds: 2, nanoseconds: 2 },
+        via: 'memory',
+      });
 
       const passB = reducer(primedState, stateAsc);
-      expect(passB.cache.testStoreAs.ordered[0][1]).to.eql('testDocId3');
-      expect(passB.cache.testStoreAs.ordered[1][1]).to.eql('testDocId4');
-      expect(passB.cache.testStoreAs.ordered[2]).to.eql(undefined);
+      expect(passB.cache.testStoreAs).to.eql({
+        ordered: [
+          ['testCollection', 'testDocId0'],
+          ['testCollection', 'testDocId1'],
+        ],
+        collection: 'testCollection',
+        storeAs: 'testStoreAs',
+        orderBy: ['dateKey', 'asc'],
+        limit: 2,
+        startAfter: { seconds: 2, nanoseconds: 2 },
+        via: 'memory',
+      });
     });
 
     it('SET_LISTENER pagination with endAt', () => {
@@ -304,14 +341,32 @@ describe('cacheReducer', () => {
       stateAsc.meta.orderBy = ['dateKey', 'asc'];
 
       const passA = reducer(primedState, stateDesc);
-      expect(passA.cache.testStoreAs.ordered[0][1]).to.eql('testDocId4');
-      expect(passA.cache.testStoreAs.ordered[1][1]).to.eql('testDocId3');
-      expect(passA.cache.testStoreAs.ordered[2]).to.eql(undefined);
+      expect(passA.cache.testStoreAs).to.eql({
+        ordered: [
+          ['testCollection', 'testDocId1'],
+          ['testCollection', 'testDocId0'],
+        ],
+        collection: 'testCollection',
+        storeAs: 'testStoreAs',
+        orderBy: ['dateKey', 'desc'],
+        limit: 2,
+        endAt: { seconds: 2, nanoseconds: 2 },
+        via: 'memory',
+      });
 
       const passB = reducer(primedState, stateAsc);
-      expect(passB.cache.testStoreAs.ordered[0][1]).to.eql('testDocId0');
-      expect(passB.cache.testStoreAs.ordered[1][1]).to.eql('testDocId1');
-      expect(passB.cache.testStoreAs.ordered[2]).to.eql(undefined);
+      expect(passB.cache.testStoreAs).to.eql({
+        ordered: [
+          ['testCollection', 'testDocId3'],
+          ['testCollection', 'testDocId4'],
+        ],
+        collection: 'testCollection',
+        storeAs: 'testStoreAs',
+        orderBy: ['dateKey', 'asc'],
+        limit: 2,
+        endAt: { seconds: 2, nanoseconds: 2 },
+        via: 'memory',
+      });
     });
 
     it('SET_LISTENER pagination with endBefore', () => {
@@ -324,14 +379,32 @@ describe('cacheReducer', () => {
       stateAsc.meta.orderBy = ['dateKey'];
 
       const passA = reducer(primedState, stateDesc);
-      expect(passA.cache.testStoreAs.ordered[0][1]).to.eql('testDocId4');
-      expect(passA.cache.testStoreAs.ordered[1][1]).to.eql('testDocId3');
-      expect(passA.cache.testStoreAs.ordered[2]).to.eql(undefined);
+      expect(passA.cache.testStoreAs).to.eql({
+        ordered: [
+          ['testCollection', 'testDocId1'],
+          ['testCollection', 'testDocId0'],
+        ],
+        collection: 'testCollection',
+        storeAs: 'testStoreAs',
+        orderBy: ['dateKey', 'desc'],
+        limit: 2,
+        endBefore: { seconds: 2, nanoseconds: 2 },
+        via: 'memory',
+      });
 
       const passB = reducer(primedState, stateAsc);
-      expect(passB.cache.testStoreAs.ordered[0][1]).to.eql('testDocId0');
-      expect(passB.cache.testStoreAs.ordered[1][1]).to.eql('testDocId1');
-      expect(passB.cache.testStoreAs.ordered[2]).to.eql(undefined);
+      expect(passB.cache.testStoreAs).to.eql({
+        ordered: [
+          ['testCollection', 'testDocId3'],
+          ['testCollection', 'testDocId4'],
+        ],
+        collection: 'testCollection',
+        storeAs: 'testStoreAs',
+        orderBy: ['dateKey'],
+        limit: 2,
+        endBefore: { seconds: 2, nanoseconds: 2 },
+        via: 'memory',
+      });
     });
   });
 
@@ -1607,10 +1680,22 @@ describe('cacheReducer', () => {
       // eslint-disable-next-line no-invalid-this
       this.timeout(30_000);
 
+      const generate = (limit) =>
+        new Array(limit).fill(null).map(() => ({
+          path,
+          id: `testDocId${Math.random()}`,
+          key1: 'value1',
+          number: 11,
+          multipled: 3,
+          dateKey: { seconds: 1, nanoseconds: 1 },
+          array: [1, 2, 3, 4],
+          obj: { a: 1, b: { x: 0 }, c: { z: 9 } },
+        }));
+
       const actions = [
         {
           meta: whereKey1IsValue1,
-          payload: setPayload([testDocId0, testDocId1, testDocId3]),
+          payload: setPayload(generate(500)),
           type: actionTypes.LISTENER_RESPONSE,
         },
         {
@@ -1633,13 +1718,13 @@ describe('cacheReducer', () => {
         },
       ];
 
-      const count = 100;
+      const count = 10;
       const manyActions = new Array(count)
         .fill(null)
         .map(() => actions[Math.floor(Math.random() * actions.length)]);
 
       await benchmark.record(
-        () => manyActions.forEach((action) => reducer(primedState, action)),
+        () => actions.forEach((action) => reducer(primedState, action)),
         {
           iterations: 100,
           meanUnder: 10,
