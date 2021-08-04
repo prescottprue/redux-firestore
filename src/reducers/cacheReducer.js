@@ -1,4 +1,4 @@
-import produce, { createDraft, finishDraft } from 'immer';
+import produce from 'immer';
 import debug from 'debug';
 import {
   set,
@@ -9,11 +9,8 @@ import {
   take,
   map,
   partialRight,
-  pick,
-  compact,
   zip,
   setWith,
-  extend,
   isFunction,
   findIndex,
   isMatch,
@@ -21,9 +18,7 @@ import {
   isEqual,
   takeRight,
   isEmpty,
-  partial,
   identity,
-  flatMap,
 } from 'lodash';
 import { actionTypes } from '../constants';
 import { getBaseQueryName } from '../utils/query';

@@ -1706,8 +1706,12 @@ describe('cacheReducer', () => {
   });
 
   describe('Speed test', () => {
+    let namespaces;
     before(() => {
-      debug.disable('rrfVerbose:*');
+      namespaces = debug.disable();
+    });
+    after(() => {
+      if (namespaces) debug.enable(namespaces);
     });
 
     it('<16ms processing large action and state', async function () {

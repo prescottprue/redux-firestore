@@ -27,7 +27,7 @@ const perf = win && win.performance;
  * @returns {Function}
  */
 export default function mark(marker, context = '') {
-  if (!debug.enabled('rrf:*') || !debug.enabled('rrf:profile') || !perf) {
+  if (!debug.enabled('rrf:cache') || !debug.enabled('rrf:profile') || !perf) {
     return noop;
   }
 
@@ -54,7 +54,7 @@ export default function mark(marker, context = '') {
  * @returns
  */
 export function resource(marker) {
-  if (!debug.enabled('rrf:*') || !debug.enabled('rrf:profile') || !perf) {
+  if (!debug.enabled('rrf:cache') || !debug.enabled('rrf:profile') || !perf) {
     return noop;
   }
 
@@ -74,9 +74,10 @@ export function resource(marker) {
 
 /* istanbul ignore next */
 if (win) {
-  win.rrfStats = () => {
-    if (!debug.enabled('rrf:*') || !debug.enabled('rrf:profile') || !perf) {
-      return debug.enable('rrf:*');
+  win.rrfStats = (force = false) => {
+    if (!debug.enabled('rrf:cache') || !debug.enabled('rrf:profile') || !perf) {
+      if (force) debug.enable(typeof force === 'string' ? force : 'rrf:*');
+      return;
     }
     const getMarks = ({ name }) => name.indexOf('@rrf/') === 0;
     const getLoads = ({ name }) => name.indexOf('@rrf.load/') === 0;
