@@ -47,6 +47,16 @@ render(
 );
 ```
 
+## Debugging
+
+Enable browser debugging to troubleshoot dataflow issues
+```ts 
+localStore.debug='rrf:*'
+localStore.debug='rrf:cache'
+localStore.debug='rrf:mutate'
+localStore.debug='rrfVerbose:*'
+```
+
 ## Components
 
 ##### Functional Components
