@@ -644,14 +644,14 @@ describe('cacheReducer', () => {
         collection: 'testCollection',
         storeAs: 'testOne',
         where: [['key1', '<=', 1]],
-        via: 'memory',
+        via: 'optimistic',
       });
       expect(pass3.cache.testTwo).to.eql({
         ordered: [['testCollection', 'testDocId1']],
         collection: 'testCollection',
         storeAs: 'testTwo',
         where: [['key1', '>=', 2]],
-        via: 'memory',
+        via: 'optimistic',
       });
     });
 
@@ -695,12 +695,36 @@ describe('cacheReducer', () => {
       const pass2 = reducer(pass1, action2);
       const pass3 = reducer(pass2, action3);
 
-      expect(pass2.cache.testOne.ordered[0][1]).to.eql(first.id);
-      expect(pass2.cache.testTwo.ordered[0]).to.eql(undefined);
+      expect(pass2.cache.testOne).to.eql({
+        ordered: [['testCollection', 'testDocId1']],
+        collection: 'testCollection',
+        storeAs: 'testOne',
+        where: [['key1', '<', 2]],
+        via: 'cache',
+      });
+      expect(pass2.cache.testTwo).to.eql({
+        ordered: [],
+        collection: 'testCollection',
+        storeAs: 'testTwo',
+        where: [['key1', '>', 1]],
+        via: 'cache',
+      });
 
       // doc moved from testOne to testTwo query
-      expect(pass3.cache.testOne.ordered[0]).to.eql(undefined);
-      expect(pass3.cache.testTwo.ordered[0][1]).to.eql(second.id);
+      expect(pass3.cache.testOne).to.eql({
+        ordered: [],
+        collection: 'testCollection',
+        storeAs: 'testOne',
+        where: [['key1', '<', 2]],
+        via: 'optimistic',
+      });
+      expect(pass3.cache.testTwo).to.eql({
+        ordered: [['testCollection', 'testDocId1']],
+        collection: 'testCollection',
+        storeAs: 'testTwo',
+        where: [['key1', '>', 1]],
+        via: 'optimistic',
+      });
     });
 
     it('not compares', () => {
@@ -743,12 +767,36 @@ describe('cacheReducer', () => {
       const pass2 = reducer(pass1, action2);
       const pass3 = reducer(pass2, action3);
 
-      expect(pass2.cache.testOne.ordered[0][1]).to.eql(first.id);
-      expect(pass2.cache.testTwo.ordered[0]).to.eql(undefined);
+      expect(pass2.cache.testOne).to.eql({
+        ordered: [['testCollection', 'testDocId1']],
+        collection: 'testCollection',
+        storeAs: 'testOne',
+        where: [['key1', '!=', 2]],
+        via: 'cache',
+      });
+      expect(pass2.cache.testTwo).to.eql({
+        ordered: [],
+        collection: 'testCollection',
+        storeAs: 'testTwo',
+        where: [['key1', '>', 1]],
+        via: 'cache',
+      });
 
       // doc moved from testOne to testTwo query
-      expect(pass3.cache.testOne.ordered[0]).to.eql(undefined);
-      expect(pass3.cache.testTwo.ordered[0][1]).to.eql(second.id);
+      expect(pass3.cache.testOne).to.eql({
+        ordered: [],
+        collection: 'testCollection',
+        storeAs: 'testOne',
+        where: [['key1', '!=', 2]],
+        via: 'optimistic',
+      });
+      expect(pass3.cache.testTwo).to.eql({
+        ordered: [['testCollection', 'testDocId1']],
+        collection: 'testCollection',
+        storeAs: 'testTwo',
+        where: [['key1', '>', 1]],
+        via: 'optimistic',
+      });
     });
 
     it('not in and __name__', () => {
@@ -795,9 +843,36 @@ describe('cacheReducer', () => {
       const pass2 = reducer(pass1, action2);
       const pass3 = reducer(pass2, action3);
 
+      expect(pass2.cache.notTwo).to.eql({
+        ordered: [['testCollection', 'testDocId1']],
+        collection: 'testCollection',
+        storeAs: 'notTwo',
+        where: [['key1', 'not-in', [2]]],
+        via: 'cache',
+      });
+      expect(pass2.cache.isIdMatch).to.eql({
+        ordered: [['testCollection', 'testDocId1']],
+        collection: 'testCollection',
+        storeAs: 'isIdMatch',
+        where: [['__name__', '==', 'testDocId1']],
+        via: 'cache',
+      });
+
       // doc moved from testOne to testTwo query
-      expect(pass3.cache.notTwo.ordered[0]).to.eql(undefined);
-      expect(pass3.cache.isIdMatch.ordered[0][1]).to.eql(second.id);
+      expect(pass3.cache.notTwo).to.eql({
+        ordered: [],
+        collection: 'testCollection',
+        storeAs: 'notTwo',
+        where: [['key1', 'not-in', [2]]],
+        via: 'optimistic',
+      });
+      expect(pass3.cache.isIdMatch).to.eql({
+        ordered: [['testCollection', 'testDocId1']],
+        collection: 'testCollection',
+        storeAs: 'isIdMatch',
+        where: [['__name__', '==', 'testDocId1']],
+        via: 'cache',
+      });
     });
 
     it('nested compare ', () => {
@@ -840,12 +915,36 @@ describe('cacheReducer', () => {
       const pass2 = reducer(pass1, action2);
       const pass3 = reducer(pass2, action3);
 
-      expect(pass2.cache.testOne.ordered[0][1]).to.eql(first.id);
-      expect(pass2.cache.testTwo.ordered[0]).to.eql(undefined);
+      expect(pass2.cache.testOne).to.eql({
+        ordered: [['testCollection', 'testDocId1']],
+        collection: 'testCollection',
+        storeAs: 'testOne',
+        where: [['key1.val', 'array-contains', 1]],
+        via: 'cache',
+      });
+      expect(pass2.cache.testTwo).to.eql({
+        ordered: [],
+        collection: 'testCollection',
+        storeAs: 'testTwo',
+        where: [['key1.val', 'array-contains-any', [2]]],
+        via: 'cache',
+      });
 
       // doc moved from testOne to testTwo query
-      expect(pass3.cache.testOne.ordered[0]).to.eql(undefined);
-      expect(pass3.cache.testTwo.ordered[0][1]).to.eql(second.id);
+      expect(pass3.cache.testOne).to.eql({
+        ordered: [],
+        collection: 'testCollection',
+        storeAs: 'testOne',
+        where: [['key1.val', 'array-contains', 1]],
+        via: 'optimistic',
+      });
+      expect(pass3.cache.testTwo).to.eql({
+        ordered: [['testCollection', 'testDocId1']],
+        collection: 'testCollection',
+        storeAs: 'testTwo',
+        where: [['key1.val', 'array-contains-any', [2]]],
+        via: 'optimistic',
+      });
     });
   });
 
@@ -1714,7 +1813,7 @@ describe('cacheReducer', () => {
       if (namespaces) debug.enable(namespaces);
     });
 
-    it('<16ms processing large action and state', async function () {
+    it('<16ms processing large action and large state', async function () {
       // eslint-disable-next-line no-invalid-this
       this.timeout(5_000);
 

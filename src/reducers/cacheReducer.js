@@ -151,7 +151,7 @@ const xfVerbose = (title) =>
  * @typedef xFormCollection - return a single collection from the fragment database
  * @returns {xFormCollection} - transducer
  */
-const xfAllIds = ({ collection: path, via, ordered }) =>
+const xfAllIds = ({ collection: path }) =>
   function allIdsTransducer(state) {
     const { database: db = {}, databaseOverrides: dbo = {} } = state;
     const allIds = new Set([
@@ -269,25 +269,15 @@ const xfLimit = ({ limit, endAt, endBefore }) => {
  * @returns {xFormFilter} - transducer
  */
 const xfPaginate = (query, getDoc) => {
-  const {
-    orderBy: order,
-    startAt,
-    startAfter,
-    endAt,
-    endBefore,
-    via = 'memory',
-  } = query;
+  const { orderBy: order, startAt, startAfter, endAt, endBefore, via } = query;
 
-  const isOptimisticRead = via === 'memory';
-
-  if (!isOptimisticRead) return identity;
-
+  const isOptimisticRead = !via || via === 'memory';
   const start = startAt || startAfter;
   const end = endAt || endBefore;
   const isAfter = startAfter !== undefined;
   const isBefore = endBefore !== undefined;
 
-  if (start === undefined && end === undefined) return identity;
+  if (!order || !isOptimisticRead || !!start || !!end) return identity;
 
   const isFlat = typeof order[0] === 'string';
   const orders = isFlat ? [order] : order;
@@ -344,11 +334,15 @@ const xfPaginate = (query, getDoc) => {
  * @returns {Function} - Transducer will return a modifed array of documents
  */
 function processOptimistic(query, state) {
-  const { via = 'memory', database: db, databaseOverrides: dbo } = state;
-  const getDoc = (path, id) => {
-    const data = (db && db[path] && db[path][id]) || {};
-    const override = dbo && dbo[path] && dbo[path][id];
+  const { database, databaseOverrides } = state;
+  const { via = 'memory', collection } = query;
+  const db = (database && database[collection]) || {};
+  const dbo = databaseOverrides && databaseOverrides[collection];
 
+  const getDoc = (path, id) => {
+    if (path !== collection) console.log('-----', path, collection);
+    const data = db[id] || {};
+    const override = dbo?.[id];
     return override ? { ...data, ...override } : data;
   };
 
@@ -403,6 +397,7 @@ function reprocessQueries(draft, path) {
   const queries = [];
 
   const paths = Array.isArray(path) ? path : [path];
+  const overrides = draft.databaseOverrides?.[path];
   Object.keys(draft).forEach((key) => {
     if (['database', 'databaseOverrides'].includes(key)) return;
     if (!paths.includes(draft[key].collection)) return;
@@ -415,20 +410,20 @@ function reprocessQueries(draft, path) {
 
     if (
       !draft[key].ordered ||
-      new Set(ordered ?? []) !== new Set(draft[key].ordered ?? [])
+      (ordered ?? []).toString() !== (draft[key].ordered ?? []).toString()
     ) {
       set(draft, [key, 'ordered'], ordered);
-      set(draft, [key, 'via'], 'memory');
+      set(draft, [key, 'via'], !isEmpty(overrides) ? 'optimistic' : 'memory');
     }
   });
 
   if (info.enabled) {
     /* istanbul ignore next */
-    const overrides = JSON.parse(JSON.stringify(draft.databaseOverrides || {}));
+    const override = JSON.parse(JSON.stringify(draft.databaseOverrides || {}));
     /* istanbul ignore next */
     info(
       `reprocess ${path} (${queries.length} queries) with overrides`,
-      overrides,
+      override,
     );
   }
 
@@ -628,9 +623,10 @@ const initialize = (state, { action, key, path }) =>
       set(draft, ['database'], {});
       set(draft, ['databaseOverrides'], {});
     }
+    const hasOptimistic = !isEmpty(draft.databaseOverrides?.[path]);
 
     const via = {
-      undefined: 'memory',
+      undefined: hasOptimistic ? 'optimistic' : 'memory',
       true: 'cache',
       false: 'server',
     }[action.payload.fromCache];
