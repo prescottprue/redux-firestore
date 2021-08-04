@@ -20,10 +20,10 @@ import {
   isEmpty,
   identity,
 } from 'lodash';
+import firebase from 'firebase';
 import { actionTypes } from '../constants';
 import { getBaseQueryName } from '../utils/query';
 import mark from '../utils/profiling';
-import firebase from 'firebase';
 
 const info = debug('rrf:cache');
 const verbose = debug('rrfVerbose:cache');
@@ -337,7 +337,7 @@ const xfPaginate = (query, getDoc) => {
  * @returns {Function} - Transducer will return a modifed array of documents
  */
 function processOptimistic(query, state) {
-  const { database: db, databaseOverrides: dbo } = state;
+  const { via = 'memory', database: db, databaseOverrides: dbo } = state;
   const getDoc = (path, id) => {
     const data = (db && db[path] && db[path][id]) || {};
     const override = dbo && dbo[path] && dbo[path][id];
@@ -371,15 +371,16 @@ function processOptimistic(query, state) {
     xfVerbose('xfLimit'),
   ]);
 
-  return process(state)[0];
+  const ordered = process(state)[0];
+  return via === 'memory' && ordered.length === 0 ? undefined : ordered;
 }
 
 const skipReprocessing = (query, { databaseOverrides = {} }) => {
   const { collection, via } = query;
   const fromFirestore = ['cache', 'server'].includes(via);
-  const noOverrieds = isEmpty(databaseOverrides[collection]);
+  const hasNoOverrides = isEmpty(databaseOverrides[collection]);
 
-  if (fromFirestore && noOverrieds) return true;
+  if (fromFirestore && hasNoOverrides) return true;
 
   return false;
 };
@@ -405,10 +406,11 @@ function reprocessQueries(draft, path) {
     // either was processed via reducer or had optimistic data
     const ordered = processOptimistic(draft[key], draft);
 
-    const isInitialLoad = draft[key].via === 'memory' && ordered.length === 0;
-
-    if (new Set(ordered) !== new Set(draft[key].ordered)) {
-      set(draft, [key, 'ordered'], isInitialLoad ? undefined : ordered);
+    if (
+      !draft[key].ordered ||
+      new Set(ordered ?? []) !== new Set(draft[key].ordered ?? [])
+    ) {
+      set(draft, [key, 'ordered'], ordered);
       set(draft, [key, 'via'], 'memory');
     }
   });
