@@ -269,9 +269,16 @@ const xfLimit = ({ limit, endAt, endBefore }) => {
  * @returns {xFormFilter} - transducer
  */
 const xfPaginate = (query, getDoc) => {
-  const { orderBy: order, startAt, startAfter, endAt, endBefore, via } = query;
+  const {
+    orderBy: order,
+    startAt,
+    startAfter,
+    endAt,
+    endBefore,
+    via = 'memory',
+  } = query;
 
-  const isOptimisticRead = via === undefined;
+  const isOptimisticRead = via === 'memory';
 
   if (!isOptimisticRead) return identity;
 
