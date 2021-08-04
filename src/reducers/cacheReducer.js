@@ -144,7 +144,9 @@ const PROCESSES_TIMESTAMP = {
 
 const xfVerbose = (title) =>
   partialRight(map, (data) => {
-    verbose(title, data);
+    if (verbose.enabled) {
+      verbose(title, JSON.parse(JSON.stringify(data)));
+    }
     return data;
   });
 
@@ -154,7 +156,7 @@ const xfVerbose = (title) =>
  * @typedef xFormCollection - return a single collection from the fragment database
  * @returns {xFormCollection} - transducer
  */
-const xfAllIds = (path) =>
+const xfAllIds = ({ collection: path, via, ordered }) =>
   function allIdsTransducer(state) {
     const { database: db = {}, databaseOverrides: dbo = {} } = state;
     const allIds = new Set([
@@ -174,7 +176,7 @@ const xfAllIds = (path) =>
  * firestore for all the optimitic overrides
  * @returns {xFormFilter} - transducer
  */
-const xfWhere = (where, getDoc) => {
+const xfWhere = ({ where }, getDoc) => {
   if (!where) return [partialRight(map, identity)];
 
   const isFlat = typeof where[0] === 'string';
@@ -216,7 +218,7 @@ const xfWhere = (where, getDoc) => {
  * firestore query
  * @returns {xFormOrdering} - transducer
  */
-const xfOrder = (order, getDoc) => {
+const xfOrder = ({ orderBy: order }, getDoc) => {
   if (!order) return identity;
 
   const isFlat = typeof order[0] === 'string';
@@ -273,6 +275,7 @@ const xfLimit = ({ limit, endAt, endBefore }) => {
  */
 const xfPaginate = (query, getDoc) => {
   const { orderBy: order, startAt, startAfter, endAt, endBefore, via } = query;
+
   const isOptimisticRead = via === undefined;
 
   if (!isOptimisticRead) return identity;
@@ -339,25 +342,28 @@ const xfPaginate = (query, getDoc) => {
  * @returns {Function} - Transducer will return a modifed array of documents
  */
 function processOptimistic(query, state) {
-  const { collection, where, orderBy: order, ordered, storeAs } = query;
   const { database: db, databaseOverrides: dbo } = state;
-
   const getDoc = (path, id) => {
     const data = (db && db[path] && db[path][id]) || {};
     const override = dbo && dbo[path] && dbo[path][id];
+
     return override ? { ...data, ...override } : data;
   };
 
+  if (verbose.enabled) {
+    verbose(JSON.parse(JSON.stringify(query)));
+  }
+
   const process = flow([
-    xfAllIds(collection),
+    xfAllIds(query),
 
     xfVerbose('xfAllIds'),
 
-    ...xfWhere(where, getDoc),
+    ...xfWhere(query, getDoc),
 
     xfVerbose('xfWhere'),
 
-    xfOrder(order, getDoc),
+    xfOrder(query, getDoc),
 
     xfVerbose('xfOrder'),
 
@@ -397,7 +403,7 @@ function reprocessQueries(draft, path) {
   Object.keys(draft).forEach((key) => {
     if (['database', 'databaseOverrides'].includes(key)) return;
     if (!paths.includes(draft[key].collection)) return;
-    if (skipReprocessing(key, draft)) return;
+    if (skipReprocessing(draft[key], draft)) return;
 
     queries.push(key);
 
@@ -405,7 +411,8 @@ function reprocessQueries(draft, path) {
     const ordered = processOptimistic(draft[key], draft);
 
     const isInitialLoad = draft[key].via === 'memory' && ordered.length === 0;
-    if (!ordered.every((value, idx) => value === draft[key].ordered[idx])) {
+
+    if (new Set(ordered) !== new Set(draft[key].ordered)) {
       set(draft, [key, 'ordered'], isInitialLoad ? undefined : ordered);
       set(draft, [key, 'via'], 'memory');
     }
@@ -638,15 +645,15 @@ const initialize = (state, { action, key, path }) =>
       action.payload.ordered?.map(({ path: _path, id }) => [_path, id]) ||
       processOptimistic(action.meta, draft);
 
-    // 15%
-    reprocessQueries(draft, path);
-
     // 20%
     set(draft, [action.meta.storeAs], {
       ordered,
       ...action.meta,
       via,
     });
+
+    // 15%
+    reprocessQueries(draft, path);
 
     done();
     return draft;

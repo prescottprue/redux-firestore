@@ -68,9 +68,11 @@ describe('actions utils', () => {
         types: [{ type: 'test' }, { type: 'test', payload: () => ({}) }],
         method: 'test',
       };
+
       wrapInDispatch(dispatchSpy, opts).catch((err) =>
         expect(err).to.be.a('Error'),
       );
+
       expect(dispatchSpy).to.have.been.calledOnce;
     });
 

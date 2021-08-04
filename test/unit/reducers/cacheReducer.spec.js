@@ -3,7 +3,9 @@
 import reducer from 'reducer';
 import { actionTypes } from 'constants';
 import { benchmark } from 'kelonio';
-import largeAction from './stub.json';
+import largeAction from './__stubs__/one_mb_action.json';
+import appState from './__stubs__/app_state.json';
+import { debug } from 'debug';
 // import * as mutate from 'utils/mutate';
 
 const collection = 'testCollection';
@@ -76,7 +78,7 @@ const whereDateKeyLessOneNS = {
   orderBy: ['dateKey'],
 };
 
-const orderDateLimit2 = {
+const orderDateLimitTwo = {
   collection,
   storeAs: 'testStoreAs',
   orderBy: ['dateKey', 'desc'],
@@ -252,7 +254,7 @@ describe('cacheReducer', () => {
     it('SET_LISTENER pagination with startAt', () => {
       const stateDesc = {
         meta: {
-          ...orderDateLimit2,
+          ...orderDateLimitTwo,
           startAt: { seconds: 2, nanoseconds: 2 },
         },
         payload: { name: 'testStoreAs' },
@@ -262,7 +264,6 @@ describe('cacheReducer', () => {
       stateAsc.meta.orderBy = ['dateKey'];
 
       const passA = reducer(primedState, stateDesc);
-
       expect(passA.cache.testStoreAs).to.eql({
         ordered: [
           ['testCollection', 'testDocId4'],
@@ -271,8 +272,8 @@ describe('cacheReducer', () => {
         collection: 'testCollection',
         storeAs: 'testStoreAs',
         orderBy: ['dateKey', 'desc'],
-        limit: 2,
         startAt: { seconds: 2, nanoseconds: 2 },
+        limit: 2,
         via: 'memory',
       });
 
@@ -294,7 +295,7 @@ describe('cacheReducer', () => {
     it('SET_LISTENER pagination with startAfter', () => {
       const stateDesc = {
         meta: {
-          ...orderDateLimit2,
+          ...orderDateLimitTwo,
           startAfter: { seconds: 2, nanoseconds: 2 },
         },
         payload: { name: 'testStoreAs' },
@@ -334,7 +335,7 @@ describe('cacheReducer', () => {
 
     it('SET_LISTENER pagination with endAt', () => {
       const stateDesc = {
-        meta: { ...orderDateLimit2, endAt: { seconds: 2, nanoseconds: 2 } },
+        meta: { ...orderDateLimitTwo, endAt: { seconds: 2, nanoseconds: 2 } },
         payload: { name: 'testStoreAs' },
         type: actionTypes.SET_LISTENER,
       };
@@ -372,7 +373,10 @@ describe('cacheReducer', () => {
 
     it('SET_LISTENER pagination with endBefore', () => {
       const stateDesc = {
-        meta: { ...orderDateLimit2, endBefore: { seconds: 2, nanoseconds: 2 } },
+        meta: {
+          ...orderDateLimitTwo,
+          endBefore: { seconds: 2, nanoseconds: 2 },
+        },
         payload: { name: 'testStoreAs' },
         type: actionTypes.SET_LISTENER,
       };
@@ -618,12 +622,37 @@ describe('cacheReducer', () => {
       const pass2 = reducer(pass1, action2);
       const pass3 = reducer(pass2, action3);
 
-      expect(pass2.cache.testOne.ordered[0][1]).to.eql(first.id);
-      expect(pass2.cache.testTwo.ordered[0]).to.eql(undefined);
+      expect(pass2.cache.testOne).to.eql({
+        ordered: [['testCollection', 'testDocId1']],
+        collection: 'testCollection',
+        storeAs: 'testOne',
+        where: [['key1', '<=', 1]],
+        via: 'cache',
+      });
+
+      expect(pass2.cache.testTwo).to.eql({
+        ordered: [],
+        collection: 'testCollection',
+        storeAs: 'testTwo',
+        where: [['key1', '>=', 2]],
+        via: 'cache',
+      });
 
       // doc moved from testOne to testTwo query
-      expect(pass3.cache.testOne.ordered[0]).to.eql(undefined);
-      expect(pass3.cache.testTwo.ordered[0][1]).to.eql(second.id);
+      expect(pass3.cache.testOne).to.eql({
+        ordered: [],
+        collection: 'testCollection',
+        storeAs: 'testOne',
+        where: [['key1', '<=', 1]],
+        via: 'memory',
+      });
+      expect(pass3.cache.testTwo).to.eql({
+        ordered: [['testCollection', 'testDocId1']],
+        collection: 'testCollection',
+        storeAs: 'testTwo',
+        where: [['key1', '>=', 2]],
+        via: 'memory',
+      });
     });
 
     it('less than', () => {
@@ -1677,9 +1706,28 @@ describe('cacheReducer', () => {
   });
 
   describe('Speed test', () => {
-    it('runs fast', async function () {
+    before(() => {
+      debug.disable('rrfVerbose:*');
+    });
+
+    it('<16ms processing large action and state', async function () {
       // eslint-disable-next-line no-invalid-this
-      this.timeout(30_000);
+      this.timeout(5_000);
+
+      const manyActions = new Array(1).fill(null).map(() => largeAction);
+
+      await benchmark.record(
+        () => manyActions.forEach((action) => reducer(appState, action)),
+        {
+          iterations: 20,
+          meanUnder: 20,
+        },
+      );
+    });
+
+    it('<16ms to process stores 2,000 docs', async function () {
+      // eslint-disable-next-line no-invalid-this
+      this.timeout(5_000);
 
       const generate = (limit) =>
         new Array(limit).fill(null).map(() => ({
@@ -1693,44 +1741,55 @@ describe('cacheReducer', () => {
           obj: { a: 1, b: { x: 0 }, c: { z: 9 } },
         }));
 
-      const actions = [
-        {
-          meta: whereKey1IsValue1,
-          payload: setPayload(generate(5_000)),
-          type: actionTypes.LISTENER_RESPONSE,
-        },
-        {
-          meta: whereOtherIsTest,
-          payload: { name: 'testStoreAs2' },
-          type: actionTypes.SET_LISTENER,
-        },
-        {
-          type: actionTypes.MUTATE_START,
-          payload: {
-            meta: { collection: testDocId0.path, doc: testDocId0.id },
-            data: [
-              {
-                path: testDocId0.path,
-                id: testDocId0.id,
-                dateKey: { seconds: 99, nanoseconds: 99 },
-              },
-            ],
-          },
-        },
-      ];
+      const action = {
+        meta: whereKey1IsValue1,
+        payload: setPayload(generate(2_000)),
+        type: actionTypes.LISTENER_RESPONSE,
+      };
 
-      const count = 10;
-      const manyActions = new Array(count)
-        .fill(null)
-        .map(() => actions[Math.floor(Math.random() * actions.length)]);
+      await benchmark.record(() => reducer(appState, action), {
+        iterations: 50,
+        meanUnder: 16,
+      });
+    });
+
+    it('<16ms to process 100 mutates', async function () {
+      // eslint-disable-next-line no-invalid-this
+      this.timeout(5_000);
+
+      const actions = {
+        type: actionTypes.MUTATE_START,
+        payload: {
+          meta: { collection: testDocId0.path, doc: testDocId0.id },
+          data: [
+            {
+              path: testDocId0.path,
+              id: testDocId0.id,
+              dateKey: { seconds: 99, nanoseconds: 99 },
+            },
+          ],
+        },
+      };
+
+      const manyActions = new Array(100).fill(null).map(() => actions);
 
       await benchmark.record(
-        () => [largeAction].forEach((action) => reducer(primedState, action)),
+        () => manyActions.forEach((action) => reducer(appState, action)),
         {
-          iterations: 10,
-          meanUnder: 1,
+          iterations: 50,
+          meanUnder: 16,
         },
       );
+    });
+
+    it('<2ms to process 1MB action', async function () {
+      // eslint-disable-next-line no-invalid-this
+      this.timeout(5_000);
+
+      await benchmark.record(() => reducer(primedState, largeAction), {
+        iterations: 50,
+        meanUnder: 2,
+      });
     });
   });
 });
