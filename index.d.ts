@@ -244,10 +244,9 @@ export namespace FirestoreReducer {
     queries: Data<ReduxFirestoreQuerySetting & (Dictionary<any> | any)>;
     cache: CachedData<Schema> & {
       database: CacheDatabase<Schema>;
-      private databaseOverrides: CacheDatabase<Schema> | null;
+      databaseOverrides: CacheDatabase<Schema> | null;
       [queryAlias]: ReduxFirestoreQuerySetting & {
-        docs: EntityWithIdPath<Schema>[];
-        private ordered: [entityId, entityPath][];
+        ordered: [entityId, entityPath][];
       };
     };
     status: {

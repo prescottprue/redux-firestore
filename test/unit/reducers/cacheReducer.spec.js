@@ -2,15 +2,19 @@
 /* eslint-disable no-console */
 import reducer from 'reducer';
 import { actionTypes } from 'constants';
+import { benchmark } from 'kelonio';
+import largeAction from './__stubs__/one_mb_action.json';
+import appState from './__stubs__/app_state.json';
+import { debug } from 'debug';
+// import * as mutate from 'utils/mutate';
 
 const collection = 'testCollection';
 const another = 'anotherCollection';
 const path = `${collection}`;
 const anotherPath = `${another}`;
-const initialState = {
-  data: { testStoreAs: { obsoleteDocId: {} } },
-  ordered: {},
-};
+
+// --- data
+
 const testDocId0 = {
   dateKey: { seconds: 0, nanoseconds: 0 },
   id: 'testDocId0',
@@ -36,6 +40,13 @@ const testDocId4 = {
   id: 'testDocId4',
 };
 
+// -- states
+
+const initialState = {
+  data: { testStoreAs: { obsoleteDocId: {} } },
+  ordered: {},
+};
+
 const primedState = {
   cache: {
     database: {
@@ -44,25 +55,57 @@ const primedState = {
   },
 };
 
+// -- queries
+
+const whereKey1IsValue1 = {
+  collection,
+  storeAs: 'testStoreAs',
+  where: [['key1', '==', 'value1']],
+  orderBy: ['key1'],
+};
+
+const whereOtherIsTest = {
+  collection,
+  storeAs: 'testStoreAs2',
+  where: [['other', '==', 'test']],
+  orderBy: ['key1'],
+};
+
+const whereDateKeyLessOneNS = {
+  collection,
+  storeAs: 'testStoreAs2',
+  where: [['dateKey', '<', { seconds: 0, nanoseconds: 1 }]],
+  orderBy: ['dateKey'],
+};
+
+const orderDateLimitTwo = {
+  collection,
+  storeAs: 'testStoreAs',
+  orderBy: ['dateKey', 'desc'],
+  limit: 2,
+};
+
+// --- payload
+
+const setPayload = (docs, fromCache = true) => ({
+  data: docs.reduce((data, doc) => ({ ...data, [doc.id]: doc }), {}),
+  ordered: docs,
+  fromCache,
+});
+
 describe('cacheReducer', () => {
   describe('optimistic reads', () => {
     it('SET_LISTENER returns undefined if nothing in memory', () => {
       // Request to set listener
       const action1 = {
-        meta: {
-          collection,
-          storeAs: 'testStoreAs',
-          where: [['key1', '==', 'value1']],
-          orderBy: ['key1'],
-          fields: ['id', 'other'],
-        },
+        meta: whereKey1IsValue1,
         payload: { name: 'testStoreAs' },
         type: actionTypes.SET_LISTENER,
       };
 
       const pass1 = reducer(initialState, action1);
 
-      expect(pass1.cache.testStoreAs.docs).to.eql(undefined);
+      expect(pass1.cache.testStoreAs.ordered).to.eql(undefined);
     });
 
     it('SET_LISTENER returns data if in memory', () => {
@@ -70,29 +113,13 @@ describe('cacheReducer', () => {
 
       // Initial seed
       const action1 = {
-        meta: {
-          collection,
-          storeAs: 'testStoreAs',
-          where: [['key1', '==', 'value1']],
-          orderBy: ['key1'],
-          fields: ['id', 'other'],
-        },
-        payload: {
-          data: { [doc1.id]: doc1 },
-          ordered: [doc1],
-          fromCache: true,
-        },
+        meta: whereKey1IsValue1,
+        payload: setPayload([doc1]),
         type: actionTypes.LISTENER_RESPONSE,
       };
 
       const action2 = {
-        meta: {
-          collection,
-          storeAs: 'testStoreAs2',
-          where: [['other', '==', 'test']],
-          orderBy: ['key1'],
-          fields: ['id', 'other'],
-        },
+        meta: whereOtherIsTest,
         payload: { name: 'testStoreAs2' },
         type: actionTypes.SET_LISTENER,
       };
@@ -100,53 +127,21 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass2.cache.testStoreAs2.docs[0]).to.eql({
-        other: 'test',
-        id: 'testDocId1',
-        path,
-      });
+      expect(pass2.cache.testStoreAs2.ordered).to.eql([
+        ['testCollection', 'testDocId1'],
+      ]);
     });
 
     it('SET_LISTENER returns smaller filtered date', () => {
-      const thresholdDate = { seconds: 0, nanoseconds: 1 };
-
-      const doc1 = {
-        dateKey: { seconds: 0, nanoseconds: 0 },
-        other: 'test',
-        id: 'testDocId1',
-        path,
-      };
-      const doc2 = {
-        dateKey: { seconds: 1, nanoseconds: 1 },
-        other: 'test',
-        id: 'testDocId2',
-        path,
-      };
-
       // Initial seed
       const action1 = {
-        meta: {
-          collection,
-          storeAs: 'testStoreAs',
-          orderBy: ['dateKey'],
-          fields: ['id', 'other'],
-        },
-        payload: {
-          data: { [doc1.id]: doc1, [doc2.id]: doc2 },
-          ordered: [doc1, doc2],
-          fromCache: true,
-        },
+        meta: whereDateKeyLessOneNS,
+        payload: setPayload([testDocId0, testDocId1]),
         type: actionTypes.LISTENER_RESPONSE,
       };
 
       const action2 = {
-        meta: {
-          collection,
-          storeAs: 'testStoreAs2',
-          where: [['dateKey', '<', thresholdDate]],
-          orderBy: ['dateKey'],
-          fields: ['id', 'other'],
-        },
+        meta: whereDateKeyLessOneNS,
         payload: { name: 'testStoreAs2' },
         type: actionTypes.SET_LISTENER,
       };
@@ -154,49 +149,22 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass2.cache.testStoreAs2.docs.length).to.eql(1);
-      expect(pass2.cache.testStoreAs2.docs[0].id).to.eql('testDocId1');
+      expect(pass2.cache.testStoreAs2.ordered.length).to.eql(1);
+      expect(pass2.cache.testStoreAs2.ordered[0][1]).to.eql('testDocId0');
     });
 
     it('SET_LISTENER returns greater filtered date', () => {
-      const thresholdDate = { seconds: 0, nanoseconds: 1 };
-
-      const doc1 = {
-        dateKey: { seconds: 0, nanoseconds: 0 },
-        other: 'test',
-        id: 'testDocId1',
-        path,
-      };
-      const doc2 = {
-        dateKey: { seconds: 1, nanoseconds: 1 },
-        other: 'test',
-        id: 'testDocId2',
-        path,
-      };
-
       // Initial seed
       const action1 = {
-        meta: {
-          collection,
-          storeAs: 'testStoreAs',
-          orderBy: ['dateKey'],
-          fields: ['id', 'other'],
-        },
-        payload: {
-          data: { [doc1.id]: doc1, [doc2.id]: doc2 },
-          ordered: [doc1, doc2],
-          fromCache: true,
-        },
+        meta: whereDateKeyLessOneNS,
+        payload: setPayload([testDocId0, testDocId1]),
         type: actionTypes.LISTENER_RESPONSE,
       };
 
       const action2 = {
         meta: {
-          collection,
-          storeAs: 'testStoreAs2',
-          where: [['dateKey', '>', thresholdDate]],
-          orderBy: ['dateKey'],
-          fields: ['id', 'other'],
+          ...whereDateKeyLessOneNS,
+          where: [['dateKey', '>', { seconds: 0, nanoseconds: 1 }]],
         },
         payload: { name: 'testStoreAs2' },
         type: actionTypes.SET_LISTENER,
@@ -205,55 +173,22 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass2.cache.testStoreAs2.docs.length).to.eql(1);
-      expect(pass2.cache.testStoreAs2.docs[0].id).to.eql('testDocId2');
+      expect(pass2.cache.testStoreAs2.ordered.length).to.eql(1);
+      expect(pass2.cache.testStoreAs2.ordered[0][1]).to.eql('testDocId1');
     });
 
     it('SET_LISTENER returns smaller or equal filtered date', () => {
-      const thresholdDate = { seconds: 1, nanoseconds: 1 };
-
-      const doc1 = {
-        dateKey: { seconds: 0, nanoseconds: 0 },
-        other: 'test',
-        id: 'testDocId1',
-        path,
-      };
-      const doc2 = {
-        dateKey: { seconds: 1, nanoseconds: 1 },
-        other: 'test',
-        id: 'testDocId2',
-        path,
-      };
-      const doc3 = {
-        dateKey: { seconds: 3, nanoseconds: 3 },
-        other: 'test',
-        id: 'testDocId3',
-        path,
-      };
-
       // Initial seed
       const action1 = {
-        meta: {
-          collection,
-          storeAs: 'testStoreAs',
-          orderBy: ['dateKey'],
-          fields: ['id', 'other'],
-        },
-        payload: {
-          data: { [doc1.id]: doc1, [doc2.id]: doc2, [doc3.id]: doc3 },
-          ordered: [doc1, doc2],
-          fromCache: true,
-        },
+        meta: whereDateKeyLessOneNS,
+        payload: setPayload([testDocId0, testDocId1, testDocId3]),
         type: actionTypes.LISTENER_RESPONSE,
       };
 
       const action2 = {
         meta: {
-          collection,
-          storeAs: 'testStoreAs2',
-          where: [['dateKey', '<=', thresholdDate]],
-          orderBy: ['dateKey'],
-          fields: ['id', 'other'],
+          ...whereDateKeyLessOneNS,
+          where: [['dateKey', '<=', { seconds: 1, nanoseconds: 1 }]],
         },
         payload: { name: 'testStoreAs2' },
         type: actionTypes.SET_LISTENER,
@@ -262,56 +197,23 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass2.cache.testStoreAs2.docs.length).to.eql(2);
-      expect(pass2.cache.testStoreAs2.docs[0].id).to.eql('testDocId1');
-      expect(pass2.cache.testStoreAs2.docs[1].id).to.eql('testDocId2');
+      expect(pass2.cache.testStoreAs2.ordered.length).to.eql(2);
+      expect(pass2.cache.testStoreAs2.ordered[0][1]).to.eql('testDocId0');
+      expect(pass2.cache.testStoreAs2.ordered[1][1]).to.eql('testDocId1');
     });
 
     it('SET_LISTENER returns greater or equal filtered date', () => {
-      const thresholdDate = { seconds: 1, nanoseconds: 1 };
-
-      const doc1 = {
-        dateKey: { seconds: 0, nanoseconds: 0 },
-        other: 'test',
-        id: 'testDocId1',
-        path,
-      };
-      const doc2 = {
-        dateKey: { seconds: 1, nanoseconds: 1 },
-        other: 'test',
-        id: 'testDocId2',
-        path,
-      };
-      const doc3 = {
-        dateKey: { seconds: 3, nanoseconds: 3 },
-        other: 'test',
-        id: 'testDocId3',
-        path,
-      };
-
       // Initial seed
       const action1 = {
-        meta: {
-          collection,
-          storeAs: 'testStoreAs',
-          orderBy: ['dateKey'],
-          fields: ['id', 'other'],
-        },
-        payload: {
-          data: { [doc1.id]: doc1, [doc2.id]: doc2, [doc3.id]: doc3 },
-          ordered: [doc1, doc2],
-          fromCache: true,
-        },
+        meta: whereDateKeyLessOneNS,
+        payload: setPayload([testDocId0, testDocId1, testDocId3]),
         type: actionTypes.LISTENER_RESPONSE,
       };
 
       const action2 = {
         meta: {
-          collection,
-          storeAs: 'testStoreAs2',
-          where: [['dateKey', '>=', thresholdDate]],
-          orderBy: ['dateKey'],
-          fields: ['id', 'other'],
+          ...whereDateKeyLessOneNS,
+          where: [['dateKey', '>=', { seconds: 1, nanoseconds: 1 }]],
         },
         payload: { name: 'testStoreAs2' },
         type: actionTypes.SET_LISTENER,
@@ -320,56 +222,23 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass2.cache.testStoreAs2.docs.length).to.eql(2);
-      expect(pass2.cache.testStoreAs2.docs[0].id).to.eql('testDocId2');
-      expect(pass2.cache.testStoreAs2.docs[1].id).to.eql('testDocId3');
+      expect(pass2.cache.testStoreAs2.ordered.length).to.eql(2);
+      expect(pass2.cache.testStoreAs2.ordered[0][1]).to.eql('testDocId1');
+      expect(pass2.cache.testStoreAs2.ordered[1][1]).to.eql('testDocId3');
     });
 
     it('SET_LISTENER returns exact filtered date', () => {
-      const thresholdDate = { seconds: 1, nanoseconds: 1 };
-
-      const doc1 = {
-        dateKey: { seconds: 0, nanoseconds: 0 },
-        other: 'test',
-        id: 'testDocId1',
-        path,
-      };
-      const doc2 = {
-        dateKey: { seconds: 1, nanoseconds: 1 },
-        other: 'test',
-        id: 'testDocId2',
-        path,
-      };
-      const doc3 = {
-        dateKey: { seconds: 3, nanoseconds: 3 },
-        other: 'test',
-        id: 'testDocId3',
-        path,
-      };
-
       // Initial seed
       const action1 = {
-        meta: {
-          collection,
-          storeAs: 'testStoreAs',
-          orderBy: ['dateKey'],
-          fields: ['id', 'other'],
-        },
-        payload: {
-          data: { [doc1.id]: doc1, [doc2.id]: doc2, [doc3.id]: doc3 },
-          ordered: [doc1, doc2],
-          fromCache: true,
-        },
+        meta: whereDateKeyLessOneNS,
+        payload: setPayload([testDocId0, testDocId1, testDocId3]),
         type: actionTypes.LISTENER_RESPONSE,
       };
 
       const action2 = {
         meta: {
-          collection,
-          storeAs: 'testStoreAs2',
-          where: [['dateKey', '==', thresholdDate]],
-          orderBy: ['dateKey'],
-          fields: ['id', 'other'],
+          ...whereDateKeyLessOneNS,
+          where: [['dateKey', '==', { seconds: 1, nanoseconds: 1 }]],
         },
         payload: { name: 'testStoreAs2' },
         type: actionTypes.SET_LISTENER,
@@ -378,18 +247,15 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass2.cache.testStoreAs2.docs.length).to.eql(1);
-      expect(pass2.cache.testStoreAs2.docs[0].id).to.eql('testDocId2');
+      expect(pass2.cache.testStoreAs2.ordered.length).to.eql(1);
+      expect(pass2.cache.testStoreAs2.ordered[0][1]).to.eql('testDocId1');
     });
 
     it('SET_LISTENER pagination with startAt', () => {
       const stateDesc = {
         meta: {
-          collection,
-          storeAs: 'testStoreAs',
-          orderBy: ['dateKey', 'desc'],
+          ...orderDateLimitTwo,
           startAt: { seconds: 2, nanoseconds: 2 },
-          limit: 2,
         },
         payload: { name: 'testStoreAs' },
         type: actionTypes.SET_LISTENER,
@@ -398,24 +264,39 @@ describe('cacheReducer', () => {
       stateAsc.meta.orderBy = ['dateKey'];
 
       const passA = reducer(primedState, stateDesc);
-      expect(passA.cache.testStoreAs.docs[0].id).to.eql('testDocId1');
-      expect(passA.cache.testStoreAs.docs[1].id).to.eql('testDocId0');
-      expect(passA.cache.testStoreAs.docs[2]).to.eql(undefined);
+      expect(passA.cache.testStoreAs).to.eql({
+        ordered: [
+          ['testCollection', 'testDocId4'],
+          ['testCollection', 'testDocId3'],
+        ],
+        collection: 'testCollection',
+        storeAs: 'testStoreAs',
+        orderBy: ['dateKey', 'desc'],
+        startAt: { seconds: 2, nanoseconds: 2 },
+        limit: 2,
+        via: 'memory',
+      });
 
       const passB = reducer(primedState, stateAsc);
-      expect(passB.cache.testStoreAs.docs[0].id).to.eql('testDocId3');
-      expect(passB.cache.testStoreAs.docs[1].id).to.eql('testDocId4');
-      expect(passB.cache.testStoreAs.docs[2]).to.eql(undefined);
+      expect(passB.cache.testStoreAs).to.eql({
+        ordered: [
+          ['testCollection', 'testDocId0'],
+          ['testCollection', 'testDocId1'],
+        ],
+        collection: 'testCollection',
+        storeAs: 'testStoreAs',
+        orderBy: ['dateKey'],
+        limit: 2,
+        startAt: { seconds: 2, nanoseconds: 2 },
+        via: 'memory',
+      });
     });
 
     it('SET_LISTENER pagination with startAfter', () => {
       const stateDesc = {
         meta: {
-          collection,
-          storeAs: 'testStoreAs',
-          orderBy: ['dateKey', 'desc'],
+          ...orderDateLimitTwo,
           startAfter: { seconds: 2, nanoseconds: 2 },
-          limit: 2,
         },
         payload: { name: 'testStoreAs' },
         type: actionTypes.SET_LISTENER,
@@ -424,25 +305,37 @@ describe('cacheReducer', () => {
       stateAsc.meta.orderBy = ['dateKey', 'asc'];
 
       const passA = reducer(primedState, stateDesc);
-      expect(passA.cache.testStoreAs.docs[0].id).to.eql('testDocId1');
-      expect(passA.cache.testStoreAs.docs[1].id).to.eql('testDocId0');
-      expect(passA.cache.testStoreAs.docs[2]).to.eql(undefined);
+      expect(passA.cache.testStoreAs).to.eql({
+        ordered: [
+          ['testCollection', 'testDocId4'],
+          ['testCollection', 'testDocId3'],
+        ],
+        collection: 'testCollection',
+        storeAs: 'testStoreAs',
+        orderBy: ['dateKey', 'desc'],
+        limit: 2,
+        startAfter: { seconds: 2, nanoseconds: 2 },
+        via: 'memory',
+      });
 
       const passB = reducer(primedState, stateAsc);
-      expect(passB.cache.testStoreAs.docs[0].id).to.eql('testDocId3');
-      expect(passB.cache.testStoreAs.docs[1].id).to.eql('testDocId4');
-      expect(passB.cache.testStoreAs.docs[2]).to.eql(undefined);
+      expect(passB.cache.testStoreAs).to.eql({
+        ordered: [
+          ['testCollection', 'testDocId0'],
+          ['testCollection', 'testDocId1'],
+        ],
+        collection: 'testCollection',
+        storeAs: 'testStoreAs',
+        orderBy: ['dateKey', 'asc'],
+        limit: 2,
+        startAfter: { seconds: 2, nanoseconds: 2 },
+        via: 'memory',
+      });
     });
 
     it('SET_LISTENER pagination with endAt', () => {
       const stateDesc = {
-        meta: {
-          collection,
-          storeAs: 'testStoreAs',
-          orderBy: ['dateKey', 'desc'],
-          endAt: { seconds: 2, nanoseconds: 2 },
-          limit: 2,
-        },
+        meta: { ...orderDateLimitTwo, endAt: { seconds: 2, nanoseconds: 2 } },
         payload: { name: 'testStoreAs' },
         type: actionTypes.SET_LISTENER,
       };
@@ -450,24 +343,39 @@ describe('cacheReducer', () => {
       stateAsc.meta.orderBy = ['dateKey', 'asc'];
 
       const passA = reducer(primedState, stateDesc);
-      expect(passA.cache.testStoreAs.docs[0].id).to.eql('testDocId4');
-      expect(passA.cache.testStoreAs.docs[1].id).to.eql('testDocId3');
-      expect(passA.cache.testStoreAs.docs[2]).to.eql(undefined);
+      expect(passA.cache.testStoreAs).to.eql({
+        ordered: [
+          ['testCollection', 'testDocId1'],
+          ['testCollection', 'testDocId0'],
+        ],
+        collection: 'testCollection',
+        storeAs: 'testStoreAs',
+        orderBy: ['dateKey', 'desc'],
+        limit: 2,
+        endAt: { seconds: 2, nanoseconds: 2 },
+        via: 'memory',
+      });
 
       const passB = reducer(primedState, stateAsc);
-      expect(passB.cache.testStoreAs.docs[0].id).to.eql('testDocId0');
-      expect(passB.cache.testStoreAs.docs[1].id).to.eql('testDocId1');
-      expect(passB.cache.testStoreAs.docs[2]).to.eql(undefined);
+      expect(passB.cache.testStoreAs).to.eql({
+        ordered: [
+          ['testCollection', 'testDocId3'],
+          ['testCollection', 'testDocId4'],
+        ],
+        collection: 'testCollection',
+        storeAs: 'testStoreAs',
+        orderBy: ['dateKey', 'asc'],
+        limit: 2,
+        endAt: { seconds: 2, nanoseconds: 2 },
+        via: 'memory',
+      });
     });
 
     it('SET_LISTENER pagination with endBefore', () => {
       const stateDesc = {
         meta: {
-          collection,
-          storeAs: 'testStoreAs',
-          orderBy: ['dateKey', 'desc'],
+          ...orderDateLimitTwo,
           endBefore: { seconds: 2, nanoseconds: 2 },
-          limit: 2,
         },
         payload: { name: 'testStoreAs' },
         type: actionTypes.SET_LISTENER,
@@ -476,269 +384,31 @@ describe('cacheReducer', () => {
       stateAsc.meta.orderBy = ['dateKey'];
 
       const passA = reducer(primedState, stateDesc);
-      expect(passA.cache.testStoreAs.docs[0].id).to.eql('testDocId4');
-      expect(passA.cache.testStoreAs.docs[1].id).to.eql('testDocId3');
-      expect(passA.cache.testStoreAs.docs[2]).to.eql(undefined);
+      expect(passA.cache.testStoreAs).to.eql({
+        ordered: [
+          ['testCollection', 'testDocId1'],
+          ['testCollection', 'testDocId0'],
+        ],
+        collection: 'testCollection',
+        storeAs: 'testStoreAs',
+        orderBy: ['dateKey', 'desc'],
+        limit: 2,
+        endBefore: { seconds: 2, nanoseconds: 2 },
+        via: 'memory',
+      });
 
       const passB = reducer(primedState, stateAsc);
-      expect(passB.cache.testStoreAs.docs[0].id).to.eql('testDocId0');
-      expect(passB.cache.testStoreAs.docs[1].id).to.eql('testDocId1');
-      expect(passB.cache.testStoreAs.docs[2]).to.eql(undefined);
-    });
-  });
-
-  describe('query fields', () => {
-    it('query fields return partial document', () => {
-      const doc1 = { key1: 'value1', other: 'test', id: 'testDocId1', path };
-      const doc2 = { key1: 'value1', other: 'limit', id: 'testDocId2', path };
-      const doc3 = { key1: 'value1', other: 'third', id: 'testDocId3', path };
-      const doc4 = { key1: 'value1', other: 'fourth', id: 'testDocId4', path };
-
-      // Initial seed
-      const action1 = {
-        meta: {
-          collection,
-          storeAs: 'testStoreAs',
-          where: [['key1', '==', 'value1']],
-          orderBy: ['key1'],
-          fields: ['id', 'other'],
-          limit: 2,
-        },
-        payload: {
-          data: { [doc1.id]: doc1, [doc2.id]: doc2, [doc3.id]: doc3 },
-          ordered: [doc1, doc2, doc3],
-          fromCache: true,
-        },
-        type: actionTypes.LISTENER_RESPONSE,
-      };
-      const action2 = {
-        type: actionTypes.OPTIMISTIC_ADDED,
-        meta: {
-          collection,
-          doc: doc4.id,
-        },
-        payload: { data: doc4 },
-      };
-
-      const pass1 = reducer(initialState, action1);
-      const pass2 = reducer(pass1, action2);
-
-      expect(pass1.cache.testStoreAs.docs[0]).to.eql({
-        other: 'test',
-        id: 'testDocId1',
-        path,
-      });
-      expect(pass1.cache.testStoreAs.docs[1]).to.eql({
-        other: 'limit',
-        id: 'testDocId2',
-        path,
-      });
-      expect(pass2.cache.testStoreAs.docs[1]).to.eql({
-        other: 'limit',
-        id: 'testDocId2',
-        path,
-      });
-
-      expect(pass2.cache.testStoreAs.docs[2]).to.eql(undefined);
-    });
-
-    it('empty fields return entire document', () => {
-      const doc1 = { key1: 'value1', other: 'test', id: 'testDocId1', path };
-
-      // Initial seed
-      const action1 = {
-        meta: {
-          collection,
-          storeAs: 'testStoreAs',
-          where: [['key1', '!=', 'value2']],
-          orderBy: ['key1'],
-        },
-        payload: {
-          data: { [doc1.id]: doc1 },
-          ordered: [doc1],
-          fromCache: true,
-        },
-        type: actionTypes.LISTENER_RESPONSE,
-      };
-
-      const pass1 = reducer(initialState, action1);
-
-      expect(pass1.cache.testStoreAs.docs[0]).to.eql(doc1);
-    });
-  });
-
-  describe('fast populates', () => {
-    it('populate one-to-one', () => {
-      const doc1 = {
-        key1: 'value1',
-        anotherId: 'anotherDocId1',
-        id: 'testDocId1',
-        path,
-      };
-      const doc2 = { other: 'test', id: 'anotherDocId1', path: anotherPath };
-
-      // Initial seed
-      const action1 = {
-        meta: {
-          collection,
-          storeAs: 'testStoreAs',
-          where: [['key1', 'in', ['value1']]],
-          orderBy: ['value1'],
-          fields: ['id', 'key1', 'anotherDocument'],
-          populates: [['anotherId', anotherPath, 'anotherDocument']],
-        },
-        payload: {
-          data: { [doc1.id]: doc1 },
-          ordered: [doc1],
-          fromCache: true,
-        },
-        type: actionTypes.LISTENER_RESPONSE,
-      };
-
-      const action2 = {
-        meta: {
-          collection: another,
-          storeAs: 'anotherStoreAs',
-        },
-        payload: {
-          data: { [doc2.id]: doc2 },
-          ordered: [doc2],
-          fromCache: true,
-        },
-        type: actionTypes.LISTENER_RESPONSE,
-      };
-
-      const pass1 = reducer(initialState, action1);
-      const pass2 = reducer(pass1, action2);
-
-      expect(pass1.cache.testStoreAs.docs[0]).to.eql({
-        id: 'testDocId1',
-        key1: 'value1',
-        path,
-      });
-      expect(pass2.cache.testStoreAs.docs[0]).to.eql({
-        anotherDocument: doc2,
-        key1: 'value1',
-        id: 'testDocId1',
-        path,
-      });
-    });
-
-    it('populate many-to-one', () => {
-      const doc1 = {
-        key1: 'value1',
-        anotherIds: ['anotherDocId2', 'anotherDocId1'],
-        id: 'testDocId1',
-        path,
-      };
-
-      const doc2 = { other: 'test', id: 'anotherDocId1', path: anotherPath };
-      const doc3 = { other: 'test', id: 'anotherDocId2', path: anotherPath };
-
-      // Initial seed
-      const action1 = {
-        meta: {
-          collection,
-          storeAs: 'testStoreAs',
-          where: [['key1', '==', 'value1']],
-          orderBy: ['value1'],
-          fields: ['id', 'key1', 'others'],
-          populates: [['anotherIds', anotherPath, 'others']],
-        },
-        payload: {
-          data: { [doc1.id]: doc1 },
-          ordered: [doc1],
-          fromCache: true,
-        },
-        type: actionTypes.LISTENER_RESPONSE,
-      };
-
-      const action2 = {
-        meta: {
-          collection: another,
-          storeAs: 'anotherStoreAs',
-        },
-        payload: {
-          data: { [doc2.id]: doc2, [doc3.id]: doc3 },
-          ordered: [doc2, doc3],
-          fromCache: true,
-        },
-        type: actionTypes.LISTENER_RESPONSE,
-      };
-
-      const pass1 = reducer(initialState, action1);
-      const pass2 = reducer(pass1, action2);
-
-      expect(pass1.cache.testStoreAs.docs[0]).to.eql({
-        id: 'testDocId1',
-        key1: 'value1',
-        path,
-      });
-
-      expect(pass2.cache.testStoreAs.docs[0]).to.eql({
-        others: [doc3, doc2],
-        key1: 'value1',
-        id: 'testDocId1',
-        path,
-      });
-    });
-
-    it('populate nested', () => {
-      const doc1 = {
-        key1: 'value1',
-        sub: { anotherIds: ['anotherDocId2', 'anotherDocId1'] },
-        id: 'testDocId1',
-        path,
-      };
-
-      const doc2 = { other: 'test', id: 'anotherDocId1', path: anotherPath };
-      const doc3 = { other: 'test', id: 'anotherDocId2', path: anotherPath };
-
-      // Initial seed
-      const action1 = {
-        meta: {
-          collection,
-          storeAs: 'testStoreAs',
-          where: [['key1', '==', 'value1']],
-          orderBy: ['value1'],
-          fields: ['id', 'key1', 'others'],
-          populates: [['sub.anotherIds', anotherPath, 'others']],
-        },
-        payload: {
-          data: { [doc1.id]: doc1 },
-          ordered: [doc1],
-          fromCache: true,
-        },
-        type: actionTypes.LISTENER_RESPONSE,
-      };
-
-      const action2 = {
-        meta: {
-          collection: another,
-          storeAs: 'anotherStoreAs',
-        },
-        payload: {
-          data: { [doc2.id]: doc2, [doc3.id]: doc3 },
-          ordered: [doc2, doc3],
-          fromCache: true,
-        },
-        type: actionTypes.LISTENER_RESPONSE,
-      };
-
-      const pass1 = reducer(initialState, action1);
-      const pass2 = reducer(pass1, action2);
-
-      expect(pass1.cache.testStoreAs.docs[0]).to.eql({
-        id: 'testDocId1',
-        key1: 'value1',
-        path,
-      });
-
-      expect(pass2.cache.testStoreAs.docs[0]).to.eql({
-        others: [doc3, doc2],
-        key1: 'value1',
-        id: 'testDocId1',
-        path,
+      expect(passB.cache.testStoreAs).to.eql({
+        ordered: [
+          ['testCollection', 'testDocId3'],
+          ['testCollection', 'testDocId4'],
+        ],
+        collection: 'testCollection',
+        storeAs: 'testStoreAs',
+        orderBy: ['dateKey'],
+        limit: 2,
+        endBefore: { seconds: 2, nanoseconds: 2 },
+        via: 'memory',
       });
     });
   });
@@ -775,8 +445,10 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass1.cache.testStoreAs.docs[0]).to.eql(doc1);
-      expect(pass2.cache.testStoreAs.docs[0]).to.eql({ ...doc1, ...doc2 });
+      expect(pass1.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
+      expect(pass2.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
+      expect(pass2.cache.database[collection][doc1.id]).to.eql(doc1);
+      expect(pass2.cache.databaseOverrides[collection][doc1.id]).to.eql(doc2);
     });
 
     it('override a document add synchronously', () => {
@@ -809,10 +481,10 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass1.cache.testStoreAs.docs[0]).to.eql(doc1);
-      expect(pass1.cache.testStoreAs.docs[1]).to.eql(undefined);
-      expect(pass2.cache.testStoreAs.docs[0]).to.eql(doc1);
-      expect(pass2.cache.testStoreAs.docs[1]).to.eql(doc2);
+      expect(pass1.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
+      expect(pass1.cache.testStoreAs.ordered[1]).to.eql(undefined);
+      expect(pass2.cache.database[collection][doc1.id]).to.eql(doc1);
+      expect(pass2.cache.databaseOverrides[collection][doc2.id]).to.eql(doc2);
 
       expect(pass1.cache.testStoreAs.ordered[1]).to.eql(undefined);
       expect(pass2.cache.testStoreAs.ordered[1]).to.eql([doc2.path, doc2.id]);
@@ -829,11 +501,7 @@ describe('cacheReducer', () => {
           storeAs: 'testStoreAs',
           where: [['key1', '==', 'value1']],
         },
-        payload: {
-          data: { [doc1.id]: doc1 },
-          ordered: [doc1],
-          fromCache: true,
-        },
+        payload: setPayload([doc1]),
         type: actionTypes.LISTENER_RESPONSE,
       };
 
@@ -859,9 +527,9 @@ describe('cacheReducer', () => {
       const pass2 = reducer(pass1, action2);
       const pass3 = reducer(pass2, action3);
 
-      expect(pass1.cache.testStoreAs.docs[0]).to.eql(doc1);
-      expect(pass2.cache.testStoreAs.docs[0]).to.eql(doc2);
-      expect(pass3.cache.testStoreAs.docs[0]).to.eql(doc1);
+      expect(pass1.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
+      expect(pass2.cache.testStoreAs.ordered[0][1]).to.eql(doc2.id);
+      expect(pass3.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
     });
 
     it('overrides synchronously moves to new query', () => {
@@ -904,12 +572,12 @@ describe('cacheReducer', () => {
       const pass2 = reducer(pass1, action2);
       const pass3 = reducer(pass2, action3);
 
-      expect(pass2.cache.testOne.docs[0]).to.eql(first);
-      expect(pass2.cache.testTwo.docs[0]).to.eql(undefined);
+      expect(pass2.cache.testOne.ordered[0][1]).to.eql(first.id);
+      expect(pass2.cache.testTwo.ordered[0]).to.eql(undefined);
 
       // doc moved from testOne to testTwo query
-      expect(pass3.cache.testOne.docs[0]).to.eql(undefined);
-      expect(pass3.cache.testTwo.docs[0]).to.eql(second);
+      expect(pass3.cache.testOne.ordered[0]).to.eql(undefined);
+      expect(pass3.cache.testTwo.ordered[0][1]).to.eql(second.id);
     });
   });
 
@@ -954,12 +622,37 @@ describe('cacheReducer', () => {
       const pass2 = reducer(pass1, action2);
       const pass3 = reducer(pass2, action3);
 
-      expect(pass2.cache.testOne.docs[0]).to.eql(first);
-      expect(pass2.cache.testTwo.docs[0]).to.eql(undefined);
+      expect(pass2.cache.testOne).to.eql({
+        ordered: [['testCollection', 'testDocId1']],
+        collection: 'testCollection',
+        storeAs: 'testOne',
+        where: [['key1', '<=', 1]],
+        via: 'cache',
+      });
+
+      expect(pass2.cache.testTwo).to.eql({
+        ordered: [],
+        collection: 'testCollection',
+        storeAs: 'testTwo',
+        where: [['key1', '>=', 2]],
+        via: 'cache',
+      });
 
       // doc moved from testOne to testTwo query
-      expect(pass3.cache.testOne.docs[0]).to.eql(undefined);
-      expect(pass3.cache.testTwo.docs[0]).to.eql(second);
+      expect(pass3.cache.testOne).to.eql({
+        ordered: [],
+        collection: 'testCollection',
+        storeAs: 'testOne',
+        where: [['key1', '<=', 1]],
+        via: 'optimistic',
+      });
+      expect(pass3.cache.testTwo).to.eql({
+        ordered: [['testCollection', 'testDocId1']],
+        collection: 'testCollection',
+        storeAs: 'testTwo',
+        where: [['key1', '>=', 2]],
+        via: 'optimistic',
+      });
     });
 
     it('less than', () => {
@@ -1002,12 +695,36 @@ describe('cacheReducer', () => {
       const pass2 = reducer(pass1, action2);
       const pass3 = reducer(pass2, action3);
 
-      expect(pass2.cache.testOne.docs[0]).to.eql(first);
-      expect(pass2.cache.testTwo.docs[0]).to.eql(undefined);
+      expect(pass2.cache.testOne).to.eql({
+        ordered: [['testCollection', 'testDocId1']],
+        collection: 'testCollection',
+        storeAs: 'testOne',
+        where: [['key1', '<', 2]],
+        via: 'cache',
+      });
+      expect(pass2.cache.testTwo).to.eql({
+        ordered: [],
+        collection: 'testCollection',
+        storeAs: 'testTwo',
+        where: [['key1', '>', 1]],
+        via: 'cache',
+      });
 
       // doc moved from testOne to testTwo query
-      expect(pass3.cache.testOne.docs[0]).to.eql(undefined);
-      expect(pass3.cache.testTwo.docs[0]).to.eql(second);
+      expect(pass3.cache.testOne).to.eql({
+        ordered: [],
+        collection: 'testCollection',
+        storeAs: 'testOne',
+        where: [['key1', '<', 2]],
+        via: 'optimistic',
+      });
+      expect(pass3.cache.testTwo).to.eql({
+        ordered: [['testCollection', 'testDocId1']],
+        collection: 'testCollection',
+        storeAs: 'testTwo',
+        where: [['key1', '>', 1]],
+        via: 'optimistic',
+      });
     });
 
     it('not compares', () => {
@@ -1050,12 +767,36 @@ describe('cacheReducer', () => {
       const pass2 = reducer(pass1, action2);
       const pass3 = reducer(pass2, action3);
 
-      expect(pass2.cache.testOne.docs[0]).to.eql(first);
-      expect(pass2.cache.testTwo.docs[0]).to.eql(undefined);
+      expect(pass2.cache.testOne).to.eql({
+        ordered: [['testCollection', 'testDocId1']],
+        collection: 'testCollection',
+        storeAs: 'testOne',
+        where: [['key1', '!=', 2]],
+        via: 'cache',
+      });
+      expect(pass2.cache.testTwo).to.eql({
+        ordered: [],
+        collection: 'testCollection',
+        storeAs: 'testTwo',
+        where: [['key1', '>', 1]],
+        via: 'cache',
+      });
 
       // doc moved from testOne to testTwo query
-      expect(pass3.cache.testOne.docs[0]).to.eql(undefined);
-      expect(pass3.cache.testTwo.docs[0]).to.eql(second);
+      expect(pass3.cache.testOne).to.eql({
+        ordered: [],
+        collection: 'testCollection',
+        storeAs: 'testOne',
+        where: [['key1', '!=', 2]],
+        via: 'optimistic',
+      });
+      expect(pass3.cache.testTwo).to.eql({
+        ordered: [['testCollection', 'testDocId1']],
+        collection: 'testCollection',
+        storeAs: 'testTwo',
+        where: [['key1', '>', 1]],
+        via: 'optimistic',
+      });
     });
 
     it('not in and __name__', () => {
@@ -1102,9 +843,36 @@ describe('cacheReducer', () => {
       const pass2 = reducer(pass1, action2);
       const pass3 = reducer(pass2, action3);
 
+      expect(pass2.cache.notTwo).to.eql({
+        ordered: [['testCollection', 'testDocId1']],
+        collection: 'testCollection',
+        storeAs: 'notTwo',
+        where: [['key1', 'not-in', [2]]],
+        via: 'cache',
+      });
+      expect(pass2.cache.isIdMatch).to.eql({
+        ordered: [['testCollection', 'testDocId1']],
+        collection: 'testCollection',
+        storeAs: 'isIdMatch',
+        where: [['__name__', '==', 'testDocId1']],
+        via: 'cache',
+      });
+
       // doc moved from testOne to testTwo query
-      expect(pass3.cache.notTwo.docs[0]).to.eql(undefined);
-      expect(pass3.cache.isIdMatch.docs[0]).to.eql(second);
+      expect(pass3.cache.notTwo).to.eql({
+        ordered: [],
+        collection: 'testCollection',
+        storeAs: 'notTwo',
+        where: [['key1', 'not-in', [2]]],
+        via: 'optimistic',
+      });
+      expect(pass3.cache.isIdMatch).to.eql({
+        ordered: [['testCollection', 'testDocId1']],
+        collection: 'testCollection',
+        storeAs: 'isIdMatch',
+        where: [['__name__', '==', 'testDocId1']],
+        via: 'cache',
+      });
     });
 
     it('nested compare ', () => {
@@ -1147,12 +915,36 @@ describe('cacheReducer', () => {
       const pass2 = reducer(pass1, action2);
       const pass3 = reducer(pass2, action3);
 
-      expect(pass2.cache.testOne.docs[0]).to.eql(first);
-      expect(pass2.cache.testTwo.docs[0]).to.eql(undefined);
+      expect(pass2.cache.testOne).to.eql({
+        ordered: [['testCollection', 'testDocId1']],
+        collection: 'testCollection',
+        storeAs: 'testOne',
+        where: [['key1.val', 'array-contains', 1]],
+        via: 'cache',
+      });
+      expect(pass2.cache.testTwo).to.eql({
+        ordered: [],
+        collection: 'testCollection',
+        storeAs: 'testTwo',
+        where: [['key1.val', 'array-contains-any', [2]]],
+        via: 'cache',
+      });
 
       // doc moved from testOne to testTwo query
-      expect(pass3.cache.testOne.docs[0]).to.eql(undefined);
-      expect(pass3.cache.testTwo.docs[0]).to.eql(second);
+      expect(pass3.cache.testOne).to.eql({
+        ordered: [],
+        collection: 'testCollection',
+        storeAs: 'testOne',
+        where: [['key1.val', 'array-contains', 1]],
+        via: 'optimistic',
+      });
+      expect(pass3.cache.testTwo).to.eql({
+        ordered: [['testCollection', 'testDocId1']],
+        collection: 'testCollection',
+        storeAs: 'testTwo',
+        where: [['key1.val', 'array-contains-any', [2]]],
+        via: 'optimistic',
+      });
     });
   });
 
@@ -1194,9 +986,9 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass1.cache.testStoreAs.docs[0]).to.eql(doc1);
-      expect(pass2.cache.testStoreAs.docs[0]).to.eql(doc2);
-      expect(pass2.cache.testStoreAs.docs[1]).to.eql(doc1);
+      expect(pass1.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
+      expect(pass2.cache.testStoreAs.ordered[0][1]).to.eql(doc2.id);
+      expect(pass2.cache.testStoreAs.ordered[1][1]).to.eql(doc1.id);
     });
 
     it('Firestore added document removes override', () => {
@@ -1244,9 +1036,9 @@ describe('cacheReducer', () => {
       const pass2 = reducer(pass1, action2);
       const pass3 = reducer(pass2, action3);
 
-      expect(pass1.cache.testStoreAs.docs[0]).to.eql(doc1);
-      expect(pass2.cache.testStoreAs.docs[0]).to.eql(doc2);
-      expect(pass3.cache.testStoreAs.docs[0]).to.eql(doc2);
+      expect(pass1.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
+      expect(pass2.cache.testStoreAs.ordered[0][1]).to.eql(doc2.id);
+      expect(pass3.cache.testStoreAs.ordered[0][1]).to.eql(doc2.id);
 
       expect(pass1.cache.databaseOverrides).to.eql({});
       expect(pass2.cache.databaseOverrides[collection]).to.eql({
@@ -1326,11 +1118,17 @@ describe('cacheReducer', () => {
       const pass4 = reducer(pass3, action4);
 
       // docs
-      expect(pass1.cache.testStoreAs.docs[0]).to.eql(doc1);
-      expect(pass2.cache.testStoreAs.docs[0]).to.eql(doc1a);
+      expect(pass1.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
+      expect(pass2.cache.testStoreAs.ordered[0][1]).to.eql(doc1a.id);
 
-      expect(pass3.cache.testStoreAs.docs).to.eql([doc1a, doc2]);
-      expect(pass4.cache.testStoreAs.docs).to.eql([doc1a, doc2]);
+      expect(pass3.cache.testStoreAs.ordered).to.eql([
+        [path, doc1a.id],
+        [path, doc2.id],
+      ]);
+      expect(pass4.cache.testStoreAs.ordered).to.eql([
+        [path, doc1a.id],
+        [path, doc2.id],
+      ]);
 
       // overrides
       expect(pass1.cache.databaseOverrides).to.eql({});
@@ -1386,11 +1184,11 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass1.cache.lessThanTwo.docs[0]).to.eql(doc2);
-      expect(pass1.cache.lessThanTwo.docs[1]).to.eql(doc1);
+      expect(pass1.cache.lessThanTwo.ordered[0][1]).to.eql(doc2.id);
+      expect(pass1.cache.lessThanTwo.ordered[1][1]).to.eql(doc1.id);
 
-      expect(pass2.cache.lessThanTwo.docs[0]).to.eql(doc1);
-      expect(pass2.cache.lessThanTwo.docs[1]).to.eql(undefined);
+      expect(pass2.cache.lessThanTwo.ordered[0][1]).to.eql(doc1.id);
+      expect(pass2.cache.lessThanTwo.ordered[1]).to.eql(undefined);
 
       // Removing from query !== deleting. Other queries could have the result
       expect(pass1.cache.database.testCollection.testDocId2).to.eql(doc2);
@@ -1433,10 +1231,10 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass1.cache.testStoreAs.docs[0]).to.eql(doc2);
-      expect(pass1.cache.testStoreAs.docs[1]).to.eql(doc1);
-      expect(pass2.cache.testStoreAs.docs[0]).to.eql(doc1);
-      expect(pass2.cache.testStoreAs.docs[1]).to.eql(undefined);
+      expect(pass1.cache.testStoreAs.ordered[0][1]).to.eql(doc2.id);
+      expect(pass1.cache.testStoreAs.ordered[1][1]).to.eql(doc1.id);
+      expect(pass2.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
+      expect(pass2.cache.testStoreAs.ordered[1]).to.eql(undefined);
 
       // Removing from query !== deleting. Other queries could have the result
       expect(pass1.cache.database.testCollection.testDocId2).to.eql(doc2);
@@ -1445,7 +1243,7 @@ describe('cacheReducer', () => {
 
   describe('UNSET_LISTENER', () => {
     it('unset removes query but maintains in database cache', () => {
-      const doc1 = { key1: 'value1', id: 'testDocId1' }; // initial doc
+      const doc1 = { key1: 'value1', id: 'testDocId1', path }; // initial doc
 
       // Initial seed
       const action1 = {
@@ -1474,7 +1272,7 @@ describe('cacheReducer', () => {
       };
 
       const pass1 = reducer(initialState, action1);
-      expect(pass1.cache.testStoreAs.docs).to.eql([doc1]);
+      expect(pass1.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
       expect(pass1.cache.database[collection]).to.eql({ [doc1.id]: doc1 });
 
       const pass2 = reducer(pass1, action2);
@@ -1483,7 +1281,7 @@ describe('cacheReducer', () => {
     });
 
     it('unset preserves query and maintains in database cache (preserve mode)', () => {
-      const doc1 = { key1: 'value1', id: 'testDocId1' }; // initial doc
+      const doc1 = { key1: 'value1', id: 'testDocId1', path }; // initial doc
 
       // Initial seed
       const action1 = {
@@ -1512,11 +1310,11 @@ describe('cacheReducer', () => {
       };
 
       const pass1 = reducer(initialState, action1);
-      expect(pass1.cache.testStoreAs.docs).to.eql([doc1]);
+      expect(pass1.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
       expect(pass1.cache.database[collection]).to.eql({ [doc1.id]: doc1 });
 
       const pass2 = reducer(pass1, action2);
-      expect(pass2.cache.testStoreAs.docs).to.eql([doc1]);
+      expect(pass2.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
       expect(pass2.cache.database[collection]).to.eql({ [doc1.id]: doc1 });
     });
 
@@ -1532,7 +1330,7 @@ describe('cacheReducer', () => {
       };
       const pass1 = reducer(initialState, action1);
 
-      expect(pass1.cache.testStoreAs.docs).to.eql([]);
+      expect(pass1.cache.testStoreAs.ordered).to.eql([]);
     });
   });
 
@@ -1560,8 +1358,6 @@ describe('cacheReducer', () => {
 
       const expected = JSON.parse(
         JSON.stringify({
-          ...doc1,
-          key1: 'value1',
           array: [1, 2, 3, 4, 5],
           obj: { a: 0, b: { y: 9 }, c: { z: 10 } },
           vanilla: 'some-data',
@@ -1577,11 +1373,7 @@ describe('cacheReducer', () => {
           where: ['key1', '==', 'value1'],
           storeAs: 'testStoreAs',
         },
-        payload: {
-          data: { [doc1.id]: doc1 },
-          ordered: [doc1],
-          fromCache: true,
-        },
+        payload: setPayload([doc1]),
         type: actionTypes.LISTENER_RESPONSE,
       };
       // mutate
@@ -1592,17 +1384,20 @@ describe('cacheReducer', () => {
           doc: updates.id,
         },
         payload: {
-          data: { collection: path, doc: updates.id, data: { ...updates } },
+          data: { ...updates },
         },
       };
 
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      const pass2Doc = pass2.cache.testStoreAs.docs[0];
-
-      const result = JSON.parse(JSON.stringify(pass2Doc));
-      expect(result).to.eql(expected);
+      expect(pass2.cache.testStoreAs.ordered).to.eql([[path, doc1.id]]);
+      expect(pass2.cache.database).to.eql({
+        [collection]: { [doc1.id]: doc1 },
+      });
+      expect(pass2.cache.databaseOverrides).to.eql({
+        [collection]: { [doc1.id]: expected },
+      });
     });
 
     it('Firestore batch update adds override', () => {
@@ -1649,26 +1444,29 @@ describe('cacheReducer', () => {
           doc: updates.id,
         },
         payload: {
-          data: [{ collection: path, doc: updates.id, data: { ...updates } }],
+          data: [{ ...updates }],
         },
       };
 
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      const pass2Doc = pass2.cache.testStoreAs.docs[0];
+      expect(pass2.cache.testStoreAs.ordered).to.eql([[path, doc1.id]]);
+      expect(pass2.cache.database).to.eql({
+        [collection]: { [doc1.id]: doc1 },
+      });
 
-      const result = JSON.parse(JSON.stringify(pass2Doc));
-      expect(result).to.eql(
+      expect(pass2.cache.databaseOverrides).to.eql(
         JSON.parse(
           JSON.stringify({
-            ...doc1,
-            key1: 'value1',
-            number: 15,
-            array: [1, 3, 4],
-            obj: { a: 0, b: { y: 9 }, c: { z: 10 } },
-            date: new Date('2021-01-01'),
-            // "serverTimestamp": new Date()}
+            [collection]: {
+              [doc1.id]: {
+                array: [1, 3, 4],
+                number: 15,
+                obj: { a: 0, b: { y: 9 }, c: { z: 10 } },
+                date: new Date('2021-01-01'),
+              },
+            },
           }),
         ),
       );
@@ -1727,12 +1525,10 @@ describe('cacheReducer', () => {
             },
             writes: [
               ({ fromReducerCache }) => ({
-                collection: path,
-                doc: updates.id,
-                data: {
-                  multipled: fromReducerCache.multipled * 4,
-                  ...updates,
-                },
+                path,
+                id: updates.id,
+                multipled: fromReducerCache.multipled * 4,
+                ...updates,
               }),
             ],
           },
@@ -1742,20 +1538,24 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      const pass2Doc = pass2.cache.testStoreAs.docs[0];
+      expect(pass2.cache.testStoreAs.ordered).to.eql([[path, doc1.id]]);
+      expect(pass2.cache.database).to.eql({
+        [collection]: { [doc1.id]: doc1 },
+      });
 
-      const result = JSON.parse(JSON.stringify(pass2Doc));
-      expect(result).to.eql(
+      expect(pass2.cache.databaseOverrides).to.eql(
         JSON.parse(
           JSON.stringify({
-            ...doc1,
-            key1: 'value1',
-            multipled: 12,
-            number: 15,
-            array: [1, 3, 4],
-            obj: { a: 0, b: { y: 9 }, c: { z: 10 } },
-            date: new Date('2021-01-01'),
-            // "serverTimestamp": new Date()}
+            [collection]: {
+              [doc1.id]: {
+                multipled: 12,
+                number: 15,
+                array: [1, 3, 4],
+                obj: { a: 0, b: { y: 9 }, c: { z: 10 } },
+                date: new Date('2021-01-01'),
+                // "serverTimestamp": new Date()}
+              },
+            },
           }),
         ),
       );
@@ -1813,12 +1613,10 @@ describe('cacheReducer', () => {
               },
             },
             writes: ({ fromReducerCache }) => ({
-              collection: path,
-              doc: updates.id,
-              data: {
-                multipled: fromReducerCache.multipled * 4,
-                ...updates,
-              },
+              path,
+              id: updates.id,
+              multipled: fromReducerCache.multipled * 4,
+              ...updates,
             }),
           },
         },
@@ -1827,20 +1625,24 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      const pass2Doc = pass2.cache.testStoreAs.docs[0];
+      expect(pass2.cache.testStoreAs.ordered).to.eql([[path, doc1.id]]);
+      expect(pass2.cache.database).to.eql({
+        [collection]: { [doc1.id]: doc1 },
+      });
 
-      const result = JSON.parse(JSON.stringify(pass2Doc));
-      expect(result).to.eql(
+      expect(pass2.cache.databaseOverrides).to.eql(
         JSON.parse(
           JSON.stringify({
-            ...doc1,
-            key1: 'value1',
-            multipled: 12,
-            number: 15,
-            array: [1, 3, 4],
-            obj: { a: 0, b: { y: 9 }, c: { z: 10 } },
-            date: new Date('2021-01-01'),
-            // "serverTimestamp": new Date()}
+            [collection]: {
+              [doc1.id]: {
+                multipled: 12,
+                number: 15,
+                array: [1, 3, 4],
+                obj: { a: 0, b: { y: 9 }, c: { z: 10 } },
+                date: new Date('2021-01-01'),
+                // "serverTimestamp": new Date()}
+              },
+            },
           }),
         ),
       );
@@ -1900,7 +1702,10 @@ describe('cacheReducer', () => {
   });
 
   describe('MUTATE_FAILURE', () => {
-    it('Remove overrides on Firestore failures.', () => {
+    it('Remove overrides on Firestore failures', () => {
+      // console.log('mutate---', mutate);
+      // sinon.replace(mutate, 'default', () => Promise.resolve());
+
       const doc1 = {
         path,
         id: 'testDocId1',
@@ -1951,7 +1756,11 @@ describe('cacheReducer', () => {
           doc: updates.id,
         },
         payload: {
-          data: { collection: path, doc: updates.id, vanilla: 'some-data' },
+          data: {
+            collection: path,
+            doc: updates.id,
+            data: { vanilla: 'some-data' },
+          },
         },
       };
 
@@ -1963,7 +1772,11 @@ describe('cacheReducer', () => {
           doc: updates.id,
         },
         payload: {
-          data: { collection: path, doc: updates.id, vanilla: 'some-data' },
+          data: {
+            collection: path,
+            doc: updates.id,
+            data: { vanilla: 'some-data' },
+          },
         },
       };
 
@@ -1971,22 +1784,115 @@ describe('cacheReducer', () => {
       const pass2 = reducer(pass1, action2);
       const pass3 = reducer(pass2, action3);
 
-      const pass2Doc = pass2.cache.testStoreAs.docs[0];
-      const pass3Doc = pass3.cache.testStoreAs.docs[0];
-
-      const result2 = JSON.parse(JSON.stringify(pass2Doc));
-      const result3 = JSON.parse(JSON.stringify(pass3Doc));
-
       // database should never changes. It's a perfect mirror of firestore.
       expect(pass1.cache.database.testCollection.testDocId1).to.eql(doc1);
       expect(pass2.cache.database.testCollection.testDocId1).to.eql(doc1);
       expect(pass3.cache.database.testCollection.testDocId1).to.eql(doc1);
 
-      // query has new override data
-      expect(result2).to.eql(expected2);
+      expect(pass2.cache.database).to.eql({
+        [collection]: { [doc1.id]: doc1 },
+      });
+      expect(pass2.cache.databaseOverrides).to.eql({
+        [collection]: { [doc1.id]: { vanilla: 'some-data' } },
+      });
 
-      // query is back to a perfect mirror of firestore
-      expect(result3).to.eql(expected3);
+      // overrides were deleted
+      expect(pass3.cache.database).to.eql({
+        [collection]: { [doc1.id]: doc1 },
+      });
+      expect(pass3.cache.databaseOverrides[collection]).to.eql();
+    });
+  });
+
+  describe('Speed test', () => {
+    let namespaces;
+    before(() => {
+      namespaces = debug.disable();
+    });
+    after(() => {
+      if (namespaces) debug.enable(namespaces);
+    });
+
+    it('<16ms processing large action and large state', async function () {
+      // eslint-disable-next-line no-invalid-this
+      this.timeout(5_000);
+
+      const manyActions = new Array(1).fill(null).map(() => largeAction);
+
+      await benchmark.record(
+        () => manyActions.forEach((action) => reducer(appState, action)),
+        {
+          iterations: 20,
+          meanUnder: 20,
+        },
+      );
+    });
+
+    it('<16ms to process stores 2,000 docs', async function () {
+      // eslint-disable-next-line no-invalid-this
+      this.timeout(5_000);
+
+      const generate = (limit) =>
+        new Array(limit).fill(null).map(() => ({
+          path,
+          id: `testDocId${Math.random()}`,
+          key1: 'value1',
+          number: 11,
+          multipled: 3,
+          dateKey: { seconds: 1, nanoseconds: 1 },
+          array: [1, 2, 3, 4],
+          obj: { a: 1, b: { x: 0 }, c: { z: 9 } },
+        }));
+
+      const action = {
+        meta: whereKey1IsValue1,
+        payload: setPayload(generate(2_000)),
+        type: actionTypes.LISTENER_RESPONSE,
+      };
+
+      await benchmark.record(() => reducer(appState, action), {
+        iterations: 50,
+        meanUnder: 16,
+      });
+    });
+
+    it('<16ms to process 100 mutates', async function () {
+      // eslint-disable-next-line no-invalid-this
+      this.timeout(5_000);
+
+      const actions = {
+        type: actionTypes.MUTATE_START,
+        payload: {
+          meta: { collection: testDocId0.path, doc: testDocId0.id },
+          data: [
+            {
+              path: testDocId0.path,
+              id: testDocId0.id,
+              dateKey: { seconds: 99, nanoseconds: 99 },
+            },
+          ],
+        },
+      };
+
+      const manyActions = new Array(100).fill(null).map(() => actions);
+
+      await benchmark.record(
+        () => manyActions.forEach((action) => reducer(appState, action)),
+        {
+          iterations: 50,
+          meanUnder: 16,
+        },
+      );
+    });
+
+    it('<2ms to process 1MB action', async function () {
+      // eslint-disable-next-line no-invalid-this
+      this.timeout(5_000);
+
+      await benchmark.record(() => reducer(primedState, largeAction), {
+        iterations: 50,
+        meanUnder: 2,
+      });
     });
   });
 });
