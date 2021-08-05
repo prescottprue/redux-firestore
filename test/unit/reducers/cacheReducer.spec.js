@@ -1803,8 +1803,7 @@ describe('cacheReducer', () => {
       expect(pass3.cache.databaseOverrides[collection]).to.eql();
     });
   });
-
-  describe('Speed test', () => {
+  describe('Speed test (on 2015 Dual-core 1.5Ghz i5 w/ 8GB 1600 DDR3)', () => {
     let namespaces;
     before(() => {
       namespaces = debug.disable();
@@ -1813,7 +1812,7 @@ describe('cacheReducer', () => {
       if (namespaces) debug.enable(namespaces);
     });
 
-    it('<16ms processing large action and large state', async function () {
+    it('<36ms processing large action and large state', async function () {
       // eslint-disable-next-line no-invalid-this
       this.timeout(5_000);
 
@@ -1822,13 +1821,14 @@ describe('cacheReducer', () => {
       await benchmark.record(
         () => manyActions.forEach((action) => reducer(appState, action)),
         {
-          iterations: 20,
-          meanUnder: 20,
+          iterations: 90,
+          meanUnder: 36,
+          standardDeviationUnder: 10,
         },
       );
     });
 
-    it('<16ms to process stores 2,000 docs', async function () {
+    it('<18ms to process stores 2,000 docs', async function () {
       // eslint-disable-next-line no-invalid-this
       this.timeout(5_000);
 
@@ -1852,11 +1852,11 @@ describe('cacheReducer', () => {
 
       await benchmark.record(() => reducer(appState, action), {
         iterations: 50,
-        meanUnder: 16,
+        meanUnder: 18,
       });
     });
 
-    it('<16ms to process 100 mutates', async function () {
+    it('<24ms to process 100 mutates', async function () {
       // eslint-disable-next-line no-invalid-this
       this.timeout(5_000);
 
@@ -1879,19 +1879,19 @@ describe('cacheReducer', () => {
       await benchmark.record(
         () => manyActions.forEach((action) => reducer(appState, action)),
         {
-          iterations: 50,
-          meanUnder: 16,
+          iterations: 125,
+          meanUnder: 24,
         },
       );
     });
 
-    it('<2ms to process 1MB action', async function () {
+    it('<4ms to process 1MB action', async function () {
       // eslint-disable-next-line no-invalid-this
       this.timeout(5_000);
 
       await benchmark.record(() => reducer(primedState, largeAction), {
-        iterations: 50,
-        meanUnder: 2,
+        iterations: 1_000,
+        meanUnder: 4,
       });
     });
   });
