@@ -164,6 +164,8 @@ const xfAllIds = ({ collection: path }) =>
 
 /**
  * @name xfWhere
+ * @param getDoc.where
+ * @param getDoc
  * @param {Array.<Array.<string>>} where - Firestore where clauses
  * @property {object.<FirestorePath, object<FirestoreDocumentId, Doc>>}  db
  * @property {object.<FirestorePath, object<FirestoreDocumentId, ParitalDoc>>}  dbo
@@ -206,6 +208,8 @@ const xfWhere = ({ where }, getDoc) => {
 
 /**
  * @name xfOrder
+ * @param getDoc.orderBy
+ * @param getDoc
  * @param {Array.<string>} order - Firestore order property
  * @property {object.<FirestorePath, object<FirestoreDocumentId, Doc>>}  db
  * @property {object.<FirestorePath, object<FirestoreDocumentId, ParitalDoc>>}  dbo
@@ -234,11 +238,9 @@ const xfOrder = ({ orderBy: order }, getDoc) => {
     // TODO: refactor to manually lookup and compare
     const docs = tuples.map(([path, id]) => getDoc(path, id));
 
-    const result = orderBy(docs, fields, direction).map(
+    return orderBy(docs, fields, direction).map(
       ({ id, path } = {}) => path && id && [path, id],
     );
-
-    return result;
   });
 };
 
@@ -262,7 +264,8 @@ const xfLimit = ({ limit, endAt, endBefore }) => {
  * @param {?CacheState.database} db -
  * @param {?CacheState.databaseOverrides} dbo -
  * @param {RRFQuery} query - Firestore query
- * @param {Boolean} isOptimisticWrite - includes optimistic data
+ * @param getDoc
+ * @param {boolean} isOptimisticWrite - includes optimistic data
  * @typedef {Function} xFormFilter - in optimistic reads and overrides
  * the reducer needs to take all documents and make a best effort to
  * filter down the document based on a cursor.
@@ -329,6 +332,7 @@ const xfPaginate = (query, getDoc) => {
  * @name processOptimistic
  * Convert the query to a transducer for the query results
  * @param {?CacheState.database} database -
+ * @param state
  * @param {?CacheState.databaseOverrides} overrides -
  * @param {RRFQuery} query - query used to get data from firestore
  * @returns {Function} - Transducer will return a modifed array of documents
@@ -340,9 +344,9 @@ function processOptimistic(query, state) {
   const dbo = databaseOverrides && databaseOverrides[collection];
 
   const getDoc = (path, id) => {
-    if (path !== collection) console.log('-----', path, collection);
     const data = db[id] || {};
     const override = dbo?.[id];
+
     return override ? { ...data, ...override } : data;
   };
 
@@ -530,7 +534,7 @@ function translateMutationToOverrides({ payload }, db = {}, dbo = {}) {
       const overrides = dbo[path] || {};
       return {
         ...result,
-        [key]: { ...collection[id], ...(overrides[id] || {}) },
+        [key]: { id, path, ...collection[id], ...(overrides[id] || {}) },
       };
     }, {});
   }
@@ -830,13 +834,21 @@ const mutation = (state, { action, key, path }) => {
   try {
     const result = produce(state, (draft) => {
       const done = mark(`cache.MUTATE_START`, key);
+      const {
+        meta: { timestamp },
+      } = action;
       if (action.payload && action.payload.data) {
         const optimisiticUpdates =
           translateMutationToOverrides(action, draft.database) || [];
 
-        optimisiticUpdates.forEach(({ path: _path, id, ...data }) => {
-          info('overriding', `${_path}/${id}`, data);
-          setWith(draft, ['databaseOverrides', _path, id], data, Object);
+        optimisiticUpdates.forEach((data) => {
+          info('overriding', `${data.path}/${data.id}`, data);
+          setWith(
+            draft,
+            ['databaseOverrides', data.path, data.id],
+            data,
+            Object,
+          );
         });
 
         const updatePaths = [

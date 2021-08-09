@@ -102,7 +102,6 @@ export default function createFirestoreInstance(firebase, configs, dispatch) {
  *        dispatch({ type: 'SOME_ACTION' })
  *      })
  * };
- *
  */
 export function getFirestore() {
   /* istanbul ignore next: Firestore instance always exists during tests */

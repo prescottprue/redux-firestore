@@ -416,9 +416,12 @@ export function runTransaction(firebase, dispatch, transactionPromise) {
  * @returns {Promise} Resolves with results of update call
  */
 export function mutate(firebase, dispatch, writes) {
+  const timestamp = `${+new Date()}`;
+
   return wrapInDispatch(dispatch, {
     ref: firebase,
     method: 'mutate',
+    meta: { timestamp },
     args: [writes],
     types: [
       {
@@ -428,6 +431,7 @@ export function mutate(firebase, dispatch, writes) {
       actionTypes.MUTATE_SUCCESS,
       {
         type: actionTypes.MUTATE_FAILURE,
+        meta: { timestamp },
         payload: { data: writes },
       },
     ],

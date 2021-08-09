@@ -2,12 +2,8 @@ import { actionTypes } from '../constants';
 import { getSlashStrPath, combineReducers } from '../utils/reducers';
 import { getQueryName } from '../utils/query';
 
-const {
-  SET_LISTENER,
-  UNSET_LISTENER,
-  LISTENER_ERROR,
-  LISTENER_RESPONSE,
-} = actionTypes;
+const { SET_LISTENER, UNSET_LISTENER, LISTENER_ERROR, LISTENER_RESPONSE } =
+  actionTypes;
 
 /**
  * Reducer for requesting state.Changed by `START`, `NO_VALUE`, and `SET` actions.
