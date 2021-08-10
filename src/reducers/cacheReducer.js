@@ -279,8 +279,9 @@ const xfPaginate = (query, getDoc) => {
   const end = endAt || endBefore;
   const isAfter = startAfter !== undefined;
   const isBefore = endBefore !== undefined;
+  const needsPagination = start || end || false;
 
-  if (!order || !isOptimisticRead || !!start || !!end) return identity;
+  if (!needsPagination || !order || !isOptimisticRead) return identity;
 
   const isFlat = typeof order[0] === 'string';
   const orders = isFlat ? [order] : order;

@@ -265,8 +265,8 @@ describe('cacheReducer', () => {
       const passA = reducer(primedState, stateDesc);
       expect(passA.cache.testStoreAs).to.eql({
         ordered: [
-          ['testCollection', 'testDocId4'],
-          ['testCollection', 'testDocId3'],
+          ['testCollection', 'testDocId1'],
+          ['testCollection', 'testDocId0'],
         ],
         collection: 'testCollection',
         storeAs: 'testStoreAs',
@@ -279,8 +279,8 @@ describe('cacheReducer', () => {
       const passB = reducer(primedState, stateAsc);
       expect(passB.cache.testStoreAs).to.eql({
         ordered: [
-          ['testCollection', 'testDocId0'],
-          ['testCollection', 'testDocId1'],
+          ['testCollection', 'testDocId3'],
+          ['testCollection', 'testDocId4'],
         ],
         collection: 'testCollection',
         storeAs: 'testStoreAs',
@@ -306,8 +306,8 @@ describe('cacheReducer', () => {
       const passA = reducer(primedState, stateDesc);
       expect(passA.cache.testStoreAs).to.eql({
         ordered: [
-          ['testCollection', 'testDocId4'],
-          ['testCollection', 'testDocId3'],
+          ['testCollection', 'testDocId1'],
+          ['testCollection', 'testDocId0'],
         ],
         collection: 'testCollection',
         storeAs: 'testStoreAs',
@@ -320,8 +320,8 @@ describe('cacheReducer', () => {
       const passB = reducer(primedState, stateAsc);
       expect(passB.cache.testStoreAs).to.eql({
         ordered: [
-          ['testCollection', 'testDocId0'],
-          ['testCollection', 'testDocId1'],
+          ['testCollection', 'testDocId3'],
+          ['testCollection', 'testDocId4'],
         ],
         collection: 'testCollection',
         storeAs: 'testStoreAs',
@@ -344,8 +344,8 @@ describe('cacheReducer', () => {
       const passA = reducer(primedState, stateDesc);
       expect(passA.cache.testStoreAs).to.eql({
         ordered: [
-          ['testCollection', 'testDocId1'],
-          ['testCollection', 'testDocId0'],
+          ['testCollection', 'testDocId4'],
+          ['testCollection', 'testDocId3'],
         ],
         collection: 'testCollection',
         storeAs: 'testStoreAs',
@@ -358,8 +358,8 @@ describe('cacheReducer', () => {
       const passB = reducer(primedState, stateAsc);
       expect(passB.cache.testStoreAs).to.eql({
         ordered: [
-          ['testCollection', 'testDocId3'],
-          ['testCollection', 'testDocId4'],
+          ['testCollection', 'testDocId0'],
+          ['testCollection', 'testDocId1'],
         ],
         collection: 'testCollection',
         storeAs: 'testStoreAs',
@@ -385,8 +385,8 @@ describe('cacheReducer', () => {
       const passA = reducer(primedState, stateDesc);
       expect(passA.cache.testStoreAs).to.eql({
         ordered: [
-          ['testCollection', 'testDocId1'],
-          ['testCollection', 'testDocId0'],
+          ['testCollection', 'testDocId4'],
+          ['testCollection', 'testDocId3'],
         ],
         collection: 'testCollection',
         storeAs: 'testStoreAs',
@@ -399,8 +399,8 @@ describe('cacheReducer', () => {
       const passB = reducer(primedState, stateAsc);
       expect(passB.cache.testStoreAs).to.eql({
         ordered: [
-          ['testCollection', 'testDocId3'],
-          ['testCollection', 'testDocId4'],
+          ['testCollection', 'testDocId0'],
+          ['testCollection', 'testDocId1'],
         ],
         collection: 'testCollection',
         storeAs: 'testStoreAs',
