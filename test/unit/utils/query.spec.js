@@ -612,9 +612,8 @@ describe('query utils', () => {
 
       describe('startAfter', () => {
         it('calls startAfter if valid', () => {
-          const { theFirebase, theSpy, theMeta } = fakeFirebaseWith(
-            'startAfter',
-          );
+          const { theFirebase, theSpy, theMeta } =
+            fakeFirebaseWith('startAfter');
           result = firestoreRef(theFirebase, theMeta);
           expect(result).to.be.an('object');
           expect(theSpy).to.be.calledWith(theMeta.subcollections[0].startAfter);

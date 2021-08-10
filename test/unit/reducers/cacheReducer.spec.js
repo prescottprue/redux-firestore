@@ -3,15 +3,14 @@
 import reducer from 'reducer';
 import { actionTypes } from 'constants';
 import { benchmark } from 'kelonio';
+import { debug } from 'debug';
 import largeAction from './__stubs__/one_mb_action.json';
 import appState from './__stubs__/app_state.json';
-import { debug } from 'debug';
 // import * as mutate from 'utils/mutate';
 
 const collection = 'testCollection';
 const another = 'anotherCollection';
 const path = `${collection}`;
-const anotherPath = `${another}`;
 
 // --- data
 
@@ -266,8 +265,8 @@ describe('cacheReducer', () => {
       const passA = reducer(primedState, stateDesc);
       expect(passA.cache.testStoreAs).to.eql({
         ordered: [
-          ['testCollection', 'testDocId4'],
-          ['testCollection', 'testDocId3'],
+          ['testCollection', 'testDocId1'],
+          ['testCollection', 'testDocId0'],
         ],
         collection: 'testCollection',
         storeAs: 'testStoreAs',
@@ -280,8 +279,8 @@ describe('cacheReducer', () => {
       const passB = reducer(primedState, stateAsc);
       expect(passB.cache.testStoreAs).to.eql({
         ordered: [
-          ['testCollection', 'testDocId0'],
-          ['testCollection', 'testDocId1'],
+          ['testCollection', 'testDocId3'],
+          ['testCollection', 'testDocId4'],
         ],
         collection: 'testCollection',
         storeAs: 'testStoreAs',
@@ -307,8 +306,8 @@ describe('cacheReducer', () => {
       const passA = reducer(primedState, stateDesc);
       expect(passA.cache.testStoreAs).to.eql({
         ordered: [
-          ['testCollection', 'testDocId4'],
-          ['testCollection', 'testDocId3'],
+          ['testCollection', 'testDocId1'],
+          ['testCollection', 'testDocId0'],
         ],
         collection: 'testCollection',
         storeAs: 'testStoreAs',
@@ -321,8 +320,8 @@ describe('cacheReducer', () => {
       const passB = reducer(primedState, stateAsc);
       expect(passB.cache.testStoreAs).to.eql({
         ordered: [
-          ['testCollection', 'testDocId0'],
-          ['testCollection', 'testDocId1'],
+          ['testCollection', 'testDocId3'],
+          ['testCollection', 'testDocId4'],
         ],
         collection: 'testCollection',
         storeAs: 'testStoreAs',
@@ -345,8 +344,8 @@ describe('cacheReducer', () => {
       const passA = reducer(primedState, stateDesc);
       expect(passA.cache.testStoreAs).to.eql({
         ordered: [
-          ['testCollection', 'testDocId1'],
-          ['testCollection', 'testDocId0'],
+          ['testCollection', 'testDocId4'],
+          ['testCollection', 'testDocId3'],
         ],
         collection: 'testCollection',
         storeAs: 'testStoreAs',
@@ -359,8 +358,8 @@ describe('cacheReducer', () => {
       const passB = reducer(primedState, stateAsc);
       expect(passB.cache.testStoreAs).to.eql({
         ordered: [
-          ['testCollection', 'testDocId3'],
-          ['testCollection', 'testDocId4'],
+          ['testCollection', 'testDocId0'],
+          ['testCollection', 'testDocId1'],
         ],
         collection: 'testCollection',
         storeAs: 'testStoreAs',
@@ -386,8 +385,8 @@ describe('cacheReducer', () => {
       const passA = reducer(primedState, stateDesc);
       expect(passA.cache.testStoreAs).to.eql({
         ordered: [
-          ['testCollection', 'testDocId1'],
-          ['testCollection', 'testDocId0'],
+          ['testCollection', 'testDocId4'],
+          ['testCollection', 'testDocId3'],
         ],
         collection: 'testCollection',
         storeAs: 'testStoreAs',
@@ -400,8 +399,8 @@ describe('cacheReducer', () => {
       const passB = reducer(primedState, stateAsc);
       expect(passB.cache.testStoreAs).to.eql({
         ordered: [
-          ['testCollection', 'testDocId3'],
-          ['testCollection', 'testDocId4'],
+          ['testCollection', 'testDocId0'],
+          ['testCollection', 'testDocId1'],
         ],
         collection: 'testCollection',
         storeAs: 'testStoreAs',
@@ -530,6 +529,19 @@ describe('cacheReducer', () => {
       expect(pass1.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
       expect(pass2.cache.testStoreAs.ordered[0][1]).to.eql(doc2.id);
       expect(pass3.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
+
+      // overrides must be cleared
+      expect(pass2.cache.databaseOverrides).to.eql({
+        testCollection: {
+          testDocId1: {
+            id: 'testDocId1',
+            key1: 'value1',
+            key2: 'other',
+            path: 'testCollection',
+          },
+        },
+      });
+      expect(pass3.cache.databaseOverrides).to.eql({});
     });
 
     it('overrides synchronously moves to new query', () => {
@@ -1356,16 +1368,6 @@ describe('cacheReducer', () => {
         'obj.c.z': 10,
       };
 
-      const expected = JSON.parse(
-        JSON.stringify({
-          array: [1, 2, 3, 4, 5],
-          obj: { a: 0, b: { y: 9 }, c: { z: 10 } },
-          vanilla: 'some-data',
-          date: new Date('2021-01-01'),
-          // "serverTimestamp": new Date()}
-        }),
-      );
-
       // Initial seed
       const action1 = {
         meta: {
@@ -1382,6 +1384,7 @@ describe('cacheReducer', () => {
         meta: {
           collection,
           doc: updates.id,
+          timestamp: '999',
         },
         payload: {
           data: { ...updates },
@@ -1391,12 +1394,35 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass2.cache.testStoreAs.ordered).to.eql([[path, doc1.id]]);
+      expect(pass2.cache.testStoreAs).to.eql({
+        ordered: [['testCollection', 'testDocId1']],
+        collection: 'testCollection',
+        where: ['key1', '==', 'value1'],
+        storeAs: 'testStoreAs',
+        via: 'cache',
+      });
       expect(pass2.cache.database).to.eql({
-        [collection]: { [doc1.id]: doc1 },
+        testCollection: {
+          testDocId1: {
+            path: 'testCollection',
+            id: 'testDocId1',
+            key1: 'value1',
+            array: [1, 2, 3, 4],
+            obj: { a: 1, b: { x: 0 }, c: { z: 9 } },
+          },
+        },
       });
       expect(pass2.cache.databaseOverrides).to.eql({
-        [collection]: { [doc1.id]: expected },
+        testCollection: {
+          testDocId1: {
+            path: 'testCollection',
+            id: 'testDocId1',
+            vanilla: 'some-data',
+            date: '2021-01-01T00:00:00.000Z',
+            array: [1, 2, 3, 4, 5],
+            obj: { a: 0, b: { y: 9 }, c: { z: 10 } },
+          },
+        },
       });
     });
 
@@ -1442,6 +1468,7 @@ describe('cacheReducer', () => {
         meta: {
           collection,
           doc: updates.id,
+          timestamp: '999',
         },
         payload: {
           data: [{ ...updates }],
@@ -1451,25 +1478,38 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass2.cache.testStoreAs.ordered).to.eql([[path, doc1.id]]);
+      expect(pass2.cache.testStoreAs).to.eql({
+        ordered: [['testCollection', 'testDocId1']],
+        collection: 'testCollection',
+        where: ['key1', '==', 'value1'],
+        storeAs: 'testStoreAs',
+        via: 'cache',
+      });
       expect(pass2.cache.database).to.eql({
-        [collection]: { [doc1.id]: doc1 },
+        testCollection: {
+          testDocId1: {
+            path: 'testCollection',
+            id: 'testDocId1',
+            key1: 'value1',
+            number: 11,
+            array: [1, 2, 3, 4],
+            obj: { a: 1, b: { x: 0 }, c: { z: 9 } },
+          },
+        },
       });
 
-      expect(pass2.cache.databaseOverrides).to.eql(
-        JSON.parse(
-          JSON.stringify({
-            [collection]: {
-              [doc1.id]: {
-                array: [1, 3, 4],
-                number: 15,
-                obj: { a: 0, b: { y: 9 }, c: { z: 10 } },
-                date: new Date('2021-01-01'),
-              },
-            },
-          }),
-        ),
-      );
+      expect(pass2.cache.databaseOverrides).to.eql({
+        testCollection: {
+          testDocId1: {
+            path: 'testCollection',
+            id: 'testDocId1',
+            number: 15,
+            date: '2021-01-01T00:00:00.000Z',
+            array: [1, 3, 4],
+            obj: { a: 0, b: { y: 9 }, c: { z: 10 } },
+          },
+        },
+      });
     });
 
     it('Firestore transaction update adds override', () => {
@@ -1514,6 +1554,7 @@ describe('cacheReducer', () => {
         meta: {
           collection,
           doc: updates.id,
+          timestamp: '999',
         },
         payload: {
           data: {
@@ -1538,27 +1579,40 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass2.cache.testStoreAs.ordered).to.eql([[path, doc1.id]]);
-      expect(pass2.cache.database).to.eql({
-        [collection]: { [doc1.id]: doc1 },
+      expect(pass2.cache.testStoreAs).to.eql({
+        ordered: [['testCollection', 'testDocId1']],
+        collection: 'testCollection',
+        storeAs: 'testStoreAs',
+        via: 'cache',
       });
 
-      expect(pass2.cache.databaseOverrides).to.eql(
-        JSON.parse(
-          JSON.stringify({
-            [collection]: {
-              [doc1.id]: {
-                multipled: 12,
-                number: 15,
-                array: [1, 3, 4],
-                obj: { a: 0, b: { y: 9 }, c: { z: 10 } },
-                date: new Date('2021-01-01'),
-                // "serverTimestamp": new Date()}
-              },
-            },
-          }),
-        ),
-      );
+      expect(pass2.cache.database).to.eql({
+        testCollection: {
+          testDocId1: {
+            path: 'testCollection',
+            id: 'testDocId1',
+            key1: 'value1',
+            number: 11,
+            multipled: 3,
+            array: [1, 2, 3, 4],
+            obj: { a: 1, b: { x: 0 }, c: { z: 9 } },
+          },
+        },
+      });
+
+      expect(pass2.cache.databaseOverrides).to.eql({
+        testCollection: {
+          testDocId1: {
+            path: 'testCollection',
+            id: 'testDocId1',
+            multipled: 12,
+            number: 15,
+            date: '2021-01-01T00:00:00.000Z',
+            array: [1, 3, 4],
+            obj: { a: 0, b: { y: 9 }, c: { z: 10 } },
+          },
+        },
+      });
     });
 
     it('Firestore transaction update single write adds override', () => {
@@ -1589,6 +1643,7 @@ describe('cacheReducer', () => {
         meta: {
           collection,
           storeAs: 'testStoreAs',
+          timestamp: '999',
         },
         payload: {
           data: { [doc1.id]: doc1 },
@@ -1603,6 +1658,7 @@ describe('cacheReducer', () => {
         meta: {
           collection,
           doc: updates.id,
+          timestamp: '999',
         },
         payload: {
           data: {
@@ -1625,27 +1681,41 @@ describe('cacheReducer', () => {
       const pass1 = reducer(initialState, action1);
       const pass2 = reducer(pass1, action2);
 
-      expect(pass2.cache.testStoreAs.ordered).to.eql([[path, doc1.id]]);
-      expect(pass2.cache.database).to.eql({
-        [collection]: { [doc1.id]: doc1 },
+      expect(pass2.cache.testStoreAs).to.eql({
+        ordered: [['testCollection', 'testDocId1']],
+        collection: 'testCollection',
+        storeAs: 'testStoreAs',
+        timestamp: '999',
+        via: 'cache',
       });
 
-      expect(pass2.cache.databaseOverrides).to.eql(
-        JSON.parse(
-          JSON.stringify({
-            [collection]: {
-              [doc1.id]: {
-                multipled: 12,
-                number: 15,
-                array: [1, 3, 4],
-                obj: { a: 0, b: { y: 9 }, c: { z: 10 } },
-                date: new Date('2021-01-01'),
-                // "serverTimestamp": new Date()}
-              },
-            },
-          }),
-        ),
-      );
+      expect(pass2.cache.database).to.eql({
+        testCollection: {
+          testDocId1: {
+            path: 'testCollection',
+            id: 'testDocId1',
+            key1: 'value1',
+            number: 11,
+            multipled: 3,
+            array: [1, 2, 3, 4],
+            obj: { a: 1, b: { x: 0 }, c: { z: 9 } },
+          },
+        },
+      });
+
+      expect(pass2.cache.databaseOverrides).to.eql({
+        testCollection: {
+          testDocId1: {
+            path: 'testCollection',
+            id: 'testDocId1',
+            multipled: 12,
+            number: 15,
+            date: '2021-01-01T00:00:00.000Z',
+            array: [1, 3, 4],
+            obj: { a: 0, b: { y: 9 }, c: { z: 10 } },
+          },
+        },
+      });
     });
 
     it('Firestore does not support queries inside a transaction', () => {
@@ -1678,6 +1748,7 @@ describe('cacheReducer', () => {
         meta: {
           collection,
           doc: updates.id,
+          timestamp: '999',
         },
         payload: {
           data: {
@@ -1718,21 +1789,6 @@ describe('cacheReducer', () => {
         vanilla: 'some-data',
       };
 
-      const expected2 = JSON.parse(
-        JSON.stringify({
-          ...doc1,
-          key1: 'value1',
-          ...updates,
-        }),
-      );
-
-      const expected3 = JSON.parse(
-        JSON.stringify({
-          ...doc1,
-          key1: 'value1',
-        }),
-      );
-
       // Initial seed
       const action1 = {
         meta: {
@@ -1754,6 +1810,7 @@ describe('cacheReducer', () => {
         meta: {
           collection,
           doc: updates.id,
+          timestamp: '999',
         },
         payload: {
           data: {
@@ -1789,18 +1846,58 @@ describe('cacheReducer', () => {
       expect(pass2.cache.database.testCollection.testDocId1).to.eql(doc1);
       expect(pass3.cache.database.testCollection.testDocId1).to.eql(doc1);
 
-      expect(pass2.cache.database).to.eql({
-        [collection]: { [doc1.id]: doc1 },
+      expect(pass2.cache.testStoreAs).to.eql({
+        ordered: [['testCollection', 'testDocId1']],
+        collection: 'testCollection',
+        where: ['key1', '==', 'value1'],
+        storeAs: 'testStoreAs',
+        via: 'cache',
       });
+
+      expect(pass2.cache.database).to.eql({
+        testCollection: {
+          testDocId1: {
+            path: 'testCollection',
+            id: 'testDocId1',
+            key1: 'value1',
+          },
+        },
+      });
+
       expect(pass2.cache.databaseOverrides).to.eql({
-        [collection]: { [doc1.id]: { vanilla: 'some-data' } },
+        testCollection: {
+          testDocId1: {
+            path: 'testCollection',
+            id: 'testDocId1',
+            vanilla: 'some-data',
+          },
+        },
       });
 
       // overrides were deleted
       expect(pass3.cache.database).to.eql({
-        [collection]: { [doc1.id]: doc1 },
+        testCollection: {
+          testDocId1: {
+            path: 'testCollection',
+            id: 'testDocId1',
+            key1: 'value1',
+          },
+        },
       });
-      expect(pass3.cache.databaseOverrides[collection]).to.eql();
+
+      expect(pass3.cache.databaseOverrides).to.eql({});
+
+      expect(pass3.cache.mutations).to.eql({
+        999: {
+          testCollection: {
+            testDocId1: {
+              path: 'testCollection',
+              id: 'testDocId1',
+              vanilla: 'some-data',
+            },
+          },
+        },
+      });
     });
   });
   describe('Speed test (on 2015 Dual-core 1.5Ghz i5 w/ 8GB 1600 DDR3)', () => {
