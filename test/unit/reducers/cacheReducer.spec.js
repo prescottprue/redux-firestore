@@ -529,6 +529,19 @@ describe('cacheReducer', () => {
       expect(pass1.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
       expect(pass2.cache.testStoreAs.ordered[0][1]).to.eql(doc2.id);
       expect(pass3.cache.testStoreAs.ordered[0][1]).to.eql(doc1.id);
+
+      // overrides must be cleared
+      expect(pass2.cache.databaseOverrides).to.eql({
+        testCollection: {
+          testDocId1: {
+            id: 'testDocId1',
+            key1: 'value1',
+            key2: 'other',
+            path: 'testCollection',
+          },
+        },
+      });
+      expect(pass3.cache.databaseOverrides).to.eql({});
     });
 
     it('overrides synchronously moves to new query', () => {
