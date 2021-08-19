@@ -100,6 +100,11 @@ const verbose = debug('rrfVerbose:cache');
  */
 
 const isTimestamp = (a) => a instanceof Object && a.seconds !== undefined;
+const formatTimestamp = ({ seconds } = {}) =>
+  seconds &&
+  new Intl.DateTimeFormat('en-US', { dateStyle: 'short' }).format(
+    new Date(seconds * 1000),
+  );
 
 const PROCESSES = {
   '<': (a, b) => a < b,
@@ -272,16 +277,37 @@ const xfLimit = ({ limit, endAt, endBefore }) => {
  * @returns {xFormFilter} - transducer
  */
 const xfPaginate = (query, getDoc) => {
-  const { orderBy: order, startAt, startAfter, endAt, endBefore, via } = query;
+  const {
+    orderBy: order,
+    limit,
+    startAt,
+    startAfter,
+    endAt,
+    endBefore,
+    via,
+  } = query;
 
-  const isOptimisticRead = !via || via === 'memory';
   const start = startAt || startAfter;
   const end = endAt || endBefore;
   const isAfter = startAfter !== undefined;
   const isBefore = endBefore !== undefined;
   const needsPagination = start || end || false;
 
-  if (!needsPagination || !order || !isOptimisticRead) return identity;
+  if (!needsPagination || !order) return identity;
+
+  let prop = null;
+  if (verbose.enabled) {
+    if (startAt) prop = 'startAt';
+    else if (startAfter) prop = 'startAfter';
+    else if (endAt) prop = 'endAt';
+    else if (endBefore) prop = 'endBefore';
+
+    verbose(
+      `paginate ${prop}:${formatTimestamp(needsPagination)} ` +
+        `order:[${query?.orderBy?.[0]}, ${query?.orderBy?.[1]}] ` +
+        `via:${via}`,
+    );
+  }
 
   const isFlat = typeof order[0] === 'string';
   const orders = isFlat ? [order] : order;
@@ -291,15 +317,20 @@ const xfPaginate = (query, getDoc) => {
       if (value === undefined) return false;
 
       // TODO: add support for document refs
-      const proc = isTimestamp(document[field])
-        ? PROCESSES_TIMESTAMP
-        : PROCESSES;
+      const isTime = isTimestamp(document[field]);
+      const proc = isTime ? PROCESSES_TIMESTAMP : PROCESSES;
       let compare = process['=='];
       if (startAt || endAt) compare = proc[sort === 'desc' ? '<=' : '>='];
       if (startAfter || endBefore) compare = proc[sort === 'desc' ? '<' : '>'];
 
       const isMatched = compare(document[field], value);
       if (isMatched) {
+        if (verbose.enabled) {
+          const val = isTime
+            ? formatTimestamp(document[field])
+            : document[field];
+          verbose(`${prop}: ${document.id}.${field} = ${val}`);
+        }
         return true;
       }
     }) !== undefined;
@@ -309,6 +340,8 @@ const xfPaginate = (query, getDoc) => {
     let started = start === undefined;
 
     tuples.forEach(([path, id]) => {
+      if (limit && results.length >= limit) return;
+
       if (!started && start) {
         if (isPaginateMatched(getDoc(path, id), start, undefined, isAfter)) {
           started = true;
