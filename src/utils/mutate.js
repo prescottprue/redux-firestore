@@ -23,6 +23,10 @@ const isDocRead = ({ doc, id } = {}) =>
 const isProviderRead = (read) => isFunction(read);
 const isSingleWrite = ({ collection, path } = {}) =>
   typeof path === 'string' || typeof collection === 'string';
+const hasNothing = (snapshot) =>
+  !snapshot ||
+  (snapshot.empty && snapshot.empty()) ||
+  (snapshot.exists && snapshot.exists());
 
 // ----- FieldValue support -----
 
@@ -182,7 +186,7 @@ async function writeInTransaction(firebase, operations) {
       // else query (As of 7/2021, Firestore doesn't include queries in client-side transactions)
       const coll = firestoreRef(firebase, read);
       const snapshot = await coll.get();
-      if (snapshot.docs.length === 0) return [];
+      if (hasNothing(snapshot) || snapshot.docs.length === 0) return [];
       const unserializedDocs = await Promise.all(snapshot.docs.map(getter));
       return unserializedDocs.map(serialize);
     });
