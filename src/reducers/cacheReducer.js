@@ -20,7 +20,7 @@ import {
   isEmpty,
   identity,
 } from 'lodash';
-import firebase from 'firebase';
+import { Timestamp } from 'firebase/firestore';
 import { actionTypes } from '../constants';
 import { getBaseQueryName } from '../utils/query';
 import mark from '../utils/profiling';
@@ -508,8 +508,7 @@ const arrayRemove = (key, val, cached) =>
 const increment = (key, val, cached) =>
   key === '::increment' && typeof val === 'number' && (cached() || 0) + val;
 
-const serverTimestamp = (key) =>
-  key === '::serverTimestamp' && firebase.firestore.Timestamp.now();
+const serverTimestamp = (key) => key === '::serverTimestamp' && Timestamp.now();
 
 /**
  * Process Mutation to a vanilla JSON
@@ -560,9 +559,6 @@ function translateMutationToOverrides({ payload }, db = {}, dbo = {}) {
 
       const path = reads[key]?.path || reads[key]?.collection;
       const id = reads[key]?.id || reads[key]?.doc;
-      if (!id) {
-        throw new Error("Firestore Transactions don't support query lookups.");
-      }
 
       const collection = db[path] || {};
       const overrides = dbo[path] || {};
@@ -576,6 +572,13 @@ function translateMutationToOverrides({ payload }, db = {}, dbo = {}) {
   const overrides = writes
     .map((writer) => (isFunction(writer) ? writer(optimistic) : writer))
     .filter((data) => !data || !isEmpty(data))
+    .reduce(
+      (flat, result) => [
+        ...flat,
+        ...(Array.isArray(result) ? result : [result]),
+      ],
+      [],
+    )
     .map((write) => {
       const { collection, path, doc, id, data, ...rest } = write;
 

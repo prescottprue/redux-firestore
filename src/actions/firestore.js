@@ -412,27 +412,27 @@ export function runTransaction(firebase, dispatch, transactionPromise) {
  * Unified solo, batch & transactions operations.
  * @param {object} firebase - Internal firebase object
  * @param {Function} dispatch - Redux's dispatch function
- * @param {string} queryOption - Options for query
+ * @param {string} mutations - Mutations for query
  * @returns {Promise} Resolves with results of update call
  */
-export function mutate(firebase, dispatch, writes) {
+export function mutate(firebase, dispatch, mutations) {
   const timestamp = `${+new Date()}`;
 
   return wrapInDispatch(dispatch, {
     ref: firebase,
     method: 'mutate',
     meta: { timestamp },
-    args: [writes],
+    args: [mutations],
     types: [
       {
         type: actionTypes.MUTATE_START,
-        payload: { data: writes },
+        payload: { data: mutations },
       },
       actionTypes.MUTATE_SUCCESS,
       {
         type: actionTypes.MUTATE_FAILURE,
         meta: { timestamp },
-        payload: { data: writes },
+        payload: { data: mutations },
       },
     ],
   });
