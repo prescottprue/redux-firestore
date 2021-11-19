@@ -202,7 +202,7 @@ function arrayToStr(key, value) {
 }
 
 /**
- * Pcik query params from object
+ * Pick query params from object
  * @param {object} obj - Object from which to pick query params
  * @returns {object} Object of query params by name
  */
@@ -216,6 +216,21 @@ function pickQueryParams(obj) {
     'endAt',
     'endBefore',
   ].reduce((acc, key) => (obj[key] ? { ...acc, [key]: obj[key] } : acc), {});
+}
+
+/**
+ * Parse id from string or reference
+ * @param {string|firebase.firestore.DocumentReference} value - id or reference
+ * @returns {string} Parsed id
+ */
+function parseId(value) {
+  let id;
+  if (typeof value === 'string' || value instanceof String) {
+    id = value
+  } else if (value && value.id) {
+    id = value.id;
+  }
+  return id;
 }
 
 /**
@@ -558,7 +573,7 @@ export function populateList(firebase, originalObj, p, results) {
   return Promise.all(
     map(originalObj, (id, childKey) => {
       // handle list of keys
-      const populateKey = id === true || p.populateByKey ? childKey : id;
+      const populateKey = parseId(id === true || p.populateByKey ? childKey : id);
       return getPopulateChild(firebase, p, populateKey).then(pc => {
         if (pc) {
           // write child to result object under root name if it is found
@@ -631,21 +646,21 @@ export function promisesForPopulate(
     // Data is a single object, resolve populates directly
     populatesForData.forEach(p => {
       const childDataVal = get(originalData, p.child);
-      if (typeof childDataVal === 'string' || childDataVal instanceof String) {
+      const id = parseId(childDataVal);
+      if (id) {
         return promisesArray.push(
-          getPopulateChild(firebase, p, childDataVal).then(v => {
+          getPopulateChild(firebase, p, id).then(v => {
             // write child to result object under root name if it is found
             if (v) {
               set(
                 results,
-                `${p.storeAs ? p.storeAs : p.root}.${childDataVal}`,
+                `${p.storeAs ? p.storeAs : p.root}.${id}`,
                 v,
               );
             }
           }),
         );
       }
-
       // Single Parameter is list
       return promisesArray.push(
         populateList(firebase, childDataVal, p, results),
@@ -671,16 +686,18 @@ export function promisesForPopulate(
           return;
         }
 
+        const id = parseId(idOrList);
+
         // Parameter of each list item is single ID
-        if (typeof idOrList === 'string' || idOrList instanceof String) {
+        if (id) {
           return promisesArray.push(
             // eslint-disable-line
-            getPopulateChild(firebase, p, idOrList).then(v => {
+            getPopulateChild(firebase, p, id).then(v => {
               // write child to result object under root name if it is found
               if (v) {
                 set(
                   results,
-                  `${p.storeAs ? p.storeAs : p.root}.${idOrList}`,
+                  `${p.storeAs ? p.storeAs : p.root}.${id}`,
                   v,
                 );
               }
