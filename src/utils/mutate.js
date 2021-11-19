@@ -18,9 +18,11 @@ const promiseAllObject = async (object) =>
   );
 
 const isBatchedWrite = (operations) => Array.isArray(operations);
-const isDocRead = ({ doc } = {}) => typeof doc === 'string';
+const isDocRead = ({ doc, id } = {}) =>
+  typeof id === 'string' || typeof doc === 'string';
 const isProviderRead = (read) => isFunction(read);
-const isSingleWrite = ({ collection } = {}) => typeof collection === 'string';
+const isSingleWrite = ({ collection, path } = {}) =>
+  typeof path === 'string' || typeof collection === 'string';
 
 // ----- FieldValue support -----
 
