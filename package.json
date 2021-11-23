@@ -38,7 +38,6 @@
     "pre-push": "npm run lint"
   },
   "dependencies": {
-    "debug": "^4.3.2",
     "immer": "9.0.5",
     "lodash": "^4.17.21",
     "reduce-reducers": "^1.0.4"
@@ -72,7 +71,6 @@
     "eslint-plugin-react": "^7.24.0",
     "firebase": "^8.7.1",
     "husky": "^7.0.1",
-    "kelonio": "0.6.0",
     "mocha": "^7.0.1",
     "nyc": "^15.1.0",
     "prettier": "2.3.2",

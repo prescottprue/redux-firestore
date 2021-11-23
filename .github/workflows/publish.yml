@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
 
       - name: Check package version
         uses: technote-space/package-version-check-action@v1
@@ -19,35 +19,21 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
       - name: Setup Node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v2
         with:
-          node-version: 12
-          registry-url: https://registry.npmjs.org/
-
-      - name: Get yarn cache
-        id: yarn-cache
-        run: echo "::set-output name=dir::$(yarn cache dir)"
-
-      - uses: actions/cache@v1
-        with:
-          path: ${{ steps.yarn-cache.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          node-version: 14
+          cache: yarn
 
       - name: Install Dependencies
-        env:
-          CI: true
         run: yarn install --frozen-lockfile
 
       - name: Run Unit Tests + Coverage
         env:
-          CI: true
           CODE_CLIMATE: ${{ secrets.CODE_CLIMATE }}
         run: yarn test:cov && yarn codecov
 
       - name: Upload Coverage
-        if: success()
         env:
-          CI: true
           CODE_COV: ${{ secrets.CODE_COV }}
         # Upload to Code Cover. Curl used in place of codecov/codecov-action
         # due to long build time. See https://github.com/codecov/codecov-action/issues/21
@@ -59,8 +45,7 @@ jobs:
         run: npm publish $(if [ ${{github.ref}} == 'refs/heads/next' ]; then echo '--tag next';fi;)
 
       - name: Archive Build Artifact
-        uses: actions/upload-artifact@master
-        if: success()
+        uses: actions/upload-artifact@v2
         with:
           name: build
           path: lib

@@ -1,9 +1,10 @@
 import reducer from 'reducer';
 import { actionTypes } from 'constants';
-import { benchmark } from 'kelonio';
-import { debug } from 'debug';
-import largeAction from './__stubs__/one_mb_action.json';
-import appState from './__stubs__/app_state.json';
+// TODO: Re-enable once performance util is added back
+// import { benchmark } from 'kelonio';
+// import { debug } from 'debug';
+// import largeAction from './__stubs__/one_mb_action.json';
+// import appState from './__stubs__/app_state.json';
 
 const collection = 'testCollection';
 const path = collection;
@@ -1896,87 +1897,88 @@ describe('cacheReducer', () => {
       });
     });
   });
-  describe('Speed test (on 2015 Dual-core 1.5Ghz i5 w/ 8GB 1600 DDR3)', () => {
-    let namespaces;
-    before(() => {
-      namespaces = debug.disable();
-    });
-    after(() => {
-      if (namespaces) debug.enable(namespaces);
-    });
+  // TODO: Re-enable once performance util is included (dropping when in prod)
+  // describe('Speed test (on 2015 Dual-core 1.5Ghz i5 w/ 8GB 1600 DDR3)', () => {
+  //   let namespaces;
+  //   before(() => {
+  //     namespaces = debug.disable();
+  //   });
+  //   after(() => {
+  //     if (namespaces) debug.enable(namespaces);
+  //   });
 
-    it('<36ms processing large action and large state', async () => {
-      // eslint-disable-next-line no-invalid-this
-      this.timeout(5_000);
+  //   it('<36ms processing large action and large state', async () => {
+  //     // eslint-disable-next-line no-invalid-this
+  //     this.timeout(5_000);
 
-      const manyActions = new Array(1).fill(null).map(() => largeAction);
+  //     const manyActions = new Array(1).fill(null).map(() => largeAction);
 
-      await benchmark.record(
-        () => manyActions.forEach((action) => reducer(appState, action)),
-        {
-          iterations: 90,
-          meanUnder: 36,
-          standardDeviationUnder: 10,
-        },
-      );
-    }, 5_000);
+  //     await benchmark.record(
+  //       () => manyActions.forEach((action) => reducer(appState, action)),
+  //       {
+  //         iterations: 90,
+  //         meanUnder: 36,
+  //         standardDeviationUnder: 10,
+  //       },
+  //     );
+  //   }, 5_000);
 
-    it('<18ms to process stores 2,000 docs', async () => {
-      const generate = (limit) =>
-        new Array(limit).fill(null).map(() => ({
-          path,
-          id: `testDocId${Math.random()}`,
-          key1: 'value1',
-          number: 11,
-          multipled: 3,
-          dateKey: { seconds: 1, nanoseconds: 1 },
-          array: [1, 2, 3, 4],
-          obj: { a: 1, b: { x: 0 }, c: { z: 9 } },
-        }));
+  //   it('<18ms to process stores 2,000 docs', async () => {
+  //     const generate = (limit) =>
+  //       new Array(limit).fill(null).map(() => ({
+  //         path,
+  //         id: `testDocId${Math.random()}`,
+  //         key1: 'value1',
+  //         number: 11,
+  //         multipled: 3,
+  //         dateKey: { seconds: 1, nanoseconds: 1 },
+  //         array: [1, 2, 3, 4],
+  //         obj: { a: 1, b: { x: 0 }, c: { z: 9 } },
+  //       }));
 
-      const action = {
-        meta: whereKey1IsValue1,
-        payload: setPayload(generate(2_000)),
-        type: actionTypes.LISTENER_RESPONSE,
-      };
+  //     const action = {
+  //       meta: whereKey1IsValue1,
+  //       payload: setPayload(generate(2_000)),
+  //       type: actionTypes.LISTENER_RESPONSE,
+  //     };
 
-      await benchmark.record(() => reducer(appState, action), {
-        iterations: 50,
-        meanUnder: 18,
-      });
-    }, 5_000);
+  //     await benchmark.record(() => reducer(appState, action), {
+  //       iterations: 50,
+  //       meanUnder: 18,
+  //     });
+  //   }, 5_000);
 
-    it('<24ms to process 100 mutates', async () => {
-      const actions = {
-        type: actionTypes.MUTATE_START,
-        payload: {
-          meta: { collection: testDocId0.path, doc: testDocId0.id },
-          data: [
-            {
-              path: testDocId0.path,
-              id: testDocId0.id,
-              dateKey: { seconds: 99, nanoseconds: 99 },
-            },
-          ],
-        },
-      };
+  //   it('<24ms to process 100 mutates', async () => {
+  //     const actions = {
+  //       type: actionTypes.MUTATE_START,
+  //       payload: {
+  //         meta: { collection: testDocId0.path, doc: testDocId0.id },
+  //         data: [
+  //           {
+  //             path: testDocId0.path,
+  //             id: testDocId0.id,
+  //             dateKey: { seconds: 99, nanoseconds: 99 },
+  //           },
+  //         ],
+  //       },
+  //     };
 
-      const manyActions = new Array(100).fill(null).map(() => actions);
+  //     const manyActions = new Array(100).fill(null).map(() => actions);
 
-      await benchmark.record(
-        () => manyActions.forEach((action) => reducer(appState, action)),
-        {
-          iterations: 125,
-          meanUnder: 24,
-        },
-      );
-    }, 5_000);
+  //     await benchmark.record(
+  //       () => manyActions.forEach((action) => reducer(appState, action)),
+  //       {
+  //         iterations: 125,
+  //         meanUnder: 24,
+  //       },
+  //     );
+  //   }, 5_000);
 
-    it('<4ms to process 1MB action', async () => {
-      await benchmark.record(() => reducer(primedState, largeAction), {
-        iterations: 1_000,
-        meanUnder: 4,
-      });
-    }, 5_000);
-  });
+  //   it('<4ms to process 1MB action', async () => {
+  //     await benchmark.record(() => reducer(primedState, largeAction), {
+  //       iterations: 1_000,
+  //       meanUnder: 4,
+  //     });
+  //   }, 5_000);
+  // });
 });

@@ -1,5 +1,4 @@
 import produce from 'immer';
-import debug from 'debug';
 import firebase from 'firebase/app'; // eslint-disable-line import/no-extraneous-dependencies
 import {
   set,
@@ -22,9 +21,6 @@ import {
 } from 'lodash';
 import { actionTypes } from '../constants';
 import { getBaseQueryName } from '../utils/query';
-
-const info = debug('rrf:cache');
-const verbose = debug('rrfVerbose:cache');
 
 /**
  * @typedef {object & Object.<string, RRFQuery>} CacheState
@@ -593,13 +589,6 @@ function translateMutationToOverrides({ payload }, db = {}, dbo = {}) {
         }),
       };
     });
-
-  if (debug.enabled('rrf:mutate')) {
-    debug('rrf:mutate')('optimistic write', {
-      input: { reads, writes },
-      output: { optimistic, overrides },
-    });
-  }
 
   return overrides;
 }

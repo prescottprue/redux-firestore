@@ -1,8 +1,5 @@
 import { chunk, cloneDeep, flatten, mapValues } from 'lodash';
-import debug from 'debug';
 import { firestoreRef } from './query';
-
-const info = debug('rrf:mutate');
 
 const promiseAllObject = async (object) =>
   Object.fromEntries(
