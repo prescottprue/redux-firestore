@@ -37,6 +37,9 @@
     "prepublish": "npm run clean && npm run build",
     "pre-push": "npm run lint"
   },
+  "peerDependencies": {
+    "firebase": "^9.0.0"
+  },
   "dependencies": {
     "immer": "9.0.5",
     "lodash": "^4.17.21",
@@ -69,7 +72,7 @@
     "eslint-plugin-jsx-a11y": "^6.4.1",
     "eslint-plugin-prettier": "^3.4.0",
     "eslint-plugin-react": "^7.24.0",
-    "firebase": "^8.7.1",
+    "firebase": "^9.5.0",
     "husky": "^7.0.1",
     "lint-staged": "^12.1.2",
     "mocha": "^7.0.1",

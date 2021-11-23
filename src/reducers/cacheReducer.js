@@ -1,5 +1,5 @@
 import produce from 'immer';
-import firebase from 'firebase/app'; // eslint-disable-line import/no-extraneous-dependencies
+import { Timestamp } from 'firebase/firestore'; // eslint-disable-line import/no-extraneous-dependencies
 import {
   set,
   unset,
@@ -448,8 +448,7 @@ const arrayRemove = (key, val, cached) =>
 const increment = (key, val, cached) =>
   key === '::increment' && typeof val === 'number' && (cached() || 0) + val;
 
-const serverTimestamp = (key) =>
-  key === '::serverTimestamp' && firebase.firestore.Timestamp.now();
+const serverTimestamp = (key) => key === '::serverTimestamp' && Timestamp.now();
 
 /**
  * Process Mutation to a vanilla JSON

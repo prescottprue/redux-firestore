@@ -199,10 +199,10 @@ export function setListener(firebase, dispatch, queryOpts, successCb, errorCb) {
       dispatchListenerResponse({ dispatch, docData, meta, firebase });
       // Invoke success callback if it exists
       if (typeof successCb === 'function') successCb(docData);
-      return;
+      return Promise.resolve();
     }
 
-    getPopulateActions({ firebase, docData, meta })
+    return getPopulateActions({ firebase, docData, meta })
       .then((populateActions) => {
         // Dispatch each populate action
         populateActions.forEach((populateAction) => {

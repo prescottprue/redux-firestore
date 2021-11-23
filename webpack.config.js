@@ -16,7 +16,14 @@ const config = {
     libraryTarget: 'umd',
     umdNamedDefine: true,
   },
-  externals: [],
+  externals: {
+    'firebase/firestore': {
+      commonjs: 'firebase/firestore',
+      commonjs2: 'firebase/firestore',
+      amd: 'firebase/firestore',
+      root: 'Firebase',
+    },
+  },
   optimization: {
     minimize: isProduction,
     minimizer: isProduction ? [new TerserPlugin()] : [],
