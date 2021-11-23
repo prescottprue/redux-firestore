@@ -1,6 +1,6 @@
 import produce from 'immer';
 import debug from 'debug';
-import firebase from 'firebase/app';
+import firebase from 'firebase/app'; // eslint-disable-line import/no-extraneous-dependencies
 import {
   set,
   unset,
@@ -22,7 +22,6 @@ import {
 } from 'lodash';
 import { actionTypes } from '../constants';
 import { getBaseQueryName } from '../utils/query';
-import mark from '../utils/profiling';
 
 const info = debug('rrf:cache');
 const verbose = debug('rrfVerbose:cache');
@@ -431,7 +430,6 @@ const skipReprocessing = (query, { databaseOverrides = {} }) => {
  * @param {string} path - path to rerun queries for
  */
 function reprocessQueries(draft, path) {
-  const done = mark(`reprocess.${path}`);
   const queries = [];
 
   const paths = Array.isArray(path) ? path : [path];
@@ -464,8 +462,6 @@ function reprocessQueries(draft, path) {
       override,
     );
   }
-
-  done();
 }
 
 // --- Mutate support ---
@@ -662,7 +658,6 @@ function cleanOverride(draft, { path, id, data }) {
 
 const initialize = (state, { action, key, path }) =>
   produce(state, (draft) => {
-    const done = mark(`cache.${action.type.replace(/(@@.+\/)/, '')}`, key);
     if (!draft.database) {
       set(draft, ['database'], {});
       set(draft, ['databaseOverrides'], {});
@@ -699,13 +694,11 @@ const initialize = (state, { action, key, path }) =>
     // 15%
     reprocessQueries(draft, path);
 
-    done();
     return draft;
   });
 
 const conclude = (state, { action, key, path }) =>
   produce(state, (draft) => {
-    const done = mark(`cache.UNSET_LISTENER`, key);
     if (draft[key]) {
       if (!action.payload.preserveCache) {
         // remove query
@@ -721,7 +714,6 @@ const conclude = (state, { action, key, path }) =>
 
 const modify = (state, { action, key, path }) =>
   produce(state, (draft) => {
-    const done = mark(`cache.DOCUMENT_MODIFIED`, key);
     setWith(
       draft,
       ['database', path, action.meta.doc],
@@ -764,13 +756,11 @@ const modify = (state, { action, key, path }) =>
       reprocessQueries(draft, path);
     }
 
-    done();
     return draft;
   });
 
 const failure = (state, { action, key, path }) =>
   produce(state, (draft) => {
-    const done = mark(`cache.MUTATE_FAILURE`, key);
     // All failures remove overrides
     if (action.payload.data || action.payload.args) {
       const write = action.payload.data
@@ -797,13 +787,11 @@ const failure = (state, { action, key, path }) =>
       }
     }
 
-    done();
     return draft;
   });
 
 const deletion = (state, { action, key, path }) =>
   produce(state, (draft) => {
-    const done = mark(`cache.DELETE_SUCCESS`, key);
     if (draft.database && draft.database[path]) {
       unset(draft, ['database', path, action.meta.doc]);
     }
@@ -819,13 +807,11 @@ const deletion = (state, { action, key, path }) =>
     // reprocess
     reprocessQueries(draft, path);
 
-    done();
     return draft;
   });
 
 const remove = (state, { action, key, path }) =>
   produce(state, (draft) => {
-    const done = mark(`cache.DOCUMENT_REMOVED`, key);
     cleanOverride(draft, {
       path,
       id: action.meta.doc,
@@ -844,7 +830,6 @@ const remove = (state, { action, key, path }) =>
     // reprocess
     reprocessQueries(draft, path);
 
-    done();
     return draft;
   });
 
@@ -873,7 +858,6 @@ const mutation = (state, { action, key, path }) => {
   const { _promise } = action;
   try {
     const result = produce(state, (draft) => {
-      const done = mark(`cache.MUTATE_START`, key);
       if (action.payload && action.payload.data) {
         const optimisiticUpdates =
           translateMutationToOverrides(action, draft.database) || [];
@@ -897,7 +881,6 @@ const mutation = (state, { action, key, path }) => {
         });
       }
 
-      done();
       _promise?.resolve();
 
       return draft;

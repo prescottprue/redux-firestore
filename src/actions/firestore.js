@@ -1,6 +1,4 @@
-/* eslint-disable jsdoc/require-param */
 import { every } from 'lodash';
-import { resource } from '../utils/profiling';
 import { wrapInDispatch } from '../utils/actions';
 import { actionTypes } from '../constants';
 import {
@@ -22,6 +20,7 @@ import {
  * @param {object} firebase - Internal firebase object
  * @param {Function} dispatch - Redux's dispatch function
  * @param {string} queryOption - Options for query
+ * @param {...any} args - Any preceding arguments
  * @returns {Promise} Resolves with results of add call
  */
 export function add(firebase, dispatch, queryOption, ...args) {
@@ -52,6 +51,7 @@ export function add(firebase, dispatch, queryOption, ...args) {
  * @param {object} firebase - Internal firebase object
  * @param {Function} dispatch - Redux's dispatch function
  * @param {string} queryOption - Options for query
+ * @param {...any} args - Any preceding arguments
  * @returns {Promise} Resolves with results of set call
  */
 export function set(firebase, dispatch, queryOption, ...args) {
@@ -117,6 +117,7 @@ export function get(firebase, dispatch, queryOption) {
  * @param {object} firebase - Internal firebase object
  * @param {Function} dispatch - Redux's dispatch function
  * @param {string} queryOption - Options for query
+ * @param {...any} args - Any preceding arguments
  * @returns {Promise} Resolves with results of update call
  */
 export function update(firebase, dispatch, queryOption, ...args) {
@@ -190,12 +191,9 @@ export function deleteRef(firebase, dispatch, queryOption) {
  */
 export function setListener(firebase, dispatch, queryOpts, successCb, errorCb) {
   const meta = getQueryConfig(queryOpts);
-  const done = resource(meta.collection);
 
   // Create listener
   const success = (docData) => {
-    done(docData.size);
-
     // Dispatch directly if no populates
     if (!meta.populates) {
       dispatchListenerResponse({ dispatch, docData, meta, firebase });
@@ -235,7 +233,6 @@ export function setListener(firebase, dispatch, queryOpts, successCb, errorCb) {
   };
 
   const error = (err) => {
-    done(0);
     const {
       mergeOrdered,
       mergeOrderedDocUpdates,

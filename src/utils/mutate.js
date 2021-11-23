@@ -1,7 +1,6 @@
 import { chunk, cloneDeep, flatten, isFunction, mapValues } from 'lodash';
 import debug from 'debug';
 import { firestoreRef } from './query';
-import mark from './profiling';
 
 const info = debug('rrf:mutate');
 
@@ -127,9 +126,7 @@ function write(firebase, operation = {}, writer = null) {
  * @returns {Promise}
  */
 function writeSingle(firebase, operations) {
-  const done = mark('mutate.writeSingle');
   const promise = write(firebase, operations);
-  done();
   return promise;
 }
 
@@ -141,7 +138,6 @@ const MAX_BATCH_COUNT = 500;
  * @returns {Promise}
  */
 async function writeInBatch(firebase, operations) {
-  const done = mark('mutate.writeInBatch');
   const committedBatchesPromised = chunk(operations, MAX_BATCH_COUNT).map(
     (operationsChunk) => {
       const batch = firebase.firestore().batch();
@@ -153,7 +149,6 @@ async function writeInBatch(firebase, operations) {
     },
   );
 
-  done();
   return Promise.all(committedBatchesPromised).then(flatten);
 }
 
@@ -173,7 +168,6 @@ async function writeInTransaction(firebase, operations) {
       return transaction.get(ref);
     };
 
-    const done = mark('mutate.writeInTransaction:reads');
     const readsPromised = mapValues(operations.reads, async (read) => {
       if (isProviderRead(read)) return read();
 
@@ -191,13 +185,11 @@ async function writeInTransaction(firebase, operations) {
       return unserializedDocs.map(serialize);
     });
 
-    done();
     const reads = await promiseAllObject(readsPromised);
 
     const writes = [];
 
     operations.writes.forEach((writeFnc) => {
-      const complete = mark('mutate.writeInTransaction:writes');
       const operation =
         typeof writeFnc === 'function' ? writeFnc(reads) : writeFnc;
 
@@ -207,8 +199,6 @@ async function writeInTransaction(firebase, operations) {
       } else {
         writes.push(write(firebase, operation, transaction));
       }
-
-      complete();
     });
 
     // Firestore Transaction return null.
