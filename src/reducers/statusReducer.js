@@ -10,7 +10,6 @@ const { SET_LISTENER, UNSET_LISTENER, LISTENER_ERROR, LISTENER_RESPONSE } =
  * @param {object} [state={}] - Current requesting redux state
  * @param {object} action - Object containing the action that was dispatched
  * @param {string} action.type - Type of action that was dispatched
- * @param {string} action.path - Path of action that was dispatched
  * @param {string} action.meta - The meta information of the query
  * @returns {object} Profile state after reduction
  */
@@ -38,7 +37,6 @@ export function requestingReducer(state = {}, { type, meta }) {
  * @param {object} [state={}] - Current requested redux state
  * @param {object} action - Object containing the action that was dispatched
  * @param {string} action.type - Type of action that was dispatched
- * @param {string} action.path - Path of action that was dispatched
  * @param {string} action.meta - The meta information of the query
  * @returns {object} Profile state after reduction
  */
@@ -66,7 +64,6 @@ export function requestedReducer(state = {}, { type, meta }) {
  * @param {object} [state={}] - Current timestamps redux state
  * @param {object} action - Object containing the action that was dispatched
  * @param {string} action.type - Type of action that was dispatched
- * @param {string} action.path - Path of action that was dispatched
  * @param {object} action.meta - Metadata for action
  * @returns {object} Profile state after reduction
  */

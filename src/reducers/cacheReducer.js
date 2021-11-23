@@ -94,11 +94,6 @@ import { getBaseQueryName } from '../utils/query';
  */
 
 const isTimestamp = (a) => a instanceof Object && a.seconds !== undefined;
-const formatTimestamp = ({ seconds } = {}) =>
-  seconds &&
-  new Intl.DateTimeFormat('en-US', { dateStyle: 'short' }).format(
-    new Date(seconds * 1000),
-  );
 
 const PROCESSES = {
   '<': (a, b) => a < b,
@@ -136,13 +131,7 @@ const PROCESSES_TIMESTAMP = {
   '*': () => true,
 };
 
-const xfVerbose = (title) =>
-  partialRight(map, (data) => {
-    if (verbose.enabled) {
-      verbose(title, JSON.parse(JSON.stringify(data)));
-    }
-    return data;
-  });
+const xfVerbose = (title) => partialRight(map, (data) => data);
 
 /**
  * @name xfAllIds
@@ -278,7 +267,6 @@ const xfPaginate = (query, getDoc) => {
     startAfter,
     endAt,
     endBefore,
-    via,
   } = query;
 
   const start = startAt || startAfter;
@@ -288,20 +276,6 @@ const xfPaginate = (query, getDoc) => {
   const needsPagination = start || end || false;
 
   if (!needsPagination || !order) return identity;
-
-  let prop = null;
-  if (verbose.enabled) {
-    if (startAt) prop = 'startAt';
-    else if (startAfter) prop = 'startAfter';
-    else if (endAt) prop = 'endAt';
-    else if (endBefore) prop = 'endBefore';
-
-    verbose(
-      `paginate ${prop}:${formatTimestamp(needsPagination)} ` +
-        `order:[${query?.orderBy?.[0]}, ${query?.orderBy?.[1]}] ` +
-        `via:${via}`,
-    );
-  }
 
   const isFlat = typeof order[0] === 'string';
   const orders = isFlat ? [order] : order;
@@ -318,15 +292,6 @@ const xfPaginate = (query, getDoc) => {
       if (startAfter || endBefore) compare = proc[sort === 'desc' ? '<' : '>'];
 
       const isMatched = compare(document[field], value);
-      if (isMatched) {
-        if (verbose.enabled) {
-          const val = isTime
-            ? formatTimestamp(document[field])
-            : document[field];
-          verbose(`${prop}: ${document.id}.${field} = ${val}`);
-        }
-        return true;
-      }
       return isMatched;
     }) !== undefined;
 
@@ -358,12 +323,9 @@ const xfPaginate = (query, getDoc) => {
 };
 
 /**
- * @name processOptimistic
  * Convert the query to a transducer for the query results
- * @param {?CacheState.database} database -
- * @param state
- * @param {?CacheState.databaseOverrides} overrides -
  * @param {RRFQuery} query - query used to get data from firestore
+ * @param {object} state - State object
  * @returns {Function} - Transducer will return a modifed array of documents
  */
 function processOptimistic(query, state) {
@@ -378,10 +340,6 @@ function processOptimistic(query, state) {
 
     return override ? { ...data, ...override } : data;
   };
-
-  if (verbose.enabled) {
-    verbose(JSON.parse(JSON.stringify(query)));
-  }
 
   const process = flow([
     xfAllIds(query),
@@ -448,16 +406,6 @@ function reprocessQueries(draft, path) {
       set(draft, [key, 'via'], !isEmpty(overrides) ? 'optimistic' : 'memory');
     }
   });
-
-  if (info.enabled) {
-    /* istanbul ignore next */
-    const override = JSON.parse(JSON.stringify(draft.databaseOverrides || {}));
-    /* istanbul ignore next */
-    info(
-      `reprocess ${path} (${queries.length} queries) with overrides`,
-      override,
-    );
-  }
 }
 
 // --- Mutate support ---
@@ -475,7 +423,7 @@ const primaryValue = (arr) =>
  * @param {*} obj - data
  * @param {*} key - nested key path
  * @param {*} val - value to be set
- * @returns Null | object
+ * @returns {null | object} Nested map
  */
 const nestedMap = (obj, key, val) => {
   // eslint-disable-next-line no-param-reassign
@@ -528,10 +476,11 @@ function atomize(mutation, cached) {
 }
 /**
  * Translate mutation to a set of database overrides
- * @param {MutateAction} action - Standard Redux action
+ * @param {object} action - Redux action
+ * @param {object} action.payload - Action payload
  * @param {object.<FirestorePath, object<FirestoreDocumentId, Doc>>} db - in-memory database
  * @param {object.<FirestorePath, object<FirestoreDocumentId, Doc>>} dbo - in-memory database overrides
- * @returns Array<object<FirestoreDocumentId, Doc>>
+ * @returns {Array<object<FirestoreDocumentId, Doc>>} List of overrides
  */
 function translateMutationToOverrides({ payload }, db = {}, dbo = {}) {
   // turn everything to a write
@@ -595,6 +544,7 @@ function translateMutationToOverrides({ payload }, db = {}, dbo = {}) {
 
 /**
  * @param {object} draft - reduce state
+ * @param {object} action - Redux action
  * @param {string} action.path - path of the parent collection
  * @param {string} action.id - document id
  * @param {object} action.data - data in the payload
@@ -629,10 +579,10 @@ function cleanOverride(draft, { path, id, data }) {
       });
 
   const isDone = props.length === Object.keys(override).length;
-  const isEmpty =
+  const dataIsEmpty =
     isDone && Object.keys(draft.databaseOverrides[path] || {}).length === 1;
 
-  if (isEmpty) {
+  if (dataIsEmpty) {
     unset(draft, ['databaseOverrides', path]);
   } else if (isDone) {
     unset(draft, ['databaseOverrides', path, id]);
@@ -697,7 +647,6 @@ const conclude = (state, { action, key, path }) =>
       reprocessQueries(draft, path);
     }
 
-    done();
     return draft;
   });
 
@@ -759,8 +708,6 @@ const failure = (state, { action, key, path }) =>
         (results, { writes }) => [
           ...results,
           ...writes.map(({ collection, path: _path, doc, id }) => {
-            info('remove override', `${collection}/${doc}`);
-
             // don't send data to ensure document override is deleted
             cleanOverride(draft, { path: _path || collection, id: id || doc });
 
@@ -852,7 +799,6 @@ const mutation = (state, { action, key, path }) => {
           translateMutationToOverrides(action, draft.database) || [];
 
         optimisiticUpdates.forEach((data) => {
-          info('overriding', `${data.path}/${data.id}`, data);
           setWith(
             draft,
             ['databaseOverrides', data.path, data.id],

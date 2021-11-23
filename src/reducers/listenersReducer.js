@@ -35,7 +35,7 @@ function listenersById(state = {}, { type, path, payload }) {
  * @param {object} [state=[]] - Current authError redux state
  * @param {object} action - Object containing the action that was dispatched
  * @param {string} action.type - Type of action that was dispatched
- * @param {object} action.payload - THe payload
+ * @param {object} action.payload - Action payload
  * @returns {object} allListeners state after reduction (used in listeners)
  * @private
  */

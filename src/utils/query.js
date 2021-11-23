@@ -559,7 +559,6 @@ export function dataByIdSnapshot(snap) {
 }
 
 /**
- * @private
  * Create an array of promises for population of an object or list
  * @param {object} firebase - Internal firebase object
  * @param {object} populate - Object containing root to be populate
@@ -567,14 +566,13 @@ export function dataByIdSnapshot(snap) {
  * @param {string} id - String id
  * @returns {Promise} Resolves with populate child data
  */
-export function getPopulateChild(firebase, populate, id) {
+function getPopulateChild(firebase, populate, id) {
   return firestoreRef(firebase, { collection: populate.root, doc: id })
     .get()
     .then((snap) => ({ id, ...snap.data() }));
 }
 
 /**
- * @private
  * Populate list of data
  * @param {object} firebase - Internal firebase object
  * @param {object} originalObj - Object to have parameter populated
@@ -582,7 +580,7 @@ export function getPopulateChild(firebase, populate, id) {
  * @param {object} results - Object containing results of population from other populates
  * @returns {Promise} Resolves with populated list
  */
-export function populateList(firebase, originalObj, p, results) {
+function populateList(firebase, originalObj, p, results) {
   // Handle root not being defined
   if (!results[p.root]) {
     set(results, p.root, {});
@@ -603,7 +601,6 @@ export function populateList(firebase, originalObj, p, results) {
 }
 
 /**
- * @private
  * Create standardized populate object from strings or objects
  * @param {string|object} str - String or Object to standardize into populate object
  * @returns {object} Populate object
@@ -618,7 +615,6 @@ function getPopulateObj(str) {
 }
 
 /**
- * @private
  * Create standardized populate object from strings or objects
  * @param {Array} arr - Array of items to get populate objects for
  * @returns {Array} Array of populate objects
@@ -631,20 +627,14 @@ function getPopulateObjs(arr) {
 }
 
 /**
- * @private
  * Create an array of promises for population of an object or list
  * @param {object} firebase - Internal firebase object
  * @param {object} dataKey - Object to have parameter populated
- * @param {object} originalData - String containg population data
+ * @param {object} originalData - String containing population data
  * @param {object|Function} populatesIn - Populates setting
  * @returns {Promise} Resolves with results of population
  */
-export function promisesForPopulate(
-  firebase,
-  dataKey,
-  originalData,
-  populatesIn,
-) {
+function promisesForPopulate(firebase, dataKey, originalData, populatesIn) {
   // TODO: Handle selecting of parameter to populate with (i.e. displayName of users/user)
   const promisesArray = [];
   const results = {};

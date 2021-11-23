@@ -10,7 +10,7 @@ const { CLEAR_ERRORS, CLEAR_ERROR, LISTENER_ERROR, ERROR } = actionTypes;
  * @param {object} [state=[]] - Current authError redux state
  * @param {object} action - Object containing the action that was dispatched
  * @param {string} action.type - Type of action that was dispatched
- * @param action.meta
+ * @param {object} action.meta - Metadata of action
  * @returns {object} Profile state after reduction
  */
 function errorsAllIds(state = [], { meta, type }) {
@@ -36,8 +36,8 @@ function errorsAllIds(state = [], { meta, type }) {
  * @param {object} [state=[]] - Current authError redux state
  * @param {object} action - Object containing the action that was dispatched
  * @param {string} action.type - Type of action that was dispatched
- * @param action.meta
- * @param action.payload
+ * @param {object} action.meta - Metadata of action
+ * @param {object} action.payload - Payload of action
  * @returns {object} Profile state after reduction
  */
 function errorsByQuery(state = {}, { meta, payload, type }) {

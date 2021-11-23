@@ -94,8 +94,6 @@ function write(firebase, operation = {}, writer = null) {
   const [changes, requiresUpdate = false] = atomize(firebase, data || rest);
 
   if (writer) {
-    const writeType = writer.commit ? 'Batching' : 'Transaction.set';
-    info(writeType, { id: ref.id, path: ref.parent.path, ...changes });
     if (requiresUpdate) {
       writer.update(ref, changes);
     } else {
@@ -103,7 +101,6 @@ function write(firebase, operation = {}, writer = null) {
     }
     return { id: ref.id, path: ref.parent.path, ...changes };
   }
-  info('Writing', { id: ref.id, path: ref.parent.path, ...changes });
   if (requiresUpdate) {
     return ref.update(changes);
   }
@@ -112,9 +109,9 @@ function write(firebase, operation = {}, writer = null) {
 }
 
 /**
- * @param {object} firebase
- * @param {object} operations
- * @returns {Promise}
+ * @param {object} firebase - Firebase instance
+ * @param {object} operations - Operations
+ * @returns {Promise} Resolves with results of write
  */
 function writeSingle(firebase, operations) {
   const promise = write(firebase, operations);
@@ -124,9 +121,9 @@ function writeSingle(firebase, operations) {
 const MAX_BATCH_COUNT = 500;
 
 /**
- * @param {object} firebase
- * @param {object} operations
- * @returns {Promise}
+ * @param {object} firebase - Firebase instance
+ * @param {object} operations - Operations
+ * @returns {Promise} Resolves with results of writing in batch
  */
 async function writeInBatch(firebase, operations) {
   const committedBatchesPromised = chunk(operations, MAX_BATCH_COUNT).map(
@@ -144,9 +141,9 @@ async function writeInBatch(firebase, operations) {
 }
 
 /**
- * @param {object} firebase
- * @param {object} operations
- * @returns {Promise}
+ * @param {object} firebase - Firebase instance
+ * @param {object} operations - Operations
+ * @returns {Promise} Resolves with results of running transaction
  */
 async function writeInTransaction(firebase, operations) {
   return firebase.firestore().runTransaction(async (transaction) => {
@@ -154,17 +151,13 @@ async function writeInTransaction(firebase, operations) {
       !doc
         ? null
         : { ...doc.data(), id: doc.ref.id, path: doc.ref.parent.path };
-    const getter = (ref) => {
-      info('Transaction.get ', { id: ref.id, path: ref.parent.path });
-      return transaction.get(ref);
-    };
 
     const readsPromised = mapValues(operations.reads, async (read) => {
       if (typeof read === 'function') return read();
 
       if (isDocRead(read)) {
         const doc = firestoreRef(firebase, read);
-        const snapshot = await getter(doc);
+        const snapshot = await transaction.get(doc);
         return serialize(snapshot.exsits === false ? null : snapshot);
       }
 
@@ -172,7 +165,9 @@ async function writeInTransaction(firebase, operations) {
       const coll = firestoreRef(firebase, read);
       const snapshot = await coll.get();
       if (hasNothing(snapshot) || snapshot.docs.length === 0) return [];
-      const unserializedDocs = await Promise.all(snapshot.docs.map(getter));
+      const unserializedDocs = await Promise.all(
+        snapshot.docs.map((ref) => transaction.get(ref)),
+      );
       return unserializedDocs.map(serialize);
     });
 
@@ -199,9 +194,9 @@ async function writeInTransaction(firebase, operations) {
 }
 
 /**
- * @param {object} firestore
- * @param {object} operations
- * @returns {Promise}
+ * @param {object} firestore - Firestore instance
+ * @param {object} operations - Operations
+ * @returns {Promise} Resolves with results of mutation
  */
 export default function mutate(firestore, operations) {
   // Is a single write
@@ -213,5 +208,5 @@ export default function mutate(firestore, operations) {
     return writeInBatch(firestore, operations);
   }
 
-  return writeInTransaction(firestore, operations).then((val) => val);
+  return writeInTransaction(firestore, operations);
 }
