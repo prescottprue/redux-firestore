@@ -27,6 +27,9 @@ jobs:
       - name: Install Dependencies
         run: yarn install --frozen-lockfile
 
+      - name: Check For Lint
+        run: npm run lint
+
       - name: Run Unit Tests + Coverage
         env:
           CODE_CLIMATE: ${{ secrets.CODE_CLIMATE }}
