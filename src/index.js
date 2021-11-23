@@ -11,6 +11,15 @@ import { getSnapshotByObject } from './utils/query';
 // converted with transform-inline-environment-variables
 export const version = process.env.npm_package_version;
 
+const mockMutate = (state, writes) =>
+  new Promise((resolve, reject) => {
+    state.cache = reducer(state, {
+      type: actionTypes.MUTATE_START,
+      payload: { data: writes },
+      _promise: { resolve, reject },
+    }).cache;
+  });
+
 export {
   reducer,
   reducer as firestoreReducer,
@@ -24,6 +33,7 @@ export {
   actionTypes,
   middleware,
   CALL_FIRESTORE,
+  mockMutate,
 };
 
 export default {
@@ -40,4 +50,5 @@ export default {
   actionTypes,
   middleware,
   CALL_FIRESTORE,
+  mockMutate,
 };

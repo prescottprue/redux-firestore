@@ -13,16 +13,6 @@ describe('reducer', () => {
 });
 
 describe('reducers', () => {
-  describe('data reducer', () => {
-    it('returns state for undefined actionType', () => {
-      expect(reducer({}, {})).to.have.property('data');
-    });
-  });
-  describe('ordered reducer', () => {
-    it('returns state for undefined actionType', () => {
-      expect(reducer({}, {})).to.have.property('ordered');
-    });
-  });
   describe('errors reducer', () => {
     it('returns state for undefined actionType', () => {
       expect(reducer({}, {})).to.have.property('errors');

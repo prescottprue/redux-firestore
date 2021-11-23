@@ -1,4 +1,5 @@
-import { isObject, mapValues } from 'lodash';
+import { isFunction, isObject, mapValues } from 'lodash';
+import mutate from './mutate';
 
 /**
  * Build payload by invoking payload function if it a function, otherwise
@@ -19,6 +20,8 @@ function makePayload({ payload }, valToPass) {
  * @param {Function} opts.method - Method to call
  * @param {Array} opts.args - Arguments to call method with
  * @param {Array} opts.types - Action types array ([BEFORE, SUCCESS, FAILURE])
+ * @param opts.ref
+ * @param opts.meta
  * @returns {Promise} Results of method call
  * @private
  */
@@ -26,14 +29,34 @@ export function wrapInDispatch(
   dispatch,
   { ref, meta = {}, method, args = [], types },
 ) {
+  if (!isFunction(dispatch)) {
+    throw new Error('dispatch is not a function');
+  }
+
   const [requestingType, successType, errorType] = types;
-  dispatch({
+  const startAction = {
     type: isObject(requestingType) ? requestingType.type : requestingType,
     meta,
     payload: isObject(requestingType) ? requestingType.payload : { args },
+  };
+  const optimistic = new Promise((resolve, reject) => {
+    Object.defineProperty(startAction, '_promise', {
+      enumerable: false,
+      configurable: false,
+      writable: false,
+      value: { resolve, reject },
+    });
+    if (method !== 'mutate') {
+      resolve();
+    }
+    dispatch(startAction);
   });
-  return ref[method](...args)
-    .then(result => {
+
+  const saved =
+    method === 'mutate' ? mutate(ref, ...args) : ref[method](...args);
+
+  saved
+    .then((result) => {
       const successIsObject = isObject(successType);
       // Built action object handling function for custom payload
       const actionObj = {
@@ -55,7 +78,7 @@ export function wrapInDispatch(
       dispatch(actionObj);
       return result;
     })
-    .catch(err => {
+    .catch((err) => {
       dispatch({
         type: errorType,
         meta,
@@ -63,6 +86,14 @@ export function wrapInDispatch(
       });
       return Promise.reject(err);
     });
+
+  return new Promise((done, error) => {
+    Promise.allSettled([saved, optimistic]).then(([firestore, memory]) => {
+      if (memory.status === 'rejected') return error(memory.reason);
+      if (firestore.status === 'rejected') return error(firestore.reason);
+      return done(firestore.value);
+    });
+  });
 }
 
 /**
@@ -74,8 +105,9 @@ export function wrapInDispatch(
  * and dispatch.
  */
 function createWithFirebaseAndDispatch(firebase, dispatch) {
-  return func => (...args) =>
-    func.apply(firebase, [firebase, dispatch, ...args]);
+  return (func) =>
+    (...args) =>
+      func.apply(firebase, [firebase, dispatch, ...args]);
 }
 
 /**

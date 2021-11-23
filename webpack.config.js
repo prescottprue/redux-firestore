@@ -1,5 +1,5 @@
 const path = require('path');
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 
 const libraryName = 'redux-firestore';
 const isProduction = process.env.NODE_ENV === 'production';
@@ -18,26 +18,20 @@ const config = {
   },
   externals: [],
   optimization: {
-    minimizer: isProduction
-      ? [
-          new UglifyJsPlugin({
-            cache: true,
-            parallel: true,
-            uglifyOptions: {
-              compress: true,
-              ecma: 6,
-              mangle: true,
-            },
-            sourceMap: true,
-          }),
-        ]
-      : [],
+    minimize: isProduction,
+    minimizer: isProduction ? [new TerserPlugin()] : [],
   },
   module: {
     rules: [
       {
         test: /(\.jsx|\.js)$/,
-        use: 'babel-loader',
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-env'],
+            plugins: ['@babel/transform-runtime'],
+          },
+        },
         exclude: /node_modules/,
       },
     ],
