@@ -1,11 +1,8 @@
-import { chunk, cloneDeep, flatten, isFunction, mapValues } from 'lodash';
+import { chunk, cloneDeep, flatten, mapValues } from 'lodash';
 import debug from 'debug';
 import { firestoreRef } from './query';
 
 const info = debug('rrf:mutate');
-
-const docRef = (firestore, collection, doc) =>
-  firestore.doc(`${collection}/${doc}`);
 
 const promiseAllObject = async (object) =>
   Object.fromEntries(
@@ -16,12 +13,9 @@ const promiseAllObject = async (object) =>
     ),
   );
 
-const isBatchedWrite = (operations) => Array.isArray(operations);
 const isDocRead = ({ doc, id } = {}) =>
   typeof id === 'string' || typeof doc === 'string';
-const isProviderRead = (read) => isFunction(read);
-const isSingleWrite = ({ collection, path } = {}) =>
-  typeof path === 'string' || typeof collection === 'string';
+
 const hasNothing = (snapshot) =>
   !snapshot ||
   (snapshot.empty && snapshot.empty()) ||
@@ -57,7 +51,7 @@ const serverTimestamp = (firebase, key) =>
  * Process Mutation to a vanilla JSON
  * @param {object} firebase - firebase
  * @param {*} operation - payload mutation
- * @returns
+ * @returns {Array} Array of objects
  */
 function atomize(firebase, operation) {
   let requiresUpdate = false;
@@ -92,14 +86,14 @@ function atomize(firebase, operation) {
 /**
  * For details between set & udpate see:
  * https://firebase.google.com/docs/reference/js/firebase.firestore.Transaction#update
- * @param {object} firebase
- * @param {Mutation_v1 | Mutation_v2} operation
- * @param {Batch | Transaction} writer
+ * @param {object} firebase - Firebase instance
+ * @param {Mutation_v1 | Mutation_v2} operation - Operation object
+ * @param {Batch | Transaction} writer - Writer object
  * @returns {Promise | Doc} - Batch & Transaction .set returns null
  */
 function write(firebase, operation = {}, writer = null) {
   const { collection, path, doc, id, data, ...rest } = operation;
-  const ref = docRef(firebase.firestore(), path || collection, id || doc);
+  const ref = firebase.firestore().doc(`${path || collection}/${id || doc}`);
   const [changes, requiresUpdate = false] = atomize(firebase, data || rest);
 
   if (writer) {
@@ -169,7 +163,7 @@ async function writeInTransaction(firebase, operations) {
     };
 
     const readsPromised = mapValues(operations.reads, async (read) => {
-      if (isProviderRead(read)) return read();
+      if (typeof read === 'function') return read();
 
       if (isDocRead(read)) {
         const doc = firestoreRef(firebase, read);
@@ -213,11 +207,12 @@ async function writeInTransaction(firebase, operations) {
  * @returns {Promise}
  */
 export default function mutate(firestore, operations) {
-  if (isSingleWrite(operations)) {
+  // Is a single write
+  if (typeof path === 'string' || typeof collection === 'string') {
     return writeSingle(firestore, operations);
   }
-
-  if (isBatchedWrite(operations)) {
+  // Is batched write
+  if (Array.isArray(operations)) {
     return writeInBatch(firestore, operations);
   }
 

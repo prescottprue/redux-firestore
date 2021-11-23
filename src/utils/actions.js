@@ -1,4 +1,4 @@
-import { isFunction, isObject, mapValues } from 'lodash';
+import { isObject, mapValues } from 'lodash';
 import mutate from './mutate';
 
 /**
@@ -20,8 +20,8 @@ function makePayload({ payload }, valToPass) {
  * @param {Function} opts.method - Method to call
  * @param {Array} opts.args - Arguments to call method with
  * @param {Array} opts.types - Action types array ([BEFORE, SUCCESS, FAILURE])
- * @param opts.ref
- * @param opts.meta
+ * @param {object} opts.ref - Firestore reference
+ * @param {object} opts.meta - Meta object
  * @returns {Promise} Results of method call
  * @private
  */
@@ -29,7 +29,7 @@ export function wrapInDispatch(
   dispatch,
   { ref, meta = {}, method, args = [], types },
 ) {
-  if (!isFunction(dispatch)) {
+  if (typeof dispatch !== 'function') {
     throw new Error('dispatch is not a function');
   }
 
@@ -87,12 +87,11 @@ export function wrapInDispatch(
       return Promise.reject(err);
     });
 
-  return new Promise((done, error) => {
-    Promise.allSettled([saved, optimistic]).then(([firestore, memory]) => {
-      if (memory.status === 'rejected') return error(memory.reason);
-      if (firestore.status === 'rejected') return error(firestore.reason);
-      return done(firestore.value);
-    });
+  return Promise.allSettled([saved, optimistic]).then(([firestore, memory]) => {
+    if (memory.status === 'rejected') return Promise.reject(memory.reason);
+    if (firestore.status === 'rejected')
+      return Promise.reject(firestore.reason);
+    return firestore.value;
   });
 }
 
