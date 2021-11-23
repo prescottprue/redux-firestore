@@ -1,5 +1,6 @@
 const path = require('path');
 const TerserPlugin = require('terser-webpack-plugin');
+const LodashModuleReplacementPlugin = require('lodash-webpack-plugin');
 
 const libraryName = 'redux-firestore';
 const isProduction = process.env.NODE_ENV === 'production';
@@ -43,7 +44,7 @@ const config = {
       },
     ],
   },
-  plugins: [],
+  plugins: [new LodashModuleReplacementPlugin()],
 };
 
 module.exports = config;

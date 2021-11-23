@@ -1771,9 +1771,6 @@ describe('cacheReducer', () => {
 
   describe('MUTATE_FAILURE', () => {
     it('Remove overrides on Firestore failures', () => {
-      // console.log('mutate---', mutate);
-      // sinon.replace(mutate, 'default', () => Promise.resolve());
-
       const doc1 = {
         path,
         id: 'testDocId1',

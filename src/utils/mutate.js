@@ -200,7 +200,10 @@ async function writeInTransaction(firebase, operations) {
  */
 export default function mutate(firestore, operations) {
   // Is a single write
-  if (typeof path === 'string' || typeof collection === 'string') {
+  if (
+    typeof operations?.path === 'string' ||
+    typeof operations?.collection === 'string'
+  ) {
     return writeSingle(firestore, operations);
   }
   // Is batched write
