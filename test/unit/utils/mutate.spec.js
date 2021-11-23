@@ -1,4 +1,3 @@
-/* eslint-disable require-jsdoc */
 import { expect } from 'chai';
 import mutate from 'utils/mutate';
 
@@ -78,8 +77,8 @@ describe('firestore.mutate()', () => {
   });
 
   it('writes operations in multiple batches when there are over 500 writes', async () => {
-    const set = sinon.spy(() => ({ set, commit }));
     const commit = sinon.spy((val) => Promise.resolve(val));
+    const set = sinon.spy(() => ({ set, commit }));
     const doc = sinon.spy((val) => ({
       doc: val,
       id: 'id',
@@ -115,8 +114,15 @@ describe('firestore.mutate()', () => {
     );
     const withConverter = sinon.spy(() => ({ get: firestoreGet }));
     const where = sinon.spy(() => ({ get: firestoreGet, withConverter }));
+    const doc = sinon.spy((val) => ({
+      doc: val,
+      withConverter,
+      id: 'id',
+      parent: { path: 'path' },
+    }));
     const collection = sinon.spy(() => ({ doc, withConverter, where }));
     const update = sinon.spy();
+
     function* mock() {
       yield Promise.resolve({
         ref: { id: 'sprint-1', parent: { path: 'sprints' } },
@@ -137,12 +143,6 @@ describe('firestore.mutate()', () => {
     const transactionGet = () => mocked.next().value;
     const transaction = { update, get: transactionGet };
     const runTransaction = sinon.spy((cb) => cb(transaction));
-    const doc = sinon.spy((val) => ({
-      doc: val,
-      withConverter,
-      id: 'id',
-      parent: { path: 'path' },
-    }));
 
     const firestore = sinon.spy(() => ({ collection, runTransaction, doc }));
 
@@ -208,6 +208,12 @@ describe('firestore.mutate()', () => {
     );
     const withConverter = sinon.spy(() => ({ get: firestoreGet }));
     const where = sinon.spy(() => ({ get: firestoreGet, withConverter }));
+    const doc = sinon.spy((val) => ({
+      doc: val,
+      withConverter,
+      id: 'id',
+      parent: { path: 'path' },
+    }));
     const collection = sinon.spy(() => ({ doc, withConverter, where }));
     const set = sinon.spy();
     // eslint-disable-next-line
@@ -229,12 +235,6 @@ describe('firestore.mutate()', () => {
     const transactionGet = () => mocked.next().value;
     const transaction = { set, get: transactionGet };
     const runTransaction = sinon.spy((cb) => cb(transaction));
-    const doc = sinon.spy((val) => ({
-      doc: val,
-      withConverter,
-      id: 'id',
-      parent: { path: 'path' },
-    }));
 
     const firestore = sinon.spy(() => ({ collection, runTransaction, doc }));
 

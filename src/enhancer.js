@@ -95,7 +95,6 @@ export default function reduxFirestore(firebaseInstance, otherConfig) {
  *        dispatch({ type: 'SOME_ACTION' })
  *      })
  * };
- *
  */
 export function getFirestore() {
   // TODO: Handle receiveing config and creating firebase instance if it doesn't exist

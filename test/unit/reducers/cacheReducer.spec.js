@@ -1,16 +1,12 @@
-/* eslint-disable prettier/prettier */
-/* eslint-disable no-console */
 import reducer from 'reducer';
 import { actionTypes } from 'constants';
 import { benchmark } from 'kelonio';
 import { debug } from 'debug';
 import largeAction from './__stubs__/one_mb_action.json';
 import appState from './__stubs__/app_state.json';
-// import * as mutate from 'utils/mutate';
 
 const collection = 'testCollection';
-const another = 'anotherCollection';
-const path = `${collection}`;
+const path = collection;
 
 // --- data
 
@@ -1753,7 +1749,7 @@ describe('cacheReducer', () => {
         payload: {
           data: {
             reads: {
-              firestore_doesnt_support_transction_queries: {
+              firestore_doesnt_support_transaction_queries: {
                 collection: path,
               },
             },
@@ -1909,7 +1905,7 @@ describe('cacheReducer', () => {
       if (namespaces) debug.enable(namespaces);
     });
 
-    it('<36ms processing large action and large state', async function () {
+    it('<36ms processing large action and large state', async () => {
       // eslint-disable-next-line no-invalid-this
       this.timeout(5_000);
 
@@ -1923,12 +1919,9 @@ describe('cacheReducer', () => {
           standardDeviationUnder: 10,
         },
       );
-    });
+    }, 5_000);
 
-    it('<18ms to process stores 2,000 docs', async function () {
-      // eslint-disable-next-line no-invalid-this
-      this.timeout(5_000);
-
+    it('<18ms to process stores 2,000 docs', async () => {
       const generate = (limit) =>
         new Array(limit).fill(null).map(() => ({
           path,
@@ -1951,12 +1944,9 @@ describe('cacheReducer', () => {
         iterations: 50,
         meanUnder: 18,
       });
-    });
+    }, 5_000);
 
-    it('<24ms to process 100 mutates', async function () {
-      // eslint-disable-next-line no-invalid-this
-      this.timeout(5_000);
-
+    it('<24ms to process 100 mutates', async () => {
       const actions = {
         type: actionTypes.MUTATE_START,
         payload: {
@@ -1980,16 +1970,13 @@ describe('cacheReducer', () => {
           meanUnder: 24,
         },
       );
-    });
+    }, 5_000);
 
-    it('<4ms to process 1MB action', async function () {
-      // eslint-disable-next-line no-invalid-this
-      this.timeout(5_000);
-
+    it('<4ms to process 1MB action', async () => {
       await benchmark.record(() => reducer(primedState, largeAction), {
         iterations: 1_000,
         meanUnder: 4,
       });
-    });
+    }, 5_000);
   });
 });

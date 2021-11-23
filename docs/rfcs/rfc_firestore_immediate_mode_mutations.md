@@ -7,13 +7,13 @@
 Isolating mutations into stages makes the mutations be compositional and serialable.
 Doing so fixed multiple design flaws with redux:
 
-1. Actions finally return to the original deisgn; fully synchronous and serialzable so that they can be replayed if needed.
+1. Actions finally return to the original design; fully synchronous and serializable so that they can be replayed if needed.
 2. Async work happens as a side effect _after_ the reducer, not before.
 3. Async firestore mutations that fail will automatically roll back the synchronous, in-memory data store.
 
 ### Process steps
 
-Step 1. Decoding as a global convertion
+Step 1. Decoding as a global convention
 
 ```ts
 function createConvertorFactory() {

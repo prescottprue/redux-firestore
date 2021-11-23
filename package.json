@@ -1,6 +1,6 @@
 {
   "name": "redux-firestore",
-  "version": "1.1.2",
+  "version": "0.16.0",
   "description": "Redux bindings for Firestore.",
   "main": "lib/index.js",
   "module": "es/index.js",
@@ -33,7 +33,7 @@
     "lint": "eslint src test",
     "lint:fix": "npm run lint -- --fix",
     "format": "prettier --write \"src/**/*.js\" \"test/**/*.js\"",
-    "prepare": "npm run clean && npm run build",
+    "prepare": "husky install && npm run clean && npm run build",
     "prepublish": "npm run clean && npm run build",
     "pre-push": "npm run lint"
   },
@@ -44,14 +44,14 @@
     "reduce-reducers": "^1.0.4"
   },
   "devDependencies": {
-    "@babel/cli": "^7.14.5",
-    "@babel/core": "^7.14.6",
-    "@babel/plugin-transform-modules-commonjs": "^7.14.5",
-    "@babel/plugin-transform-runtime": "^7.14.5",
-    "@babel/preset-env": "^7.14.7",
-    "@babel/preset-react": "^7.14.5",
-    "@babel/register": "^7.14.5",
-    "@babel/runtime": "^7.14.6",
+    "@babel/cli": "^7.16.0",
+    "@babel/core": "^7.16.0",
+    "@babel/plugin-transform-modules-commonjs": "^7.16.0",
+    "@babel/plugin-transform-runtime": "^7.16.4",
+    "@babel/preset-env": "^7.16.4",
+    "@babel/preset-react": "^7.16.0",
+    "@babel/register": "^7.16.0",
+    "@babel/runtime": "^7.16.3",
     "babel-eslint": "^10.1.0",
     "babel-loader": "^8.2.2",
     "babel-plugin-lodash": "^3.3.4",
@@ -80,9 +80,9 @@
     "rimraf": "^3.0.2",
     "sinon": "^11.1.1",
     "sinon-chai": "^3.7.0",
-    "terser-webpack-plugin": "^5.1.4",
-    "webpack": "^5.44.0",
-    "webpack-cli": "^4.7.2"
+    "terser-webpack-plugin": "^5.2.5",
+    "webpack": "^5.64.2",
+    "webpack-cli": "^4.9.1"
   },
   "license": "MIT",
   "homepage": "https://github.com/prescottprue/redux-firestore#readme",

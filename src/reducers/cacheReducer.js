@@ -1,5 +1,6 @@
 import produce from 'immer';
 import debug from 'debug';
+import firebase from 'firebase/app';
 import {
   set,
   unset,
@@ -11,7 +12,6 @@ import {
   partialRight,
   zip,
   setWith,
-  isFunction,
   findIndex,
   isMatch,
   get,
@@ -20,7 +20,6 @@ import {
   isEmpty,
   identity,
 } from 'lodash';
-import { Timestamp } from 'firebase/firestore';
 import { actionTypes } from '../constants';
 import { getBaseQueryName } from '../utils/query';
 import mark from '../utils/profiling';
@@ -333,6 +332,7 @@ const xfPaginate = (query, getDoc) => {
         }
         return true;
       }
+      return isMatched;
     }) !== undefined;
 
   return partialRight(map, (tuples) => {
@@ -508,7 +508,8 @@ const arrayRemove = (key, val, cached) =>
 const increment = (key, val, cached) =>
   key === '::increment' && typeof val === 'number' && (cached() || 0) + val;
 
-const serverTimestamp = (key) => key === '::serverTimestamp' && Timestamp.now();
+const serverTimestamp = (key) =>
+  key === '::serverTimestamp' && firebase.firestore.Timestamp.now();
 
 /**
  * Process Mutation to a vanilla JSON
@@ -553,7 +554,7 @@ function translateMutationToOverrides({ payload }, db = {}, dbo = {}) {
   let optimistic = {};
   if (reads) {
     optimistic = Object.keys(reads).reduce((result, key) => {
-      if (isFunction(reads[key])) {
+      if (typeof reads[key] === 'function') {
         return { ...result, [key]: reads[key]() };
       }
 
@@ -570,7 +571,9 @@ function translateMutationToOverrides({ payload }, db = {}, dbo = {}) {
   }
 
   const overrides = writes
-    .map((writer) => (isFunction(writer) ? writer(optimistic) : writer))
+    .map((writer) =>
+      typeof writer === 'function' ? writer(optimistic) : writer,
+    )
     .filter((data) => !data || !isEmpty(data))
     .reduce(
       (flat, result) => [
@@ -634,7 +637,7 @@ function cleanOverride(draft, { path, id, data }) {
         }
         if (typeof current === 'object') {
           return Object.keys(current).every(
-            (key) => current[key] === optimistic[key],
+            (currentKey) => current[currentKey] === optimistic[currentKey],
           );
         }
         return isEqual(data[key], override[key]);
@@ -871,9 +874,6 @@ const mutation = (state, { action, key, path }) => {
   try {
     const result = produce(state, (draft) => {
       const done = mark(`cache.MUTATE_START`, key);
-      const {
-        meta: { timestamp },
-      } = action;
       if (action.payload && action.payload.data) {
         const optimisiticUpdates =
           translateMutationToOverrides(action, draft.database) || [];

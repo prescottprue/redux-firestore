@@ -14,6 +14,8 @@ module.exports = {
   rules: {
     'no-unused-expressions': [0],
     'new-cap': 0,
+    'jsdoc/require-jsdoc': 0,
+    'require-jsdoc': 0,
   },
   settings: {
     'import/resolver': {
