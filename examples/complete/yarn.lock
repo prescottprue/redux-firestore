@@ -4432,12 +4432,7 @@ commander@^2.20.0:
   resolved "https://registry.yarnpkg.com/commander/-/commander-2.20.3.tgz#fd485e84c03eb4881c20722ba48035e8531aeb33"
   integrity sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ==
 
-commander@^4.0.1:
-  version "4.0.1"
-  resolved "https://registry.yarnpkg.com/commander/-/commander-4.0.1.tgz#b67622721785993182e807f4883633e6401ba53c"
-  integrity sha512-IPF4ouhCP+qdlcmCedhxX4xiGBPyigb8v5NeUp+0LyhwLgxMqyp3S0vl7TAPfS/hiP7FC3caI/PB9lTmP8r1NA==
-
-commander@^4.1.0, commander@^4.1.1:
+commander@^4.0.1, commander@^4.1.0, commander@^4.1.1:
   version "4.1.1"
   resolved "https://registry.yarnpkg.com/commander/-/commander-4.1.1.tgz#9fd602bd936294e9e9ef46a3f4d6964044b18068"
   integrity sha512-NOKm8xhkzAjzFx8B2v5OAHT+u5pRQc2UCa2Vq9jYL/31o2wi9mxBA7LIFs3sV5VSC49z6pEhfbMULvShKj26WA==
@@ -6474,14 +6469,7 @@ figures@^2.0.0:
   dependencies:
     escape-string-regexp "^1.0.5"
 
-figures@^3.1.0:
-  version "3.1.0"
-  resolved "https://registry.yarnpkg.com/figures/-/figures-3.1.0.tgz#4b198dd07d8d71530642864af2d45dd9e459c4ec"
-  integrity sha512-ravh8VRXqHuMvZt/d8GblBeqDMkdJMBdv/2KntFH+ra5MXkO7nxNKpzQ3n6QD/2da1kH0aWmNISdvhM7gl2gVg==
-  dependencies:
-    escape-string-regexp "^1.0.5"
-
-figures@^3.2.0:
+figures@^3.1.0, figures@^3.2.0:
   version "3.2.0"
   resolved "https://registry.yarnpkg.com/figures/-/figures-3.2.0.tgz#625c18bd293c604dc4a8ddb2febf0c88341746af"
   integrity sha512-yaduQFRKLXYOGgEn6AZau90j3ggSOyiqXU0F9JZfeXYhNa+Jk4X+s45A2zg5jns87GAFa34BBm2kXw4XpNcbdg==
@@ -6603,12 +6591,12 @@ find-versions@^4.0.0:
   dependencies:
     semver-regex "^3.1.2"
 
-firebase-ci@^0.15.0:
-  version "0.15.0"
-  resolved "https://registry.yarnpkg.com/firebase-ci/-/firebase-ci-0.15.0.tgz#2053975fb8206e5512656445814529da652a9289"
-  integrity sha512-4/cEmTt9i3GO96sakuS3Wvp3xAE3bpkF4vKUdFsSe5wLQvXbd0ohfrUPYiE2THdZ6Ntj8LDNGe7vGiO2va98Kg==
+firebase-ci@^0.15.1:
+  version "0.15.1"
+  resolved "https://registry.yarnpkg.com/firebase-ci/-/firebase-ci-0.15.1.tgz#cc1d41c5b94ce36661373534373e1f403872f812"
+  integrity sha512-z6l8+fjID9NVdU6UsH0gI1yY0oCAPkmGJbLHyiWnQH19rtMqpa5L0ufTWYGknVM7KOEhrahRUR41ozKcEjzZbA==
   dependencies:
-    chalk "^3.0.0"
+    chalk "^4.1.0"
     command-exists "^1.2.8"
     commander "^4.1.0"
     figures "^3.1.0"
@@ -9525,12 +9513,7 @@ lodash.values@^2.4.1:
   dependencies:
     lodash.keys "~2.4.1"
 
-"lodash@>=3.5 <5", lodash@^4.17.10, lodash@^4.17.11, lodash@^4.17.13, lodash@^4.17.14, lodash@^4.17.15, lodash@^4.17.5:
-  version "4.17.15"
-  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.15.tgz#b447f6670a0455bbfeedd11392eff330ea097548"
-  integrity sha512-8xOcRHvCjnocdS5cpwXQXVzmmh5e5+saE2QGoeQmbKmRS6J3VQppPOIt0MnmE+4xlZoumy0GPG0D0MVIQbNA1A==
-
-lodash@^4.17.19, lodash@^4.17.20:
+"lodash@>=3.5 <5", lodash@^4.17.10, lodash@^4.17.11, lodash@^4.17.13, lodash@^4.17.14, lodash@^4.17.15, lodash@^4.17.19, lodash@^4.17.20, lodash@^4.17.5:
   version "4.17.20"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.20.tgz#b44a9b6297bcb698f1c51a3545a2b3b368d59c52"
   integrity sha512-PlhdFcillOINfeV7Ni6oF1TAEayyZBoZ8bcshTHqOYJYlrqzRK5hagpagky5o4HfCzzd1TRkXPMFq6cKk9rGmA==
