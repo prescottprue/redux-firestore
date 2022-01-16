@@ -65,7 +65,7 @@
     "husky": "^4.3.6",
     "lint-staged": "^10.5.4",
     "prettier": "^2.2.1",
-    "react-scripts": "^4.0.2"
+    "react-scripts": "^5.0.0"
   },
   "eslintConfig": {
     "extends": "./eslintrc.js"
