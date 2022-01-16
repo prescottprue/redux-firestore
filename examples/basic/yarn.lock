@@ -4929,10 +4929,10 @@ hoist-non-react-statics@^2.3.1:
   resolved "https://registry.yarnpkg.com/hoist-non-react-statics/-/hoist-non-react-statics-2.5.5.tgz#c5903cf409c0dfd908f388e619d86b9c1174cb47"
   integrity sha512-rqcy4pJo55FTTLWt+bU8ukscqHeE/e9KWvsOW2b/a3afxQZhwkQdT1rPPCJ0rYXdj4vNcasY8zHTH+jF/qStxw==
 
-hoist-non-react-statics@^3.3.0:
-  version "3.3.0"
-  resolved "https://registry.yarnpkg.com/hoist-non-react-statics/-/hoist-non-react-statics-3.3.0.tgz#b09178f0122184fb95acf525daaecb4d8f45958b"
-  integrity sha512-0XsbTXxgiaCDYDIWFcwkmerZPSwywfUqYmwT4jzewKTQSWoE6FCMoUVOeBJWK3E/CrWbxRG3m5GzY4lnIwGRBA==
+hoist-non-react-statics@^3.3.0, hoist-non-react-statics@^3.3.2:
+  version "3.3.2"
+  resolved "https://registry.yarnpkg.com/hoist-non-react-statics/-/hoist-non-react-statics-3.3.2.tgz#ece0acaf71d62c2969c2ec59feff42a4b1a85b45"
+  integrity sha512-/gGivxi8JPKWNm/W0jSmzcMPpfpPLc3dY/6GxhX2hQ9iGj3aDfklV4ET7NjKpSinLpJ5vafa9iiGIEZg10SfBw==
   dependencies:
     react-is "^16.7.0"
 
@@ -8683,13 +8683,13 @@ react-lifecycles-compat@^3.0.2:
   resolved "https://registry.yarnpkg.com/react-lifecycles-compat/-/react-lifecycles-compat-3.0.4.tgz#4f1a273afdfc8f3488a8c516bfda78f872352362"
   integrity sha512-fBASbA6LnOU9dOU2eW7aQ8xmYBSXUIWr+UmF9b1efZBazGNO+rcXT/icdKnYm2pTwcRylVUYwW7H1PHfLekVzA==
 
-react-redux-firebase@^3.0.6:
-  version "3.0.6"
-  resolved "https://registry.yarnpkg.com/react-redux-firebase/-/react-redux-firebase-3.0.6.tgz#b55e613383ca6d1163729b08dc0006320917aaed"
-  integrity sha512-xZ6/GrffzuxppAUYmDE/UCMcYVpEJdm8L+us8XIgMMMZwZHOWUSsN2V+LAdmI+YnLyoVCp1XyyyflPHYZy9gcA==
+react-redux-firebase@^3.11.0:
+  version "3.11.0"
+  resolved "https://registry.yarnpkg.com/react-redux-firebase/-/react-redux-firebase-3.11.0.tgz#0723452a21158b7f6dd96fe38e65e4ddff2d2893"
+  integrity sha512-WJheUdKA8YdEQ0cGR75dwfLxokL8AALgo+8HK7OmC5IKYoS2YiputJhvjFWcdHtRKnf5mmt/bVc+LGzYWxlSXA==
   dependencies:
-    hoist-non-react-statics "^3.3.0"
-    lodash "^4.17.15"
+    hoist-non-react-statics "^3.3.2"
+    lodash "^4.17.21"
     prop-types "^15.7.2"
 
 react-redux@^7.1.3:
