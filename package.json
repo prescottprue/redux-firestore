@@ -48,6 +48,8 @@
     "@babel/preset-react": "^7.16.7",
     "@babel/register": "^7.16.9",
     "@babel/runtime": "^7.16.7",
+    "@commitlint/cli": "^16.0.2",
+    "@commitlint/config-conventional": "^16.0.0",
     "babel-eslint": "^10.1.0",
     "babel-loader": "^8.2.3",
     "babel-plugin-lodash": "^3.3.4",
@@ -66,6 +68,7 @@
     "eslint-plugin-prettier": "^3.1.0",
     "eslint-plugin-react": "^7.18.3",
     "husky": "^7.0.4",
+    "lint-staged": "^12.1.7",
     "mocha": "^7.0.1",
     "nyc": "^15.1.0",
     "prettier": "1.19.1",
@@ -99,5 +102,13 @@
         "*.js"
       ]
     }
-  ]
+  ],
+  "lint-staged": {
+    "*.{json,md,yaml,yml}": [
+      "prettier --write"
+    ],
+    "*.{js,ts}": [
+      "eslint --fix"
+    ]
+  }
 }
