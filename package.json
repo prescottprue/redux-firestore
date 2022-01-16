@@ -35,7 +35,7 @@
     "pre-push": "npm run lint"
   },
   "dependencies": {
-    "immer": "8.0.1",
+    "immer": "9.0.6",
     "lodash": "^4.17.20",
     "reduce-reducers": "^1.0.4"
   },
