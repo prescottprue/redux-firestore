@@ -184,6 +184,6 @@ Before starting make sure to install Firebase Command Line Tool: `npm i -g fireb
 
 
 [license-image]: https://img.shields.io/github/license/prescottprue/complete?style=flat-square
-[license-url]: https://github.com/prescottprue/complete/blob/master/LICENSE
+[license-url]: https://github.com/prescottprue/complete/blob/main/LICENSE
 [code-style-image]: https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat-square
 [code-style-url]: http://standardjs.com/

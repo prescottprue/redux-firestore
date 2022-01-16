@@ -13,6 +13,6 @@
   ],
   "tabs": [
     { "title": "NPM", "href": "https://npmjs.com/package/redux-firestore" },
-    { "title": "API Reference", "href": "https://github.com/prescottprue/redux-firestore/blob/master/README.md" }
+    { "title": "API Reference", "href": "https://github.com/prescottprue/redux-firestore/blob/main/README.md" }
   ]
 }

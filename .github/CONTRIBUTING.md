@@ -7,7 +7,7 @@ Thanks for taking the time to look into contributing! Below are some basic conve
 Please make sure that there aren't existing pull requests attempting to address the issue mentioned. Likewise, please check for issues related to update, as someone else may be working on the issue in a branch or fork.
 
 * Non-trivial changes should be discussed in an issue or on [gitter](https://gitter.im/redux-firebase/Lobby) or within an issue first
-* Develop in a topic branch, not master
+* Develop in a topic branch, not `main`
 * Squash your commits
 
 ### Commit Message Format
