@@ -67,7 +67,7 @@ const initialState = {};
 const store = createStoreWithFirebase(rootReducer, initialState);
 ```
 
-Then pass store to your component's context using [react-redux's `Provider`](https://github.com/reactjs/react-redux/blob/master/docs/api.md#provider-store):
+Then pass store to your component's context using [react-redux's `Provider`](https://github.com/reactjs/react-redux/blob/main/docs/api.md#provider-store):
 
 ```js
 import React from 'react';
@@ -729,7 +729,7 @@ Post an issue with a feature suggestion if you have any ideas!
 [npm-downloads-image]: https://img.shields.io/npm/dm/redux-firestore.svg?style=flat-square
 [quality-image]: http://npm.packagequality.com/shield/redux-firestore.svg?style=flat-square
 [quality-url]: https://packagequality.com/#?package=redux-firestore
-[travis-image]: https://img.shields.io/travis/prescottprue/redux-firestore/master.svg?style=flat-square
+[travis-image]: https://img.shields.io/travis/prescottprue/redux-firestore/main.svg?style=flat-square
 [travis-url]: https://travis-ci.org/prescottprue/redux-firestore
 [daviddm-image]: https://img.shields.io/david/prescottprue/redux-firestore.svg?style=flat-square
 [daviddm-url]: https://david-dm.org/prescottprue/redux-firestore
@@ -738,7 +738,7 @@ Post an issue with a feature suggestion if you have any ideas!
 [coverage-image]: https://img.shields.io/codecov/c/github/prescottprue/redux-firestore.svg?style=flat-square
 [coverage-url]: https://codecov.io/gh/prescottprue/redux-firestore
 [license-image]: https://img.shields.io/npm/l/redux-firestore.svg?style=flat-square
-[license-url]: https://github.com/prescottprue/redux-firestore/blob/master/LICENSE
+[license-url]: https://github.com/prescottprue/redux-firestore/blob/main/LICENSE
 [code-style-image]: https://img.shields.io/badge/code%20style-airbnb-blue.svg?style=flat-square
 [code-style-url]: https://github.com/airbnb/javascript
 [gitter-image]: https://img.shields.io/gitter/room/redux-firestore/gitter.svg?style=flat-square
