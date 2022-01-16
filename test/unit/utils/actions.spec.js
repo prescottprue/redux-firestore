@@ -62,13 +62,17 @@ describe('actions utils', () => {
     });
 
     it('handles rejection', () => {
+      const testError = new Error('test')
       const opts = {
-        ref: { test: () => Promise.reject(new Error('test')) },
+        ref: { test: () => Promise.reject(testError) },
         types: [{ type: 'test' }, { type: 'test', payload: () => ({}) }],
         method: 'test',
       };
-      wrapInDispatch(dispatchSpy, opts);
-      expect(dispatchSpy).to.have.been.calledOnce;
+      wrapInDispatch(dispatchSpy, opts)
+        .catch(err => {
+          expect(err).to.equal(testError);
+        })
+        expect(dispatchSpy).to.have.been.calledOnce;
     });
   });
 });
