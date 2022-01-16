@@ -28,6 +28,11 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'yarn'
 
+      - name: Configure package manager
+        run: |
+          npm config set '//registry.npmjs.org/:_authToken' ${{ secrets.NPM_TOKEN }}
+          npm whoami
+
       - name: Install Dependencies
         run: yarn install --frozen-lockfile
 
