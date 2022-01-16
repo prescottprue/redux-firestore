@@ -4,8 +4,7 @@
 [![NPM downloads][npm-downloads-image]][npm-url]
 [![License][license-image]][license-url]
 [![Code Style][code-style-image]][code-style-url]
-[![Dependency Status][daviddm-image]][daviddm-url]
-[![Build Status][travis-image]][travis-url]
+[![Build Status][build-image]][build-status-url]
 [![Code Coverage][coverage-image]][coverage-url]
 
 [![Gitter][gitter-image]][gitter-url]
@@ -729,10 +728,8 @@ Post an issue with a feature suggestion if you have any ideas!
 [npm-downloads-image]: https://img.shields.io/npm/dm/redux-firestore.svg?style=flat-square
 [quality-image]: http://npm.packagequality.com/shield/redux-firestore.svg?style=flat-square
 [quality-url]: https://packagequality.com/#?package=redux-firestore
-[travis-image]: https://img.shields.io/travis/prescottprue/redux-firestore/main.svg?style=flat-square
-[travis-url]: https://travis-ci.org/prescottprue/redux-firestore
-[daviddm-image]: https://img.shields.io/david/prescottprue/redux-firestore.svg?style=flat-square
-[daviddm-url]: https://david-dm.org/prescottprue/redux-firestore
+[build-image]: https://img.shields.io/github/workflow/status/prescottprue/redux-firestore/NPM%20Package%20Publish?style=flat-square
+[build-status-url]: https://travis-ci.org/prescottprue/redux-firestore
 [climate-image]: https://img.shields.io/codeclimate/github/prescottprue/redux-firestore.svg?style=flat-square
 [climate-url]: https://codeclimate.com/github/prescottprue/redux-firestore
 [coverage-image]: https://img.shields.io/codecov/c/github/prescottprue/redux-firestore.svg?style=flat-square
