@@ -1,6 +1,6 @@
 {
   "name": "redux-firestore",
-  "version": "0.15.1",
+  "version": "0.15.2",
   "description": "Redux bindings for Firestore.",
   "main": "lib/index.js",
   "module": "es/index.js",
