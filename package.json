@@ -29,9 +29,7 @@
     "lint": "eslint src test",
     "lint:fix": "npm run lint -- --fix",
     "format": "prettier --write \"src/**/*.js\" \"test/**/*.js\"",
-    "prepare": "husky install && npm run clean && npm run build",
-    "preversion": "npm run clean && npm run build",
-    "pre-push": "npm run lint"
+    "prepare": "husky install && npm run clean && npm run build"
   },
   "peerDependencies": {
     "firebase": "^4 || ^5 || ^6 || ^7 || ^8"
