@@ -60,7 +60,7 @@
     "eslint-plugin-react": "^7.22.0",
     "eslint-plugin-react-hooks": "^4.2.0",
     "eslint-plugin-standard": "^5.0.0",
-    "firebase-ci": "^0.15.0",
+    "firebase-ci": "^0.15.1",
     "firebase-tools": "^9.3.0",
     "husky": "^4.3.6",
     "lint-staged": "^10.5.4",
