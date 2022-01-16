@@ -29,7 +29,6 @@
     "watch:commonjs": "npm run build:commonjs -- --watch",
     "test": "mocha -r @babel/register -R spec ./test/unit/**",
     "test:cov": "nyc --reporter=lcov --reporter=html npm run test",
-    "codecov": "cat coverage/lcov.info | codecov",
     "lint": "eslint src test",
     "lint:fix": "npm run lint -- --fix",
     "format": "prettier --write \"src/**/*.js\" \"test/**/*.js\"",
@@ -41,7 +40,7 @@
     "firebase": "^9.0.0"
   },
   "dependencies": {
-    "immer": "9.0.5",
+    "immer": "9.0.6",
     "lodash": "^4.17.21",
     "reduce-reducers": "^1.0.4"
   },
@@ -60,7 +59,6 @@
     "babel-plugin-module-resolver": "^4.1.0",
     "babel-plugin-transform-inline-environment-variables": "^0.4.3",
     "chai": "^4.3.4",
-    "codecov": "^3.8.2",
     "cross-env": "^7.0.3",
     "eslint": "^7.30.0",
     "eslint-config-airbnb-base": "^14.2.1",

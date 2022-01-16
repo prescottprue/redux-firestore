@@ -23,17 +23,14 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: Check For Lint
-        run: npm run lint
+        run: yarn lint
 
       - name: Run Unit Tests + Coverage
         run: yarn test:cov
 
+      - name: Upload coverage to Codecov
+        if: matrix.node-version == '14.x'
+        uses: codecov/codecov-action@v2
+
       - name: Run Build
         run: yarn build
-
-      - name: Upload Coverage
-        env:
-          CODE_COV: ${{ secrets.CODE_COV }}
-        # Upload to codecov.io. Curl used in place of codecov/codecov-action
-        # due to long build time. See https://github.com/codecov/codecov-action/issues/21
-        run: curl -s https://codecov.io/bash | bash -s -- -t $CODE_COV

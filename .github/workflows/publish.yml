@@ -3,7 +3,7 @@ name: NPM Package Publish
 on:
   push:
     branches:
-      - master
+      - main
       - next
 
 jobs:
@@ -28,19 +28,15 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: Check For Lint
-        run: npm run lint
+        run: yarn lint
 
       - name: Run Unit Tests + Coverage
         env:
           CODE_CLIMATE: ${{ secrets.CODE_CLIMATE }}
-        run: yarn test:cov && yarn codecov
+        run: yarn test:cov
 
-      - name: Upload Coverage
-        env:
-          CODE_COV: ${{ secrets.CODE_COV }}
-        # Upload to Code Cover. Curl used in place of codecov/codecov-action
-        # due to long build time. See https://github.com/codecov/codecov-action/issues/21
-        run: curl -s https://codecov.io/bash | bash -s -- -t $CODE_COV
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
 
       - name: Publish
         env:
