@@ -75,7 +75,7 @@
     "sinon-chai": "^3.4.0",
     "uglifyjs-webpack-plugin": "^2.2.0",
     "webpack": "^4.41.5",
-    "webpack-cli": "^3.3.10"
+    "webpack-cli": "^4.9.1"
   },
   "license": "MIT",
   "homepage": "https://github.com/prescottprue/redux-firestore#readme",
