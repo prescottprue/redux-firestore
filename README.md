@@ -1,17 +1,18 @@
 # redux-firestore
 
+> Redux bindings for Firestore. Provides low-level API used in other libraries such as [react-redux-firebase](https://github.com/prescottprue/react-redux-firebase)
+
 [![NPM version][npm-image]][npm-url]
 [![NPM downloads][npm-downloads-image]][npm-url]
 [![License][license-image]][license-url]
 [![Code Style][code-style-image]][code-style-url]
 [![Build Status][build-image]][build-status-url]
 [![Code Coverage][coverage-image]][coverage-url]
+[![semantic-release][semantic-release-image]][semantic-release-url]
 
 [![Gitter][gitter-image]][gitter-url]
 
 <!-- [![Quality][quality-image]][quality-url] -->
-
-> Redux bindings for Firestore. Provides low-level API used in other libraries such as [react-redux-firebase](https://github.com/prescottprue/react-redux-firebase)
 
 ## Installation
 
@@ -137,3 +138,5 @@ Post an issue with a feature suggestion if you have any ideas!
 [code-style-url]: https://github.com/airbnb/javascript
 [gitter-image]: https://img.shields.io/gitter/room/redux-firestore/gitter.svg?style=flat-square
 [gitter-url]: https://gitter.im/redux-firestore/Lobby
+[semantic-release-image]: https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg?style=flat-square
+[semantic-release-url]: https://github.com/semantic-release/semantic-release

@@ -17,8 +17,8 @@ let firestoreInstance;
  * import { createStore, compose } from 'redux'
  * import { reduxFirestore } from 'redux-firestore'
  * import firebase from 'firebase' // must be 4.5.0 or higher
- import 'firebase/firestore' // make sure you add this for firestore
- 
+ * import 'firebase/firestore' // make sure you add this for firestore
+ *
  * // Redux Firestore Config
  * const config = {
  *   // here is where you place other config options

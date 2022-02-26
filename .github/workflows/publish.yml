@@ -5,6 +5,15 @@ on:
     branches:
       - main
       - next
+      - beta
+      - alpha
+      - '[0-9]+.x' # maintenance releases
+
+concurrency:
+  group: publish-${{ github.ref }}
+
+env:
+  NODE_VERSION: 14.x
 
 jobs:
   publish-npm:
@@ -13,16 +22,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Check package version
-        uses: technote-space/package-version-check-action@v1
-        with:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-
-      - name: Setup Node
+      - name: Setup Node ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v2
         with:
-          node-version: 14
-          cache: yarn
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Configure package manager
+        run: |
+          npm config set '//registry.npmjs.org/:_authToken' ${{ secrets.NPM_TOKEN }}
+          npm whoami
 
       - name: Install Dependencies
         run: yarn install --frozen-lockfile
@@ -31,20 +40,21 @@ jobs:
         run: yarn lint
 
       - name: Run Unit Tests + Coverage
-        env:
-          CODE_CLIMATE: ${{ secrets.CODE_CLIMATE }}
         run: yarn test:cov
+
+      - name: Semantic Release
+        uses: cycjimmy/semantic-release-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          branches: |
+            [
+              '+([0-9])?(.{+([0-9]),x}).x',
+              'main',
+              'next',
+              {name: 'beta', prerelease: true},
+              {name: 'alpha', prerelease: true}
+            ]
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
-
-      - name: Publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish $(if [ ${{github.ref}} == 'refs/heads/next' ]; then echo '--tag next';fi;)
-
-      - name: Archive Build Artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: build
-          path: lib

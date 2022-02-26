@@ -32,29 +32,29 @@
     "lint": "eslint src test",
     "lint:fix": "npm run lint -- --fix",
     "format": "prettier --write \"src/**/*.js\" \"test/**/*.js\"",
-    "prepare": "husky install && npm run clean && npm run build",
-    "prepublish": "npm run clean && npm run build",
-    "pre-push": "npm run lint"
+    "prepare": "husky install && npm run clean && npm run build"
   },
   "peerDependencies": {
     "firebase": "^9.0.0"
   },
   "dependencies": {
-    "immer": "9.0.6",
+    "immer": "9.0.12",
     "lodash": "^4.17.21",
     "reduce-reducers": "^1.0.4"
   },
   "devDependencies": {
-    "@babel/cli": "^7.16.0",
-    "@babel/core": "^7.16.0",
-    "@babel/plugin-transform-modules-commonjs": "^7.16.0",
-    "@babel/plugin-transform-runtime": "^7.16.4",
-    "@babel/preset-env": "^7.16.4",
-    "@babel/preset-react": "^7.16.0",
-    "@babel/register": "^7.16.0",
-    "@babel/runtime": "^7.16.3",
+    "@babel/cli": "^7.16.8",
+    "@babel/core": "^7.16.7",
+    "@babel/plugin-transform-modules-commonjs": "^7.16.8",
+    "@babel/plugin-transform-runtime": "^7.16.8",
+    "@babel/preset-env": "^7.16.8",
+    "@babel/preset-react": "^7.16.7",
+    "@babel/register": "^7.16.9",
+    "@babel/runtime": "^7.16.7",
+    "@commitlint/cli": "^16.0.2",
+    "@commitlint/config-conventional": "^16.0.0",
     "babel-eslint": "^10.1.0",
-    "babel-loader": "^8.2.2",
+    "babel-loader": "^8.2.3",
     "babel-plugin-lodash": "^3.3.4",
     "babel-plugin-module-resolver": "^4.1.0",
     "babel-plugin-transform-inline-environment-variables": "^0.4.3",
@@ -107,5 +107,13 @@
         "*.js"
       ]
     }
-  ]
+  ],
+  "lint-staged": {
+    "*.{json,md,yaml,yml}": [
+      "prettier --write"
+    ],
+    "*.{js,ts}": [
+      "eslint --fix"
+    ]
+  }
 }
