@@ -32,7 +32,7 @@
     "prepare": "husky install && npm run clean && npm run build"
   },
   "peerDependencies": {
-    "firebase": "^4 || ^5 || ^6 || ^7 || ^8"
+    "firebase": "^8"
   },
   "dependencies": {
     "immer": "9.0.12",
