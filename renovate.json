@@ -1,5 +1,100 @@
 {
-  "extends": [
-    "config:base"
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:base", ":pinOnlyDevDependencies"],
+  "ignorePresets": [":ignoreModulesAndTests", ":prHourlyLimit2"],
+  "ignorePaths": [
+    "**/node_modules/**",
+    "**/__tests__/**",
+    "**/test/**",
+    "**/tests/**"
+  ],
+  "timezone": "America/Denver",
+  "prHourlyLimit": 0,
+  "lockFileMaintenance": {
+    "enabled": true,
+    "automerge": true,
+    "extends": ["schedule:monthly"]
+  },
+  "packageRules": [
+    {
+      "description": "Label NPM dev dependencies",
+      "matchDatasources": ["npm"],
+      "matchDepTypes": ["devDependencies"],
+      "labels": ["devDependencies"],
+      "semanticCommitScope": "dev-deps"
+    },
+    {
+      "description": "Label NPM dependencies",
+      "matchDatasources": ["npm"],
+      "matchDepTypes": ["dependencies"],
+      "labels": ["dependencies"]
+    },
+    {
+      "description": "Configure Github Actions dependencies (labels, commit format)",
+      "matchDepTypes": ["action"],
+      "labels": ["github_actions", "ci"],
+      "semanticCommitType": "chore",
+      "semanticCommitScope": "ci-deps"
+    },
+    {
+      "description": "Auto-merge non-major npm dev dependencies",
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      "matchDatasources": ["npm"],
+      "matchDepTypes": ["devDependencies"],
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "squash"
+    },
+    {
+      "description": "Weekly npm dependencies maintenance (grouped minor + patch updates)",
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      "matchDatasources": ["npm"],
+      "matchDepTypes": ["dependencies"],
+      "schedule": ["before 8am on Monday"],
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "squash",
+      "commitMessageAction": "",
+      "groupName": "Weekly npm maintenance release",
+      "groupSlug": "weekly-npm-maintenance"
+    },
+    {
+      "description": "Auto-merge non-major Github Actions dependencies",
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      "matchDepTypes": ["action"],
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "squash"
+    },
+    {
+      "description": "Label examples dependencies.",
+      "matchPaths": ["examples/**/package.json"],
+      "labels": ["examples"],
+      "semanticCommitType": "chore",
+      "semanticCommitScope": "examples"
+    },
+    {
+      "description": "Auto-merge examples folder non-major npm dependencies weekly on Monday morning",
+      "matchPaths": ["examples/**/package.json"],
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      "matchDepTypes": ["npm"],
+      "prCreation": "not-pending",
+      "extends": ["schedule:weekly"],
+      "groupName": "Examples non-major",
+      "groupSlug": "examples-non-major",
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "squash"
+    },
+    {
+      "description": "Group major examples folder npm dependencies monthly on Monday morning",
+      "matchPaths": ["examples/**/package.json"],
+      "matchUpdateTypes": ["major"],
+      "matchDepTypes": ["npm"],
+      "prCreation": "not-pending",
+      "extends": ["schedule:monthly"],
+      "groupName": "Examples major",
+      "groupSlug": "examples-major"
+    }
   ]
 }
