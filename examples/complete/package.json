@@ -58,7 +58,7 @@
     "eslint-plugin-prettier": "3.4.1",
     "eslint-plugin-promise": "4.3.1",
     "eslint-plugin-react": "7.29.2",
-    "eslint-plugin-react-hooks": "4.2.0",
+    "eslint-plugin-react-hooks": "4.3.0",
     "eslint-plugin-standard": "5.0.0",
     "firebase-ci": "0.15.1",
     "firebase-tools": "9.3.0",
