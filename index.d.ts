@@ -161,7 +161,7 @@ export namespace FirestoreReducer {
   export type OrderedData<Schema extends Record<string, any>> = {
     [T in keyof Schema]: Schema[T] extends Entity<infer V>
       ? EntityWithId<V>[]
-      : OrderedData<EntityWithId<Schema[T]>>[]
+      : EntityWithId<Schema[T]>[]
   }
 
   export interface Reducer<Schema extends Record<string, any> = {}> {
