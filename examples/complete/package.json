@@ -28,7 +28,7 @@
   "dependencies": {
     "@material-ui/core": "^4.11.3",
     "@material-ui/icons": "^4.11.2",
-    "firebase": "^8.2.6",
+    "firebase": "^9.0.0",
     "notistack": "^1.0.3",
     "prop-types": "^15.7.2",
     "react": "^17.0.1",
