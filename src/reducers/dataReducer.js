@@ -12,6 +12,7 @@ const {
   DOCUMENT_ADDED,
   DOCUMENT_MODIFIED,
   DOCUMENT_REMOVED,
+  MULTIPLE_DOCUMENTS_ADDED,
 } = actionTypes;
 
 /**
@@ -74,6 +75,13 @@ export default function dataReducer(state = {}, action) {
         action.payload.data,
         state,
       );
+    case MULTIPLE_DOCUMENTS_ADDED:
+      return action.payload.reduce((futureState, change) => setWith(
+        Object,
+        pathFromMeta(change.meta),
+        change.payload.data,
+        futureState
+      ), state)
     case DOCUMENT_REMOVED:
     case DELETE_SUCCESS:
       const removePath = pathFromMeta(action.meta);

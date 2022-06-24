@@ -45,6 +45,11 @@ export default function queriesReducer(state = {}, action) {
       case actionTypes.DOCUMENT_MODIFIED:
         set(draft, [key, 'data', action.meta.doc], action.payload.data);
         return draft;
+      case actionTypes.MULTIPLE_DOCUMENTS_ADDED:
+        action.payload.forEach(changeAction => {
+          set(draft, [key, 'data', changeAction.meta.doc], changeAction.payload.data);
+        })
+        return draft;
       case actionTypes.DOCUMENT_REMOVED:
       case actionTypes.DELETE_SUCCESS:
         unset(draft, [key, 'data', action.meta.doc]);
