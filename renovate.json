@@ -72,7 +72,8 @@
       "matchPaths": ["examples/**/package.json"],
       "labels": ["examples"],
       "semanticCommitType": "chore",
-      "semanticCommitScope": "examples"
+      "semanticCommitScope": "examples",
+      "enabled": false
     },
     {
       "description": "Auto-merge examples folder non-major npm dependencies weekly on Monday morning",
