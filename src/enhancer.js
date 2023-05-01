@@ -5,7 +5,7 @@ let firestoreInstance;
 
 /**
  * @name reduxFirestore
- * @external
+ * @external reduxFirestore
  * Redux store enhancer that accepts configuration options and adds
  * store.firestore. Enhancers are most commonly placed in redux's `compose` call
  * along side applyMiddleware.
@@ -46,7 +46,7 @@ let firestoreInstance;
  * const store = createStoreWithFirestore(rootReducer, initialState)
  */
 export default function reduxFirestore(firebaseInstance, otherConfig) {
-  return next => (reducer, initialState, middleware) => {
+  return (next) => (reducer, initialState, middleware) => {
     const store = next(reducer, initialState, middleware);
 
     const configs = { ...defaultConfig, ...otherConfig };
@@ -95,7 +95,6 @@ export default function reduxFirestore(firebaseInstance, otherConfig) {
  *        dispatch({ type: 'SOME_ACTION' })
  *      })
  * };
- *
  */
 export function getFirestore() {
   // TODO: Handle receiveing config and creating firebase instance if it doesn't exist

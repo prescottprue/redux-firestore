@@ -37,7 +37,7 @@ export default function dataReducer(state = {}, action) {
         return state;
       }
       // Get doc from subcollections if they exist
-      const getDocName = data =>
+      const getDocName = (data) =>
         data.subcollections
           ? getDocName(data.subcollections.slice(-1)[0]) // doc from last item of subcollections array
           : data.doc; // doc from top level meta

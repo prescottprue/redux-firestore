@@ -51,7 +51,7 @@ describe('firestoreActions', () => {
       onSnapshot: onSnapshotSpy,
     });
     fakeFirebase = {
-      _: { listeners: {}, config: defaultConfig },
+      _: { listeners: {}, pathListenerCounts: {}, config: defaultConfig },
       firestore: () => ({
         collection: collectionClass,
       }),
@@ -302,7 +302,7 @@ describe('firestoreActions', () => {
 
         describe('as a parameter', () => {
           it('updates single doc in state when docChanges includes single doc change with type: "modified"', async () => {
-            onSnapshotSpy = sinon.spy(func => {
+            onSnapshotSpy = sinon.spy((func) => {
               func({
                 docChanges: [
                   {
@@ -311,6 +311,9 @@ describe('firestoreActions', () => {
                       data: () => ({ some: 'value' }),
                       ref: {
                         path: 'test/1/test2/test3',
+                        parent: {
+                          path: 'test/1/test2',
+                        },
                       },
                     },
                     type: 'modified',
@@ -319,6 +322,9 @@ describe('firestoreActions', () => {
                 size: 2,
                 doc: {
                   id: '123ABC',
+                  parent: {
+                    path: 'test/1/test2',
+                  },
                 },
               });
             });
@@ -354,6 +360,9 @@ describe('firestoreActions', () => {
                   data: () => ({ some: 'value' }),
                   ref: {
                     path: 'test/1/test2/123ABC',
+                    parent: {
+                      path: 'test/1/test2',
+                    },
                   },
                 },
                 type: 'modified',
@@ -364,12 +373,15 @@ describe('firestoreActions', () => {
                   data: () => ({ some: 'value' }),
                   ref: {
                     path: 'test/1/test2/234ABC',
+                    parent: {
+                      path: 'test/1/test2',
+                    },
                   },
                 },
                 type: 'modified',
               },
             ];
-            onSnapshotSpy = sinon.spy(func => {
+            onSnapshotSpy = sinon.spy((func) => {
               func({
                 docChanges,
                 size: 3,
@@ -402,15 +414,31 @@ describe('firestoreActions', () => {
           });
 
           it('still dispatches LISTENER_RESPONSE action type if whole collection is being updated (i.e. docChanges.length === size)', async () => {
-            onSnapshotSpy = sinon.spy(success => {
+            onSnapshotSpy = sinon.spy((success) => {
               success({
                 docChanges: [
                   {
-                    doc: { id: '123ABC', data: () => ({ some: 'value' }) },
+                    doc: {
+                      id: '123ABC',
+                      data: () => ({ some: 'value' }),
+                      ref: {
+                        parent: {
+                          path: 'test/1/test2',
+                        },
+                      },
+                    },
                     type: 'modified',
                   },
                   {
-                    doc: { id: '123ABC', data: () => ({ some: 'value' }) },
+                    doc: {
+                      id: '123ABC',
+                      data: () => ({ some: 'value' }),
+                      ref: {
+                        parent: {
+                          path: 'test/1/test2',
+                        },
+                      },
+                    },
                     type: 'modified',
                   },
                 ],
@@ -435,7 +463,7 @@ describe('firestoreActions', () => {
             };
             const expectedAction2 = {
               meta: listenerConfig,
-              payload: { data: null, ordered: [] },
+              payload: { data: null, ordered: [], fromCache: true },
               merge: { collections: true, docs: true },
               type: actionTypes.LISTENER_RESPONSE,
             };
@@ -461,17 +489,25 @@ describe('firestoreActions', () => {
                   data: () => ({ some: 'value' }),
                   ref: {
                     path: 'test/1/test2/123ABC',
+                    parent: {
+                      path: 'test/1/test2',
+                    },
                   },
                 },
                 type: 'modified',
               },
             ];
-            onSnapshotSpy = sinon.spy(func => {
+            onSnapshotSpy = sinon.spy((func) => {
               func({
                 docChanges: () => docChanges,
                 size: 2,
                 doc: {
                   id: '123ABC',
+                  ref: {
+                    parent: {
+                      path: 'test/1/test2',
+                    },
+                  },
                 },
               });
             });
@@ -506,6 +542,9 @@ describe('firestoreActions', () => {
                   data: () => ({ some: 'value' }),
                   ref: {
                     path: 'test/1/test2/123ABC',
+                    parent: {
+                      path: 'test/1/test2',
+                    },
                   },
                 },
                 type: 'modified',
@@ -516,12 +555,15 @@ describe('firestoreActions', () => {
                   data: () => ({ some: 'value' }),
                   ref: {
                     path: 'test/1/test2/234ABC',
+                    parent: {
+                      path: 'test/1/test2',
+                    },
                   },
                 },
                 type: 'modified',
               },
             ];
-            onSnapshotSpy = sinon.spy(func => {
+            onSnapshotSpy = sinon.spy((func) => {
               func({
                 docChanges: () => docChanges,
                 size: 3,
@@ -553,15 +595,31 @@ describe('firestoreActions', () => {
           });
 
           it('still dispatches LISTENER_RESPONSE action type if whole collection is being updated (i.e. docChanges.length === size)', async () => {
-            onSnapshotSpy = sinon.spy(success => {
+            onSnapshotSpy = sinon.spy((success) => {
               success({
                 docChanges: () => [
                   {
-                    doc: { id: '123ABC', data: () => ({ some: 'value' }) },
+                    doc: {
+                      id: '123ABC',
+                      data: () => ({ some: 'value' }),
+                      ref: {
+                        parent: {
+                          path: 'test/1/test2',
+                        },
+                      },
+                    },
                     type: 'modified',
                   },
                   {
-                    doc: { id: '123ABC', data: () => ({ some: 'value' }) },
+                    doc: {
+                      id: '123ABC',
+                      data: () => ({ some: 'value' }),
+                      ref: {
+                        parent: {
+                          path: 'test/1/test2',
+                        },
+                      },
+                    },
                     type: 'modified',
                   },
                 ],
@@ -586,7 +644,7 @@ describe('firestoreActions', () => {
             };
             const expectedAction2 = {
               meta: listenerConfig,
-              payload: { data: null, ordered: [] },
+              payload: { data: null, ordered: [], fromCache: true },
               merge: { collections: true, docs: true },
               type: actionTypes.LISTENER_RESPONSE,
             };
@@ -773,14 +831,33 @@ describe('firestoreActions', () => {
 
       it('dispatches UNSET_LISTENER action', () => {
         const instance = createFirestoreInstance(
-          {},
+          { _: { pathListenerCounts: { test: 1 } } },
           { helpersNamespace: 'test' },
           dispatchSpy,
         );
         instance.test.unsetListeners([{ collection: 'test' }]);
         expect(dispatchSpy).to.have.been.calledWith({
           meta: { collection: 'test' },
-          payload: { name: 'test' },
+          payload: { name: 'test', preserveCache: true },
+          type: actionTypes.UNSET_LISTENER,
+        });
+      });
+
+      it('dispatches UNSET_LISTENER action with preserveCache: false', async () => {
+        const instance = createFirestoreInstance(
+          {
+            _: {
+              pathListenerCounts: { test: 1 },
+              config: { preserveCacheAfterUnset: false },
+            },
+          },
+          { helpersNamespace: 'test' },
+          dispatchSpy,
+        );
+        instance.test.unsetListeners([{ collection: 'test' }]);
+        expect(dispatchSpy).to.have.been.calledWith({
+          meta: { collection: 'test' },
+          payload: { name: 'test', preserveCache: false },
           type: actionTypes.UNSET_LISTENER,
         });
       });
@@ -839,6 +916,32 @@ describe('firestoreActions', () => {
         expect(() => instance.test.runTransaction()).to.throw(
           'dispatch is not a function',
         );
+      });
+    });
+
+    describe('mutate', () => {
+      it('handles mutate action types', () => {
+        const set = sinon.spy(() => Promise.resolve());
+        const doc = sinon.spy(() => ({
+          set,
+          id: 'id',
+          parent: { path: 'path' },
+        }));
+        const collection = sinon.spy(() => ({ doc }));
+        const firestore = sinon.spy(() => ({ collection, doc }));
+
+        const instance = createFirestoreInstance(
+          { firestore },
+          { helpersNamespace: 'test' },
+          dispatchSpy,
+        );
+        instance.test.mutate({
+          collection: '/collection/path',
+          doc: 'doc',
+          data: { a: 1 },
+        });
+
+        expect(set).to.have.been.calledOnceWith({ a: 1 });
       });
     });
   });

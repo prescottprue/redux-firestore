@@ -1,5 +1,6 @@
 const path = require('path');
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
+const LodashModuleReplacementPlugin = require('lodash-webpack-plugin');
 
 const libraryName = 'redux-firestore';
 const isProduction = process.env.NODE_ENV === 'production';
@@ -16,33 +17,34 @@ const config = {
     libraryTarget: 'umd',
     umdNamedDefine: true,
   },
-  externals: [],
+  externals: {
+    'firebase/firestore': {
+      commonjs: 'firebase/firestore',
+      commonjs2: 'firebase/firestore',
+      amd: 'firebase/firestore',
+      root: 'Firebase',
+    },
+  },
   optimization: {
-    minimizer: isProduction
-      ? [
-          new UglifyJsPlugin({
-            cache: true,
-            parallel: true,
-            uglifyOptions: {
-              compress: true,
-              ecma: 6,
-              mangle: true,
-            },
-            sourceMap: true,
-          }),
-        ]
-      : [],
+    minimize: isProduction,
+    minimizer: isProduction ? [new TerserPlugin()] : [],
   },
   module: {
     rules: [
       {
         test: /(\.jsx|\.js)$/,
-        use: 'babel-loader',
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-env'],
+            plugins: ['@babel/transform-runtime'],
+          },
+        },
         exclude: /node_modules/,
       },
     ],
   },
-  plugins: [],
+  plugins: [new LodashModuleReplacementPlugin()],
 };
 
 module.exports = config;

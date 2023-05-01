@@ -81,6 +81,12 @@ export const actionTypes = {
   TRANSACTION_START: `${actionsPrefix}/TRANSACTION_START`,
   TRANSACTION_SUCCESS: `${actionsPrefix}/TRANSACTION_SUCCESS`,
   TRANSACTION_FAILURE: `${actionsPrefix}/TRANSACTION_FAILURE`,
+  OPTIMISTIC_ADDED: `${actionsPrefix}/OPTIMISTIC_ADDED`,
+  OPTIMISTIC_MODIFIED: `${actionsPrefix}/OPTIMISTIC_MODIFIED`,
+  OPTIMISTIC_REMOVED: `${actionsPrefix}/OPTIMISTIC_REMOVED`,
+  MUTATE_START: `${actionsPrefix}/MUTATE_START`,
+  MUTATE_SUCCESS: `${actionsPrefix}/MUTATE_SUCCESS`,
+  MUTATE_FAILURE: `${actionsPrefix}/MUTATE_FAILURE`,
 };
 
 /**
@@ -98,6 +104,8 @@ export const actionTypes = {
  * state.ordered if you have a listener attached.
  * @property {object} preserveOnListenerError - `null` Values to
  * preserve from state when LISTENER_ERROR action is dispatched.
+ * @property {boolean} preserveCacheAfterUnset - `true` Indicates whether to
+ * preserve or remove the cache data from the store after a listener is unset.
  * @property {boolean} enhancerNamespace - `'firestore'` Namespace under which
  * enhancer places internal instance on redux store (i.e. store.firestore).
  * @property {boolean|Function} allowMultipleListeners - `false` Whether or not
@@ -120,10 +128,12 @@ export const defaultConfig = {
   allowMultipleListeners: false,
   preserveOnDelete: null,
   preserveOnListenerError: null,
+  preserveCacheAfterUnset: true,
   onAttemptCollectionDelete: null,
   mergeOrdered: true,
   mergeOrderedDocUpdates: true,
   mergeOrderedCollectionUpdates: true,
+  globalDataConverter: null,
 };
 
 export const methodsToAddFromFirestore = [
@@ -138,6 +148,7 @@ export const methodsToAddFromFirestore = [
   'ensureClientConfigured',
   'setLogLevel',
   'settings',
+  'mutate',
 ];
 
 export default {

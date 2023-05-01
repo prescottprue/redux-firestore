@@ -1,4 +1,3 @@
-/* eslint-disable jsdoc/require-param */
 import { every } from 'lodash';
 import { wrapInDispatch } from '../utils/actions';
 import { actionTypes } from '../constants';
@@ -15,13 +14,13 @@ import {
   snapshotCache,
 } from '../utils/query';
 
-const pathListenerCounts = {};
 /**
  * Add data to a collection or document on Cloud Firestore with the call to
  * the Firebase library being wrapped in action dispatches.
  * @param {object} firebase - Internal firebase object
  * @param {Function} dispatch - Redux's dispatch function
  * @param {string} queryOption - Options for query
+ * @param {...any} args - Any preceding arguments
  * @returns {Promise} Resolves with results of add call
  */
 export function add(firebase, dispatch, queryOption, ...args) {
@@ -35,7 +34,7 @@ export function add(firebase, dispatch, queryOption, ...args) {
       actionTypes.ADD_REQUEST,
       {
         type: actionTypes.ADD_SUCCESS,
-        payload: snap => {
+        payload: (snap) => {
           const obj = { id: snap.id, data: args[0] };
           snapshotCache.set(obj, snap);
           return obj;
@@ -52,6 +51,7 @@ export function add(firebase, dispatch, queryOption, ...args) {
  * @param {object} firebase - Internal firebase object
  * @param {Function} dispatch - Redux's dispatch function
  * @param {string} queryOption - Options for query
+ * @param {...any} args - Any preceding arguments
  * @returns {Promise} Resolves with results of set call
  */
 export function set(firebase, dispatch, queryOption, ...args) {
@@ -93,9 +93,13 @@ export function get(firebase, dispatch, queryOption) {
       actionTypes.GET_REQUEST,
       {
         type: actionTypes.GET_SUCCESS,
-        payload: snap => ({
+        payload: (snap) => ({
           data: dataByIdSnapshot(snap),
           ordered: orderedFromSnap(snap),
+          fromCache:
+            typeof snap.metadata?.fromCache === 'boolean'
+              ? snap.metadata.fromCache
+              : true,
         }),
         merge: {
           docs: mergeOrdered && mergeOrderedDocUpdates,
@@ -113,6 +117,7 @@ export function get(firebase, dispatch, queryOption) {
  * @param {object} firebase - Internal firebase object
  * @param {Function} dispatch - Redux's dispatch function
  * @param {string} queryOption - Options for query
+ * @param {...any} args - Any preceding arguments
  * @returns {Promise} Resolves with results of update call
  */
 export function update(firebase, dispatch, queryOption, ...args) {
@@ -188,76 +193,87 @@ export function setListener(firebase, dispatch, queryOpts, successCb, errorCb) {
   const meta = getQueryConfig(queryOpts);
 
   // Create listener
-  const unsubscribe = firestoreRef(firebase, meta).onSnapshot(
-    docData => {
-      // Dispatch directly if no populates
-      if (!meta.populates) {
-        dispatchListenerResponse({ dispatch, docData, meta, firebase });
-        // Invoke success callback if it exists
-        if (typeof successCb === 'function') successCb(docData);
-        return;
-      }
+  const success = (docData) => {
+    // Dispatch directly if no populates
+    if (!meta.populates) {
+      dispatchListenerResponse({ dispatch, docData, meta, firebase });
+      // Invoke success callback if it exists
+      if (typeof successCb === 'function') successCb(docData);
+      return Promise.resolve();
+    }
 
-      getPopulateActions({ firebase, docData, meta })
-        .then(populateActions => {
-          // Dispatch each populate action
-          populateActions.forEach(populateAction => {
-            dispatch({
-              ...populateAction,
-              type: actionTypes.LISTENER_RESPONSE,
-              timestamp: Date.now(),
-            });
+    return getPopulateActions({ firebase, docData, meta })
+      .then((populateActions) => {
+        // Dispatch each populate action
+        populateActions.forEach((populateAction) => {
+          dispatch({
+            ...populateAction,
+            type: actionTypes.LISTENER_RESPONSE,
+            timestamp: Date.now(),
           });
-          // Dispatch original action
-          dispatchListenerResponse({ dispatch, docData, meta, firebase });
-        })
-        .catch(populateErr => {
-          const { logListenerError } = firebase._.config || {};
-          // Handle errors in population
-          if (logListenerError !== false) {
-            // Log error handling the case of it not existing
-            if (
-              logListenerError !== false &&
-              !!console &&
-              typeof console.error === 'function' // eslint-disable-line no-console
-            ) {
-              console.error('redux-firestore error populating:', populateErr); // eslint-disable-line no-console
-            }
-          }
-          if (typeof errorCb === 'function') errorCb(populateErr);
         });
-    },
-    err => {
-      const {
-        mergeOrdered,
-        mergeOrderedDocUpdates,
-        mergeOrderedCollectionUpdates,
-        logListenerError,
-        preserveOnListenerError,
-      } = firebase._.config || {};
-      // TODO: Look into whether listener is automatically removed in all cases
-      // Log error handling the case of it not existing
-      if (
-        logListenerError !== false &&
-        !!console &&
-        typeof console.error === 'function' // eslint-disable-line no-console
-      ) {
-        console.error('redux-firestore listener error:', err); // eslint-disable-line no-console
-      }
-      dispatch({
-        type: actionTypes.LISTENER_ERROR,
-        meta,
-        payload: err,
-        merge: {
-          docs: mergeOrdered && mergeOrderedDocUpdates,
-          collections: mergeOrdered && mergeOrderedCollectionUpdates,
-        },
-        preserve: preserveOnListenerError,
+        // Dispatch original action
+        dispatchListenerResponse({ dispatch, docData, meta, firebase });
+      })
+      .catch((populateErr) => {
+        const { logListenerError } = firebase._.config || {};
+        // Handle errors in population
+        if (logListenerError !== false) {
+          // Log error handling the case of it not existing
+          if (
+            logListenerError !== false &&
+            !!console &&
+            typeof console.error === 'function' // eslint-disable-line no-console
+          ) {
+            console.error('redux-firestore error populating:', populateErr); // eslint-disable-line no-console
+          }
+        }
+        if (typeof errorCb === 'function') errorCb(populateErr);
       });
-      // Invoke error callback if it exists
-      if (typeof errorCb === 'function') errorCb(err);
-    },
-  );
+  };
+
+  const error = (err) => {
+    const {
+      mergeOrdered,
+      mergeOrderedDocUpdates,
+      mergeOrderedCollectionUpdates,
+      logListenerError,
+      preserveOnListenerError,
+    } = firebase._.config || {};
+    // TODO: Look into whether listener is automatically removed in all cases
+    // Log error handling the case of it not existing
+    if (
+      logListenerError !== false &&
+      !!console &&
+      typeof console.error === 'function' // eslint-disable-line no-console
+    ) {
+      console.error('redux-firestore listener error:', err); // eslint-disable-line no-console
+    }
+    dispatch({
+      type: actionTypes.LISTENER_ERROR,
+      meta,
+      payload: err,
+      merge: {
+        docs: mergeOrdered && mergeOrderedDocUpdates,
+        collections: mergeOrdered && mergeOrderedCollectionUpdates,
+      },
+      preserve: preserveOnListenerError,
+    });
+    // Invoke error callback if it exists
+    if (typeof errorCb === 'function') errorCb(err);
+  };
+
+  const includeMetadataChanges =
+    (queryOpts && queryOpts.includeMetadataChanges) || false;
+
+  // Create listener
+  const unsubscribe = includeMetadataChanges
+    ? firestoreRef(firebase, meta).onSnapshot(
+        { includeMetadataChanges },
+        success,
+        error,
+      )
+    : firestoreRef(firebase, meta).onSnapshot(success, error);
   attachListener(firebase, dispatch, meta, unsubscribe);
 
   return unsubscribe;
@@ -283,10 +299,11 @@ export function setListeners(firebase, dispatch, listeners) {
 
   // Only attach one listener (count of matching listener path calls is tracked)
   if (config.oneListenerPerPath) {
-    listeners.forEach(listener => {
+    listeners.forEach((listener) => {
       const path = getQueryName(listener);
-      const oldListenerCount = pathListenerCounts[path] || 0;
-      pathListenerCounts[path] = oldListenerCount + 1;
+      const oldListenerCount = firebase._.pathListenerCounts[path] || 0;
+      // eslint-disable-next-line no-param-reassign
+      firebase._.pathListenerCounts[path] = oldListenerCount + 1;
 
       // If we already have an attached listener exit here
       if (oldListenerCount > 0) {
@@ -298,15 +315,16 @@ export function setListeners(firebase, dispatch, listeners) {
   } else {
     const { allowMultipleListeners } = config;
 
-    listeners.forEach(listener => {
+    listeners.forEach((listener) => {
       const path = getQueryName(listener);
-      const oldListenerCount = pathListenerCounts[path] || 0;
+      const oldListenerCount = firebase._.pathListenerCounts[path] || 0;
       const multipleListenersEnabled =
         typeof allowMultipleListeners === 'function'
           ? allowMultipleListeners(listener, firebase._.listeners)
           : allowMultipleListeners;
 
-      pathListenerCounts[path] = oldListenerCount + 1;
+      // eslint-disable-next-line no-param-reassign
+      firebase._.pathListenerCounts[path] = oldListenerCount + 1;
 
       // If we already have an attached listener exit here
       if (oldListenerCount === 0 || multipleListenersEnabled) {
@@ -347,18 +365,22 @@ export function unsetListeners(firebase, dispatch, listeners) {
   const { allowMultipleListeners } = config;
 
   // Keep one listener path even when detaching
-  listeners.forEach(listener => {
+  listeners.forEach((listener) => {
     const path = getQueryName(listener);
-    const listenerExists = pathListenerCounts[path] >= 1;
+    const listenerExists = firebase._.pathListenerCounts[path] >= 1;
     const multipleListenersEnabled =
       typeof allowMultipleListeners === 'function'
         ? allowMultipleListeners(listener, firebase._.listeners)
         : allowMultipleListeners;
 
     if (listenerExists) {
-      pathListenerCounts[path] -= 1;
+      // eslint-disable-next-line no-param-reassign
+      firebase._.pathListenerCounts[path] -= 1;
       // If we aren't supposed to have listners for this path, then remove them
-      if (pathListenerCounts[path] === 0 || multipleListenersEnabled) {
+      if (
+        firebase._.pathListenerCounts[path] === 0 ||
+        multipleListenersEnabled
+      ) {
         unsetListener(firebase, dispatch, listener);
       }
     }
@@ -386,6 +408,36 @@ export function runTransaction(firebase, dispatch, transactionPromise) {
   });
 }
 
+/**
+ * Unified solo, batch & transactions operations.
+ * @param {object} firebase - Internal firebase object
+ * @param {Function} dispatch - Redux's dispatch function
+ * @param {string} mutations - Mutations for query
+ * @returns {Promise} Resolves with results of update call
+ */
+export function mutate(firebase, dispatch, mutations) {
+  const timestamp = `${+new Date()}`;
+
+  return wrapInDispatch(dispatch, {
+    ref: firebase,
+    method: 'mutate',
+    meta: { timestamp },
+    args: [mutations],
+    types: [
+      {
+        type: actionTypes.MUTATE_START,
+        payload: { data: mutations },
+      },
+      actionTypes.MUTATE_SUCCESS,
+      {
+        type: actionTypes.MUTATE_FAILURE,
+        meta: { timestamp },
+        payload: { data: mutations },
+      },
+    ],
+  });
+}
+
 export default {
   get,
   firestoreRef,
@@ -396,4 +448,5 @@ export default {
   unsetListener,
   unsetListeners,
   runTransaction,
+  mutate,
 };
