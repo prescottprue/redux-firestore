@@ -29,7 +29,9 @@ jobs:
           cache: 'yarn'
 
       - name: Configure package manager
-        run: yarn config set npmAuthToken ${{ secrets.NPM_TOKEN }}
+        run: |
+          npm config set '//registry.npmjs.org/:_authToken' ${{ secrets.NPM_TOKEN }}
+          yarn config set npmAuthToken ${{ secrets.NPM_TOKEN }}
 
       - name: Install Dependencies
         run: yarn install --immutable
