@@ -85,8 +85,8 @@ function atomize(firebase, operation) {
  * https://firebase.google.com/docs/reference/js/firebase.firestore.Transaction#update
  * @param {object} firebase - Firebase instance
  * @param {Mutation_v1 | Mutation_v2} operation - Operation object
- * @param {Batch | Transaction} writer - Writer object
- * @returns {Promise | Doc} - Batch & Transaction .set returns null
+ * @param {firestore.batch | firestore.Transaction} writer - Writer object
+ * @returns {Promise | firestore.Doc} - Batch & Transaction .set returns null
  */
 function write(firebase, operation = {}, writer = null) {
   const { collection, path, doc, id, data, ...rest } = operation;

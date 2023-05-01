@@ -1,3 +1,4 @@
+/* eslint-disable jsdoc/valid-types */
 import produce from 'immer';
 import { Timestamp } from 'firebase/firestore'; // eslint-disable-line import/no-extraneous-dependencies
 import {
@@ -23,7 +24,7 @@ import { actionTypes } from '../constants';
 import { getBaseQueryName } from '../utils/query';
 
 /**
- * @typedef {object & Object.<string, RRFQuery>} CacheState
+ * @typedef {object.<string, RRFQuery>} CacheState
  * Cache state is a synchronous, in-memory fragment of Firestore. The primary
  * goal is to provide instant, synchronous data mutations. The key use case to consider
  * is when React has a drag and drop interface but the data change requires a
@@ -39,11 +40,11 @@ import { getBaseQueryName } from '../utils/query';
  * @typedef {string} FirestoreDocumentId
  * @typedef {object} FirestoreDocument
  * @typedef {{ id: FirestoreDocumentId, path: FirestorePath } & FirestoreDocument} Doc
- * @typedef {{ id: FirestoreDocumentId, path: FirestorePath } & ?FirestoreDocument} ParitalDoc
+ * @typedef {{ id: FirestoreDocumentId, path: FirestorePath } & firestore.FirestoreDocument} ParitalDoc
  * @typedef {Array.<string>} Populates - [field_name, firestore_path_to_collection, new_field_name]
  * @typedef {Array.<string>} Fields - document fields to include for the result
  * @typedef {Array<*> & { 0: FirestorePath, 1: FirestoreDocumentId, length: 2 }} OrderedTuple
- * @property
+ * @property {object} - Some
  */
 
 /**
@@ -83,14 +84,14 @@ import { getBaseQueryName } from '../utils/query';
 
 /**
  * @typedef {object} Transaction
- * @property {object.<ReadKey, RRFQuery>} reads - Object of read keys and queries
- * @property {Function[]} writes - Array of function that take rekyKey results and return writes
+ * @property {object.<string, RRFQuery>} reads - Object of read keys and queries
+ * @property {Function[]} writes - Array of function that take rtdbKey results and return writes
  */
 
 /**
  * @typedef MutateAction_v1
  * @property {Write | Batch | Transaction} payload - mutation payload
- * @property {object} meta
+ * @property {object} meta - Meta object
  */
 
 const isTimestamp = (a) => a instanceof Object && a.seconds !== undefined;
@@ -152,13 +153,12 @@ const xfAllIds = ({ collection: path }) =>
 
 /**
  * @name xfWhere
- * @param getDoc.where
- * @param getDoc
- * @param {Array.<Array.<string>>} where - Firestore where clauses
- * @property {object.<FirestorePath, object<FirestoreDocumentId, Doc>>}  db
- * @property {object.<FirestorePath, object<FirestoreDocumentId, ParitalDoc>>}  dbo
+ * @param {object} getDoc - Object
+ * @param {Array.<Array.<string>>} getDoc.where - Firestore where clauses
+ * @property {object.<FirestorePath, object<FirestoreDocumentId, Doc>>} db - DB
+ * @property {object.<FirestorePath, object<FirestoreDocumentId, ParitalDoc>>} dbo - DB
  * @typedef {Function} xFormFilter - run the same where cause sent to
- * firestore for all the optimitic overrides
+ * firestore for all the optimistic overrides
  * @returns {xFormFilter} - transducer
  */
 const xfWhere = ({ where }, getDoc) => {
@@ -196,11 +196,10 @@ const xfWhere = ({ where }, getDoc) => {
 
 /**
  * @name xfOrder
- * @param getDoc.orderBy
- * @param getDoc
- * @param {Array.<string>} order - Firestore order property
- * @property {object.<FirestorePath, object<FirestoreDocumentId, Doc>>}  db
- * @property {object.<FirestorePath, object<FirestoreDocumentId, ParitalDoc>>}  dbo
+ * @param {object} getDoc - Object
+ * @param {Array.<string>} getDoc.orderBy - Firestore order property
+ * @property {object.<FirestorePath, object<FirestoreDocumentId, Doc>>}  db - Db
+ * @property {object.<FirestorePath, object<FirestoreDocumentId, ParitalDoc>>} dbo - DBO
  * @typedef {Function} xFormOrdering - sort docs bases on criteria from the
  * firestore query
  * @returns {xFormOrdering} - transducer
@@ -249,11 +248,8 @@ const xfLimit = ({ limit, endAt, endBefore }) => {
 
 /**
  * @name xfPaginate
- * @param {?CacheState.database} db -
- * @param {?CacheState.databaseOverrides} dbo -
  * @param {RRFQuery} query - Firestore query
- * @param getDoc
- * @param {boolean} isOptimisticWrite - includes optimistic data
+ * @param {object} getDoc - Get doc function
  * @typedef {Function} xFormFilter - in optimistic reads and overrides
  * the reducer needs to take all documents and make a best effort to
  * filter down the document based on a cursor.
@@ -412,8 +408,8 @@ function reprocessQueries(draft, path) {
 
 /**
  * Not a Mutate, just an array
- * @param {Array} arr
- * @returns Null | Array
+ * @param {Array} arr - Array
+ * @returns {null | Array} Value
  */
 const primaryValue = (arr) =>
   typeof arr[0] === 'string' && arr[0].indexOf('::') === 0 ? null : arr;
@@ -454,7 +450,7 @@ const serverTimestamp = (key) => key === '::serverTimestamp' && Timestamp.now();
  * Process Mutation to a vanilla JSON
  * @param {*} mutation - payload mutation
  * @param {Function} cached - function that returns in-memory cached instance
- * @returns
+ * @returns {object} JSON Object
  */
 function atomize(mutation, cached) {
   return Object.keys(mutation).reduce((data, key) => {

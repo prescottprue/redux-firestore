@@ -13,6 +13,7 @@ export const version = process.env.npm_package_version;
 
 const mockMutate = (state, writes) =>
   new Promise((resolve, reject) => {
+    // eslint-disable-next-line no-param-reassign
     state.cache = reducer(state, {
       type: actionTypes.MUTATE_START,
       payload: { data: writes },

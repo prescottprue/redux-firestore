@@ -5,7 +5,7 @@ let firestoreInstance;
 
 /**
  * @name reduxFirestore
- * @external
+ * @external reduxFirestore
  * Redux store enhancer that accepts configuration options and adds
  * store.firestore. Enhancers are most commonly placed in redux's `compose` call
  * along side applyMiddleware.

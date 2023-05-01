@@ -302,6 +302,7 @@ export function setListeners(firebase, dispatch, listeners) {
     listeners.forEach((listener) => {
       const path = getQueryName(listener);
       const oldListenerCount = firebase._.pathListenerCounts[path] || 0;
+      // eslint-disable-next-line no-param-reassign
       firebase._.pathListenerCounts[path] = oldListenerCount + 1;
 
       // If we already have an attached listener exit here
@@ -322,6 +323,7 @@ export function setListeners(firebase, dispatch, listeners) {
           ? allowMultipleListeners(listener, firebase._.listeners)
           : allowMultipleListeners;
 
+      // eslint-disable-next-line no-param-reassign
       firebase._.pathListenerCounts[path] = oldListenerCount + 1;
 
       // If we already have an attached listener exit here
@@ -372,6 +374,7 @@ export function unsetListeners(firebase, dispatch, listeners) {
         : allowMultipleListeners;
 
     if (listenerExists) {
+      // eslint-disable-next-line no-param-reassign
       firebase._.pathListenerCounts[path] -= 1;
       // If we aren't supposed to have listners for this path, then remove them
       if (

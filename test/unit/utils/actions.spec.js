@@ -69,7 +69,7 @@ describe('actions utils', () => {
         types: [{ type: 'test' }, { type: 'test', payload: () => ({}) }],
         method: 'test',
       };
-      wrapInDispatch(dispatchSpy, opts).catch(err => {
+      wrapInDispatch(dispatchSpy, opts).catch((err) => {
         expect(err).to.equal(testError);
       });
       expect(dispatchSpy).to.have.been.calledOnce;
