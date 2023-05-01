@@ -11,10 +11,10 @@ jobs:
         node-version: [12.x, 14.x, 16.x]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup Node
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'yarn'
@@ -30,7 +30,7 @@ jobs:
 
       - name: Upload coverage to Codecov
         if: matrix.node-version == '14.x'
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v3
 
       - name: Run Build
         run: yarn build
