@@ -9,6 +9,7 @@
     "**/tests/**"
   ],
   "timezone": "America/Denver",
+  "platformAutomerge": true,
   "prHourlyLimit": 0,
   "lockFileMaintenance": {
     "enabled": true,

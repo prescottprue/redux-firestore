@@ -5,37 +5,30 @@
       "@babel/preset-env",
       {
         "targets": {
-          "chrome": 52,
-          "browsers": [
-            "last 2 versions",
-            "safari >= 7"
-          ]
+          "browsers": ["last 2 versions", "not dead", "> 0.2%"]
         }
       }
     ]
   ],
-  "plugins": [
-    "lodash",
-  ],
+  "plugins": ["lodash"],
   "env": {
     "es": {
       "comments": false,
-      "plugins": [
-        "transform-inline-environment-variables"
-      ]
+      "plugins": ["transform-inline-environment-variables"]
     },
     "commonjs": {
       "comments": false,
-      "plugins": [
-        "transform-inline-environment-variables"
-      ]
+      "plugins": ["transform-inline-environment-variables"]
     },
     "test": {
       "plugins": [
         "@babel/plugin-transform-runtime",
-        ["module-resolver", {
-         "root": ["./src"]
-       }]
+        [
+          "module-resolver",
+          {
+            "root": ["./src"]
+          }
+        ]
       ]
     }
   }

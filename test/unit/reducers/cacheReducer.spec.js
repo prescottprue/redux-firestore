@@ -1,5 +1,5 @@
-import reducer from 'reducer';
-import { actionTypes } from 'constants';
+import reducer from '../../../src/reducer';
+import { actionTypes } from '../../../src/constants';
 // TODO: Re-enable once performance util is added back
 // import { benchmark } from 'kelonio';
 // import { debug } from 'debug';

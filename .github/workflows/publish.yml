@@ -13,7 +13,7 @@ concurrency:
   group: publish-${{ github.ref }}
 
 env:
-  NODE_VERSION: 14.x
+  NODE_VERSION: 18.x
 
 jobs:
   publish-npm:
@@ -29,12 +29,10 @@ jobs:
           cache: 'yarn'
 
       - name: Configure package manager
-        run: |
-          npm config set '//registry.npmjs.org/:_authToken' ${{ secrets.NPM_TOKEN }}
-          npm whoami
+        run: yarn config set npmAuthToken ${{ secrets.NPM_TOKEN }}
 
       - name: Install Dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install --immutable
 
       - name: Check For Lint
         run: yarn lint

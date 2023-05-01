@@ -1,7 +1,7 @@
-import createFirestoreInstance from 'createFirestoreInstance';
-import { firestoreActions } from 'actions';
-import { setListeners } from 'actions/firestore';
-import { actionTypes, defaultConfig } from 'constants';
+import { setListeners } from '../../../src/actions/firestore';
+import { actionTypes, defaultConfig } from '../../../src/constants';
+import { firestoreActions } from '../../../src/actions';
+import createFirestoreInstance from '../../../src/createFirestoreInstance';
 
 let dispatchSpy;
 let fakeFirebase;

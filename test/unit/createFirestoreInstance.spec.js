@@ -1,4 +1,4 @@
-import createFirestoreInstance from 'createFirestoreInstance';
+import createFirestoreInstance from '../../src/createFirestoreInstance';
 
 describe('createFirestoreInstance', () => {
   describe('exports', () => {

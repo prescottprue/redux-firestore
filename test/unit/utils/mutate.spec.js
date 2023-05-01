@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import mutate from 'utils/mutate';
+import mutate from '../../../src/utils/mutate';
 
 describe('firestore.mutate()', () => {
   it('writes a single operation', async () => {

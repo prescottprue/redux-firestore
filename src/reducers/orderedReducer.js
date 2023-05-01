@@ -20,7 +20,6 @@ const {
 
 /**
  * Create a new copy of an array with the provided item in a new array index
- *
  * @param {Array} [collectionState=[]] - Redux state of current collection
  * @param {object} meta - Redux Action meta data contains the doc id
  * @param {object} ordered - New array metadata
