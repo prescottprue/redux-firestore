@@ -61,7 +61,7 @@
     "chai": "^4.3.4",
     "cross-env": "^7.0.3",
     "eslint": "^7.30.0",
-    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-google": "^0.14.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-babel": "^5.3.1",
