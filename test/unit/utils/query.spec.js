@@ -7,8 +7,8 @@ import {
   orderedFromSnap,
   dataByIdSnapshot,
   getSnapshotByObject,
-} from 'utils/query';
-import { actionTypes, defaultConfig } from 'constants';
+} from '../../../src/utils/query';
+import { actionTypes, defaultConfig } from '../../../src/constants';
 
 let dispatch = sinon.spy();
 let meta;

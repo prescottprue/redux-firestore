@@ -1,6 +1,6 @@
 module.exports = {
   root: true,
-  parser: 'babel-eslint',
+  parser: '@babel/eslint-parser',
   extends: ['airbnb-base', 'google', 'prettier', 'plugin:jsdoc/recommended'],
   plugins: ['babel', 'prettier', 'jsdoc'],
   env: {
@@ -37,5 +37,7 @@ module.exports = {
         definedTypes: ['firebase', 'Mutation_v1', 'Mutation_v2', 'firstore'],
       },
     ],
+    // TODO: Remove once all default params are updated
+    'default-param-last': 0,
   },
 };

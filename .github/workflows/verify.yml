@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [12.x, 14.x, 16.x]
+        node-version: [16.x, 18.x, 20.x]
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -20,7 +20,7 @@ jobs:
           cache: 'yarn'
 
       - name: Install Dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install --immutable
 
       - name: Check For Lint
         run: yarn lint
@@ -29,7 +29,7 @@ jobs:
         run: yarn test:cov
 
       - name: Upload coverage to Codecov
-        if: matrix.node-version == '14.x'
+        if: matrix.node-version == '18.x'
         uses: codecov/codecov-action@v3
 
       - name: Run Build

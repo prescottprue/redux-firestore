@@ -1,4 +1,4 @@
-/* eslint-disable jsdoc/valid-types */
+/* eslint-disable jsdoc/valid-types, jsdoc/check-types */
 import produce from 'immer';
 import { Timestamp } from 'firebase/firestore'; // eslint-disable-line import/no-extraneous-dependencies
 import {
