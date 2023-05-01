@@ -2153,15 +2153,14 @@
     estree-walker "^1.0.1"
     picomatch "^2.2.2"
 
-"@sentry/cli@1.74.4":
-  version "1.74.4"
-  resolved "https://registry.yarnpkg.com/@sentry/cli/-/cli-1.74.4.tgz#7df82f68045a155e1885bfcbb5d303e5259eb18e"
-  integrity sha512-BMfzYiedbModsNBJlKeBOLVYUtwSi99LJ8gxxE4Bp5N8hyjNIN0WVrozAVZ27mqzAuy6151Za3dpmOLO86YlGw==
+"@sentry/cli@1.75.2":
+  version "1.75.2"
+  resolved "https://registry.yarnpkg.com/@sentry/cli/-/cli-1.75.2.tgz#2c38647b38300e52c9839612d42b7c23f8d6455b"
+  integrity sha512-CG0CKH4VCKWzEaegouWfCLQt9SFN+AieFESCatJ7zSuJmzF05ywpMusjxqRul6lMwfUhRKjGKOzcRJ1jLsfTBw==
   dependencies:
     https-proxy-agent "^5.0.0"
     mkdirp "^0.5.5"
     node-fetch "^2.6.7"
-    npmlog "^4.1.2"
     progress "^2.0.3"
     proxy-from-env "^1.1.0"
     which "^2.0.2"
