@@ -96,7 +96,7 @@ function arrayify(cursor) {
  */
 function handleSubcollections(ref, subcollectionList) {
   if (Array.isArray(subcollectionList)) {
-    subcollectionList.forEach(subcollection => {
+    subcollectionList.forEach((subcollection) => {
       /* eslint-disable no-param-reassign */
       if (subcollection.collection) {
         if (typeof ref.collection !== 'function') {
@@ -106,6 +106,7 @@ function handleSubcollections(ref, subcollectionList) {
         }
         ref = ref.collection(subcollection.collection);
       }
+      if (subcollection.id) ref = ref.doc(subcollection.id);
       if (subcollection.doc) ref = ref.doc(subcollection.doc);
       if (subcollection.where) ref = addWhereToRef(ref, subcollection.where);
       if (subcollection.orderBy) {
@@ -146,8 +147,10 @@ export function firestoreRef(firebase, meta) {
     throw new Error('Firestore must be required and initalized.');
   }
   const {
+    path,
     collection,
     collectionGroup,
+    id,
     doc,
     subcollections,
     where,
@@ -166,10 +169,12 @@ export function firestoreRef(firebase, meta) {
       'Reference cannot contain both Collection and CollectionGroup.',
     );
   }
+  const { globalDataConvertor } =
+    (firebase && firebase._ && firebase._.config) || {};
 
-  if (collection) ref = ref.collection(collection);
+  if (path || collection) ref = ref.collection(path || collection);
   if (collectionGroup) ref = ref.collectionGroup(collectionGroup);
-  if (doc) ref = ref.doc(doc);
+  if (id || doc) ref = ref.doc(id || doc);
   ref = handleSubcollections(ref, subcollections);
   if (where) ref = addWhereToRef(ref, where);
   if (orderBy) ref = addOrderByToRef(ref, orderBy);
@@ -178,6 +183,7 @@ export function firestoreRef(firebase, meta) {
   if (startAfter) ref = ref.startAfter(...arrayify(startAfter));
   if (endAt) ref = ref.endAt(...arrayify(endAt));
   if (endBefore) ref = ref.endBefore(...arrayify(endBefore));
+  if (globalDataConvertor) ref = ref.withConverter(globalDataConvertor);
   return ref;
 }
 
@@ -198,7 +204,7 @@ function arrayToStr(key, value) {
     return `${key}=${value.toString()}`;
   }
 
-  return value.map(val => arrayToStr(key, val));
+  return value.map((val) => arrayToStr(key, val));
 }
 
 /**
@@ -225,8 +231,8 @@ function pickQueryParams(obj) {
  */
 function serialize(queryParams) {
   return Object.keys(queryParams)
-    .filter(key => queryParams[key] !== undefined)
-    .map(key => arrayToStr(key, queryParams[key]))
+    .filter((key) => queryParams[key] !== undefined)
+    .map((key) => arrayToStr(key, queryParams[key]))
     .join('&');
 }
 
@@ -246,14 +252,16 @@ export function getQueryName(meta) {
     return meta;
   }
   const {
+    path,
     collection,
     collectionGroup,
+    id,
     doc,
     subcollections,
     storeAs,
     ...remainingMeta
   } = meta;
-  if (!collection && !collectionGroup) {
+  if (!path && !collection && !collectionGroup) {
     throw new Error(
       'Collection or Collection Group is required to build query name',
     );
@@ -263,17 +271,17 @@ export function getQueryName(meta) {
     return storeAs;
   }
 
-  let basePath = collection || collectionGroup;
-  if (doc) {
-    basePath = basePath.concat(`/${doc}`);
+  let basePath = path || collection || collectionGroup;
+  if (id || doc) {
+    basePath = basePath.concat(`/${id || doc}`);
   }
-  if (collection && subcollections) {
+  if ((path || collection) && subcollections) {
     /* eslint-disable no-console */
     console.error(
       'Queries with subcollections must use "storeAs" to prevent invalid store updates. This closley matches the upcoming major release (v1), which stores subcollections at the top level by default.',
     );
     /* eslint-enable no-console */
-    const mappedCollections = subcollections.map(subcollection =>
+    const mappedCollections = subcollections.map((subcollection) =>
       getQueryName(subcollection),
     );
     basePath = `${basePath}/${mappedCollections.join('/')}`;
@@ -305,20 +313,21 @@ export function getBaseQueryName(meta) {
     return meta;
   }
   const {
+    path,
     collection,
     collectionGroup,
     subcollections,
     ...remainingMeta
   } = meta;
-  if (!collection && !collectionGroup) {
+  if (!path && !collection && !collectionGroup) {
     throw new Error(
       'Collection or Collection Group is required to build query name',
     );
   }
-  let basePath = collection || collectionGroup;
+  let basePath = path || collection || collectionGroup;
 
-  if (collection && subcollections) {
-    const mappedCollections = subcollections.map(subcollection =>
+  if ((path || collection) && subcollections) {
+    const mappedCollections = subcollections.map((subcollection) =>
       getQueryName(subcollection),
     );
     basePath = `${basePath}/${mappedCollections.join('/')}`;
@@ -404,11 +413,12 @@ export function detachListener(firebase, dispatch, meta) {
     firebase._.listeners[name]();
     delete firebase._.listeners[name]; // eslint-disable-line no-param-reassign
   }
+  const { preserveCacheAfterUnset: preserveCache } = firebase._.config || {};
 
   dispatch({
     type: actionTypes.UNSET_LISTENER,
     meta,
-    payload: { name },
+    payload: { name, preserveCache },
   });
 }
 
@@ -480,16 +490,28 @@ export function getQueryConfigs(queries) {
 export function orderedFromSnap(snap) {
   const ordered = [];
   if (snap.data && snap.exists) {
+    const {
+      id,
+      ref: {
+        parent: { path },
+      },
+    } = snap;
     const obj = isObject(snap.data())
-      ? { id: snap.id, ...(snap.data() || snap.data) }
-      : { id: snap.id, data: snap.data() };
+      ? { ...(snap.data() || snap.data), id, path }
+      : { id, path, data: snap.data() };
     snapshotCache.set(obj, snap);
     ordered.push(obj);
   } else if (snap.forEach) {
-    snap.forEach(doc => {
+    snap.forEach((doc) => {
+      const {
+        id,
+        ref: {
+          parent: { path },
+        },
+      } = doc;
       const obj = isObject(doc.data())
-        ? { id: doc.id, ...(doc.data() || doc.data) }
-        : { id: doc.id, data: doc.data() };
+        ? { ...(doc.data() || doc.data), id, path }
+        : { id, path, data: doc.data() };
       snapshotCache.set(obj, doc);
       ordered.push(obj);
     });
@@ -510,13 +532,23 @@ export function dataByIdSnapshot(snap) {
     const snapData = snap.exists ? snap.data() : null;
     if (snapData) {
       snapshotCache.set(snapData, snap);
+      data[snap.id] = {
+        ...snapData,
+        id: snap.id,
+        path: snap.ref.parent.path,
+      };
+    } else {
+      data[snap.id] = null;
     }
-    data[snap.id] = snapData;
   } else if (snap.forEach) {
-    snap.forEach(doc => {
+    snap.forEach((doc) => {
       const snapData = doc.data() || doc;
       snapshotCache.set(snapData, doc);
-      data[doc.id] = snapData;
+      data[doc.id] = {
+        ...snapData,
+        id: doc.id,
+        path: doc.ref.parent.path,
+      };
     });
   }
   if (!!data && Object.keys(data).length) {
@@ -527,7 +559,6 @@ export function dataByIdSnapshot(snap) {
 }
 
 /**
- * @private
  * Create an array of promises for population of an object or list
  * @param {object} firebase - Internal firebase object
  * @param {object} populate - Object containing root to be populate
@@ -535,14 +566,13 @@ export function dataByIdSnapshot(snap) {
  * @param {string} id - String id
  * @returns {Promise} Resolves with populate child data
  */
-export function getPopulateChild(firebase, populate, id) {
+function getPopulateChild(firebase, populate, id) {
   return firestoreRef(firebase, { collection: populate.root, doc: id })
     .get()
-    .then(snap => ({ id, ...snap.data() }));
+    .then((snap) => ({ id, ...snap.data() }));
 }
 
 /**
- * @private
  * Populate list of data
  * @param {object} firebase - Internal firebase object
  * @param {object} originalObj - Object to have parameter populated
@@ -550,7 +580,7 @@ export function getPopulateChild(firebase, populate, id) {
  * @param {object} results - Object containing results of population from other populates
  * @returns {Promise} Resolves with populated list
  */
-export function populateList(firebase, originalObj, p, results) {
+function populateList(firebase, originalObj, p, results) {
   // Handle root not being defined
   if (!results[p.root]) {
     set(results, p.root, {});
@@ -559,7 +589,7 @@ export function populateList(firebase, originalObj, p, results) {
     map(originalObj, (id, childKey) => {
       // handle list of keys
       const populateKey = id === true || p.populateByKey ? childKey : id;
-      return getPopulateChild(firebase, p, populateKey).then(pc => {
+      return getPopulateChild(firebase, p, populateKey).then((pc) => {
         if (pc) {
           // write child to result object under root name if it is found
           return set(results, `${p.root}.${populateKey}`, pc);
@@ -571,7 +601,6 @@ export function populateList(firebase, originalObj, p, results) {
 }
 
 /**
- * @private
  * Create standardized populate object from strings or objects
  * @param {string|object} str - String or Object to standardize into populate object
  * @returns {object} Populate object
@@ -586,7 +615,6 @@ function getPopulateObj(str) {
 }
 
 /**
- * @private
  * Create standardized populate object from strings or objects
  * @param {Array} arr - Array of items to get populate objects for
  * @returns {Array} Array of populate objects
@@ -595,24 +623,18 @@ function getPopulateObjs(arr) {
   if (!Array.isArray(arr)) {
     return arr;
   }
-  return arr.map(o => (isObject(o) ? o : getPopulateObj(o)));
+  return arr.map((o) => (isObject(o) ? o : getPopulateObj(o)));
 }
 
 /**
- * @private
  * Create an array of promises for population of an object or list
  * @param {object} firebase - Internal firebase object
  * @param {object} dataKey - Object to have parameter populated
- * @param {object} originalData - String containg population data
+ * @param {object} originalData - String containing population data
  * @param {object|Function} populatesIn - Populates setting
  * @returns {Promise} Resolves with results of population
  */
-export function promisesForPopulate(
-  firebase,
-  dataKey,
-  originalData,
-  populatesIn,
-) {
+function promisesForPopulate(firebase, dataKey, originalData, populatesIn) {
   // TODO: Handle selecting of parameter to populate with (i.e. displayName of users/user)
   const promisesArray = [];
   const results = {};
@@ -624,16 +646,16 @@ export function promisesForPopulate(
       : populatesIn,
   );
 
-  const dataHasPopulateChilds = populatesForData.some(populate =>
+  const dataHasPopulateChilds = populatesForData.some((populate) =>
     has(originalData, populate.child),
   );
   if (dataHasPopulateChilds) {
     // Data is a single object, resolve populates directly
-    populatesForData.forEach(p => {
+    populatesForData.forEach((p) => {
       const childDataVal = get(originalData, p.child);
       if (typeof childDataVal === 'string' || childDataVal instanceof String) {
         return promisesArray.push(
-          getPopulateChild(firebase, p, childDataVal).then(v => {
+          getPopulateChild(firebase, p, childDataVal).then((v) => {
             // write child to result object under root name if it is found
             if (v) {
               set(
@@ -661,7 +683,7 @@ export function promisesForPopulate(
       );
 
       // resolve each populate for this data item
-      forEach(populatesForDataItem, p => {
+      forEach(populatesForDataItem, (p) => {
         // get value of parameter to be populated (key or list of keys)
         const idOrList = get(d, p.child);
 
@@ -675,7 +697,7 @@ export function promisesForPopulate(
         if (typeof idOrList === 'string' || idOrList instanceof String) {
           return promisesArray.push(
             // eslint-disable-line
-            getPopulateChild(firebase, p, idOrList).then(v => {
+            getPopulateChild(firebase, p, idOrList).then((v) => {
               // write child to result object under root name if it is found
               if (v) {
                 set(
@@ -719,17 +741,22 @@ const changeTypeToEventType = {
  * @returns {object} Resolves with doc change action object
  */
 function docChangeEvent(change, originalMeta = {}) {
-  const meta = { ...cloneDeep(originalMeta), path: change.doc.ref.path };
+  const meta = { ...cloneDeep(originalMeta), path: change.doc.ref.parent.path };
   if (originalMeta.subcollections && !originalMeta.storeAs) {
     meta.subcollections[0] = { ...meta.subcollections[0], doc: change.doc.id };
   } else {
     meta.doc = change.doc.id;
   }
+  const data = {
+    id: change.doc.id,
+    path: change.doc.ref.parent.path,
+    ...change.doc.data(),
+  };
   return {
     type: changeTypeToEventType[change.type] || actionTypes.DOCUMENT_MODIFIED,
     meta,
     payload: {
-      data: change.doc.data(),
+      data,
       ordered: { oldIndex: change.oldIndex, newIndex: change.newIndex },
     },
   };
@@ -755,6 +782,10 @@ export function dispatchListenerResponse({
     mergeOrderedDocUpdates,
     mergeOrderedCollectionUpdates,
   } = firebase._.config || {};
+  const fromCache =
+    typeof docData.metadata?.fromCache === 'boolean'
+      ? docData.metadata.fromCache
+      : true;
   const docChanges =
     typeof docData.docChanges === 'function'
       ? docData.docChanges()
@@ -763,8 +794,9 @@ export function dispatchListenerResponse({
   if (docChanges && docChanges.length < docData.size) {
     // Loop to dispatch for each change if there are multiple
     // TODO: Option for dispatching multiple changes in single action
-    docChanges.forEach(change => {
-      dispatch(docChangeEvent(change, meta));
+    docChanges.forEach((change, index) => {
+      const lastChange = index === docChanges.length - 1;
+      dispatch(docChangeEvent(change, { reprocess: lastChange, ...meta }));
     });
   } else {
     // Dispatch action for whole collection change
@@ -774,6 +806,7 @@ export function dispatchListenerResponse({
       payload: {
         data: dataByIdSnapshot(docData),
         ordered: orderedFromSnap(docData),
+        fromCache,
       },
       merge: {
         docs: mergeOrdered && mergeOrderedDocUpdates,
@@ -800,9 +833,9 @@ export function getPopulateActions({ firebase, docData, meta }) {
     dataByIdSnapshot(docData),
     meta.populates,
   )
-    .then(populateResults =>
+    .then((populateResults) =>
       // Listener results for each child collection
-      Object.keys(populateResults).map(resultKey => ({
+      Object.keys(populateResults).map((resultKey) => ({
         // TODO: Handle population of subcollection queries
         meta: { collection: resultKey },
         payload: {
@@ -813,7 +846,7 @@ export function getPopulateActions({ firebase, docData, meta }) {
         requested: true,
       })),
     )
-    .catch(populateErr => {
+    .catch((populateErr) => {
       console.error('Error with populate:', populateErr, meta); // eslint-disable-line no-console
       return Promise.reject(populateErr);
     });

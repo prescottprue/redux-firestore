@@ -17,6 +17,8 @@ export default function createFirestoreInstance(firebase, configs, dispatch) {
   const defaultInternals = {
     // Setup empty listeners object (later used to track listeners)
     listeners: {},
+    // Setup empty path listeners count object (later used to track listeners)
+    pathListenerCounts: {},
     // Extend default config with provided config
     config: { ...defaultConfig, ...configs },
   };
@@ -100,7 +102,6 @@ export default function createFirestoreInstance(firebase, configs, dispatch) {
  *        dispatch({ type: 'SOME_ACTION' })
  *      })
  * };
- *
  */
 export function getFirestore() {
   /* istanbul ignore next: Firestore instance always exists during tests */

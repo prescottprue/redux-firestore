@@ -12,7 +12,7 @@ import { preserveValuesFromState } from '../utils/reducers';
  * @returns {object} Cross slice state
  */
 export default function crossSliceReducer(state = {}, action) {
-  return produce(state, draft => {
+  return produce(state, (draft) => {
     switch (action.type) {
       case actionTypes.DOCUMENT_MODIFIED:
       case actionTypes.DOCUMENT_ADDED:
@@ -22,12 +22,12 @@ export default function crossSliceReducer(state = {}, action) {
         // Take all of the query values and plop them into composite, replacing the existing data entirely
         const groups = groupBy(
           (!!state.queries && Object.values(state.queries)) || [],
-          c => c.storeAs || c.collection,
+          (c) => c.storeAs || c.collection,
         );
 
-        Object.keys(groups).forEach(storeAs => {
+        Object.keys(groups).forEach((storeAs) => {
           const updated = {};
-          groups[storeAs].forEach(item =>
+          groups[storeAs].forEach((item) =>
             merge(updated, get(item, 'data', {})),
           );
 

@@ -1,4 +1,5 @@
-import { wrapInDispatch } from 'utils/actions';
+import { expect } from 'chai';
+import { wrapInDispatch } from '../../../src/utils/actions';
 
 let dispatchSpy;
 describe('actions utils', () => {
@@ -61,17 +62,38 @@ describe('actions utils', () => {
       );
     });
 
-    it('handles rejection', () => {
+    // TODO: Unskip once sinon-as-promised is added or some other handling is done
+    // for uncaught error
+    it.skip('handles rejection', () => {
       const testError = new Error('test');
       const opts = {
         ref: { test: () => Promise.reject(testError) },
         types: [{ type: 'test' }, { type: 'test', payload: () => ({}) }],
         method: 'test',
       };
-      wrapInDispatch(dispatchSpy, opts).catch(err => {
+      wrapInDispatch(dispatchSpy, opts).catch((err) => {
         expect(err).to.equal(testError);
       });
       expect(dispatchSpy).to.have.been.calledOnce;
+    });
+
+    it('handles mutate action types', () => {
+      const set = sinon.spy(() => Promise.resolve());
+      const doc = sinon.spy(() => ({
+        set,
+        id: 'id',
+        parent: { path: 'path' },
+      }));
+      const collection = sinon.spy(() => ({ doc }));
+      const firestore = sinon.spy(() => ({ collection, doc }));
+      wrapInDispatch(dispatchSpy, {
+        ref: { firestore },
+        types: ['mutate', 'mutate', 'mutate'],
+        args: [{ collection: '/collection/path', doc: 'doc', data: { a: 1 } }],
+        method: 'mutate',
+      });
+      expect(doc).to.have.been.calledOnceWith('/collection/path/doc');
+      expect(set).to.have.been.calledOnceWith({ a: 1 });
     });
   });
 });

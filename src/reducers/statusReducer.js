@@ -2,19 +2,14 @@ import { actionTypes } from '../constants';
 import { getSlashStrPath, combineReducers } from '../utils/reducers';
 import { getQueryName } from '../utils/query';
 
-const {
-  SET_LISTENER,
-  UNSET_LISTENER,
-  LISTENER_ERROR,
-  LISTENER_RESPONSE,
-} = actionTypes;
+const { SET_LISTENER, UNSET_LISTENER, LISTENER_ERROR, LISTENER_RESPONSE } =
+  actionTypes;
 
 /**
  * Reducer for requesting state.Changed by `START`, `NO_VALUE`, and `SET` actions.
  * @param {object} [state={}] - Current requesting redux state
  * @param {object} action - Object containing the action that was dispatched
  * @param {string} action.type - Type of action that was dispatched
- * @param {string} action.path - Path of action that was dispatched
  * @param {string} action.meta - The meta information of the query
  * @returns {object} Profile state after reduction
  */
@@ -42,7 +37,6 @@ export function requestingReducer(state = {}, { type, meta }) {
  * @param {object} [state={}] - Current requested redux state
  * @param {object} action - Object containing the action that was dispatched
  * @param {string} action.type - Type of action that was dispatched
- * @param {string} action.path - Path of action that was dispatched
  * @param {string} action.meta - The meta information of the query
  * @returns {object} Profile state after reduction
  */
@@ -70,7 +64,7 @@ export function requestedReducer(state = {}, { type, meta }) {
  * @param {object} [state={}] - Current timestamps redux state
  * @param {object} action - Object containing the action that was dispatched
  * @param {string} action.type - Type of action that was dispatched
- * @param {string} action.path - Path of action that was dispatched
+ * @param {object} action.meta - Metadata for action
  * @returns {object} Profile state after reduction
  */
 export function timestampsReducer(state = {}, { type, meta }) {

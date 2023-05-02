@@ -8,6 +8,8 @@ import { combineReducers } from '../utils/reducers';
  * @param {object} [state={}] - Current listenersById redux state
  * @param {object} action - Object containing the action that was dispatched
  * @param {string} action.type - Type of action that was dispatched
+ * @param {string} action.path - Path of action
+ * @param {object} action.payload - THe payload
  * @returns {object} listenersById state after reduction (used in listeners)
  * @private
  */
@@ -33,6 +35,7 @@ function listenersById(state = {}, { type, path, payload }) {
  * @param {object} [state=[]] - Current authError redux state
  * @param {object} action - Object containing the action that was dispatched
  * @param {string} action.type - Type of action that was dispatched
+ * @param {object} action.payload - Action payload
  * @returns {object} allListeners state after reduction (used in listeners)
  * @private
  */
@@ -41,7 +44,7 @@ function allListeners(state = [], { type, payload }) {
     case actionTypes.SET_LISTENER:
       return [...state, payload.name];
     case actionTypes.UNSET_LISTENER:
-      return state.filter(name => name !== payload.name);
+      return state.filter((name) => name !== payload.name);
     default:
       return state;
   }
