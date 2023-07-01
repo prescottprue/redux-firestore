@@ -87,7 +87,7 @@
     "sinon": "15.2.0",
     "sinon-chai": "3.7.0",
     "terser-webpack-plugin": "5.3.9",
-    "webpack": "5.81.0",
+    "webpack": "5.88.1",
     "webpack-cli": "5.1.4"
   },
   "license": "MIT",
