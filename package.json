@@ -48,12 +48,12 @@
     "reduce-reducers": "^1.0.4"
   },
   "devDependencies": {
-    "@babel/cli": "7.22.6",
-    "@babel/core": "7.22.8",
-    "@babel/eslint-parser": "7.22.7",
+    "@babel/cli": "7.22.9",
+    "@babel/core": "7.22.9",
+    "@babel/eslint-parser": "7.22.9",
     "@babel/plugin-transform-modules-commonjs": "7.22.5",
-    "@babel/plugin-transform-runtime": "7.22.7",
-    "@babel/preset-env": "7.22.7",
+    "@babel/plugin-transform-runtime": "7.22.9",
+    "@babel/preset-env": "7.22.9",
     "@babel/preset-react": "7.22.5",
     "@babel/register": "7.22.5",
     "@babel/runtime": "7.22.6",
