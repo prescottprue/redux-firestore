@@ -83,7 +83,7 @@
     "nyc": "15.1.0",
     "prettier": "2.8.8",
     "redux": "4.2.1",
-    "rimraf": "5.0.1",
+    "rimraf": "5.0.4",
     "sinon": "15.2.0",
     "sinon-chai": "3.7.0",
     "terser-webpack-plugin": "5.3.9",
