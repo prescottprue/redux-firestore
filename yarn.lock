@@ -2574,6 +2574,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@pkgr/core@npm:^0.3.0":
+  version: 0.3.4
+  resolution: "@pkgr/core@npm:0.3.4"
+  checksum: c7830b8579629f71f8f576f3a65983b8c7bb87909aa789e52d9862518dfc8467b7df778131d7908ccc09a388ca963a3c21456d891b0ebb71c39c70b0aa9b9ca6
+  languageName: node
+  linkType: hard
+
 "@protobufjs/aspromise@npm:^1.1.1, @protobufjs/aspromise@npm:^1.1.2":
   version: 1.1.2
   resolution: "@protobufjs/aspromise@npm:1.1.2"
@@ -5238,18 +5245,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-prettier@npm:4.2.5":
-  version: 4.2.5
-  resolution: "eslint-plugin-prettier@npm:4.2.5"
+"eslint-plugin-prettier@npm:5.5.3":
+  version: 5.5.3
+  resolution: "eslint-plugin-prettier@npm:5.5.3"
   dependencies:
     prettier-linter-helpers: ^1.0.0
+    synckit: ^0.11.7
   peerDependencies:
-    eslint: ">=7.28.0"
-    prettier: ">=2.0.0"
+    "@types/eslint": ">=8.0.0"
+    eslint: ">=8.0.0"
+    eslint-config-prettier: ">= 7.0.0 <10.0.0 || >=10.1.0"
+    prettier: ">=3.0.0"
   peerDependenciesMeta:
+    "@types/eslint":
+      optional: true
     eslint-config-prettier:
       optional: true
-  checksum: 22c29ba685f18516e3b1595e062849ccc108996a759da6067ff5d876519a5f81c8ba92c0c5623a1c62b593d417619ba44ab3b6ec1450ca753c078fd92970b883
+  checksum: d1d83fddcdd8c7b7378f2c554206f8cbd1ddf174fd62989c2dc6a61a88442b2326f06ebd7db5f302a2dde24604f11061d4e974f37e4a51c76c4b97cb55d115e0
   languageName: node
   linkType: hard
 
@@ -9036,7 +9048,7 @@ __metadata:
     eslint-plugin-import: 2.32.0
     eslint-plugin-jsdoc: 46.10.1
     eslint-plugin-jsx-a11y: 6.10.2
-    eslint-plugin-prettier: 4.2.5
+    eslint-plugin-prettier: 5.5.3
     eslint-plugin-react: 7.37.5
     firebase: 9.23.0
     husky: 8.0.3
@@ -10209,6 +10221,15 @@ __metadata:
   version: 1.0.0
   resolution: "supports-preserve-symlinks-flag@npm:1.0.0"
   checksum: 53b1e247e68e05db7b3808b99b892bd36fb096e6fba213a06da7fab22045e97597db425c724f2bbd6c99a3c295e1e73f3e4de78592289f38431049e1277ca0ae
+  languageName: node
+  linkType: hard
+
+"synckit@npm:^0.11.7":
+  version: 0.11.10
+  resolution: "synckit@npm:0.11.10"
+  dependencies:
+    "@pkgr/core": ^0.3.0
+  checksum: ad0736f1701932c31d0f35251db3d485b6b007ea674dd6fb71e159dbb162b3834be6d98b71a1e54fa7d8047d2e2ba14b147147183eaab4f51c6e74aaec6f32e8
   languageName: node
   linkType: hard
 
