@@ -2,6 +2,7 @@
 import produce from 'immer';
 import { groupBy, merge, set, get } from 'lodash';
 import { actionTypes } from '../constants';
+import { preserveValuesFromState } from '../utils/reducers';
 
 /**
  * Reducer for crossSlice state
@@ -34,6 +35,12 @@ export default function crossSliceReducer(state = {}, action) {
         });
 
         return draft;
+      case actionTypes.CLEAR_DATA:
+        // support keeping data when logging out - #125
+        if (action.preserve && action.preserve.ordered) {
+          return preserveValuesFromState(state, action.preserve.ordered, {});
+        }
+        return {};
       default:
         return state;
     }
