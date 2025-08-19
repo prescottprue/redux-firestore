@@ -6464,10 +6464,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"immer@npm:9.0.21":
-  version: 9.0.21
-  resolution: "immer@npm:9.0.21"
-  checksum: 70e3c274165995352f6936695f0ef4723c52c92c92dd0e9afdfe008175af39fa28e76aafb3a2ca9d57d1fb8f796efc4dd1e1cc36f18d33fa5b74f3dfb0375432
+"immer@npm:10.1.1":
+  version: 10.1.1
+  resolution: "immer@npm:10.1.1"
+  checksum: 07c67970b7d22aded73607193d84861bf786f07d47f7d7c98bb10016c7a88f6654ad78ae1e220b3c623695b133aabbf24f5eb8d9e8060cff11e89ccd81c9c10b
   languageName: node
   linkType: hard
 
@@ -8990,7 +8990,7 @@ __metadata:
     eslint-plugin-react: 7.37.5
     firebase: 10.9.0
     husky: 8.0.3
-    immer: 9.0.21
+    immer: 10.1.1
     lint-staged: 13.3.0
     lodash: ^4.17.21
     lodash-webpack-plugin: 0.11.6
