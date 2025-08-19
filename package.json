@@ -75,7 +75,7 @@
     "eslint-plugin-jsx-a11y": "6.10.2",
     "eslint-plugin-prettier": "5.5.4",
     "eslint-plugin-react": "7.37.5",
-    "firebase": "10.9.0",
+    "firebase": "10.14.1",
     "husky": "8.0.3",
     "lint-staged": "13.3.0",
     "lodash-webpack-plugin": "0.11.6",
