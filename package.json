@@ -40,7 +40,7 @@
     "prepare": "husky install && npm run clean && npm run build"
   },
   "peerDependencies": {
-    "firebase": "^10.9.0"
+    "firebase": "^10.9.0 || ^12.0.0"
   },
   "dependencies": {
     "immer": "9.0.21",
@@ -75,7 +75,7 @@
     "eslint-plugin-jsx-a11y": "6.10.2",
     "eslint-plugin-prettier": "5.5.4",
     "eslint-plugin-react": "7.37.5",
-    "firebase": "10.14.1",
+    "firebase": "12.5.0",
     "husky": "8.0.3",
     "lint-staged": "13.3.0",
     "lodash-webpack-plugin": "0.11.6",
