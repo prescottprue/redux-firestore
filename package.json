@@ -43,7 +43,7 @@
     "firebase": "^10.9.0 || ^12.0.0"
   },
   "dependencies": {
-    "immer": "9.0.21",
+    "immer": "10.2.0",
     "lodash": "^4.17.21",
     "reduce-reducers": "^1.0.4"
   },
