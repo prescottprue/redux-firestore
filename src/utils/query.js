@@ -762,6 +762,7 @@ function docChangeEvent(change, originalMeta = {}) {
   };
 }
 
+const MAX_MULTI_ACTION = 15;
 /**
  * Dispatch action(s) response from listener response.
  * @private
@@ -791,7 +792,7 @@ export function dispatchListenerResponse({
       ? docData.docChanges()
       : docData.docChanges;
   // Dispatch different actions for doc changes (only update doc(s) by key)
-  if (docChanges && docChanges.length < docData.size) {
+  if (docChanges && docChanges.length < Math.min(MAX_MULTI_ACTION, docData.size)) {
     // Loop to dispatch for each change if there are multiple
     // TODO: Option for dispatching multiple changes in single action
     docChanges.forEach((change, index) => {
