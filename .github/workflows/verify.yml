@@ -30,7 +30,7 @@ jobs:
 
       - name: Upload coverage to Codecov
         if: matrix.node-version == '18.x'
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
 
       - name: Run Build
         run: yarn build
