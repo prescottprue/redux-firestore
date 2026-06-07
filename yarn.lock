@@ -4904,13 +4904,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"enhanced-resolve@npm:^5.21.4":
-  version: 5.21.5
-  resolution: "enhanced-resolve@npm:5.21.5"
+"enhanced-resolve@npm:^5.22.0":
+  version: 5.23.0
+  resolution: "enhanced-resolve@npm:5.23.0"
   dependencies:
     graceful-fs: ^4.2.4
     tapable: ^2.3.3
-  checksum: 6626d4e0cbb5fd4fc717f67f4b9c48384909450ea4e17d7983172226c4b61a50b7e5ccb652126917e3b0c5865d5d1ec617fea67f38f1fd80a030a1054295d4b1
+  checksum: ae594afb28f15a44bbbd8f3eede43e97b8c7bae9e89b7040a209fb8f50c1d2f27f0bfe63b3c31ab226b1b8eefabf2277ed83fba0177b55d76239a8efba3b148c
   languageName: node
   linkType: hard
 
@@ -8975,7 +8975,7 @@ __metadata:
     sinon: 15.2.0
     sinon-chai: 3.7.0
     terser-webpack-plugin: 5.6.1
-    webpack: 5.107.0
+    webpack: 5.107.2
     webpack-cli: 5.1.4
   peerDependencies:
     firebase: ^10.9.0 || ^12.0.0
@@ -10762,16 +10762,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"webpack-sources@npm:^3.4.1":
-  version: 3.4.1
-  resolution: "webpack-sources@npm:3.4.1"
-  checksum: 5b318a9d3ed0ab53ca1e7e6b340eb7d88220a7197977b51b24d9e15ac864615f7ab58486f3233327d152f4a618f23d219877b7dc506f6adb75f3a8dd4d73ab5c
+"webpack-sources@npm:^3.5.0":
+  version: 3.5.0
+  resolution: "webpack-sources@npm:3.5.0"
+  checksum: 748e288620d0731be0f89efaf9cce752d245e224b4d74361d1150ebe680338946ced1bbcc0a67b887cf0a86e1ed4d6c68770b7b7c46f83975c0bc30eb8c64ff6
   languageName: node
   linkType: hard
 
-"webpack@npm:5.107.0":
-  version: 5.107.0
-  resolution: "webpack@npm:5.107.0"
+"webpack@npm:5.107.2":
+  version: 5.107.2
+  resolution: "webpack@npm:5.107.2"
   dependencies:
     "@types/estree": ^1.0.8
     "@types/json-schema": ^7.0.15
@@ -10782,7 +10782,7 @@ __metadata:
     acorn-import-phases: ^1.0.3
     browserslist: ^4.28.1
     chrome-trace-event: ^1.0.2
-    enhanced-resolve: ^5.21.4
+    enhanced-resolve: ^5.22.0
     es-module-lexer: ^2.1.0
     eslint-scope: 5.1.1
     events: ^3.2.0
@@ -10795,13 +10795,13 @@ __metadata:
     tapable: ^2.3.0
     terser-webpack-plugin: ^5.5.0
     watchpack: ^2.5.1
-    webpack-sources: ^3.4.1
+    webpack-sources: ^3.5.0
   peerDependenciesMeta:
     webpack-cli:
       optional: true
   bin:
     webpack: bin/webpack.js
-  checksum: 21aa704fd4c72d8caf43982ccd5f495cca22895fe724c0f083e9807260607809d7986f1396547f74ea53016b363f167ebe3b3678cd632389165998caa213456c
+  checksum: b56e6c28fa238e1f185ffbcff9a28d02d12c195e07c174ba770b3e84bf969e0c41cb237123e9bfec3fc0b76b08c641fed8eb3468c141443707ff8aaaf579425e
   languageName: node
   linkType: hard
 
