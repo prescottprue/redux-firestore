@@ -1,6 +1,7 @@
 import produce from 'immer';
 import { set, get, unset } from 'lodash';
 import { actionTypes } from '../constants';
+import { preserveValuesFromState } from '../utils/reducers';
 import { getBaseQueryName } from '../utils/query';
 
 /**
@@ -49,6 +50,12 @@ export default function queriesReducer(state = {}, action) {
       case actionTypes.DELETE_SUCCESS:
         unset(draft, [key, 'data', action.meta.doc]);
         return draft;
+      case actionTypes.CLEAR_DATA:
+        // support keeping data when logging out - #125
+        if (action.preserve && action.preserve.ordered) {
+          return preserveValuesFromState(state, action.preserve.ordered, {});
+        }
+        return {};
       default:
         return state;
     }
