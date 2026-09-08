@@ -7,7 +7,7 @@ const { SET_LISTENER, UNSET_LISTENER, LISTENER_ERROR, LISTENER_RESPONSE } =
 
 /**
  * Reducer for requesting state.Changed by `START`, `NO_VALUE`, and `SET` actions.
- * @param {object} [state={}] - Current requesting redux state
+ * @param {object} [state] - Current requesting redux state
  * @param {object} action - Object containing the action that was dispatched
  * @param {string} action.type - Type of action that was dispatched
  * @param {string} action.meta - The meta information of the query
@@ -34,7 +34,7 @@ export function requestingReducer(state = {}, { type, meta }) {
 
 /**
  * Reducer for requested state. Changed by `START`, `NO_VALUE`, and `SET` actions.
- * @param {object} [state={}] - Current requested redux state
+ * @param {object} [state] - Current requested redux state
  * @param {object} action - Object containing the action that was dispatched
  * @param {string} action.type - Type of action that was dispatched
  * @param {string} action.meta - The meta information of the query
@@ -61,7 +61,7 @@ export function requestedReducer(state = {}, { type, meta }) {
 
 /**
  * Reducer for timestamps state. Changed by `START`, `NO_VALUE`, and `SET` actions.
- * @param {object} [state={}] - Current timestamps redux state
+ * @param {object} [state] - Current timestamps redux state
  * @param {object} action - Object containing the action that was dispatched
  * @param {string} action.type - Type of action that was dispatched
  * @param {object} action.meta - Metadata for action

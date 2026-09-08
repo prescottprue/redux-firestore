@@ -5,7 +5,7 @@ import { combineReducers } from '../utils/reducers';
 /**
  * Reducer for listeners ids. Changed by `SET_LISTENER` and `UNSET_LISTENER`
  * actions.
- * @param {object} [state={}] - Current listenersById redux state
+ * @param {object} [state] - Current listenersById redux state
  * @param {object} action - Object containing the action that was dispatched
  * @param {string} action.type - Type of action that was dispatched
  * @param {string} action.path - Path of action
@@ -32,7 +32,7 @@ function listenersById(state = {}, { type, path, payload }) {
 
 /**
  * Reducer for listeners state. Changed by `ERROR` and `LOGOUT` actions.
- * @param {object} [state=[]] - Current authError redux state
+ * @param {object} [state] - Current authError redux state
  * @param {object} action - Object containing the action that was dispatched
  * @param {string} action.type - Type of action that was dispatched
  * @param {object} action.payload - Action payload

@@ -16,7 +16,7 @@ const {
 
 /**
  * Reducer for data state.
- * @param {object} [state={}] - Current data redux state
+ * @param {object} [state] - Current data redux state
  * @param {object} action - Object containing the action that was dispatched
  * @param {string} action.type - Type of action that was dispatched
  * @param {object} action.meta - Meta data of action

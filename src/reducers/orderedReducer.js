@@ -20,7 +20,7 @@ const {
 
 /**
  * Create a new copy of an array with the provided item in a new array index
- * @param {Array} [collectionState=[]] - Redux state of current collection
+ * @param {Array} [collectionState] - Redux state of current collection
  * @param {object} meta - Redux Action meta data contains the doc id
  * @param {object} ordered - New array metadata
  * @param {object} ordered.oldIndex - New array index for the item
@@ -49,7 +49,7 @@ function newArrayWithItemMoved(collectionState, meta, ordered, newValue) {
  * Case reducer for modifying a document within a collection or
  * subcollection. When storeAs is being used, subcollections are
  * moved to the level of the storeAs (instead of on their parent doc).
- * @param {Array} [collectionState=[]] - Redux state of current collection
+ * @param {Array} [collectionState] - Redux state of current collection
  * @param {object} action - The action that was dispatched
  * @returns {Array} State with document modified
  */
@@ -98,7 +98,7 @@ function modifyDoc(collectionState, action) {
 
 /**
  * Case reducer for adding a document to a collection or subcollection.
- * @param {Array} [array=[]] - Redux state of current collection
+ * @param {Array} [array] - Redux state of current collection
  * @param {object} action - The action that was dispatched
  * @returns {Array} State with document modified
  */
@@ -259,7 +259,7 @@ const orderedCollectionReducer = createReducer(undefined, actionHandlers);
 
 /**
  * Reducer for ordered state.
- * @param {object} [state={}] - Current ordered redux state
+ * @param {object} [state] - Current ordered redux state
  * @param {object} action - The action that was dispatched
  * @param {string} action.type - Type of action that was dispatched
  * @param {string} action.meta.collection - Name of Collection which the action

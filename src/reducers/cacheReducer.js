@@ -453,21 +453,24 @@ const serverTimestamp = (key) => key === '::serverTimestamp' && Timestamp.now();
  * @returns {object} JSON Object
  */
 function atomize(mutation, cached) {
-  return Object.keys(mutation).reduce((data, key) => {
-    const val = data[key];
-    if (key.includes('.')) {
-      nestedMap(data, key, val);
-    } else if (Array.isArray(val) && val.length > 0) {
-      // eslint-disable-next-line no-param-reassign
-      data[key] =
-        primaryValue(val) ||
-        serverTimestamp(val[0]) ||
-        arrayUnion(val[0], val[1], () => cached(key)) ||
-        arrayRemove(val[0], val[1], () => cached(key)) ||
-        increment(val[0], val[1], () => cached(key));
-    }
-    return data;
-  }, JSON.parse(JSON.stringify(mutation)));
+  return Object.keys(mutation).reduce(
+    (data, key) => {
+      const val = data[key];
+      if (key.includes('.')) {
+        nestedMap(data, key, val);
+      } else if (Array.isArray(val) && val.length > 0) {
+        // eslint-disable-next-line no-param-reassign
+        data[key] =
+          primaryValue(val) ||
+          serverTimestamp(val[0]) ||
+          arrayUnion(val[0], val[1], () => cached(key)) ||
+          arrayRemove(val[0], val[1], () => cached(key)) ||
+          increment(val[0], val[1], () => cached(key));
+      }
+      return data;
+    },
+    JSON.parse(JSON.stringify(mutation)),
+  );
 }
 /**
  * Translate mutation to a set of database overrides
@@ -846,7 +849,7 @@ const HANDLERS = {
 /**
  * @name cacheReducer
  * Reducer for in-memory database
- * @param {object} [state={}] - Current listenersById redux state
+ * @param {object} [state] - Current listenersById redux state
  * @param {object} action - Object containing the action that was dispatched
  * @param {string} action.type - Type of action that was dispatched
  * @returns {object} Queries state

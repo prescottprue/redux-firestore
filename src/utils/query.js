@@ -737,7 +737,7 @@ const changeTypeToEventType = {
  * Action creator for document change event. Used to create action objects
  * to be passed to dispatch.
  * @param {object} change - Document change object from Firebase callback
- * @param {object} [originalMeta={}] - Original meta data of action
+ * @param {object} [originalMeta] - Original meta data of action
  * @returns {object} Resolves with doc change action object
  */
 function docChangeEvent(change, originalMeta = {}) {
@@ -792,7 +792,10 @@ export function dispatchListenerResponse({
       ? docData.docChanges()
       : docData.docChanges;
   // Dispatch different actions for doc changes (only update doc(s) by key)
-  if (docChanges && docChanges.length < Math.min(MAX_MULTI_ACTION, docData.size)) {
+  if (
+    docChanges &&
+    docChanges.length < Math.min(MAX_MULTI_ACTION, docData.size)
+  ) {
     // Loop to dispatch for each change if there are multiple
     // TODO: Option for dispatching multiple changes in single action
     docChanges.forEach((change, index) => {

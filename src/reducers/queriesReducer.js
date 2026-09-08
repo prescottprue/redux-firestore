@@ -14,7 +14,7 @@ export function isComposable(action) {
 
 /**
  * Reducer for queries state
- * @param {object} [state={}] - Current listenersById redux state
+ * @param {object} [state] - Current listenersById redux state
  * @param {object} action - Object containing the action that was dispatched
  * @param {string} action.type - Type of action that was dispatched
  * @returns {object} Queries state

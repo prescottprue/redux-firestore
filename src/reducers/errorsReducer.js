@@ -7,7 +7,7 @@ const { CLEAR_ERRORS, CLEAR_ERROR, LISTENER_ERROR, ERROR } = actionTypes;
 /**
  * Reducer for errors state. Changed by `ERROR`
  * and `CLEAR_ERRORS` actions.
- * @param {object} [state=[]] - Current authError redux state
+ * @param {object} [state] - Current authError redux state
  * @param {object} action - Object containing the action that was dispatched
  * @param {string} action.type - Type of action that was dispatched
  * @param {object} action.meta - Metadata of action
@@ -33,7 +33,7 @@ function errorsAllIds(state = [], { meta, type }) {
 /**
  * Reducer for errors state. Changed by `ERROR`
  * and `CLEAR_ERRORS` actions.
- * @param {object} [state=[]] - Current authError redux state
+ * @param {object} [state] - Current authError redux state
  * @param {object} action - Object containing the action that was dispatched
  * @param {string} action.type - Type of action that was dispatched
  * @param {object} action.meta - Metadata of action

@@ -5,7 +5,7 @@ import { actionTypes } from '../constants';
 
 /**
  * Reducer for crossSlice state
- * @param  {object} [state={}] - Current ordered redux state
+ * @param  {object} [state] - Current ordered redux state
  * @param  {object} action - The action that was dispatched
  * @param  {string} action.type - Type of action that was dispatched
  * @returns {object} Cross slice state
