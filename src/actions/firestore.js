@@ -247,7 +247,11 @@ export function setListener(firebase, dispatch, queryOpts, successCb, errorCb) {
       !!console &&
       typeof console.error === 'function' // eslint-disable-line no-console
     ) {
-      console.error(`redux-firestore listener error for collection "${meta?.collection}":`, err); // eslint-disable-line no-console
+      // eslint-disable-next-line no-console
+      console.error(
+        `redux-firestore listener error for collection "${meta?.collection}":`,
+        err,
+      );
     }
     dispatch({
       type: actionTypes.LISTENER_ERROR,
