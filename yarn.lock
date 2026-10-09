@@ -1542,10 +1542,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/runtime@npm:7.29.7":
-  version: 7.29.7
-  resolution: "@babel/runtime@npm:7.29.7"
-  checksum: bc311855c6dbf5356030979584ca0f8b6cee39fe058175b02e85a73e246fc76ae30248b0d40e70c2652101faeb43279468ed2d086a670673eb9783c1fee1df2b
+"@babel/runtime@npm:7.29.10":
+  version: 7.29.10
+  resolution: "@babel/runtime@npm:7.29.10"
+  checksum: b0ea4fdc84105e46d4a22fe6af7f835397294b0291795f9c0c3e1ad917a5bfdbd38914ea717007e12904ec4ccb8b5a4b05a1acd45ccae3e424cdc0ef2df4912a
   languageName: node
   linkType: hard
 
@@ -8855,7 +8855,7 @@ __metadata:
     "@babel/preset-env": 7.29.7
     "@babel/preset-react": 7.29.7
     "@babel/register": 7.29.7
-    "@babel/runtime": 7.29.7
+    "@babel/runtime": 7.29.10
     "@commitlint/cli": 20.5.3
     "@commitlint/config-conventional": 20.5.3
     babel-loader: 10.1.1
