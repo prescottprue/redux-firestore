@@ -56,7 +56,7 @@
     "@babel/preset-env": "7.29.7",
     "@babel/preset-react": "7.29.7",
     "@babel/register": "7.29.7",
-    "@babel/runtime": "7.29.7",
+    "@babel/runtime": "7.29.10",
     "@commitlint/cli": "20.5.3",
     "@commitlint/config-conventional": "20.5.3",
     "babel-loader": "10.1.1",
